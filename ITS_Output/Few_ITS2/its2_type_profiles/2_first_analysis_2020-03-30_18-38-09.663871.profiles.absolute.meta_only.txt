@@ -1,0 +1,5 @@
+ITS2 type profile UID	Clade	Majority ITS2 sequence	Associated species	ITS2 profile abundance local	ITS2 profile abundance DB	ITS2 type profile	Sequence accession / SymPortal UID	Average defining sequence proportions and [stdev]
+6	C	C1d	None	6	6	C1d-C42.2-C1	332-329-1	0.895[0.024]-0.061[0.015]-0.043[0.009]
+7	C	C17d/C31	None	6	6	C17d/C31-C21	1158/848-18	0.453[0.058]/0.428[0.087]-0.119[0.057]
+9	C	C1d	None	2	2	C1d	332	1.000[0.000]
+8	D	D1	S. glynnii,S. trenchii	6	6	D1-D4-D6-D1ab	347-57-68-985	0.440[0.016]-0.328[0.010]-0.170[0.011]-0.062[0.003]

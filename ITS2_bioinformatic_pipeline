@@ -242,15 +242,16 @@ Add the desired columns to the right of the 'sampling_info' section. Here we add
 Uploading datasheet to KITT server. Run this command in a new terminal window outside of KITT.
 
 $ scp -P XXXX ~/MyProjects/Acclim_Dynamics/ITS2_subset.xlsx XXXX@kitt.uri.edu:/home/estrand/ITS2/Few_ITS2/
+$ scp -P XXXX ~/MyProjects/Acclim_Dynamics/ITS2_Full.xlsx XXXX@kitt.uri.edu:/home/estrand/ITS2/FULL_ITS2/
 
 XXXX indicates personal password and user information for KITT server.
 ```
 2. Loading the test dataset to the database. This step will also include quality control filtering steps as described in the Running SymPortal link above.
 
 ```
+Few_ITS2
 $ ./main.py --load /home/estrand/ITS2/Few_ITS2 --name first_loading --num_proc 3 --data_sheet /home/estrand/ITS2/Few_ITS2/ITS2_subset.xlsx
 
-num_proc 3 indicates using 3 processors to run the subset. Please be mindful of your individual processor limit, especially on a shared server.
 End of output:
 
 DATA LOADING COMPLETE
@@ -258,6 +259,16 @@ DataSet id: 4
 DataSet name: first_loading
 DataSet loading_complete_time_stamp: 2020-03-30_17-25-08.147412
 
+Full_ITS2
+$ ./main.py --load /home/estrand/ITS2/FULL_ITS2 --name first_loading --num_proc 3 --data_sheet /home/estrand/ITS2/FULL_ITS2/ITS2_Full.xlsx
+
+End of output:
+DATA LOADING COMPLETE
+DataSet id: 5
+DataSet name: first_loading
+DataSet loading_complete_time_stamp: 2020-03-31_23-03-43.621114
+
+num_proc 3 indicates using 3 processors to run the subset. Please be mindful of your individual processor limit, especially on a shared server.
 DataSet id number is higher because I ran a few test loadings with one or two samples to double check this worked. Each time the new loading overrode the previous one under the name first_loading.
 ```
 
@@ -277,9 +288,12 @@ Solution: ITS2_subset.xlsx datasheet is likely empty. Forward and reverse pair i
 
 ```
 $ python3.6 main.py --display_data_sets
-Output:
+Few_ITS2 Output:
 3: first_loading	2020-03-30_16-39-46.644400
 4: first_loading	2020-03-30_16-57-13.928018
+
+FULL_ITS2 Output:
+5: first_loading	2020-03-31_18-49-02.076040
 
 In the future I would change the name of the data sets from first_loading to a more specific name for even further clarification.
 ```
@@ -289,13 +303,22 @@ In the future I would change the name of the data sets from first_loading to a m
 1. Running the analysis on single or multiple datasets uploaded. The number corresponds to the dataset ID from step 2 of downloading data.
 
 ```
-$ ./main.py --analyse 4 --name first_analysis --num_proc 3
-End of output:
+Few_ITS2: $ ./main.py --analyse 4 --name first_analysis --num_proc 3
+FULL_ITS2: $ ./main.py --analyse 5 --name first_analysis --num_proc 3
+
+Few_ITS2 end of output:
 ANALYSIS COMPLETE: DataAnalysis:
  name: first_analysis
  UID: 2
 
 DataSet analysis_complete_time_stamp: 2020-03-30_17-49-03.127592
+
+FULL_ITS2 end of output:
+ANALYSIS COMPLETE: DataAnalysis:
+ name: first_analysis
+ UID: 3
+
+DataSet analysis_complete_time_stamp: 2020-04-01_09-28-45.840199
 
 ```
 
@@ -303,8 +326,11 @@ DataSet analysis_complete_time_stamp: 2020-03-30_17-49-03.127592
 
 ```
 $ ./main.py --display_analyses
-Output:
+Few_ITS2 output:
 2: first_analysis	2020-03-30_17-26-48.150823
+
+FULL_ITS2 output:
+3: first_analysis	2020-04-01_08-55-07.023480
 ```
 
 3. To output the ITS2 sequence count table and figures (DIVs):
@@ -323,12 +349,13 @@ Rename the output repo
 $ mv ~/MyProjects/Acclim_Dynamics/2020-03-30_17-51-51.940845 ~/MyProjects/Acclim_Dynamics/Few_ITS2_DIVs
 ```
 
-Pre-med and post-med is .... .... ... .
+This step will output pre-med-seq and post-med-seq folders with the DIV tables and visualizations. Med refers to minimum entropy decomposition, which is a form of quality control used in SymPortal that partitions the dataset into operational taxonomical units. Read more about this [in Eren et al 2015](https://www.nature.com/articles/ismej2014195.pdf).
 
 4. To output the ITS2 sequences (DIVs) and the ITS2 type profile tables and figures:
 
 ```
-$ ./main.py --print_output_types 4 --data_analysis_id 2 --num_proc 3
+Few_ITS2: $ ./main.py --print_output_types 4 --data_analysis_id 2 --num_proc 3
+FULL_ITS2: $ ./main.py --print_output_types 5 --data_analysis_id 3 --num_proc 3
 ## 4 is the dataset ID from downloading and 2 is the data analysis id.
 ## See above for DIV dataset file format
 
@@ -342,3 +369,15 @@ $ scp -r -P XXXX XXXX@kitt.uri.edu:/home/estrand/ITS2/SymPortal_framework/output
 Copy entire output folder to own github repo (outisde of KITT terminal)
 $ scp -r -P XXXX XXXX@kitt.uri.edu:/home/estrand/ITS2/SymPortal_framework/outputs/analyses/2/2020-03-30_18-38-09.663871 ~/MyProjects/Acclim_Dynamics/
 ```
+
+Few_ITS2 figures:
+
+![DIVs]()
+
+![Type profiles]()
+
+FULL_ITS2 figures:
+
+![DIVs]()
+
+![type profiles]()
