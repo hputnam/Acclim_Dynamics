@@ -369,3 +369,6 @@ $ scp -r -P XXXX XXXX@kitt.uri.edu:/home/estrand/ITS2/SymPortal_framework/output
 Copy entire output folder to own github repo (outisde of KITT terminal)
 $ scp -r -P XXXX XXXX@kitt.uri.edu:/home/estrand/ITS2/SymPortal_framework/outputs/analyses/2/2020-03-30_18-38-09.663871 ~/MyProjects/Acclim_Dynamics/
 ```
+
+[Full ITS2 post-med seq ouput](https://github.com/hputnam/Acclim_Dynamics/tree/master/ITS_Output/FULL_ITS2/post_med_seqs)  
+[Full ITS2 type profiles](https://github.com/hputnam/Acclim_Dynamics/tree/master/ITS_Output/FULL_ITS2/its2_type_profiles)
