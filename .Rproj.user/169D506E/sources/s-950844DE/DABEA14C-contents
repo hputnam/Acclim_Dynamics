@@ -1,0 +1,44 @@
+#Title: Surface Area By Wax Dipping 
+#Project: Holobiont Integration
+#Author: HM Putnam 
+#Edited by: EL Strand
+#Date Last Modified: 20200206
+#See Readme file for details
+
+rm(list=ls()) #clears workspace 
+
+## install packages if you dont already have them in your library
+#if ("devtools" %in% rownames(installed.packages()) == 'FALSE') install.packages('devtools') 
+
+#Surface area by wax dipping Veal et al 
+
+library(tidyverse)
+
+wax.data <- read.csv("~/MyProjects/Holobiont_Integration/RAnalysis/Data/Phys.assays/Wax_dipping.csv", header=TRUE)
+
+# 20200205 Surface Area Standard curve with Dowels 
+wax.data$delta.mass.g <- wax.data$weight2.g-wax.data$weight1.g
+stnds <- subset(wax.data, Sample=="Standard")
+stnd.curve <- lm(stnds$Surface_area~delta.mass.g, data=stnds)
+plot(stnds$Surface_area~delta.mass.g, data=stnds)
+
+# pi*(2.5/2)^2 + 2*(2.5/2)*pi*(10.8)
+
+stnd.curve$coefficients
+summary(stnd.curve)$r.squared
+range(stnds$delta.mass.g)
+range(stnds$Surface_area)
+
+#Calculate surface area
+smpls <- subset(wax.data, Sample=="Coral")
+smpls$surface.area.cm2 <- stnd.curve$coefficients[2] * smpls$delta.mass.g + stnd.curve$coefficients[1]
+
+smpls <- smpls %>%
+  select(-Sample, -Surface_area, -Notes)
+
+range(smpls$surface.area.cm2)
+range(stnds$surface.area.cm2)
+
+write.csv(smpls, "~/MyProjects/Holobiont_Integration/RAnalysis/Data/Phys.assays/coral_surface_area.csv")
+
+plot(smpls$surface.area.cm2) 

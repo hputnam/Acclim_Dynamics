@@ -1,0 +1,5 @@
+"0","setwd(""~/MyProjects/Acclim_Dynamics"")"
+"0","library(""phyloseq"")"
+"0","library(""ggplot2"")      # graphics"
+"0","library(""readxl"")       # necessary to import the data from Excel file"
+"0","library(""dplyr"")        # filter and reformat data frames"

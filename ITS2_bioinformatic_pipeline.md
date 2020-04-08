@@ -372,3 +372,20 @@ $ scp -r -P XXXX XXXX@kitt.uri.edu:/home/estrand/ITS2/SymPortal_framework/output
 
 [Full ITS2 post-med seq ouput](https://github.com/hputnam/Acclim_Dynamics/tree/master/ITS_Output/FULL_ITS2/post_med_seqs)  
 [Full ITS2 type profiles](https://github.com/hputnam/Acclim_Dynamics/tree/master/ITS_Output/FULL_ITS2/its2_type_profiles)
+
+#### Pairwise dissimilarity distances and PCA
+
+Generate between sample distances using both BrayCurtis- and UniFrac- programs to test which best explains the data. BrayCurtis is faster and has less dependencies, but is not as optimal for very closely related sequence profiles. UniFrac takes longer and requires mafft and iqtree, and is not as ideal for large datasets or extremely high sequence diversity.
+
+I suspect BrayCurtis may be the best option based on our large sample size and high diversity of sequences.
+
+```
+Full_ITS2:  
+$ ./main.py --between_sample_distances 5 --num_proc 3
+# 5 indicates the dataset ID
+
+$ ./main.py --between_type_distances 5 --data_analysis_id 3
+```
+
+[between_sample_distances output](https://github.com/hputnam/Acclim_Dynamics/tree/master/ITS_Output/FULL_ITS2/between_sample_distances)  
+[between_type_distances output](https://github.com/hputnam/Acclim_Dynamics/tree/master/ITS_Output/FULL_ITS2/between_profile_distances/C)
