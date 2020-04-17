@@ -1,0 +1,4 @@
+"0","# filtering by the most abundance Profile Types"
+"0","carbom_abund <- filter_taxa(sample_date, function(x) sum(x > total*0.20) > 0, TRUE)"
+"0","plot_heatmap(carbom_abund, method = ""NMDS"", distance = ""bray"")"
+"2","stress is (nearly) zero: you may have insufficient data"

@@ -1,0 +1,9 @@
+{
+    "path" : "~/MyProjects/Acclim_Dynamics/ITS2_Data",
+    "sortOrder" : [
+        {
+            "ascending" : true,
+            "columnIndex" : 2
+        }
+    ]
+}

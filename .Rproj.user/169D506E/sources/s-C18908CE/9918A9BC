@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1587154599903.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "9918A9BC",
+    "lastKnownWriteTime" : 1586451323,
+    "last_content_update" : 1586451323,
+    "path" : "~/MyProjects/Surface_area_practice.Rmd",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "28,0",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

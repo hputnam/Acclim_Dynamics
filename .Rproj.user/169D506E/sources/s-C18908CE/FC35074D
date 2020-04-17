@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1587155211004.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "FC35074D",
+    "lastKnownWriteTime" : 6,
+    "last_content_update" : 1587155211004,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "4145D01D",
+        "caption" : "Quahog",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=Quahog&cache_key=4145D01D",
+        "displayedObservations" : 12,
+        "environment" : "",
+        "object" : "Quahog",
+        "preview" : 0,
+        "totalObservations" : 12,
+        "variables" : 2
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

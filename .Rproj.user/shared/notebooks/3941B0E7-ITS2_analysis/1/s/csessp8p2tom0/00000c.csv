@@ -1,0 +1,4 @@
+"0","allBio <- read.csv(""~/MyProjects/Acclim_Dynamics/ITS2_Data/alpha_rareBio.csv"", sep = "","", header = TRUE)"
+"0","sample_info <- read.csv(""~/MyProjects/Acclim_Dynamics/ITS2_Data/Sample_variables.csv"", sep="","", header=TRUE)"
+"0","names(allBio)[1] <- ""sample_uid"" # changing the column header to match that in sample_info"
+"0","alpha_diversity_total <- full_join(allBio, sample_info, by=""sample_uid"")"

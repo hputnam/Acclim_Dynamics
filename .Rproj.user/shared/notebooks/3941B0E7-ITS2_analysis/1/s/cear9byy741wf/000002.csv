@@ -1,0 +1,3 @@
+"0","total = median(sample_sums(carbom))"
+"0","standf = function(x, t=total) round(t * (x/sum(x)))"
+"0","carbom = transform_sample_counts(carbom, standf)"

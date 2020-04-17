@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1586793278389.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "4134913606",
+    "id" : "8ECBB1BE",
+    "lastKnownWriteTime" : 1586383157,
+    "last_content_update" : 1586383157,
+    "path" : "~/MyProjects/Holobiont_Integration/RAnalysis/Scripts/pH_Tris_Curve.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "0,0",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 11,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
