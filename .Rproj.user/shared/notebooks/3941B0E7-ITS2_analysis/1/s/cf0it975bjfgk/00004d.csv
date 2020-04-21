@@ -1,6 +1,0 @@
-"0","Alpha.Figs <- arrangeGrob(Mcap.A, Pacuta.A, ncol=1)
-ggsave(file=""~/MyProjects/Acclim_Dynamics/ITS2_Data/Output/Alpha.Figs.csv"", Alpha.Figs, width = 11, height = 6, units = c(""in""))
-"
-"2","Error: Unknown graphics device 'csv'
-[90mRun `rlang::last_error()` to see where the error occurred.[39m
-"

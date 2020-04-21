@@ -1,0 +1,18 @@
+"0","library(DirichletReg)
+"
+"2","Loading required package: rgl
+"
+"2","Error in dyn.load(file, DLLpath = DLLpath, ...) : 
+  unable to load shared object '/Library/Frameworks/R.framework/Versions/3.5/Resources/library/rgl/libs/rgl.so':
+  dlopen(/Library/Frameworks/R.framework/Versions/3.5/Resources/library/rgl/libs/rgl.so, 6): Library not loaded: /opt/X11/lib/libGLU.1.dylib
+  Referenced from: /Library/Frameworks/R.framework/Versions/3.5/Resources/library/rgl/libs/rgl.so
+  Reason: image not found
+"
+"2","Error: package or namespace load failed for ‘rgl’:
+ .onLoad failed in loadNamespace() for 'rgl', details:
+  call: NULL
+  error: 	Loading rgl's DLL failed. 
+	On MacOS, rgl depends on XQuartz, which you can download from xquartz.org.
+"
+"2","Error: package ‘rgl’ could not be loaded
+"

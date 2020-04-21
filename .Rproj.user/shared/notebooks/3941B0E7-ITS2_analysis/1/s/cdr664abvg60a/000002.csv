@@ -1,0 +1,4 @@
+"0","sample_date <- merge_samples(carbom, ""Timepoint"")"
+"2","missing values for 'group'"
+"0","plot_bar(sample_date, fill=""Species"") +"
+"0","  geom_bar(aes(color=Genus, fill=Genus), stat=""identity"", position=""stack"")"

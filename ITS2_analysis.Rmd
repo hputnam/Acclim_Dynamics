@@ -52,6 +52,7 @@ Samples_df was created with the different variables from the project, including 
 otu_mat <- read.csv("~/MyProjects/Acclim_Dynamics/ITS2_Data/Full_abundance.csv", sep=",", header=TRUE)
 tax_mat <- read.csv("~/MyProjects/Acclim_Dynamics/ITS2_Data/Taxonomy.csv", sep=",", header=TRUE)
 samples_df <- read.csv("~/MyProjects/Acclim_Dynamics/ITS2_Data/Sample_variables.csv", sep=",", header=TRUE)
+samples_df <- na.omit(samples_df)
 
 #reading timepoint as factor
 samples_df$Timepoint <- as.factor(samples_df$Timepoint)
@@ -127,7 +128,6 @@ sample_variables(carbom)
 ```
 
 Normalize number of reads in each sample using median sequencing depth 
-***********Wtf is this***********
 ```{r}
 total = median(sample_sums(carbom))
 standf = function(x, t=total) round(t * (x/sum(x)))
@@ -140,15 +140,19 @@ Solution: The sample values likely do not between datasheets "samples" and "OTU"
 
 ### Bar graphs 
 ```{r}
-# excluding NA treatments - hard and soft mix controls 
+# filtering by the most abundance Profile Types
+carbom_abund <- filter_taxa(carbom, function(x) sum(x > total*0.10) > 0, TRUE)
 
-plot_bar(carbom, x="Timepoint", fill="Genus", facet_grid = Host_species~Treatment) + 
-  geom_bar(aes(color=Genus, fill=Genus), stat="identity", position="stack")
+png("~/MyProjects/Acclim_Dynamics/ITS2_Data/Output/Total_treatments.png")
+plot_bar(carbom_abund, x="Timepoint", fill="Type", facet_grid = Host_species~Treatment) + 
+  geom_bar(aes(color=Type, fill=Type), stat="identity", position="stack")
+dev.off()
 ```
+
 
 ```{r}
 sample_date <- merge_samples(carbom, "Timepoint")
-plot_bar(sample_date, fill="Genus") +
+plot_bar(sample_date, fill="Species") +
   geom_bar(aes(color=Genus, fill=Genus), stat="identity", position="stack")
 ```
 
@@ -157,6 +161,7 @@ plot_bar(sample_date, fill="Genus") +
 ```{r}
 # filtering by the most abundance Profile Types
 carbom_abund <- filter_taxa(sample_date, function(x) sum(x > total*0.20) > 0, TRUE)
+carbom_abund
 
 plot_heatmap(carbom_abund, method = "NMDS", distance = "bray")
 ```
@@ -225,14 +230,14 @@ Mcap_alpha <- subset(Shannon.Means, Host_species=="Montipora capitata")
 Mcap.A <- ggline(Mcap_alpha, x = "Timepoint", y = "Shannon.mean", color = "Treatment",
        ylim=c(0.5,4), 
        add = c("Shannon.se"),
-       palette = c("lightblue", "blue", "salmon", "red3")) + ggtitle("Montipora capitata") + ylab("Alpha diversity")
+       palette = c("blue", "light blue", "salmon", "red3")) + ggtitle("Montipora capitata") + ylab("Alpha diversity")
 Mcap.A
 
 Pacuta_alpha <- subset(Shannon.Means, Host_species=="Pocillopora acuta")
 Pacuta.A <- ggline(Pacuta_alpha, x = "Timepoint", y = "Shannon.mean", color = "Treatment",
        ylim=c(0,3), 
        add = c("Shannon.se"),
-       palette = c("lightblue", "blue", "salmon", "red3")) + ggtitle("Pocillopora acuta") + ylab("Alpha diversity")
+       palette = c("blue", "light blue", "salmon", "red3")) + ggtitle("Pocillopora acuta") + ylab("Alpha diversity")
 Pacuta.A
 
 Alpha.Figs <- arrangeGrob(Mcap.A, Pacuta.A, ncol=1)
@@ -256,6 +261,18 @@ summary(Pacuta_alpha.aov)
 TukeyHSD(Pacuta_alpha.aov)
 ```
 
+### DIRICHLET REGRESSION 
+
+```{r}
+if ("DirichletReg" %in% rownames(installed.packages()) == 'FALSE') install.packages('DirichletReg') 
+library(DirichletReg)
+```
+
+
+
+
+
+
 
 #### SCRIPT NOT USED B/C OF ERRORS OR DECIDED ON OTHER PACKAGES
 ### SCRIPT BELOW COULD BE USEFUL IN THE FUTURE 
@@ -268,3 +285,6 @@ library(tabula)
 
 diversity(otu_mat, "shannon", simplify = FALSE)
 ```
+
+
+

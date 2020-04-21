@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1587395288417.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "8128DE57",
+    "lastKnownWriteTime" : 4294967302,
+    "last_content_update" : 1587395288417,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "B9A7DDFD",
+        "caption" : "otu_transposed",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=otu_transposed&cache_key=B9A7DDFD",
+        "displayedObservations" : 228,
+        "environment" : "",
+        "object" : "otu_transposed",
+        "preview" : 0,
+        "totalObservations" : 228,
+        "variables" : 253
+    },
+    "relative_order" : 6,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

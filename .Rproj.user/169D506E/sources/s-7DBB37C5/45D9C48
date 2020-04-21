@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1587396766306.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "45D9C48",
+    "lastKnownWriteTime" : 8093582259736543238,
+    "last_content_update" : 1587396766306,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "6F02B30E",
+        "caption" : "Shannon.Means",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=Shannon.Means&cache_key=6F02B30E",
+        "displayedObservations" : 84,
+        "environment" : "",
+        "object" : "Shannon.Means",
+        "preview" : 0,
+        "totalObservations" : 84,
+        "variables" : 6
+    },
+    "relative_order" : 8,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

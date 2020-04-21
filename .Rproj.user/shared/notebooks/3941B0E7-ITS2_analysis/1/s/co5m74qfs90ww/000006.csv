@@ -77,10 +77,11 @@
 "1","
 "
 "1","The downloaded binary packages are in
-	/var/folders/r_/l_kz0z8j6k5bwwbzlwfdcbg80000gn/T//RtmpndeKxL/downloaded_packages"
+	/var/folders/r_/l_kz0z8j6k5bwwbzlwfdcbg80000gn/T//RtmpHWQqsO/downloaded_packages"
 "1","
 "
-"2","Old packages: 'backports', 'class', 'devtools', 'fs', 'gdtools', 'glue', 'gtools', 'isoband', 'lattice', 'lme4', 'lubridate', 'MuMIn', 'nlme',
-  'plotrix', 'quantreg', 'Rcpp', 'reshape2', 'rgl', 'rJava', 'survival', 'tibble', 'usethis', 'xml2'
+"2","Old packages: 'backports', 'class', 'dbplyr', 'devtools', 'emmeans', 'fs', 'future', 'gdtools', 'glue', 'gtools', 'isoband', 'lattice', 'lme4',
+  'lubridate', 'MuMIn', 'nlme', 'plotrix', 'purrr', 'quantreg', 'raster', 'Rcpp', 'reshape2', 'rgl', 'rJava', 'survival', 'systemfonts',
+  'tibble', 'tinytex', 'usethis', 'xml2'
 "
 "1","Update all/some/none? [a/s/n]: "
