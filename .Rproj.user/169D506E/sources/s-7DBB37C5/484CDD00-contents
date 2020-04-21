@@ -128,6 +128,8 @@ sample_variables(carbom)
 ```
 
 Normalize number of reads in each sample using median sequencing depth 
+**Fill in explanation of what this is later**
+
 ```{r}
 total = median(sample_sums(carbom))
 standf = function(x, t=total) round(t * (x/sum(x)))
@@ -178,6 +180,7 @@ The dataframe input needs to be a specific matrix format. See sections prior to 
 
 Loading in dataframes and running alpha diversity metrics usings otuSummary package. 
 ```{r}
+rm(list=ls()) # clear work space
 if ("otuSummary" %in% rownames(installed.packages()) == 'FALSE') install.packages('otuSummary') 
 library(otuSummary)
 library(dplyr)
@@ -188,12 +191,33 @@ library(tidyr)
 library(gridExtra)
 
 ### example data loaded to compare dataframe formatting
-data(otumothur)
-test1 <- alphaDiversity(otutab = otumothur, siteInCol = TRUE,
-    taxhead = "taxonomy", threshold = 1, percent = FALSE, write = FALSE)
+# data(otumothur)
+# test1 <- alphaDiversity(otutab = otumothur, siteInCol = TRUE,
+   # taxhead = "taxonomy", threshold = 1, percent = FALSE, write = FALSE)
 ### 
+type_abundance_raw <- read.csv("~/MyProjects/Acclim_Dynamics/ITS2_Data/Type_abundance_raw.csv", sep=",", header=TRUE)
+type_abundance <- t(type_abundance_raw)
+write.csv(type_abundance, "~/MyProjects/Acclim_Dynamics/ITS2_Data/Type_Abundance.csv")
+```
+Manually delete the first row V1, V2, V3 - this is annoying come back to this later.
 
-alpha <- alphaDiversity(otu_transposed, siteInCol = TRUE, taxhead = NULL, threshold = 1, percent = FALSE, write = TRUE)
+```{r}
+# Taking out the "X" in front of each column and row 
+type_abundance_transposed <- read.csv("~/MyProjects/Acclim_Dynamics/ITS2_Data/Type_Abundance.csv", sep = ",", header = TRUE)
+# come back to figuring out to take out the X in row names 
+for (col in 1:ncol(type_abundance_transposed)) {
+  colnames(type_abundance_transposed)[col] <- sub("X", "", colnames(type_abundance_transposed)[col])
+}
+
+row.names(type_abundance_transposed) <- type_abundance_transposed$sample_uid # defining row names from the uid column
+type_abundance_transposed <- type_abundance_transposed %>% select (-sample_uid) # removing the sample uid column since it is now used as a row name
+
+# Transforming the OTU and tax datatables into matrixes 
+type_abundance_transposed <- as.matrix(type_abundance_transposed)
+```
+
+```{r}
+alpha <- alphaDiversity(type_abundance_transposed, siteInCol = TRUE, taxhead = NULL, threshold = 1, percent = FALSE, write = TRUE)
 write.csv(alpha$allBio, "~/MyProjects/Acclim_Dynamics/ITS2_Data/alpha_allBio.csv")
 write.csv(alpha$abundBio, "~/MyProjects/Acclim_Dynamics/ITS2_Data/alpha_abundBio.csv")
 write.csv(alpha$rareBio, "~/MyProjects/Acclim_Dynamics/ITS2_Data/alpha_rareBio.csv")
@@ -208,7 +232,7 @@ names(allBio)[1] <- "sample_uid" # changing the column header to match that in s
 alpha_diversity_total <- full_join(allBio, sample_info, by="sample_uid")
 ```
 
-Plotting alpha diversity values over timepoint, treatment, and species. 
+Calculating the alpha diversity means.
 ```{r}
 # Alpha Diversity means 
 ## THIS NEEDS TO BE TIMEPOINT B/C 3 TIMEPOINTS ON 20180922
@@ -224,11 +248,13 @@ Shannon.Means <- ddply(alpha_diversity_total, c('Timepoint','Host_species', 'Tre
                   Shannon.mean= mean(shannon, na.rm=T), #mean shannon
                   N = sum(!is.na(shannon)), # sample size
                   Shannon.se = sd(shannon, na.rm=T)/sqrt(N)) #SE
+```
 
-
+Plotting alpha diversity values over timepoint, treatment, and species. 
+```{r}
 Mcap_alpha <- subset(Shannon.Means, Host_species=="Montipora capitata")
 Mcap.A <- ggline(Mcap_alpha, x = "Timepoint", y = "Shannon.mean", color = "Treatment",
-       ylim=c(0.5,4), 
+       ylim=c(0,4), 
        add = c("Shannon.se"),
        palette = c("blue", "light blue", "salmon", "red3")) + ggtitle("Montipora capitata") + ylab("Alpha diversity")
 Mcap.A

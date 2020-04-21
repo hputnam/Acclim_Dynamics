@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1587486751631.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "6405523D",
+    "lastKnownWriteTime" : 0,
+    "last_content_update" : 1587486751631,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "C1F8BC24",
+        "caption" : "alpha_diversity_total",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=alpha_diversity_total&cache_key=C1F8BC24",
+        "displayedObservations" : 15,
+        "environment" : "",
+        "object" : "alpha_diversity_total",
+        "preview" : 0,
+        "totalObservations" : 15,
+        "variables" : 16
+    },
+    "relative_order" : 7,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}
