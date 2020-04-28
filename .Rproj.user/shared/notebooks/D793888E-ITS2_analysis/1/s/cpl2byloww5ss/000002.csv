@@ -1,5 +1,8 @@
 "0","rm(list=ls()) # clear work space"
+"2","Error in names(frame) <- `*vtmp*` : names() applied to a non-vector
+"
 "0","setwd(""~/MyProjects/Acclim_Dynamics"") # set working directory"
+"2","The working directory was changed to /Users/emmastrand/MyProjects/Acclim_Dynamics inside a notebook chunk. The working directory will be reset when the chunk is finished running. Use the knitr root.dir option in the setup chunk to change the working directory for notebook chunks."
 "0","getwd() # to check working directory"
 "1","[1]"
 "1"," ""/Users/emmastrand/MyProjects/Acclim_Dynamics"""
@@ -9,17 +12,3 @@
 "0","library(""ggplot2"")      # graphics"
 "0","library(""readxl"")       # necessary to import the data from Excel file"
 "0","library(""dplyr"")        # filter and reformat data frames"
-"2","
-Attaching package: ‘dplyr’
-
-"
-"2","The following objects are masked from ‘package:stats’:
-
-    filter, lag
-
-"
-"2","The following objects are masked from ‘package:base’:
-
-    intersect, setdiff, setequal, union
-
-"

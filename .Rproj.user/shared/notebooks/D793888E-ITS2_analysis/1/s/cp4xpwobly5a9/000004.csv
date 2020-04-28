@@ -1,0 +1,8 @@
+"0","## Seq"
+"0","total_seq = median(sample_sums(carbom_Seq))"
+"0","standf_seq = function(x, t=total_seq) round(t * (x/sum(x)))"
+"0","carbom_Seq = transform_sample_counts(carbom_Seq, standf_seq)"
+"0","## Abs Type"
+"0","total_type = median(sample_sums(carbom_Abs_Type))"
+"0","standf_type = function(x, t=total_type) round(t * (x/sum(x)))"
+"0","carbom_Abs_Type = transform_sample_counts(carbom_Abs_Type, standf_type)"

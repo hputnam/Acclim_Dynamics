@@ -1,0 +1,3 @@
+"0","carbom_Seq <- phyloseq(OTU_Seq, TAX_Seq, samples)"
+"0","carbom_Abs_Type <- phyloseq(OTU_Abs_Type, TAX_Type, samples)"
+"0","carbom_Rel_Type <- phyloseq(OTU_Rel_Type, TAX_Type, samples)"
