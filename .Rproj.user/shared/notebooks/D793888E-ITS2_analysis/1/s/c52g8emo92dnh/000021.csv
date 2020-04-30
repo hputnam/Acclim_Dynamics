@@ -1,5 +1,0 @@
-"0","ggsave(file=""~/MyProjects/Acclim_Dynamics/ITS2_Data/Output/Relative.Figs.pdf"", Relative.Figs, width = 11, height = 6, units = c(""in""))
-"
-"2","Error in grDevices::pdf(file = filename, ..., version = version) : 
-  cannot open file '~/MyProjects/Acclim_Dynamics/ITS2_Data/Output/Relative.Figs.pdf'
-"

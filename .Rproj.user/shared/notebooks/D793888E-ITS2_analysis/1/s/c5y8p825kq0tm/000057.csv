@@ -1,0 +1,6 @@
+"0","Seq.Pacuta_alpha <- subset(Seq.Shannon.Means, Host_species==""Pocillopora acuta"")"
+"0","Seq.Pacuta.A <- ggline(Seq.Pacuta_alpha, x = ""Timepoint"", y = ""Shannon.mean"", color = ""Treatment"","
+"0","       ylim=c(0,3), "
+"0","       add = c(""Shannon.se""),"
+"0","       palette = c(""blue"", ""light blue"", ""salmon"", ""red3"")) + ggtitle(""Pocillopora acuta"") + ylab(""Alpha diversity"")"
+"0","Seq.Pacuta.A"

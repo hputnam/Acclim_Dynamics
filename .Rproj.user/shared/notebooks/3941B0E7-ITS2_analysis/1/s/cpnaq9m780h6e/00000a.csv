@@ -1,4 +1,0 @@
-"0","# filtering by the most abundance Profile Types"
-"0","carbom_abund <- filter_taxa(sample_date, function(x) sum(x > total*0.20) > 0, TRUE)"
-"2","Error in FUN(newX[, i], ...) : object 'total' not found
-"

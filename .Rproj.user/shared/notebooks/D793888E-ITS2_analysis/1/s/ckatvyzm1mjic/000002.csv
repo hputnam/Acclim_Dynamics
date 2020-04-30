@@ -1,0 +1,8 @@
+"0","## Relative"
+"0","# Total "
+"0","relative.dist <- vegdist(relative.sqrt.mat, method = 'bray')"
+"0","# Mcap"
+"0","mcap.relative.dist <- vegdist(mcap.relative.sqrt.mat, method = 'bray')"
+"0","# Pacuta"
+"0","## Absolute"
+"0","absolute.dist <- vegdist(absolute.sqrt.mat, method = 'bray')"

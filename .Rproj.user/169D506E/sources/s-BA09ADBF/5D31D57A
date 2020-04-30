@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1588199730443.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "5D31D57A",
+    "lastKnownWriteTime" : 4831939976,
+    "last_content_update" : 1588199730443,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "2F7DC9B2",
+        "caption" : "Pacuta_TT_Tukey",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=Pacuta_TT_Tukey&cache_key=2F7DC9B2",
+        "displayedObservations" : 780,
+        "environment" : "",
+        "object" : "Pacuta_TT_Tukey",
+        "preview" : 0,
+        "totalObservations" : 780,
+        "variables" : 4
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

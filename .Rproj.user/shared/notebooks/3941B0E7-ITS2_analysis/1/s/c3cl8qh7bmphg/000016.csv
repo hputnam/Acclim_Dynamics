@@ -1,7 +1,0 @@
-"0","plot_richness(carbom, measures = c(""Chao1"", ""Shannon""), x=""Timepoint"", color = ""Treatment"")"
-"2","The data you have provided does not have
-any singletons. This is highly suspicious. Results of richness
-estimates (for example) are probably unreliable, or wrong, if you have already
-trimmed low-abundance taxa from the data.
-
-We recommended that you find the un-trimmed data and retry."

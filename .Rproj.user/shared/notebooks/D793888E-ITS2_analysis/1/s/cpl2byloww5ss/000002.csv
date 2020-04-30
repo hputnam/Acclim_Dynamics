@@ -1,6 +1,4 @@
 "0","rm(list=ls()) # clear work space"
-"2","Error in names(frame) <- `*vtmp*` : names() applied to a non-vector
-"
 "0","setwd(""~/MyProjects/Acclim_Dynamics"") # set working directory"
 "2","The working directory was changed to /Users/emmastrand/MyProjects/Acclim_Dynamics inside a notebook chunk. The working directory will be reset when the chunk is finished running. Use the knitr root.dir option in the setup chunk to change the working directory for notebook chunks."
 "0","getwd() # to check working directory"

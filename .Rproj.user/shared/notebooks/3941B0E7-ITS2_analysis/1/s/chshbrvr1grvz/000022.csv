@@ -1,5 +1,0 @@
-"0","# filtering by the most abundance Profile Types"
-"0","carbom_abund <- filter_taxa(carbom, function(x) sum(x > total*0.10) > 0, TRUE)"
-"0","png(""~/MyProjects/Acclim_Dynamics/ITS2_Data/Output/Total_treatments.png"")"
-"0","plot_bar(carbom_abund, x=""Timepoint"", fill=""Type"", facet_grid = Host_species~Treatment) + "
-"0","  geom_bar(aes(color=Type, fill=Type), stat=""identity"", position=""stack"")"

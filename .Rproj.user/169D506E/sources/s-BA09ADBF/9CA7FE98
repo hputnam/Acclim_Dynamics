@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1588193919812.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "9CA7FE98",
+    "lastKnownWriteTime" : 8093582261672438125,
+    "last_content_update" : 1588193919812,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "A32F8CAB",
+        "caption" : "Seq_Mcap_alpha_stats",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=Seq_Mcap_alpha_stats&cache_key=A32F8CAB",
+        "displayedObservations" : 132,
+        "environment" : "",
+        "object" : "Seq_Mcap_alpha_stats",
+        "preview" : 0,
+        "totalObservations" : 132,
+        "variables" : 17
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}
