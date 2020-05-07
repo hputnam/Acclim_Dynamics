@@ -1,0 +1,8 @@
+"0","absolute_type_raw <- read.csv(""~/MyProjects/Acclim_Dynamics/ITS2/R_Input/Type_Absolute_raw_input.csv"", sep="","", header=TRUE) # reading in the type absolute abundance file"
+"0","sample_info_p <- read.csv(""~/MyProjects/Acclim_Dynamics/ITS2/R_Input/Sample_variables.csv"", sep="","", header=TRUE) # reading in sample info datasheet"
+"0","sample_info_p <- na.omit(sample_info_p)"
+"0","absolute_permanova <- full_join(absolute_type_raw, sample_info_p, by=""sample_uid"")"
+"0","absolute_permanova <- select(absolute_permanova, -Plug_ID, -Tank, -Sample_Date, -sample) # removing columns that won't be factors"
+"0","absolute_permanova <- na.omit(absolute_permanova)"
+"0","mcap_permanova_data <- subset(absolute_permanova, Host_species==""Montipora capitata"")"
+"0","pacuta_permanova_data <- subset(absolute_permanova, Host_species==""Pocillopora acuta"")"

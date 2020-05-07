@@ -1,7 +1,0 @@
-"0","# Seq Alpha Diversity"
-"0","Seq.Mcap_alpha <- subset(Seq.Shannon.Means, Host_species==""Montipora capitata"")"
-"0","Seq.Mcap.A <- ggline(Seq.Mcap_alpha, x = ""Timepoint"", y = ""Shannon.mean"", color = ""Treatment"","
-"0","       ylim=c(0,4), "
-"0","       add = c(""Shannon.se""),"
-"0","       palette = c(""blue"", ""light blue"", ""salmon"", ""red3"")) + ggtitle(""Montipora capitata"") + ylab(""Alpha diversity"")"
-"0","Seq.Mcap.A"

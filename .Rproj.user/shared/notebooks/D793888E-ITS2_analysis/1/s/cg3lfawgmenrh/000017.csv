@@ -1,7 +1,0 @@
-"0","ggplot(data=coral.plot, aes(NMDS1, NMDS2))+
-  geom_point(data=coral.plot, aes(NMDS1, NMDS2, color=Host_species),position=position_jitter(.1))+##separates overlapping points
-  stat_ellipse(aes(fill=Host_species), alpha=.2,type='t',size =1, geom=""polygon"")+ ##changes shading on ellipses
-  theme_minimal() + xlim(-5,2.5) +
-  geom_segment(data=arrow.p, aes(x=0, y=0, xend=NMDS1, yend=NMDS2, label=FG, lty=FG), arrow=arrow(length=unit(.2, ""cm"")*arrow.p$R)) ##add arrows (scaled by R-squared value)
-"
-"2","Ignoring unknown aesthetics: label"

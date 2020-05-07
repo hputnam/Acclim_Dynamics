@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1588618409045.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "5A90275E",
+    "lastKnownWriteTime" : 4294967302,
+    "last_content_update" : 1588618409045,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "D2B11E53",
+        "caption" : "absolute_permanova",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=absolute_permanova&cache_key=D2B11E53",
+        "displayedObservations" : 251,
+        "environment" : "",
+        "object" : "absolute_permanova",
+        "preview" : 0,
+        "totalObservations" : 251,
+        "variables" : 16
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

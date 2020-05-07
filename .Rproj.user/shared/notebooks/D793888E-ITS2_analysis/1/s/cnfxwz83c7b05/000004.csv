@@ -1,7 +1,0 @@
-"0","Seq_allBio <- read.csv(""~/MyProjects/Acclim_Dynamics/ITS2/Output/seq_alpha_rareBio.csv"", sep = "","", header = TRUE)"
-"0","Type_allBio <- read.csv(""~/MyProjects/Acclim_Dynamics/ITS2/Output/type_alpha_rareBio.csv"", sep = "","", header = TRUE)"
-"0","sample_info <- read.csv(""~/MyProjects/Acclim_Dynamics/ITS2/R_Input/Sample_variables.csv"", sep="","", header=TRUE)"
-"0","names(Seq_allBio)[1] <- ""sample_uid"" # changing the column header to match that in sample_info"
-"0","names(Type_allBio)[1] <- ""sample_uid"" # changing the column header to match that in sample_info"
-"0","seq_alpha_diversity_total <- full_join(Seq_allBio, sample_info, by=""sample_uid"")"
-"0","type_alpha_diversity_total <- full_join(Type_allBio, sample_info, by=""sample_uid"")"

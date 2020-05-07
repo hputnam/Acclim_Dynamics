@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1588621041166.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "46EBA3EA",
+    "lastKnownWriteTime" : 8457606641020305414,
+    "last_content_update" : 1588621041166,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "BDD5415C",
+        "caption" : "relative_abundance_info",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=relative_abundance_info&cache_key=BDD5415C",
+        "displayedObservations" : 3012,
+        "environment" : "",
+        "object" : "relative_abundance_info",
+        "preview" : 0,
+        "totalObservations" : 3012,
+        "variables" : 17
+    },
+    "relative_order" : 8,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}
