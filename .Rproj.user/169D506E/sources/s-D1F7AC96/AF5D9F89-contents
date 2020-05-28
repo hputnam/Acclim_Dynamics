@@ -1,0 +1,205 @@
+---
+title: "Environmental_Data"
+author: "EL Strand"
+date: "5/27/2020"
+output: html_document
+---
+
+Select Knit > Project Directory
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Contents:
+1. NOAA Buoy Data 
+2. Sampling Timeline 
+3. Tank Temperature Conditions
+4. Tank pH and pCO2 Conditions 
+5. Carbonate Chemistry Data 
+6. Continuous Data: pH (Apex), Temperature (Hobo), Light (Apex)
+
+
+####### NOAA BUOY DATA ####### 
+Viewing the temperature and pH data from local NOAA Hawaii Buoys to guide decisions in exper
+
+```{r}
+
+
+```
+
+####### Sampling Timeline ####### 
+
+Loading dataframe and required libraries. 
+```{r}
+library(ggplot2)
+library(scales)
+library(lubridate)
+
+Timepoint <- read.csv('Environmental_data/Sampling_Timeline.csv')
+```
+
+Converting the stage column to ordinal categorical variable and choosing colors for each level.
+```{r}
+stage_levels <- c("Acute Stress", "Chronic Stress", "Recovery")
+stage_colors <- c("firebrick2", "firebrick4", "dodgerblue1")
+
+Timepoint$Stage <- factor(Timepoint$Stage, levels = stage_levels, ordered = TRUE)
+```
+
+Adding positions and heights to each timepoint row by creating a new dataframe and merging that dataframe with the original timepoint dataframe.
+```{r}
+positions <- c(0.5, -0.5, 1.0, -1.0, 1.5, -1.5)
+directions <- c(1, -1)
+
+line_pos <- data.frame(
+    "Date"=unique(Timepoint$Date),
+    "position"=rep(positions, length.out=length(unique(Timepoint$Date))),
+    "direction"=rep(directions, length.out=length(unique(Timepoint$Date)))
+)
+
+Timepoint <- merge(x=Timepoint, y=line_pos, by="Date", all = TRUE)
+Timepoint <- Timepoint[with(Timepoint, order(Date, Stage)), ]
+
+head(Timepoint)
+```
+
+Adding text position values based on the previous position and direction values. 
+Adding a mount_count column because some months/days have multiple timepoints.
+```{r}
+text_offset <- 0.05
+
+Timepoint$month_count <- ave(Timepoint$Date==Timepoint$Date, Timepoint$Date, FUN=cumsum)
+Timepoint$text_position <- (Timepoint$month_count * text_offset * Timepoint$direction) + Timepoint$position
+head(Timepoint)
+```
+
+Creating the timeline to start 2 months before/after the first month in sampling. 
+```{r}
+month_buffer <- 2
+
+month_date_range <- seq(min(Timepoint$Month) - months(month_buffer), max(Timepoint$Month) + months(month_buffer), by='Month')
+month_format <- format(month_date_range, '%b')
+month_df <- data.frame(month_date_range, month_format)
+```
+
+Creating a year timeline buffer similar to the month timeline. 
+```{r}
+year_date_range <- seq(min(Timepoint$Date) - months(month_buffer), max(Timepoint$Date) + months(month_buffer), by='Year')
+year_date_range <- as.Date(
+    intersect(
+        ceiling_date(year_date_range, unit="Year"),
+        floor_date(year_date_range, unit="Year")
+    ),  origin = "1970-01-01"
+)
+year_format <- format(year_date_range, '%Y')
+year_df <- data.frame(year_date_range, year_format)
+```
+
+Creating the timeline plot. 
+```{r}
+#### PLOT ####
+
+timeline_plot<-ggplot(Timepoint,aes(x=Date,y=0, col=Stage, label=Description))
+timeline_plot<-timeline_plot+labs(col="Stage")
+timeline_plot<-timeline_plot+scale_color_manual(values=stage_colors, labels=stage_levels, drop = FALSE)
+timeline_plot<-timeline_plot+theme_classic()
+
+# Plot horizontal black line for timeline
+timeline_plot<-timeline_plot+geom_hline(yintercept=0, 
+                color = "black", size=0.3)
+
+# Plot vertical segment lines for milestones
+timeline_plot<-timeline_plot+geom_segment(data=Timepoint[Timepoint$month_count == 1,], aes(y=position,yend=0,xend=date), color='black', size=0.2)
+
+# Plot scatter points at zero and date
+timeline_plot<-timeline_plot+geom_point(aes(y=0), size=3)
+
+# Don't show axes, appropriately position legend
+timeline_plot<-timeline_plot+theme(axis.line.y=element_blank(),
+                 axis.text.y=element_blank(),
+                 axis.title.x=element_blank(),
+                 axis.title.y=element_blank(),
+                 axis.ticks.y=element_blank(),
+                 axis.text.x =element_blank(),
+                 axis.ticks.x =element_blank(),
+                 axis.line.x =element_blank(),
+                 legend.position = "bottom"
+                )
+
+# Show text for each month
+timeline_plot<-timeline_plot+geom_text(data=Timepoint, aes(x=Month,y=-0.1,label=month_format),size=2.5,vjust=0.5, color='black', angle=90)
+# Show year text
+timeline_plot<-timeline_plot+geom_text(data=Timepoint, aes(x=Year,y=-0.2,label=year_format, fontface="bold"),size=2.5, color='black')
+# Show text for each milestone
+timeline_plot<-timeline_plot+geom_text(aes(y=text_position,label=Description),size=2.5)
+print(timeline_plot)
+```
+
+####### Tank Temperature Conditions ####### 
+
+
+```{r}
+
+```
+
+
+####### Tank pH and pCO2 Conditions ####### 
+
+
+```{r}
+
+```
+
+
+####### Carbonate Chemistry Data ####### 
+
+```{r}
+
+```
+
+####### Continuous Data: pH (Apex), temp (Apex), temp (Hobo), light (Apex) ####### 
+
+Load required packages.
+```{r}
+library(dplyr)
+```
+
+Read in raw Apex download files with light, temperature, and pH. 
+```{r}
+## Apex continuous data: temperature and pH 
+apex1 <- read.csv('Environmental_data/Apex_continuous_data/Acclimation_0918_0921.csv')
+   apex1$Date.Time <- strptime(as.character(apex1$Date.Time), "%d/%m/%Y") # changing date format from X/X/XXX XX:XX to XXXX-XX-XX XX:XX
+   apex1$Date.Time <- format(apex1$Date.Time, "%Y-%m-%d")
+apex2 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_0922.csv')
+   apex2 <- select(apex2, -X) # removing column labeled X
+apex3 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_0923.csv')
+  apex3 <- select(apex3, -X) # removing column labeled X
+apex4 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_0924.csv')
+  apex4 <- select(apex4, -X) # removing column labeled X
+apex5 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_0925_0926.csv')
+  apex5 <- select(apex5, -X) # removing column labeled X
+apex6 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_0926_0927.csv')
+apex7 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_0929.csv')
+apex8 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_1001.csv')
+apex9 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_1003.csv')
+apex10 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_1005.csv')
+apex11 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_1007.csv')
+apex12 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_1008.csv')
+apex13 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_1119.csv')
+
+## Joining dataframes apex1 - apex13
+Apex_data <- union(apex1, apex2)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+

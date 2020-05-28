@@ -1,4 +1,0 @@
-"0","rm(list=ls()) # clear work space"
-"0","if (""vegan"" %in% rownames(installed.packages()) == 'FALSE') install.packages('vegan')"
-"0","library(vegan) ##Community ecology: ordination, disversity & dissimilarities"
-"0","# Analyses ran on vegan 2.5-6"

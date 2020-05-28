@@ -1,3 +1,0 @@
-"0","absolute.dist <- vegdist(abs.sqrt.mat, method = 'bray')"
-"0","mcap.dist <- vegdist(mcap.sqrt.mat, method = 'bray')"
-"0","pacuta.dist <- vegdist(pacuta.sqrt.mat, method = 'bray')"

@@ -1,0 +1,4 @@
+"0","text_offset <- 0.05"
+"0","Timepoint$month_count <- ave(Timepoint$Date==Timepoint$Date, Timepoint$Date, FUN=cumsum)"
+"0","Timepoint$text_position <- (Timepoint$month_count * text_offset * Timepoint$direction) + Timepoint$position"
+"0","head(Timepoint)"

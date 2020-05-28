@@ -1,0 +1,4 @@
+"0","## Joining dataframes apex1 - apex13
+Apex_data <- union(apex1, apex2)
+"
+"2","Column `Date.Time` joining factors with different levels, coercing to character vector"
