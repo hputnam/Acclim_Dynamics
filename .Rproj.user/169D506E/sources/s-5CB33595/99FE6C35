@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1591041637093.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "778511083",
+    "id" : "99FE6C35",
+    "lastKnownWriteTime" : 1588872640,
+    "last_content_update" : 1588872640,
+    "path" : "~/MyProjects/Acclim_Dynamics/ITS2_seq/ITS2_analysis.Rmd",
+    "project_path" : "ITS2_seq/ITS2_analysis.Rmd",
+    "properties" : {
+        "cursorPosition" : "39,0",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 14,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

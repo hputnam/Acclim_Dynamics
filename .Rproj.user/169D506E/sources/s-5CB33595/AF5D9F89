@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1590612098115.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "AF5D9F89",
+    "lastKnownWriteTime" : 1591110762,
+    "last_content_update" : 1591110883635,
+    "path" : "~/MyProjects/Acclim_Dynamics/Environmental_data/Environmental_Data.Rmd",
+    "project_path" : "Environmental_data/Environmental_Data.Rmd",
+    "properties" : {
+        "cursorPosition" : "286,39",
+        "last_setup_crc32" : "5CB33595bb338d19",
+        "scrollLine" : "270",
+        "tempName" : "Untitled1",
+        "working_dir" : "project"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

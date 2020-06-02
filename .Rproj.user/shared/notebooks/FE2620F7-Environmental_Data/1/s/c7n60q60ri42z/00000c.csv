@@ -1,6 +1,0 @@
-"0","month_buffer <- 2"
-"0","month_date_range <- seq(min(Timepoint$Month) - months(month_buffer), max(Timepoint$Month) + months(month_buffer), by='Month')"
-"2","Error in del/by : 
-  Arithmetic operators undefined for 'Period' and 'character' classes:
-  convert one to numeric or a matching time-span class.
-"

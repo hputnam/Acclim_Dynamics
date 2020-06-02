@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1591041487618.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "57E72E48",
+    "lastKnownWriteTime" : 6,
+    "last_content_update" : 1591041487618,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "987E974C",
+        "caption" : "apex3",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=apex3&cache_key=987E974C",
+        "displayedObservations" : 1035,
+        "environment" : "",
+        "object" : "apex3",
+        "preview" : 0,
+        "totalObservations" : 1035,
+        "variables" : 26
+    },
+    "relative_order" : 17,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

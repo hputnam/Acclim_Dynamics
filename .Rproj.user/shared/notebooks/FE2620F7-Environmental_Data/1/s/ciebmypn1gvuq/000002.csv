@@ -1,0 +1,4 @@
+"0","## Total September 1 2018 - September 23 2018"
+"0","ggplot(NOAA_temp, aes(x=Date, y=Temperature)) +"
+"0","  geom_line() +"
+"0","  geom_point()"
