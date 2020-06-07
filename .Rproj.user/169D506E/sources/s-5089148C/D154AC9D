@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1591109287085.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2002517566",
+    "id" : "D154AC9D",
+    "lastKnownWriteTime" : 1586463779,
+    "last_content_update" : 1586463779,
+    "path" : "~/MyProjects/Holobiont_Integration/RAnalysis/Scripts/Respirometry.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "251,58",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 9,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

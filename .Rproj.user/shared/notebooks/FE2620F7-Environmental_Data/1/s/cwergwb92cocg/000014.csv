@@ -1,5 +1,0 @@
-"0","NOAA_temp <- read.csv('Environmental_data/NOAA_Temp_Buoy_CO-OPS_1612480_from_20180901_to_20180923.csv')"
-"0","NOAA_temp <- NOAA_temp %>% rename(Date = DATE.TIME) %>% rename(Temperature = WATERTEMP) %>% select(-CONDUCTIVITY) # %>% # renaming columns and deleting the empty conductivity column"
-"0","  # separate(Date, c(""Date"", ""Time""))"
-"0","# NOAA_pH <- fill in when have pH dataframe"
-"0","# NOAA_total <- full_join(NOAA_temp, NOAA_pH, by=""Date"")"

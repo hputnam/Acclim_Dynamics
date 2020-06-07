@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1591291104290.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "FDC7F28D",
+    "lastKnownWriteTime" : 3414137952484196352,
+    "last_content_update" : 1591291104290,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "2B57584E",
+        "caption" : "Hobo_means",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=Hobo_means&cache_key=2B57584E",
+        "displayedObservations" : 78304,
+        "environment" : "",
+        "object" : "Hobo_means",
+        "preview" : 0,
+        "totalObservations" : 78304,
+        "variables" : 7
+    },
+    "relative_order" : 11,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

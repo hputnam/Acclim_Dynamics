@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1591303403972.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "C1754716",
+    "lastKnownWriteTime" : 4494839552,
+    "last_content_update" : 1591303403972,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "F784E0CD",
+        "caption" : "apex2",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=apex2&cache_key=F784E0CD",
+        "displayedObservations" : 1081,
+        "environment" : "",
+        "object" : "apex2",
+        "preview" : 0,
+        "totalObservations" : 1081,
+        "variables" : 27
+    },
+    "relative_order" : 14,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1591564681288.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "18F1CC6F",
+    "lastKnownWriteTime" : 23588,
+    "last_content_update" : 1591564681288,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "DE0D64DD",
+        "caption" : "Apex_means",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=Apex_means&cache_key=DE0D64DD",
+        "displayedObservations" : 212256,
+        "environment" : "",
+        "object" : "Apex_means",
+        "preview" : 0,
+        "totalObservations" : 212256,
+        "variables" : 13
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1591560611684.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "AB97E590",
+    "lastKnownWriteTime" : 4294967302,
+    "last_content_update" : 1591560611684,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "259A2E53",
+        "caption" : "Trt.Tanks",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=Trt.Tanks&cache_key=259A2E53",
+        "displayedObservations" : 12,
+        "environment" : "",
+        "object" : "Trt.Tanks",
+        "preview" : 0,
+        "totalObservations" : 12,
+        "variables" : 3
+    },
+    "relative_order" : 8,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}
