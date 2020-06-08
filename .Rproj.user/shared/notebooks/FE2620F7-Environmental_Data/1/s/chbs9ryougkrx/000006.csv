@@ -1,5 +1,0 @@
-"0","Hobos <- Hobos %>% "
-"0","  gather(""Tank_Number"", ""Temperature"", 2:13)"
-"0","Hobo_Treatment_Tanks <- read.csv('Environmental_data/Tank_to_Treatment.csv') %>% rename(Tank_Number = Tank.Name)"
-"0","Hobo_treatment <- full_join(Hobos, Hobo_Treatment_Tanks, by = ""Tank_Number"") %>% select(-Tank)"
-"2","Column `Tank_Number` joining character vector and factor, coercing into character vector"

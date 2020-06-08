@@ -1,0 +1,508 @@
+---
+title: "Environmental_Data"
+author: "EL Strand"
+date: "5/27/2020"
+output: html_document
+---
+
+Select Knit > Project Directory
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Contents:
+1. [NOAA Buoy Data](#buoy_data) 
+2. [Sampling Timeline](#sampling_timeline)
+3. [Tank Temperature Conditions](#Tank_temp_conditions)
+4. [Tank pH and pCO2 Conditions](#Tank_pH_conditions) 
+5. [Continuous Data: pH (Apex), Temperature (Hobo)](#apex)
+6. [Light (Apex and Licor) Data](#light)
+7. [Flow Rates](#flow)
+## add within markdown file links for each section
+
+Clear workspace. 
+```{r}
+rm(list=ls()) 
+```
+
+Required packages for the below analyses.
+```{r}
+library(plyr) # plyr needs to be loaded before dplyr
+library(dplyr)
+library(tidyr)
+library(xml2)
+library(tidyverse)
+# library(tidyverse) - won't download; circle back to later
+library(ggplot2)
+library(scales)
+library(lubridate)
+library(patchwork) # To display 2 charts together
+library(hrbrthemes)
+library(reshape2)
+library(gridExtra)
+library(plotrix)
+library(Rmisc)
+library(lattice)
+library(viridis)
+library(dygraphs)
+library(xts)
+```
+
+####### <a name= ="buoy_data"></a> NOAA BUOY DATA ####### 
+Viewing the temperature and pH data from local NOAA Hawaii Buoys (XX) to guide decisions in experimental design.
+
+Reading in temperature and pH data files.
+```{r}
+NOAA_temp <- read.csv('Environmental_data/NOAA_Temp_Buoy_CO-OPS_1612480_from_20180901_to_20180923.csv')
+NOAA_temp <- NOAA_temp %>% rename(Date = DATE.TIME) %>% rename(Temperature = WATERTEMP) %>% select(-CONDUCTIVITY) # %>% # renaming columns and deleting the empty conductivity column
+# NOAA_temp$Date <- parse_date_time(NOAA_temp$Date, "%m/%d/%y %I:%M:%S %p", tz="HST")
+
+ # separate(Date, c("Date", "Time")) - separating into Date and Time columns 
+# NOAA_pH <- fill in when have pH dataframe
+
+# NOAA_total <- full_join(NOAA_temp, NOAA_pH, by="Date")
+```
+
+Graphing above dataframes. 
+```{r}
+## Total September 1 2018 - September 23 2018
+ggplot(NOAA_temp, aes(x=Date, y=Temperature)) +
+  geom_line() +
+  xlab("") +
+  theme_classic() +
+  theme(axis.text.x=element_text(angle=60, hjust=1)) +
+  # scale_x_date(limit=c(as.Date("2019-08-31"),as.Date("2019-09-24"))) +
+  ylim(25,30)
+
+## Subset to show daily variation 
+```
+
+
+
+
+
+####### <a name= ="sampling_timeline"></a> Sampling Timeline ####### 
+
+Loading dataframe. 
+```{r}
+Timepoint <- read.csv('Environmental_data/Sampling_Timeline.csv')
+```
+
+Converting the stage column to ordinal categorical variable and choosing colors for each level.
+```{r}
+stage_levels <- c("Acute Stress", "Chronic Stress", "Recovery")
+stage_colors <- c("firebrick2", "firebrick4", "dodgerblue1")
+
+Timepoint$Stage <- factor(Timepoint$Stage, levels = stage_levels, ordered = TRUE)
+```
+
+Adding positions and heights to each timepoint row by creating a new dataframe and merging that dataframe with the original timepoint dataframe.
+```{r}
+positions <- c(0.5, -0.5, 1.0, -1.0, 1.5, -1.5)
+directions <- c(1, -1)
+
+line_pos <- data.frame(
+    "Date"=unique(Timepoint$Date),
+    "position"=rep(positions, length.out=length(unique(Timepoint$Date))),
+    "direction"=rep(directions, length.out=length(unique(Timepoint$Date)))
+)
+
+Timepoint <- merge(x=Timepoint, y=line_pos, by="Date", all = TRUE)
+Timepoint <- Timepoint[with(Timepoint, order(Date, Stage)), ]
+
+head(Timepoint)
+```
+
+Adding text position values based on the previous position and direction values. 
+Adding a mount_count column because some months/days have multiple timepoints.
+```{r}
+text_offset <- 0.05
+
+Timepoint$month_count <- ave(Timepoint$Date==Timepoint$Date, Timepoint$Date, FUN=cumsum)
+Timepoint$text_position <- (Timepoint$month_count * text_offset * Timepoint$direction) + Timepoint$position
+head(Timepoint)
+```
+
+Creating the timeline to start 2 months before/after the first month in sampling. 
+```{r}
+month_buffer <- 2
+
+month_date_range <- seq(min(Timepoint$Month) - months(month_buffer), max(Timepoint$Month) + months(month_buffer), by='Month')
+month_format <- format(month_date_range, '%b')
+month_df <- data.frame(month_date_range, month_format)
+```
+
+Creating a year timeline buffer similar to the month timeline. 
+```{r}
+year_date_range <- seq(min(Timepoint$Date) - months(month_buffer), max(Timepoint$Date) + months(month_buffer), by='Year')
+year_date_range <- as.Date(
+    intersect(
+        ceiling_date(year_date_range, unit="Year"),
+        floor_date(year_date_range, unit="Year")
+    ),  origin = "1970-01-01"
+)
+year_format <- format(year_date_range, '%Y')
+year_df <- data.frame(year_date_range, year_format)
+```
+
+Creating the timeline plot. 
+```{r}
+#### PLOT ####
+
+timeline_plot<-ggplot(Timepoint,aes(x=Date,y=0, col=Stage, label=Description))
+timeline_plot<-timeline_plot+labs(col="Stage")
+timeline_plot<-timeline_plot+scale_color_manual(values=stage_colors, labels=stage_levels, drop = FALSE)
+timeline_plot<-timeline_plot+theme_classic()
+
+# Plot horizontal black line for timeline
+timeline_plot<-timeline_plot+geom_hline(yintercept=0, 
+                color = "black", size=0.3)
+
+# Plot vertical segment lines for milestones
+timeline_plot<-timeline_plot+geom_segment(data=Timepoint[Timepoint$month_count == 1,], aes(y=position,yend=0,xend=date), color='black', size=0.2)
+
+# Plot scatter points at zero and date
+timeline_plot<-timeline_plot+geom_point(aes(y=0), size=3)
+
+# Don't show axes, appropriately position legend
+timeline_plot<-timeline_plot+theme(axis.line.y=element_blank(),
+                 axis.text.y=element_blank(),
+                 axis.title.x=element_blank(),
+                 axis.title.y=element_blank(),
+                 axis.ticks.y=element_blank(),
+                 axis.text.x =element_blank(),
+                 axis.ticks.x =element_blank(),
+                 axis.line.x =element_blank(),
+                 legend.position = "bottom"
+                )
+
+# Show text for each month
+timeline_plot<-timeline_plot+geom_text(data=Timepoint, aes(x=Month,y=-0.1,label=month_format),size=2.5,vjust=0.5, color='black', angle=90)
+# Show year text
+timeline_plot<-timeline_plot+geom_text(data=Timepoint, aes(x=Year,y=-0.2,label=year_format, fontface="bold"),size=2.5, color='black')
+# Show text for each milestone
+timeline_plot<-timeline_plot+geom_text(aes(y=text_position,label=Description),size=2.5)
+print(timeline_plot)
+```
+
+####### <a name= ="Tank_temp_conditions"></a> Tank Temperature Conditions ####### 
+
+
+```{r}
+
+```
+
+
+####### <a name= ="Tank_pH_conditions"></a> Tank pH and pCO2 Conditions ####### 
+
+
+```{r}
+temperatureColor <- "firebrick1"
+pHColor <- "dodgerblue1"
+
+ggplot(Apex_means, aes(x=Date.Time, group = Treatment, color = Treatment)) + 
+  geom_line(aes(y=Temperature), size=2, color=temperatureColor) + 
+  geom_line(aes(y=pH), size=2, color=pHColor) + 
+  scale_y_continuous(
+    name = "Temperature", 
+    sec.axis = sec_axis(~., name="pH")) +
+  theme_bw() + 
+  scale_color_manual(values = colors) +
+  theme(axis.title.y = element_text(color = temperatureColor, size=13),
+    axis.title.y.right = element_text(color = pHColor, size=13)) + 
+  ggtitle("Continuous Apex Data") + theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+####### <a name= ="apex"></a> Continuous Data: pH (Apex), temp (Apex), temp (Hobo) ####### 
+
+### APEX TEMPERATURE AND pH DATA ### 
+
+Read in raw Apex download files with light, temperature, and pH. 
+Improvements:
+1.) Create loop for the select(apexX, -X) function so it is not repetitive.
+2.) Come back to switching time format for Apex 1. 
+```{r}
+## Reading in apex continuous data: temperature and pH 
+apex1 <- read.csv('Environmental_data/Apex_continuous_data/Acclimation_0918_0921.csv') ## NEED TO SWITCH TIME FORMAT
+apex2 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_0922.csv')
+   apex2 <- select(apex2, -X) # removing column labeled X
+apex3 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_0923.csv')
+  apex3 <- select(apex3, -X) 
+apex4 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_0924.csv')
+  apex4 <- select(apex4, -X) 
+apex5 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_0925_0926.csv')
+  apex5 <- select(apex5, -X) 
+apex6 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_0926_0927.csv')
+  apex6 <- select(apex6, -X) 
+apex7 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_0929.csv')
+  apex7 <- select(apex7, -X)
+apex8 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_1001.csv')
+  apex8 <- select(apex8, -X)
+apex9 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_1003.csv')
+  apex9 <- select(apex9, -X)
+apex10 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_1005.csv')
+  apex10 <- select(apex10, -X)
+apex11 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_1007.csv')
+  apex11 <- select(apex11, -X)
+apex12 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_1008.csv')
+  apex12 <- select(apex12, -X)
+apex13 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_1119.csv')
+  apex13 <- select(apex13, -X)
+```
+
+Transforming data to desired format. 
+```{r}
+Apex_data <- bind_rows(apex2, apex3, apex4, apex5, apex6, apex7, apex8, apex9, apex10, apex11, apex12, apex13) %>% select(-Tmp_4.1) ## Joining dataframes apex1 - apex13
+Apex_data <- Apex_data[,order(colnames(Apex_data))] # ordering columns alphabetically 
+Apex_data <- Apex_data %>% gather("Tank", "pH", 3:14) # creates a Tank_number column and pH value column to transform tank columns into rows
+Apex_data <- Apex_data %>% gather("Temp_Tank", "Temperature", 3:14)  %>% select(-Temp_Tank) # creates another Tank column and Temperature value column to transform tank columns into rows
+Apex_data$Tank <- gsub("^.{0,3}", "", Apex_data$Tank) # removing the first three characters aka "pH_" of each element to be just tank number 
+
+
+# Double checking format before moving on.
+head(Apex_data)
+tail(Apex_data)
+```
+
+Grouping by treatment
+```{r}
+Trt.Tanks <- read.csv('Environmental_data/Tank_to_Treatment.csv') %>% select(-Tank.Name)
+Trt.Tanks$Tank <- as.character(Trt.Tanks$Tank) # changing Tank column character
+
+Apex_treatment <- full_join(Apex_data, Trt.Tanks, by = "Tank") 
+head(Apex_treatment)
+```
+
+Calculating average based on treatment and Date.Time
+Summarizing statistics: mean, N, standard deviation, standard error, confidence interval 
+```{r}
+Apex_temp_means <- summarySE(Apex_treatment, measurevar="Temperature", groupvars=c("Date.Time", "Treatment")) %>% na.omit(Temperature)
+  colnames(Apex_temp_means) <- c("Date.Time", "Treatment", "Temp_N", "Temperature", "Temp_sd", "Temp_se", "Temp_ci")
+Apex_pH_means <- summarySE(Apex_treatment, measurevar="pH", groupvars=c("Date.Time", "Treatment")) %>% na.omit(pH)
+  colnames(Apex_pH_means) <- c("Date.Time", "Treatment", "pH_N", "pH", "pH_sd", "pH_se", "pH_ci")
+## come back to N = 36
+  
+Apex_means <- full_join(Apex_temp_means, Apex_pH_means, by = "Date.Time") %>% select(-Treatment.y) %>% rename(Treatment = Treatment.x)
+tail(Apex_means)
+```
+
+Graphing apex temperature continuous data 
+Decide later if want to add in confidence intervals or standard error bars. 
+```{r}
+colors <- c("blue", "lightblue", "salmon", "red3")
+
+ggplot(Apex_temp_means, aes(x=Date.Time, y = Temperature, group = Treatment, color = Treatment)) + 
+  geom_line() + theme_bw() +
+  scale_color_manual(values = colors) + 
+  scale_shape_manual(values=c(21,24), name = "Treatment") +
+  theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
+  xlab("Date") + theme(axis.text.x=element_text(angle=60, hjust=1)) + # x-axis label and rotating text on x axis
+  ylab("Temperature °C") + ylim(c(26,30)) + # y-axis label and y axis range
+  ggtitle("Apex Temperature Data") + theme(plot.title = element_text(hjust = 0.5)) + # title label and centering the title
+  theme(legend.position=c(0.9, 0.8), legend.background = element_blank())  
+
+## come back to temperature being the same for all treatments - hm.
+```
+
+Graphing apex pH continuous data 
+Decide later if want to add in confidence intervals or standard error bars. 
+```{r}
+colors <- c("blue", "lightblue", "salmon", "red3")
+
+ggplot(Apex_pH_means, aes(x=Date.Time, y = pH, group = Treatment, color = Treatment)) + 
+  geom_line() + theme_bw() +
+  scale_color_manual(values = colors) + 
+  scale_shape_manual(values=c(21,24), name = "Treatment") +
+  theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
+  xlab("Date") + theme(axis.text.x=element_text(angle=60, hjust=1)) + # x-axis label and rotating text on x axis
+  ylab("pH") + # y-axis label and y axis range
+  ggtitle("Apex pH Data") + theme(plot.title = element_text(hjust = 0.5)) + # title label and centering the title
+  theme(legend.text = element_text(size = 10))  
+```
+
+
+### HOBO LOGGER TEMPERATURE DATA ###  
+
+Reading in and transforming hobo logger data. 
+Improvements to be made: 
+1.) Creating a loop for the "[ ,2:3] %>% rename(TankX = V3)" function so it is not repetitive. 
+2.) Creating a for loop for the Tank1 <- Tank8[1:nrow(Tank6),] function so it is not repetitive.
+```{r}
+Tank1 <- read.csv('Environmental_data/Temp_Hobo_Loggers/20190117_Tank1.csv', sep=",", skip=c(40), header=FALSE, na.strings = "NA")[ ,2:3]
+Tank2 <- read.csv('Environmental_data/Temp_Hobo_Loggers/20190117_Tank2.csv', sep=",", skip=c(40), header=FALSE, na.strings = "NA")[ ,2:3]
+  Tank2 <- Tank2[1:nrow(Tank1),]
+Tank3 <- read.csv('Environmental_data/Temp_Hobo_Loggers/20190117_Tank3.csv', sep=",", skip=c(40), header=FALSE, na.strings = "NA")[ ,2:3] 
+  Tank3 <- Tank3[1:nrow(Tank1),]
+Tank4 <- read.csv('Environmental_data/Temp_Hobo_Loggers/20190117_Tank4.csv', sep=",", skip=c(40), header=FALSE, na.strings = "NA")[ ,2:3] 
+  Tank4 <- Tank4[1:nrow(Tank1),]
+Tank5 <- read.csv('Environmental_data/Temp_Hobo_Loggers/20190117_Tank5.csv', sep=",", skip=c(40), header=FALSE, na.strings = "NA")[ ,2:3]
+  Tank5 <- Tank5[1:nrow(Tank1),] 
+Tank6 <- read.csv('Environmental_data/Temp_Hobo_Loggers/20190117_Tank6.csv', sep=",", skip=c(40), header=FALSE, na.strings = "NA")[ ,2:3]  
+  Tank6 <- Tank6[1:nrow(Tank1),] 
+Tank7 <- read.csv('Environmental_data/Temp_Hobo_Loggers/20190117_Tank7.csv', sep=",", skip=c(40), header=FALSE, na.strings = "NA")[ ,2:3] 
+  Tank7 <- Tank7[1:nrow(Tank1),] 
+Tank8 <- read.csv('Environmental_data/Temp_Hobo_Loggers/20190117_Tank8.csv', sep=",", skip=c(40), header=FALSE, na.strings = "NA")[ ,2:3] 
+  Tank8 <- Tank8[1:nrow(Tank1),]
+Tank9 <- read.csv('Environmental_data/Temp_Hobo_Loggers/20190117_Tank9.csv', sep=",", skip=c(40), header=FALSE, na.strings = "NA")[ ,2:3]
+  Tank9 <- Tank9[1:nrow(Tank1),]
+Tank10 <- read.csv('Environmental_data/Temp_Hobo_Loggers/20190117_Tank10.csv', sep=",", skip=c(40), header=FALSE, na.strings = "NA")[ ,2:3]
+  Tank10 <- Tank10[1:nrow(Tank1),]
+Tank11 <- read.csv('Environmental_data/Temp_Hobo_Loggers/20190117_Tank11.csv', sep=",", skip=c(40), header=FALSE, na.strings = "NA")[ ,2:3] 
+  Tank11 <- Tank11[1:nrow(Tank1),]
+Tank12 <- read.csv('Environmental_data/Temp_Hobo_Loggers/20190117_Tank12.csv', sep=",", skip=c(40), header=FALSE, na.strings = "NA")[ ,2:3] 
+  Tank12 <- Tank12[1:nrow(Tank1),]
+
+Hobos <- cbind(Tank2, Tank1$V3, Tank3$V3, Tank4$V3, Tank5$V3, Tank6$V3, Tank7$V3, Tank8$V3, Tank9$V3, Tank10$V3, Tank11$V3, Tank12$V3)
+colnames(Hobos) <- c("Date.Time", "Tank2", "Tank1", "Tank3", "Tank4", "Tank5", "Tank6", "Tank7", "Tank8", "Tank9", "Tank10", "Tank11", "Tank12")
+Hobos <- Hobos[1:(nrow(Hobos)-10),]
+Hobos$Date.Time <- parse_date_time(Hobos$Date.Time, "%m/%d/%y %I:%M:%S %p", tz="HST")
+```
+
+Transforming the dataframe to add treatments. 
+```{r}
+Hobos <- Hobos %>% 
+  gather("Tank_Number", "Temperature", 2:13)
+
+Hobo_Treatment_Tanks <- read.csv('Environmental_data/Tank_to_Treatment.csv') %>% rename(Tank_Number = Tank.Name)
+Hobo_Treatment_Tanks$Tank_Number <- as.character(Hobo_Treatment_Tanks$Tank_Number)
+
+Hobo_treatment <- full_join(Hobos, Hobo_Treatment_Tanks, by = "Tank_Number") %>% select(-Tank)
+```
+
+Summarizing statistics: mean, N, standard deviation, standard error, confidence interval 
+```{r}
+Hobo_means <- summarySE(Hobo_treatment, measurevar="Temperature", groupvars=c("Date.Time", "Treatment")) %>% na.omit(Temperature)
+```
+
+Graphing treatment temperatures over time. 
+To Do: decided if want to included error bars, and/or confidence intervals. Just plotting means currently. 
+```{r}
+colors <- c("blue", "lightblue", "salmon", "red3")
+
+ggplot(Hobo_means, aes(x=Date.Time, y = Temperature, group = Treatment, color = Treatment)) + 
+  geom_line() + theme_bw() +
+  scale_color_manual(values = colors) + 
+  scale_shape_manual(values=c(21,24), name = "Treatment") +
+  theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
+  xlab("Date") + theme(axis.text.x=element_text(angle=60, hjust=1)) + # x-axis label and rotating text on x axis
+  ylab("Temperature °C") + ylim(c(20,32)) + # y-axis label and y axis range
+  ggtitle("Hobo Logger Data") + theme(plot.title = element_text(hjust = 0.5)) + # title label and centering the title
+  theme(legend.position=c(0.9, 0.8), legend.background = element_blank())  
+  # geom_vline(xintercept = as.numeric(as.Date("2018-11-17 07:00:00")), colour="red", linetype="dotted")
+```
+
+
+####### <a name= ="light"></a> Light Data ####### 
+
+Decide if want to visualize/statistically analyze the positions the readings were taken in (6 points in each tank)
+
+Reading in both light data files. 
+The PAR sensor was only in one tank so we only need to subset our Apex_data frame to one tank. 
+```{r}
+Apex_Light <- subset(Apex_data, Tank=="1") %>% select(Date.Time, PAR) 
+# PAR$Date.Time <- parse_date_time(PAR$Date.Time, "%m/%d/%y %I:%M:%S %p", tz="HST")
+Licor_Light <- read.csv('Environmental_data/Discrete_Light_Licor193.csv', sep=",")
+
+Light_tank_info <-read.csv('Environmental_data/Tank_to_Treatment.csv', header=T, sep=",") %>% select(-Tank.Name)
+Licor_Light <- merge(Licor_Light, Light_tank_info, by="Tank") 
+Licor_Light$Tank <- as.character(Licor_Light$Tank) # changing Tank values to character instead of numeric
+```
+
+Visualizing Apex light data. 
+```{r}
+## Apex Data
+ggplot(Apex_Light, aes(x=Date.Time, y = PAR)) + 
+  geom_line() + theme_bw() +
+  # scale_fill_manual(values = "yellow")  
+  theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
+  xlab("Date") + theme(axis.text.x=element_text(angle=60, hjust=1)) + # x-axis label and rotating text on x axis
+  ylab("PAR")  # y-axis label 
+
+## stuck on same issue as Apex data, trimming the date down
+```
+
+Visualizing Licor light data. 
+```{r}
+treatment_colors <- c("blue", "lightblue", "salmon", "red3")
+tank_colors <- c("blue", "red3", "lightblue", "lightblue", "red3", "lightblue", "salmon", "red3", "blue", "salmon", "blue", "salmon")
+
+## BY TREATMENT
+ggplot(Licor_Light, aes(x=Treatment, y=PAR, fill=Treatment)) + 
+  geom_boxplot() +
+  scale_fill_manual(values = treatment_colors) +
+  geom_jitter(color="black", size=0.4, alpha=0.9) + 
+  theme_classic() + 
+  theme(legend.position="none", plot.title = element_text(size=11)) + 
+  xlab("Treatment") + 
+  ylab("PAR")
+
+## BY TREATMENT AND TANK
+ggplot(Licor_Light, aes(x=Tank, y=PAR, fill=Tank)) + 
+  geom_boxplot() +
+  scale_fill_manual(values = tank_colors) +
+  scale_x_discrete(limits=c("1","6","8", "3", "11", "12", "4", "7", "9", "2", "5", "10")) + 
+  geom_jitter(color="black", size=0.4, alpha=0.9) + 
+  theme_classic() + 
+  theme(legend.position="none", plot.title = element_text(size=11)) + 
+  xlab("Tank Number") + 
+  ylab("PAR")
+```
+
+
+####### <a name= ="flow"></a> Flow Rates ####### 
+
+Reading in flow rate and tank to treatment data files. 
+```{r}
+Flow_tank_info <-read.csv('Environmental_data/Tank_to_Treatment.csv', header=T, sep=",") %>% select(-Tank.Name)
+Flow_Data <- read.csv('Environmental_data/Flow_rate.csv', header=T, sep=",") %>% select(-Trial, -Rate)
+Flow_Data <- subset(Flow_Data, Final_Rate=="Yes") # subsetting to only the final rates 
+Flow_Data$Tank <- as.character(Flow_Data$Tank) # changing Tank values to character instead of numeric
+```
+
+Merging the two datafiles by Tank and ordering by specific Tank name (based on treatments)
+```{r}
+Flow_Data <- merge(Flow_Data, Flow_tank_info, by="Tank")
+Flow_Data$ml.sec <- Flow_Data$Volume.ml/Flow_Data$Time.sec
+```
+
+Visualizing flow rate data. 
+```{r}
+treatment_colors <- c("blue", "lightblue", "salmon", "red3")
+tank_colors <- c("blue", "red3", "lightblue", "lightblue", "red3", "lightblue", "salmon", "red3", "blue", "salmon", "blue", "salmon")
+
+## BY TREATMENT
+ggplot(Flow_Data, aes(x=Treatment, y=ml.sec, fill=Treatment)) + 
+  geom_boxplot() +
+  scale_fill_manual(values = treatment_colors) +
+  geom_jitter(color="black", size=0.4, alpha=0.9) + 
+  theme_classic() + 
+  theme(legend.position="none", plot.title = element_text(size=11)) + 
+  xlab("Treatment") + 
+  ylab("Flow Rates (mL/sec)")
+
+## BY TREATMENT AND TANK
+ggplot(Flow_Data, aes(x=Tank, y=ml.sec, fill=Tank)) + 
+  geom_boxplot() +
+  scale_fill_manual(values = tank_colors) +
+  scale_x_discrete(limits=c("1","6","8", "3", "11", "12", "4", "7", "9", "2", "5", "10")) + 
+  geom_jitter(color="black", size=0.4, alpha=0.9) + 
+  theme_classic() + 
+  theme(legend.position="none", plot.title = element_text(size=11)) + 
+  xlab("Tank Number") + 
+  ylab("Flow Rates (mL/sec)")
+```
+
+Statistical analyses. 
+```{r}
+tank.lm <- lm(ml.sec ~ Tank, data=Flow_Data)
+tank.anova <- aov(ml.sec ~ Tank, data=Flow_Data)
+summary(tank.lm)
+summary(tank.anova)
+
+trt.lm <- lm(ml.sec ~ Treatment, data=Flow_Data)
+trt.anova <- aov(ml.sec ~ Treatment, data=Flow_Data)
+summary(trt.lm)
+summary(trt.anova)
+```
+

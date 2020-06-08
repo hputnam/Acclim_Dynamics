@@ -1,1 +1,0 @@
-"0","Hobo_means <- summarySE(Hobo_treatment, measurevar=""Temperature"", groupvars=c(""Date.Time"", ""Treatment"")) %>% na.omit(Temperature)"
