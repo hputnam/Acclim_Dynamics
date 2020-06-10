@@ -1,0 +1,5 @@
+"0","colnames(AllMeans) <- c(""Date"", ""Species"", ""Treatment"", ""Pnet.mean"", ""N"",   ""Pnet.se"",  ""Rdark.mean"",   ""Rdark.se"", ""Pgross.mean"",  ""Pgross.se"")"
+"0","AllMeans$Group <- paste(AllMeans$Species, AllMeans$Treatment, sep = ""_"")"
+"0","# exporting results "
+"0","write.csv(resp.data, file=""Physiology_variables/Respirometry/Output/Resp_AllRates.csv"") # raw data"
+"0","write.csv(AllMeans, file=""Physiology_variables/Respirometry/Output/Resp_AllMeans.csv"") # Mean data"

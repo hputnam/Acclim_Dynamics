@@ -1,0 +1,6 @@
+"0","Photo <- subset(Data, Light.or.Dark.x.x==""Photo"")"
+"0","Photo <- subset(Photo, Species.x!=""Blank"")"
+"0","Resp <- subset(Data, Light.or.Dark.x.x==""Resp"")"
+"0","Resp <- subset(Resp, Species.x!=""Blank"")"
+"0","write.csv(Photo, file=""Physiology_variables/Respirometry/Output/Photosynthesis.rates.csv"")"
+"0","write.csv(Resp, file=""Physiology_variables/Respirometry/Output/Respiration.rates.csv"")"

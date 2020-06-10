@@ -1,0 +1,3 @@
+"0","Data <- merge(Data, Blanks, by=""Group"")"
+"0","#Account for blank rate Subtract Blank by the temperature blank"
+"0","Data$umol.sec.corr <- Data$umol.sec.x-Data$umol.sec.y"
