@@ -1,0 +1,3 @@
+"0","Data <- read.csv(""Physiology_variables/coral_survivorship.csv"", header=T, sep="","", na.string=""NA"", stringsAsFactors = F) #read in data file"
+"0","Tank.Info <- read.csv(""Environmental_data/Tank_to_Treatment.csv"", header=T, sep="","", na.string=""NA"") #read in data file "
+"0","Data.Trt <- merge(Data, Tank.Info, by=""Tank"")"
