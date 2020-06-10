@@ -1,0 +1,3 @@
+"0","path <- ('Environmental_data/Calibration_Files/Tris_calibrations')"
+"0","file.names <- list.files(path = path, pattern = ""csv$"") # list all the file names in the folder to get only get the csv files"
+"0","pH.cals <- data.frame(matrix(NA, nrow=length(file.names), ncol=3, dimnames=list(file.names,c(""Date"", ""Intercept"", ""Slope"")))) #generate a 3 column dataframe with specific column names"

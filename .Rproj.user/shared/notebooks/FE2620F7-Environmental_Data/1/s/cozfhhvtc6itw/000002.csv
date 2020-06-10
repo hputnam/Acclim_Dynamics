@@ -1,0 +1,3 @@
+"0","stage_levels <- c(""Acute Stress"", ""Chronic Stress"", ""Recovery"")"
+"0","stage_colors <- c(""firebrick2"", ""firebrick4"", ""dodgerblue1"")"
+"0","Timepoint$Stage <- factor(Timepoint$Stage, levels = stage_levels, ordered = TRUE)"
