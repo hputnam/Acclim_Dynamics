@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1591825132587.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "451D7939",
+    "lastKnownWriteTime" : 1591824324,
+    "last_content_update" : 1591824324,
+    "path" : "~/MyProjects/Acclim_Dynamics/Scripts/Respirometry.Rmd",
+    "project_path" : "Scripts/Respirometry.Rmd",
+    "properties" : {
+        "cursorPosition" : "88,71",
+        "scrollLine" : "58"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}
