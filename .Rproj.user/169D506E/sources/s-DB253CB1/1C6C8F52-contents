@@ -86,36 +86,41 @@ autoplot(Pa.km_fit)
 Plotting survivorship analysis. 
 ```{r}
 ## Montipora capitata
-pdf("Physiology_variables/Mcap_Survivorship.pdf")
-Fig.Mcap <- ggsurvplot(Mc.km_fit,  data=Mc.Data,size = 1,  # change line size
+Fig.Mcap <- ggsurvplot(Mc.km_fit, data=Mc.Data, size = 1,  # change line size
            linetype = "strata", # change line type by groups
            break.time.by = 7, # break time axis
-           palette = c("lightblue", "blue", "salmon", "red3"), # custom color palette
+           palette = c("blue", "lightblue", "salmon", "red3"), # custom color palette
            conf.int = TRUE, # Add confidence interval
            legend.title = "", # remove legend title
-           # title = "M. capitata",
+           title = "Montipora capitata",
            xlab = "Time in days",
            font.title = c(14, "bold.italic", "black"), #title italicized
-           legend.labs = c("ATAC", "ATHC","HTAC", "HTHC"),    # Change legend labels
-           pval = TRUE) # Add p-value
-dev.off()
+           legend.labs = c("ATAC", "ATHC","HTAC", "HTHC"), pval = TRUE, # Add p-value and change legend labels
+           legend=c(0.115, 0.45))
 Fig.Mcap
 
 ## Pocillopora acuta
-pdf("Physiology_variables/Pact_Survivorship.pdf")
 Fig.PA <- ggsurvplot(Pa.km_fit, data=Pa.Data, size = 1,  # change line size
            linetype = "strata", # change line type by groups
            break.time.by = 7, # break time axis
-           palette = c("lightblue", "blue", "salmon", "red3"), # custom color palette
+           palette = c("blue", "lightblue", "salmon", "red3"), # custom color palette
            conf.int = TRUE, # Add confidence interval
            legend.title = "", # remove legend title
-           # title = "P. acuta",
+           title = "Pocillopora acuta",
            xlab = "Time in days",
            font.title = c(14, "bold.italic", "black"), #title italicized
-           legend.labs = c("ATAC", "ATHC","HTAC", "HTHC"),    # Change legend labels
-           pval = TRUE) # Add p-value
+           legend.labs = c("ATAC", "ATHC","HTAC", "HTHC"), pval = TRUE, # Add p-value and change legend labels
+           legend=c(0.115, 0.45))
 Fig.PA
-dev.off()
+
+
+Surv.figs <- arrange_ggsurvplots(Fig.Mcap, Fig.PA, print = FALSE)
+  # ncol = 1,
+  # nrow = 2,
+  # title = "Survivorship Probability")
+
+ggsave(Fig.PA, file = "Physiology_variables/Poc_Survival.pdf", width = 8, height = 11)
+
 ```
 
 

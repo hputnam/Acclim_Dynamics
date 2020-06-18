@@ -1,4 +1,4 @@
- ,Timepoint,PLUG.ID,Species,Photo.Number,Tank,Treatment,Red.Standard,Green.Standard,Blue.Standard,Red.Coral,Green.Coral,Blue.Coral,*all polyps excluded in outline*,
+Date,Timepoint,PLUG.ID,Species,Photo.Number,Tank,Treatment,Red.Standard,Green.Standard,Blue.Standard,Red.Coral,Green.Coral,Blue.Coral,*all polyps excluded in outline*,
 20180926,Week1,1557,Montipora,1,7,HTAC,92.167,79.295,110.661,31.241,42.1,28.36,,
 20180926,Week1,2390,Pocillopora,1,7,HTAC,92.167,79.295,110.661,33.079,45.589,32.822,,
 20180926,Week1,1632,Montipora,1,7,HTAC,92.167,79.295,110.661,38.663,51.885,34.744,,
