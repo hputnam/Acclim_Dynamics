@@ -9,10 +9,6 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Clear workspace. 
-```{r}
-rm(list=ls())
-```
 
 Load required packages. 
 ```{r}
@@ -28,6 +24,7 @@ if ("chron" %in% rownames(installed.packages()) == 'FALSE') install.packages('ch
 if ("plyr" %in% rownames(installed.packages()) == 'FALSE') install.packages('plyr') 
 if ("dplyr" %in% rownames(installed.packages()) == 'FALSE') install.packages('dplyr') 
 if ("ggpubr" %in% rownames(installed.packages()) == 'FALSE') install.packages('ggpubr') 
+if ("car" %in% rownames(installed.packages()) == 'FALSE') install.packages('car') 
 
 ## Read in libraries. 
 install_github('colin-olito/LoLinR')
@@ -40,8 +37,9 @@ library("lubridate")
 library("chron")
 library('plyr')
 library('dplyr')
-library(stringr)
+library('stringr')
 library("ggpubr")
+library("car")
 ```
 
 Load in respiration files and creating a blank data frame to be filled in by calculated data later on.  
@@ -98,11 +96,11 @@ for(i in 1:length(file.names.full)) { # for every file in list start at the firs
     axis(1)
     axis(2, las=1)
     
-    #save original unthinned data
-    thin <- 40
+    #save original unthinned and thinned data figure for comparison
+    thin <- 30
     alp <- 0.2
     Photo.Data.orig<-Photo.Data
-    Photo.Data <-  thinData(Photo.Data ,by=thin)$newData1 #thin data by every 20 points for all the O2 values
+    Photo.Data <-  thinData(Photo.Data ,by=thin)$newData1 #thin data by every x points for all the O2 values
     Photo.Data$sec <- as.numeric(rownames(Photo.Data)) #maintain numeric values for time
     Photo.Data$Temp<-NA
     Photo.Data$Temp <-  thinData(Photo.Data.orig,xy = c(1,3),by=thin)$newData1[,2] #thin data by every 20 points for the temp values
@@ -131,13 +129,13 @@ for(i in 1:length(file.names.full)) { # for every file in list start at the firs
     Photo.R[j+s[i],4] <- mean(Photo.Data$Temp, na.rm=T)  #stores the Temperature in the Temp.C column
     Photo.R[j+s[i],5] <- PR[j] #stores whether it is photosynthesis or respiration
   }
-}  
+}
+
+write.csv(Photo.R, 'Physiology_variables/Respirometry/Output/Photo.R.csv')
 ```
 
-Exporting the above data and reading the dataframe back in. 
+Reading the dataframe in to skip calculating all regressions each time. 
 ```{r}
-write.csv(Photo.R, 'Physiology_variables/Respirometry/Output/Photo.R.csv')
-
 Photo.R <- read.csv(file="Physiology_variables/Respirometry/Output/Photo.R.csv", header=T) #read in volume and sample.info data
 Photo.R <- Photo.R[,-1]
 
@@ -196,7 +194,7 @@ write.csv(Photo, file="Physiology_variables/Respirometry/Output/Photosynthesis.r
 write.csv(Resp, file="Physiology_variables/Respirometry/Output/Respiration.rates.csv")
 ```
 
-Calculating gross photosynthesis (Pnet - Rdark)
+Calculating gross photosynthesis (Pnet -  negative Rdark)
 ```{r}
 #merge desired columns by id
 resp.data <- merge(Photo[,c(1,2,3,6,8,15,18,19,38)],Resp[,c(3,38)], by="Fragment.ID.x")
@@ -261,54 +259,74 @@ colors <- c("blue", "lightblue", "salmon", "red3")
 
 ## Montipora capitata
 Mcap.Pg <- ggplot(Mcap, aes(x=Date, y = Pgross.mean, group = Treatment, color = Treatment)) +
-  geom_line() + geom_point() + theme_classic() + 
-  scale_color_manual(values = colors) + 
-  xlab("Date") + theme(axis.text.x=element_text(angle=60, hjust=1)) + # x-axis label and rotating text on x axis
-  ylab("Gross Photosynthetic Rate (umol/cm2/hr)") + ylim(c(0, 4.5)) + # y-axis label and y axis range
+  geom_line() + geom_point() +
   geom_errorbar(aes(ymin=Pgross.mean-Pgross.se, ymax=Pgross.mean+Pgross.se), width=.2) + 
-  ggtitle("M. capitata")
+  scale_color_manual(values = colors) + 
+  xlab("Date") +
+  ylab(bquote('Gross Photosynthesis ('*mu~ 'mol' ~cm[2]~ h^-1*')')) +
+  ylim(c(0, 4.5)) + # y-axis label and y axis range
+  ggtitle("M. capitata")+
+  theme_classic() + 
+  theme(legend.position = "none", axis.title.x = element_blank(), axis.text.x=element_blank(),
+        plot.title = element_text(face="bold.italic")) 
 Mcap.Pg 
 
 Mcap.Rd <- ggplot(Mcap, aes(x=Date, y = Rdark.mean, group = Treatment, color = Treatment)) +
-  geom_line() + geom_point() + theme_classic() + 
+  geom_line() + geom_point() + 
+  geom_errorbar(aes(ymin=Rdark.mean-Rdark.se, ymax=Rdark.mean+Rdark.se), width=.2)+
   scale_color_manual(values = colors) + 
-  xlab("Date") + theme(axis.text.x=element_text(angle=60, hjust=1)) + # x-axis label and rotating text on x axis
-  ylab("Respiration Rate ([umol/cm2/hr])") + ylim(c(0, 1.2)) + # y-axis label and y axis range
-  geom_errorbar(aes(ymin=Rdark.mean-Rdark.se, ymax=Rdark.mean+Rdark.se), width=.2)
+  xlab("Date") +
+  ylab(bquote('Dark Respiration Rate ('*mu~ 'mol' ~cm[2]~ h^-1*')')) +  
+  ylim(c(0, 1.1)) + # y-axis label and y axis range
+  theme_classic() + 
+  theme(legend.position = "none", axis.title.x = element_blank(), axis.text.x=element_blank()) 
+
 Mcap.Rd
 
 Mcap.Pn <- ggplot(Mcap, aes(x=Date, y = Pnet.mean, group = Treatment, color = Treatment)) +
-  geom_line() + geom_point() + theme_classic() + 
+  geom_line() + geom_point() +
+  geom_errorbar(aes(ymin=Pnet.mean-Pnet.se, ymax=Pnet.mean+Pnet.se), width=.2) +
   scale_color_manual(values = colors) + 
   xlab("Date") + theme(axis.text.x=element_text(angle=60, hjust=1)) + # x-axis label and rotating text on x axis
-  ylab("Net Photosynthetic Rate (umol/cm2/hr)") + ylim(c(0, 3)) + # y-axis label and y axis range
-  geom_errorbar(aes(ymin=Pnet.mean-Pnet.se, ymax=Pnet.mean+Pnet.se), width=.2)
+  ylab(bquote('Net Photosynthetic Rate ('*mu~ 'mol' ~cm[2]~ h^-1*')')) + 
+  ylim(c(0, 3)) + # y-axis label and y axis range
+  theme_classic()+
+  theme(legend.position = "none")
 Mcap.Pn
 
 ## Pocillopora acuta
 Pact.Pg <- ggplot(Pact, aes(x=Date, y = Pgross.mean, group = Treatment, color = Treatment)) +
-  geom_line() + geom_point() + theme_classic() + 
-  scale_color_manual(values = colors) + 
-  xlab("Date") + theme(axis.text.x=element_text(angle=60, hjust=1)) + # x-axis label and rotating text on x axis
-  ylab("Gross Photosynthetic Rate (umol/cm2/hr)") + ylim(c(0, 4.5)) + # y-axis label and y axis range
+  geom_line() + geom_point() +
   geom_errorbar(aes(ymin=Pgross.mean-Pgross.se, ymax=Pgross.mean+Pgross.se), width=.2) +
-  ggtitle("P. acuta")
+  scale_color_manual(values = colors) + 
+  xlab("Date") + 
+  ylab(bquote('Gross Photosynthetsis ('*mu~ 'mol' ~cm[2]~ h^-1*')')) + 
+  ylim(c(0, 4.5)) + # y-axis label and y axis range
+  ggtitle("P. acuta") +
+  theme_classic() + 
+  theme(legend.position = c(0.8, 0.8), axis.title.x = element_blank(), axis.text.x=element_blank(),
+        plot.title = element_text(face="bold.italic")) 
 Pact.Pg
 
 Pact.Rd <- ggplot(Pact, aes(x=Date, y = Rdark.mean, group = Treatment, color = Treatment)) +
-  geom_line() + geom_point() + theme_classic() + 
+  geom_line() + geom_point() +
+  geom_errorbar(aes(ymin=Rdark.mean-Rdark.se, ymax=Rdark.mean+Rdark.se), width=.2) +
   scale_color_manual(values = colors) + 
-  xlab("Date") + theme(axis.text.x=element_text(angle=60, hjust=1)) + # x-axis label and rotating text on x axis
-  ylab("Respiration Rate ([umol/cm2/hr])") + ylim(c(0, 0.8)) + # y-axis label and y axis range
-  geom_errorbar(aes(ymin=Rdark.mean-Rdark.se, ymax=Rdark.mean+Rdark.se), width=.2)
+  xlab("Date") + 
+  ylab(bquote('Dark Respiration Rate ('*mu~ 'mol' ~cm[2]~ h^-1*')')) + # y-axis label and y axis range
+  ylim(c(0, 1.1)) + # y-axis label and y axis range
+  theme_classic() + 
+  theme(legend.position = "none", axis.title.x = element_blank(), axis.text.x=element_blank()) 
 Pact.Rd
 
 Pact.Pn <- ggplot(Pact, aes(x=Date, y = Pnet.mean, group = Treatment, color = Treatment)) +
-  geom_line() + geom_point() + theme_classic() + 
+  geom_line() + geom_point() + 
+  geom_errorbar(aes(ymin=Pnet.mean-Pnet.se, ymax=Pnet.mean+Pnet.se), width=.2) +
   scale_color_manual(values = colors) + 
   xlab("Date") + theme(axis.text.x=element_text(angle=60, hjust=1)) + # x-axis label and rotating text on x axis
-  ylab("Net Photosynthetic Rate (umol/cm2/hr)") + ylim(c(0, 3)) + # y-axis label and y axis range
-  geom_errorbar(aes(ymin=Pnet.mean-Pnet.se, ymax=Pnet.mean+Pnet.se), width=.2)
+  ylab(bquote('Net Photosynthetic Rate ('*mu~ 'mol' ~cm[2]~ h^-1*')')) + # y-axis label and y axis range
+  theme_classic()+
+  theme(legend.position = "none") 
 Pact.Pn
 
 Poc.Figs <- arrangeGrob(Pact.Pg, Pact.Rd, Pact.Pn, ncol=1)
@@ -331,65 +349,60 @@ Pact.All  <- subset(resp.data, Species.x=="Pocillopora")
 
 ## P. acuta
 # Net Photosynthetic Rates
-hist(Pact.All$Pnet_umol.cm2.hr)
-library(car)
-shapiro.test(Pact.All$Pnet_umol.cm2.hr) 
-bartlett.test(Pnet_umol.cm2.hr~Treatment, data = Pact.All)
-
-Pact.Pnet.aov <- aov(Pnet_umol.cm2.hr ~ Treatment, data = Pact.All)
+Pact.Pnet.aov <- aov(Pnet_umol.cm2.hr ~ Treatment*Date.x, data = Pact.All)
 summary(Pact.Pnet.aov)
-TukeyHSD(Pact.Pnet.aov)
+#TukeyHSD(Pact.Pnet.aov)
+
+hist(Pact.Pnet.aov$residuals)
+plot(Pact.Pnet.aov$fitted.values, Pact.Pnet.aov$residuals)
+shapiro.test(Pact.Pnet.aov$residuals) 
 
 # Gross Photosynthetic Rates
-hist(Pact.All$Pgross_umol.cm2.hr)
-library(car)
-shapiro.test(Pact.All$Pgross_umol.cm2.hr) 
-bartlett.test(Pgross_umol.cm2.hr~Treatment, data=Pact.All)
-
-Pact.Pgross.aov <- aov(Pgross_umol.cm2.hr ~ Treatment, data = Pact.All)
+Pact.Pgross.aov <- aov(Pgross_umol.cm2.hr ~ Treatment*Date.x, data = Pact.All)
 summary(Pact.Pgross.aov)
-TukeyHSD(Pact.Pgross.aov)
+#TukeyHSD(Pact.Pgross.aov)
+
+hist(Pact.Pgross.aov$residuals)
+plot(Pact.Pgross.aov$fitted.values, Pact.Pgross.aov$residuals)
+shapiro.test(Pact.Pgross.aov$residuals) 
 
 # Dark Respiration Rates
-hist(Pact.All$Rdark_umol.cm2.hr)
-library(car)
-shapiro.test(Pact.All$Rdark_umol.cm2.hr) 
-bartlett.test(Rdark_umol.cm2.hr~Treatment, data=Pact.All)
-
-Pact.Rdark.aov <- aov(Rdark_umol.cm2.hr ~ Treatment, data = Pact.All)
+Pact.Rdark.aov <- aov(Rdark_umol.cm2.hr ~ Treatment*Date.x, data = Pact.All)
 summary(Pact.Rdark.aov)
-TukeyHSD(Pact.Rdark.aov)
+#TukeyHSD(Pact.Rdark.aov)
+
+hist(Pact.Rdark.aov$residuals)
+plot(Pact.Rdark.aov$fitted.values, Pact.Rdark.aov$residuals)
+shapiro.test(Pact.Rdark.aov$residuals) 
+
 
 ## M. capitata
 # Net Photosynthetic Rates
-hist(Mcap.All$Pnet_umol.cm2.hr)
-library(car)
-shapiro.test(Mcap.All$Pnet_umol.cm2.hr) 
-bartlett.test(Pnet_umol.cm2.hr~Treatment, data = Mcap.All)
-
-Mcap.Pnet.aov <- aov(Pnet_umol.cm2.hr ~ Treatment, data = Mcap.All)
+Mcap.Pnet.aov <- aov(log10(Pnet_umol.cm2.hr) ~ Treatment*Date.x, data = Mcap.All)
 summary(Mcap.Pnet.aov)
-TukeyHSD(Mcap.Pnet.aov)
+#TukeyHSD(Mcap.Pnet.aov)
+
+hist(Mcap.Pnet.aov$residuals)
+plot(Mcap.Pnet.aov$fitted.values, Mcap.Pnet.aov$residuals)
+shapiro.test(Mcap.Pnet.aov$residuals) 
 
 # Gross Photosynthetic Rates
-hist(Mcap.All$Pgross_umol.cm2.hr)
-library(car)
-shapiro.test(Mcap.All$Pgross_umol.cm2.hr) 
-bartlett.test(Pgross_umol.cm2.hr~Treatment, data=Mcap.All)
-
-Mcap.Pgross.aov <- aov(Pgross_umol.cm2.hr ~ Treatment, data = Mcap.All)
+Mcap.Pgross.aov <- aov(log10(Pgross_umol.cm2.hr) ~ Treatment*Date.x, data = Mcap.All)
 summary(Mcap.Pgross.aov)
-TukeyHSD(Mcap.Pgross.aov)
+#TukeyHSD(Mcap.Pgross.aov)
+
+hist(Mcap.Pgross.aov$residuals)
+plot(Mcap.Pgross.aov$fitted.values, Mcap.Pgross.aov$residuals)
+shapiro.test(Mcap.Pgross.aov$residuals) 
 
 # Dark Respiration Rates
-hist(Mcap.All$Rdark_umol.cm2.hr)
-library(car)
-shapiro.test(Mcap.All$Rdark_umol.cm2.hr) 
-bartlett.test(Rdark_umol.cm2.hr~Treatment, data=Mcap.All)
-
-Mcap.Rdark.aov <- aov(Rdark_umol.cm2.hr ~ Treatment, data = Mcap.All)
+Mcap.Rdark.aov <- aov(Rdark_umol.cm2.hr ~ Treatment*Date.x, data = Mcap.All)
 summary(Mcap.Rdark.aov)
-TukeyHSD(Mcap.Rdark.aov)
+#TukeyHSD(Mcap.Rdark.aov)
+
+hist(Mcap.Rdark.aov$residuals)
+plot(Mcap.Rdark.aov$fitted.values, Mcap.Rdark.aov$residuals)
+shapiro.test(Mcap.Rdark.aov$residuals) 
 ```
 
 
