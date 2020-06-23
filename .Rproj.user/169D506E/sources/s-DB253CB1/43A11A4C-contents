@@ -1,23 +1,12 @@
----
-title: "Survivorship"
-author: "EL Strand"
-date: "6/10/2020"
-output:
-  pdf_document: default
-  html_document: default
----
+#Title: Bleaching estimates from pictures
+#Project: NSF BSF
+#Author: HM Putnam
+#Edited by: HM Putnam
+#Date Last Modified: 20181110
+#See Readme file for details
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+rm(list=ls()) #clears workspace 
 
-Clear workspace. 
-```{r}
-rm(list=ls())
-```
-
-Installing and loading required libraries.
-```{r}
 if ("tidyr" %in% rownames(installed.packages()) == 'FALSE') install.packages('tidyr') 
 if ("tidyverse" %in% rownames(installed.packages()) == 'FALSE') install.packages('tidyverse') 
 if ("reshape" %in% rownames(installed.packages()) == 'FALSE') install.packages('reshape') 
@@ -43,83 +32,82 @@ library(dplyr)
 library(ggfortify)
 library(gridExtra)
 library(survminer)
-```
 
-Loading dataframes. 
-```{r}
-Data <- read.csv("Physiology_variables/coral_survivorship_QC.csv", header=T, sep=",", na.string="NA", stringsAsFactors = F) #read in data file
-Tank.Info <- read.csv("Environmental_data/Tank_to_Treatment.csv", header=T, sep=",", na.string="NA") #read in data file 
-Data.Trt <- merge(Data, Tank.Info, by="Tank")
-```
+#Required Data files
 
-Replace sampled with alive. 
-```{r}
+# Set Working Directory:
+setwd("~/MyProjects/Holobiont_Integration/RAnalysis/") #set working
+
+Data <- read.csv("Data/coral_survivorship.csv", header=T, sep=",", na.string="NA", stringsAsFactors = F) #read in data file
+Data.Trt <- Data %>% drop_na(Day.57)
+#Data.Trt <- Data.Trt[,c(1:92)]
+Tank.Info <- read.csv("Data/Tank_to_Treatment.csv", header=T, sep=",", na.string="NA") #read in data file 
+Data.Trt <- merge(Data.Trt, Tank.Info, by="Tank")
+
+#replace sampled with alive
 Data.Trt.x <- Data.Trt %>% mutate_if(is.character, str_replace_all, pattern = 'sampled', replacement = 'alive')
 Data.Trt.x$lifespan <- rowSums(Data.Trt.x[,10:120] == "alive")
 Data.Trt.x$status <- as.numeric(as.factor(Data.Trt.x$Day.110))
-```
 
-Survivorship analysis. 
-```{r}
-### Montipora capitata
+#Mcapitata
 Mc.Data <- subset(Data.Trt.x, Species=="Mcapitata")
-Mc.Data$group <- paste0(Mc.Data$Treatment) 
+Mc.Data$group <- paste0(Mc.Data$Treatment) #, Mc.Data$ORIGIN
 Mc.km <- with(Mc.Data, Surv(lifespan, status))
 Mc.km_fit <- survfit(Surv(lifespan, status) ~ Treatment, data=Mc.Data)
 summary(Mc.km_fit)
 
+# Mcap
 cols <- c("lightblue", "blue", "salmon", "red3")
 MC.sur <- summary(Mc.km_fit, times = c(1:58))
 Mc.km_fit <- survfit(Surv(lifespan, status) ~ Treatment, data=Mc.Data)
 autoplot(Mc.km_fit)
+Fig.MC.sur <- ggsurvplot(Mc.km_fit, data = Mc.Data, pval = TRUE) +
+  theme_bw() + #Set the background color 
+  xlab("Days")
 
-### Pocillopora acuta
+
+
+
+pdf("Output/Mcap_Survivorship.pdf", onefile=FALSE)
+#par(mfrow=c(1,1))
+Fig.Mcap <- ggsurvplot(Mc.km_fit,  data=Mc.Data,size = 1,  # change line size
+           linetype = "strata", # change line type by groups
+           break.time.by = 7, # break time axis
+           palette = c("lightblue", "blue", "salmon", "red3"), # custom color palette
+           conf.int = TRUE, # Add confidence interval
+           legend.title = "", # remove legend title
+           # title = "M. capitata",
+           xlab = "Time in days",
+           font.title = c(14, "bold.italic", "black"), #title italicized
+           legend.labs = c("ATAC", "ATHC","HTAC", "HTHC"),    # Change legend labels
+           pval = TRUE) # Add p-value
+dev.off()
+Fig.Mcap
+#plot(Mc.km_fit, xlab="Time", ylab="Survival Probability", main="Kaplan-Meier plot")
+
+pdf("Output/Pact_Survivorship.pdf", onefile=FALSE)
+#par(mfrow=c(1,1))
+#Pacuta
 Pa.Data <- subset(Data.Trt.x, Species=="Pacuta")
 Pa.km <- with(Pa.Data, Surv(lifespan, status))
 Pa.km_fit <- survfit(Surv(lifespan, status) ~ Treatment, data=Pa.Data) #*Origin
 Pa.sur <- summary(Pa.km_fit, times = c(1:58))
 autoplot(Pa.km_fit)
-```
 
-
-Plotting survivorship analysis. 
-```{r}
-## Montipora capitata
-Fig.Mcap <- ggsurvplot(Mc.km_fit, data=Mc.Data, size = 1,  # change line size
-           linetype = "strata", # change line type by groups
-           break.time.by = 7, # break time axis
-           palette = c("blue", "lightblue", "salmon", "red3"), # custom color palette
-           conf.int = TRUE, # Add confidence interval
-           legend.title = "", # remove legend title
-           title = "Montipora capitata",
-           xlab = "Time in days",
-           font.title = c(14, "bold.italic", "black"), #title italicized
-           legend.labs = c("ATAC", "ATHC","HTAC", "HTHC"), pval = TRUE, # Add p-value and change legend labels
-           legend=c(0.115, 0.45))
-Fig.Mcap
-
-## Pocillopora acuta
+# Fig.PA.sur <- ggsurvplot(Pa.km_fit, data = Pa.Data, pval = TRUE)
 Fig.PA <- ggsurvplot(Pa.km_fit, data=Pa.Data, size = 1,  # change line size
            linetype = "strata", # change line type by groups
            break.time.by = 7, # break time axis
-           palette = c("blue", "lightblue", "salmon", "red3"), # custom color palette
+           palette = c("lightblue", "blue", "salmon", "red3"), # custom color palette
            conf.int = TRUE, # Add confidence interval
            legend.title = "", # remove legend title
-           title = "Pocillopora acuta",
+           # title = "P. acuta",
            xlab = "Time in days",
            font.title = c(14, "bold.italic", "black"), #title italicized
-           legend.labs = c("ATAC", "ATHC","HTAC", "HTHC"), pval = TRUE, # Add p-value and change legend labels
-           legend=c(0.115, 0.45))
+           legend.labs = c("ATAC", "ATHC","HTAC", "HTHC"),    # Change legend labels
+           pval = TRUE) # Add p-value
 Fig.PA
+dev.off()
 
-
-# Surv.figs <- arrange_ggsurvplots(Fig.Mcap, Fig.PA, print = FALSE)
-  # ncol = 1,
-  # nrow = 2,
-  # title = "Survivorship Probability")
-
-ggsave(Fig.PA, file = "Physiology_variables/Poc_Survival.pdf", width = 8, height = 11)
-ggsave(Fig.Mcap, file = "Physiology_variables/Mont_Survival.pdf", width = 8, height = 11)
-```
-
-
+#Mort.Figs <- arrangeGrob(Fig.MC.sur, Fig.PA.sur, ncol=2)
+#ggsave(file="Output/Survivorship.pdf", Mort.Figs, width = 4, height = 3, units = c("in"))

@@ -2,7 +2,9 @@
 title: "Survivorship"
 author: "EL Strand"
 date: "6/10/2020"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -45,7 +47,7 @@ library(survminer)
 
 Loading dataframes. 
 ```{r}
-Data <- read.csv("Physiology_variables/coral_survivorship.csv", header=T, sep=",", na.string="NA", stringsAsFactors = F) #read in data file
+Data <- read.csv("Physiology_variables/coral_survivorship_QC.csv", header=T, sep=",", na.string="NA", stringsAsFactors = F) #read in data file
 Tank.Info <- read.csv("Environmental_data/Tank_to_Treatment.csv", header=T, sep=",", na.string="NA") #read in data file 
 Data.Trt <- merge(Data, Tank.Info, by="Tank")
 ```
@@ -70,9 +72,6 @@ cols <- c("lightblue", "blue", "salmon", "red3")
 MC.sur <- summary(Mc.km_fit, times = c(1:58))
 Mc.km_fit <- survfit(Surv(lifespan, status) ~ Treatment, data=Mc.Data)
 autoplot(Mc.km_fit)
-Fig.MC.sur <- ggsurvplot(Mc.km_fit, data = Mc.Data, pval = TRUE) +
-  theme_bw() + #Set the background color 
-  xlab("Days")
 
 ### Pocillopora acuta
 Pa.Data <- subset(Data.Trt.x, Species=="Pacuta")
@@ -114,13 +113,13 @@ Fig.PA <- ggsurvplot(Pa.km_fit, data=Pa.Data, size = 1,  # change line size
 Fig.PA
 
 
-Surv.figs <- arrange_ggsurvplots(Fig.Mcap, Fig.PA, print = FALSE)
+# Surv.figs <- arrange_ggsurvplots(Fig.Mcap, Fig.PA, print = FALSE)
   # ncol = 1,
   # nrow = 2,
   # title = "Survivorship Probability")
 
 ggsave(Fig.PA, file = "Physiology_variables/Poc_Survival.pdf", width = 8, height = 11)
-
+ggsave(Fig.Mcap, file = "Physiology_variables/Mont_Survival.pdf", width = 8, height = 11)
 ```
 
 

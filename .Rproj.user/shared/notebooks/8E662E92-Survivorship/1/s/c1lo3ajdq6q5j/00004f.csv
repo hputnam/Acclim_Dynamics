@@ -1,5 +1,0 @@
-"0","ggsave(Fig.PA, file = ""Physiology_variables/Poc_Survival.pdf"", width = 8, height = 11)
-"
-"2","Error in UseMethod(""grid.draw"") : 
-  no applicable method for 'grid.draw' applied to an object of class ""c('ggsurvplot', 'ggsurv', 'list')""
-"
