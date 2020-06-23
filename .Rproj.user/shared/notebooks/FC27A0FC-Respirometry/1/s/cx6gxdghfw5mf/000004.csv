@@ -1,5 +1,0 @@
-"0","#Calculate Photo blank rate"
-"0","blnk <- aggregate(umol.sec ~ Date*Species*Tank*Light.or.Dark.x  , data=Data, mean)"
-"0","Blanks <- subset(blnk, Species == ""Blank"")"
-"0","Blanks$Group <- paste(Blanks$Date, Blanks$Tank, Blanks$Light.or.Dark.x, sep = ""_"")"
-"0","boxplot(Blanks$umol.sec ~ Blanks$Tank)"

@@ -1,2 +1,0 @@
-"0","Data$umol.sec <- Data$umol.L.sec * (Data$Vol.ml/1000)"
-"0","Data$Group <- paste(Data$Date, Data$Tank, Data$Light.or.Dark.x, sep = ""_"")"

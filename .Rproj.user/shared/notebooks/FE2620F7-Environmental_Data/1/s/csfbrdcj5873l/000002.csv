@@ -1,6 +1,0 @@
-"0","## Reading in apex continuous data: temperature and pH "
-"0","apex1 <- read.csv('Environmental_data/Apex_continuous_data/Acclimation_0918_0921.csv') ## NEED TO SWITCH TIME FORMAT"
-"0","apex2 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_0922.csv')"
-"0","   apex2 <- select(apex2, -X) # removing column labeled X"
-"2","Error in select(apex2, -X) : unused argument (-X)
-"

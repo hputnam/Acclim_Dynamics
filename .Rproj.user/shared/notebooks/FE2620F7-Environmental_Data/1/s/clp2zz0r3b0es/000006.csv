@@ -1,8 +1,0 @@
-"0","Apex_temp_means <- summarySE(Apex_treatment, measurevar=""Temperature"", groupvars=c(""Date.Time"", ""Treatment"")) %>% na.omit(Temperature)"
-"0","  colnames(Apex_temp_means) <- c(""Date.Time"", ""Treatment"", ""Temp_N"", ""Temperature"", ""Temp_sd"", ""Temp_se"", ""Temp_ci"")"
-"0","Apex_pH_means <- summarySE(Apex_treatment, measurevar=""pH"", groupvars=c(""Date.Time"", ""Treatment"")) %>% na.omit(pH)"
-"0","  colnames(Apex_pH_means) <- c(""Date.Time"", ""Treatment"", ""pH_N"", ""pH"", ""pH_sd"", ""pH_se"", ""pH_ci"")"
-"0","## come back to N = 36"
-"0","  "
-"0","Apex_means <- full_join(Apex_temp_means, Apex_pH_means, by = ""Date.Time"") %>% select(-Treatment.y) %>% rename(Treatment = Treatment.x)"
-"0","tail(Apex_means)"

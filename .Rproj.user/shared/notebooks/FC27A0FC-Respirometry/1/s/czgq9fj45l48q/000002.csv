@@ -1,8 +1,0 @@
-"0","path.p <- ""Physiology_variables/Respirometry/Raw_Data/"" #the location of all your respirometry files "
-"0","file.names <- basename(list.files(path = path.p, pattern = ""csv$"", recursive = TRUE)) #list all csv file names in the folder and subfolders"
-"0","#basename above removes the subdirectory name from the file"
-"0","#generate a 3 column dataframe with specific column names"
-"0","Photo.R <- data.frame(matrix(NA, nrow=length(file.names)*2, ncol=3)) "
-"0","colnames(Photo.R) <- c(""Fragment.ID"",""Intercept"", ""umol.L.sec"")"
-"0","#add file names that include the subdirectory name"
-"0","file.names.full <- list.files(path = path.p, pattern = ""csv$"", recursive = TRUE) #list all csv file names in the folder and subfolders"

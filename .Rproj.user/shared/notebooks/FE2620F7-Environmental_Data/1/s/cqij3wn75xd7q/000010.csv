@@ -1,4 +1,0 @@
-"0","Trt.Tanks <- read.csv('Environmental_data/Tank_to_Treatment.csv') %>% select(-Tank.Name)"
-"0","Trt.Tanks$Tank <- as.character(Trt.Tanks$Tank) # changing Tank column character"
-"0","Apex_treatment <- full_join(Apex_data, Trt.Tanks, by = ""Tank"") "
-"0","head(Apex_treatment)"

@@ -1,1 +1,0 @@
-{"frames":[{"character_number":0,"end_character_number":0,"end_line_number":0,"file":"","func":"list.files(path = path, pattern = \"csv$\")","line_number":0}],"message":"Error in list.files(path = path, pattern = \"csv$\") : \n  object 'path' not found\n"}

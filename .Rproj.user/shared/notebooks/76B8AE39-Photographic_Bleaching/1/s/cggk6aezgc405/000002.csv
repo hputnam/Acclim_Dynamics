@@ -1,3 +1,0 @@
-"0","Data$Red.Norm.Coral <- Data$Red.Coral/Data$Red.Standard #normalize to color standard"
-"0","Data$Green.Norm.Coral <- Data$Green.Coral/Data$Green.Standard #normalize to color standard"
-"0","Data$Blue.Norm.Coral <- Data$Blue.Coral/Data$Blue.Standard #normalize to color standard"

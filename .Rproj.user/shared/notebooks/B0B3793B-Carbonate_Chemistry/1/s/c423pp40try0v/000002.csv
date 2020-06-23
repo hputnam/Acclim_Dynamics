@@ -1,6 +1,0 @@
-"0","## pH calibration files (tris calibrations)"
-"0","pH_cal_path <-('Environmental_data/pH_Calibration_Files/')"
-"0","pH_cal_files <- list.files(path = path, pattern = ""csv$"") #list all the file names in the folder to get only get the csv files"
-"2","Error in list.files(path = path, pattern = ""csv$"") : 
-  object 'path' not found
-"

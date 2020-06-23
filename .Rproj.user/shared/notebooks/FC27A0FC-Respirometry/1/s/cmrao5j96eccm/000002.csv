@@ -1,2 +1,0 @@
-"0","#normalize to surface area and h-1"
-"0","Data$umol.cm2.hr <- (Data$umol.sec.corr*3600)/Data$Surface.Area"
