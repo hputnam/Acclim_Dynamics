@@ -1,0 +1,3 @@
+"0","Data.Trt.x <- Data.Trt %>% mutate_if(is.character, str_replace_all, pattern = 'sampled', replacement = 'alive')"
+"0","Data.Trt.x$lifespan <- rowSums(Data.Trt.x[,10:120] == ""alive"")"
+"0","Data.Trt.x$status <- as.numeric(as.factor(Data.Trt.x$Day.110))"

@@ -1,0 +1,125 @@
+---
+title: "Survivorship"
+author: "EL Strand"
+date: "6/10/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Clear workspace. 
+```{r}
+rm(list=ls())
+```
+
+Installing and loading required libraries.
+```{r}
+if ("tidyr" %in% rownames(installed.packages()) == 'FALSE') install.packages('tidyr') 
+if ("tidyverse" %in% rownames(installed.packages()) == 'FALSE') install.packages('tidyverse') 
+if ("reshape" %in% rownames(installed.packages()) == 'FALSE') install.packages('reshape') 
+if ("stringr" %in% rownames(installed.packages()) == 'FALSE') install.packages('stringr') 
+if ("survival" %in% rownames(installed.packages()) == 'FALSE') install.packages('survival') 
+if ("ranger" %in% rownames(installed.packages()) == 'FALSE') install.packages('ranger') 
+if ("ggplot2" %in% rownames(installed.packages()) == 'FALSE') install.packages('ggplot2') 
+if ("dplyr" %in% rownames(installed.packages()) == 'FALSE') install.packages('dplyr') 
+if ("ggfortify" %in% rownames(installed.packages()) == 'FALSE') install.packages('ggfortify') 
+if ("gridExtra" %in% rownames(installed.packages()) == 'FALSE') install.packages('gridExtra') 
+if ("survminer" %in% rownames(installed.packages()) == 'FALSE') install.packages('survminer') 
+
+#Read in required libraries
+##### Include Versions of libraries
+library(tidyr)
+library(tidyverse)
+library(reshape)
+library(stringr)
+library(survival)
+library(ranger)
+library(ggplot2)
+library(dplyr)
+library(ggfortify)
+library(gridExtra)
+library(survminer)
+```
+
+Loading dataframes. 
+```{r}
+Data <- read.csv("Physiology_variables/coral_survivorship_QC.csv", header=T, sep=",", na.string="NA", stringsAsFactors = F) #read in data file
+Tank.Info <- read.csv("Environmental_data/Tank_to_Treatment.csv", header=T, sep=",", na.string="NA") #read in data file 
+Data.Trt <- merge(Data, Tank.Info, by="Tank")
+```
+
+Replace sampled with alive. 
+```{r}
+Data.Trt.x <- Data.Trt %>% mutate_if(is.character, str_replace_all, pattern = 'sampled', replacement = 'alive')
+Data.Trt.x$lifespan <- rowSums(Data.Trt.x[,10:120] == "alive")
+Data.Trt.x$status <- as.numeric(as.factor(Data.Trt.x$Day.110))
+```
+
+Survivorship analysis. 
+```{r}
+### Montipora capitata
+Mc.Data <- subset(Data.Trt.x, Species=="Mcapitata")
+Mc.Data$group <- paste0(Mc.Data$Treatment) 
+Mc.km <- with(Mc.Data, Surv(lifespan, status))
+Mc.km_fit <- survfit(Surv(lifespan, status) ~ Treatment, data=Mc.Data)
+summary(Mc.km_fit)
+
+cols <- c("lightblue", "blue", "salmon", "red3")
+MC.sur <- summary(Mc.km_fit, times = c(1:58))
+Mc.km_fit <- survfit(Surv(lifespan, status) ~ Treatment, data=Mc.Data)
+autoplot(Mc.km_fit)
+
+### Pocillopora acuta
+Pa.Data <- subset(Data.Trt.x, Species=="Pacuta")
+Pa.km <- with(Pa.Data, Surv(lifespan, status))
+Pa.km_fit <- survfit(Surv(lifespan, status) ~ Treatment, data=Pa.Data) #*Origin
+Pa.sur <- summary(Pa.km_fit, times = c(1:58))
+autoplot(Pa.km_fit)
+```
+
+
+Plotting survivorship analysis. 
+```{r}
+## Montipora capitata
+Fig.Mcap <- ggsurvplot(Mc.km_fit, data=Mc.Data, size = 1,  # change line size
+           linetype = "strata", # change line type by groups
+           break.time.by = 7, # break time axis
+           palette = c("blue", "lightblue", "salmon", "red3"), # custom color palette
+           conf.int = TRUE, # Add confidence interval
+           legend.title = "", # remove legend title
+           title = "Montipora capitata",
+           xlab = "Time in days",
+           font.title = c(14, "bold.italic", "black"), #title italicized
+           legend.labs = c("ATAC", "ATHC","HTAC", "HTHC"), pval = TRUE, # Add p-value and change legend labels
+           legend=c(0.115, 0.45))
+Fig.Mcap
+
+## Pocillopora acuta
+Fig.PA <- ggsurvplot(Pa.km_fit, data=Pa.Data, size = 1,  # change line size
+           linetype = "strata", # change line type by groups
+           break.time.by = 7, # break time axis
+           palette = c("blue", "lightblue", "salmon", "red3"), # custom color palette
+           conf.int = TRUE, # Add confidence interval
+           legend.title = "", # remove legend title
+           title = "Pocillopora acuta",
+           xlab = "Time in days",
+           font.title = c(14, "bold.italic", "black"), #title italicized
+           legend.labs = c("ATAC", "ATHC","HTAC", "HTHC"), pval = TRUE, # Add p-value and change legend labels
+           legend=c(0.115, 0.45))
+Fig.PA
+
+
+# Surv.figs <- arrange_ggsurvplots(Fig.Mcap, Fig.PA, print = FALSE)
+  # ncol = 1,
+  # nrow = 2,
+  # title = "Survivorship Probability")
+
+ggsave(Fig.PA, file = "Physiology_variables/Poc_Survival.pdf", width = 8, height = 11)
+ggsave(Fig.Mcap, file = "Physiology_variables/Mont_Survival.pdf", width = 8, height = 11)
+```
+
+

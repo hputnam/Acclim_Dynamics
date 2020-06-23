@@ -1,0 +1,7 @@
+"0","#merge desired columns by id"
+"0","resp.data <- merge(Photo[,c(1,2,3,6,8,15,18,19,38)],Resp[,c(3,38)], by=""Fragment.ID.x"")"
+"0","#rename the columns"
+"0","names(resp.data)[names(resp.data) == ""umol.cm2.hr.x""]<- ""Pnet_umol.cm2.hr"" "
+"0","names(resp.data)[names(resp.data) == ""umol.cm2.hr.y""] <- ""Rdark_umol.cm2.hr"""
+"0","# calculating Pgross"
+"0","resp.data$Pgross_umol.cm2.hr <- resp.data$Pnet_umol.cm2.hr - resp.data$Rdark_umol.cm2.hr"

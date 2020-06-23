@@ -1,0 +1,11 @@
+"0","Data <- read.csv(""Physiology_variables/Bleaching_ImageJ_QC.csv"", header=T, sep="","", na.string=""NA"") #read in data file"
+"0","Sample.Info <- read.csv(""Environmental_data/Master_Fragment_20200616_QC.csv"", header=T, sep="","", na.string=""NA"") #read in data file "
+"0","Sample.Info <- Sample.Info[,c(7,5,9)]"
+"0","Tank.Info <- read.csv(""Environmental_data/Tank_to_Treatment.csv"", header=T, sep="","", na.string=""NA"") #read in data file "
+"0","A <- Sample.Info$PLUG.ID"
+"0","B <- Data$PLUG.ID"
+"0","bad.id.tanks <- which(B %in% A ==FALSE)"
+"0","bad.id.tanks"
+"1","integer(0)
+"
+"0","Data <-na.omit(Data)"

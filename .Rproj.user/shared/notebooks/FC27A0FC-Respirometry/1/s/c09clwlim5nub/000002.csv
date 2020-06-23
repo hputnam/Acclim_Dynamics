@@ -1,0 +1,4 @@
+"0","write.csv(Photo.R, 'Physiology_variables/Respirometry/Output/Photo.R.csv')"
+"0","Photo.R <- read.csv(file=""Physiology_variables/Respirometry/Output/Photo.R.csv"", header=T) #read in volume and sample.info data"
+"0","Photo.R <- Photo.R[,-1]"
+"0","Photo.R$Fragment.ID <- str_sub(Photo.R$Fragment.ID, 1, str_length(Photo.R$Fragment.ID)-2) #Removing _1 or _2"

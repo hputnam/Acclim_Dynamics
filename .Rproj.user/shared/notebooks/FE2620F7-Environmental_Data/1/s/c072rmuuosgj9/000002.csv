@@ -1,0 +1,7 @@
+"0","## Apex Data"
+"0","ggplot(Apex_Light, aes(x=Date.Time, y = PAR)) + "
+"0","  geom_line() + theme_bw() +"
+"0","  # scale_fill_manual(values = ""yellow"")  "
+"0","  theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = ""black"")) +"
+"0","  xlab(""Date"") + theme(axis.text.x=element_text(angle=60, hjust=1)) + # x-axis label and rotating text on x axis"
+"0","  ylab(""PAR"")  # y-axis label "

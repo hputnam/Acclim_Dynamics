@@ -1,0 +1,10 @@
+"0","## Total September 1 2018 - September 23 2018"
+"0","ggplot(NOAA_temp, aes(x=Date, y=Temperature)) +"
+"0","  geom_line() +"
+"0","  xlab("""") +"
+"0","  theme_classic() +"
+"0","  theme(axis.text.x=element_text(angle=60, hjust=1)) +"
+"0","  # scale_x_date(limit=c(as.Date(""2019-08-31""),as.Date(""2019-09-24""))) +"
+"0","  ylim(25,30)"
+"2","Error in FUN(X[[i]], ...) : object 'Date' not found
+"

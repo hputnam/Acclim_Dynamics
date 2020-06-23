@@ -1,0 +1,7 @@
+"0","Pact.Pn <- ggplot(Pact, aes(x=Date, y = Pnet.mean, group = Treatment, color = Treatment)) +"
+"0","  geom_line() + geom_point() + theme_classic() + "
+"0","  scale_color_manual(values = colors) + "
+"0","  xlab(""Date"") + theme(axis.text.x=element_text(angle=60, hjust=1)) + # x-axis label and rotating text on x axis"
+"0","  ylab(""Net Photosynthetic Rate (umol/cm2/hr)"") + ylim(c(0, 3)) + # y-axis label and y axis range"
+"0","  geom_errorbar(aes(ymin=Pnet.mean-Pnet.se, ymax=Pnet.mean+Pnet.se), width=.2)"
+"0","Pact.Pn"

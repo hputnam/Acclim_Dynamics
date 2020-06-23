@@ -1,0 +1,85 @@
+---
+title: "Photographic_Bleaching"
+author: "EL Strand"
+date: "6/23/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+rm(list=ls()) #clears workspace 
+
+if ("vegan" %in% rownames(installed.packages()) == 'FALSE') install.packages('vegan') 
+if ("ggpubr" %in% rownames(installed.packages()) == 'FALSE') install.packages('ggpubr') 
+if ("gridExtra" %in% rownames(installed.packages()) == 'FALSE') install.packages('gridExtra') 
+if ("plyr" %in% rownames(installed.packages()) == 'FALSE') install.packages('plyr') 
+if ("lsmeans" %in% rownames(installed.packages()) == 'FALSE') install.packages('lsmeans') 
+if ("multcompView" %in% rownames(installed.packages()) == 'FALSE') install.packages('multcompView') 
+
+
+#Read in required libraries
+##### Include Versions of libraries
+library("vegan")
+library("ggpubr")
+library("gridExtra")
+library("plyr") 
+library("lsmeans")
+library("multcompView")
+```
+
+```{r}
+Data <- read.csv("Physiology_variables/Bleaching_ImageJ_QC.csv", header=T, sep=",", na.string="NA") #read in data file
+Sample.Info <- read.csv("Environmental_data/Master_Fragment_20200616_QC.csv", header=T, sep=",", na.string="NA") #read in data file 
+Sample.Info <- Sample.Info[,c(7,5,9)]
+Tank.Info <- read.csv("Environmental_data/Tank_to_Treatment.csv", header=T, sep=",", na.string="NA") #read in data file 
+
+
+A <- Sample.Info$PLUG.ID
+B <- Data$PLUG.ID
+bad.id.tanks <- which(B %in% A ==FALSE)
+bad.id.tanks
+
+
+Data <-na.omit(Data)
+```
+
+```{r}
+Data$Red.Norm.Coral <- Data$Red.Coral/Data$Red.Standard #normalize to color standard
+Data$Green.Norm.Coral <- Data$Green.Coral/Data$Green.Standard #normalize to color standard
+Data$Blue.Norm.Coral <- Data$Blue.Coral/Data$Blue.Standard #normalize to color standard
+```
+
+```{r}
+blch.scor <- as.matrix(cbind(Data$Red.Norm.Coral,Data$Green.Norm.Coral,Data$Blue.Norm.Coral)) #create matrix
+rownames(blch.scor) <- Data$PLUG.ID #name columns in dataframe
+
+dist <- vegdist(blch.scor, method="euclidean") #calculate distance matrix of color scores
+
+PCA.color <- princomp(dist) #run principal components Analysis
+summary(PCA.color) # view variance explained by PCs
+
+Blch <- as.data.frame(PCA.color$scores[,1]) #extract PC1
+Blch$PLUG.ID <- rownames(blch.scor)
+
+Blch  <- cbind(Blch, Data$Timepoint, Data$Treatment, Data$Species) #make a dataframe of PC1 and experiment factors
+colnames(Blch) <- c("Bleaching.Score", "PLUG.ID", "Timepoint", "Treatment", "Species")
+Blch$Group <- paste(Blch$Timepoint, Blch$Treatment, Blch$Species)
+Blch$SpGroup <- paste(Blch$Treatment, Blch$Species)
+```
+
+```{r}
+write.table(Blch, file = "Physiology_variables/Output/Bleaching_Score.csv", append = FALSE, quote = TRUE, sep = ",",
+            eol = "\n", na = "NA", dec = ".", row.names = TRUE,
+            col.names = TRUE, qmethod = c("escape", "double"),
+            fileEncoding = "")
+
+x<- Blch #assign values to test data frame to look for outliers
+par(mar=c(10,4,2,2)) #bottom, left, top and right margins respectively
+boxplot(Bleaching.Score ~ Group, data = x, lwd = 1, ylab = 'PC1Color', las=2, cex=0.8) #plot boxplot of PC1 color score by Genotype and timepoint
+
+## Sample Sizes 
+Bleaching.Score <- read.csv("Physiology_variables/Output/Bleaching_Score.csv", header=T, sep=",", na.string="NA") #read in data file
+```

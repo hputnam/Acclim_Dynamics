@@ -1,0 +1,6 @@
+"0","blch.scor <- as.matrix(cbind(Data$Red.Norm.Coral,Data$Green.Norm.Coral,Data$Blue.Norm.Coral)) #create matrix"
+"0","rownames(blch.scor) <- Data$PLUG.ID #name columns in dataframe"
+"0","dist <- vegdist(blch.scor, method=""euclidean"") #calculate distance matrix of color scores"
+"2","Error in vegdist(blch.scor, method = ""euclidean"") : 
+  could not find function ""vegdist""
+"

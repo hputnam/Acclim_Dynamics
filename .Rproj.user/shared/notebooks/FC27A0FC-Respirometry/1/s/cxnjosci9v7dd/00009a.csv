@@ -1,0 +1,7 @@
+"0","Mcap.Rd <- ggplot(Mcap, aes(x=Date, y = Rdark.mean, group = Treatment, color = Treatment)) +"
+"0","  geom_line() + geom_point() + theme_classic() + "
+"0","  scale_color_manual(values = colors) + "
+"0","  xlab(""Date"") + theme(axis.text.x=element_text(angle=60, hjust=1)) + # x-axis label and rotating text on x axis"
+"0","  ylab(""Respiration Rate ([umol/cm2/hr])"") + ylim(c(0, 1.2)) + # y-axis label and y axis range"
+"0","  geom_errorbar(aes(ymin=Rdark.mean-Rdark.se, ymax=Rdark.mean+Rdark.se), width=.2)"
+"0","Mcap.Rd"

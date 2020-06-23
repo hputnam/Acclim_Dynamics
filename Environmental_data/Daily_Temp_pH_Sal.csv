@@ -217,7 +217,7 @@ Date,Calib.Date,Time,Sample.ID,Treatment,Type,TA.Run,Temperature,pH.MV,Salinity,
 20180923,20180923,12:28,Tank3,ATHC,Tank,Yes,26.93,-41,34.24,Treatment,
 20180923,20180923,12:35,Tank4,HTAC,Tank,Yes,29.55,-58.4,34.37,Treatment,
 20180923,20180923,12:42,Tank5,HTHC,Tank,Yes,30.04,-47.4,34.47,Treatment,
-20180923,20180923,12:40,Tank6,ATAC,Tank,Yes,27.08,-59.9,34.35,Treatment,check notebook for pH value
+20180923,20180923,12:40,Tank6,ATAC,Tank,Yes,27.08,NA,34.35,Treatment,notebook value different than spreadsheet value; notebook value looks incorrect
 20180923,20180923,12:34,Tank7,HTAC,Tank,Yes,29.7,-59.1,34.45,Treatment,
 20180923,20180923,12:30,Tank8,ATAC,Tank,Yes,27.33,-59,34.11,Treatment,
 20180923,20180923,12:29,Tank9,HTAC,Tank,Yes,29.07,-58.2,34.49,Treatment,
