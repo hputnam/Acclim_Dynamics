@@ -118,8 +118,18 @@ Fig.PA
   # nrow = 2,
   # title = "Survivorship Probability")
 
-ggsave(Fig.PA, file = "Physiology_variables/Poc_Survival.pdf", width = 8, height = 11)
-ggsave(Fig.Mcap, file = "Physiology_variables/Mont_Survival.pdf", width = 8, height = 11)
+# ggsave(Fig.PA, file = "Physiology_variables/Poc_Survival.pdf", print(Fig.PA))
+
+png("Physiology_variables/Poc_Survival.png")
+print(Fig.PA, newpage = FALSE)
+dev.off()
+
+png("Physiology_variables/Mont_Survival.png")
+print(Fig.Mcap, newpage = FALSE)
+dev.off()
+
+# ggsave(Fig.PA, file = "Physiology_variables/Poc_Survival.pdf", width = 8, height = 11)
+# ggsave(Fig.Mcap, file = "Physiology_variables/Mont_Survival.pdf", width = 8, height = 11)
 ```
 
 
