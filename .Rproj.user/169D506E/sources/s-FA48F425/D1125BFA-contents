@@ -31,7 +31,7 @@ library("multcompView")
 ```
 
 ```{r}
-Data <- read.csv("Physiology_variables/Bleaching_ImageJ_QC.csv", header=T, sep=",", na.string="NA") #read in data file
+Data <- read.csv("Physiology_variables/Bleaching_Intensity/Bleaching_ImageJ_QC.csv", header=T, sep=",", na.string="NA") #read in data file
 Sample.Info <- read.csv("Environmental_data/Master_Fragment_20200616_QC.csv", header=T, sep=",", na.string="NA") #read in data file 
 Sample.Info <- Sample.Info[,c(7,5,9)]
 Tank.Info <- read.csv("Environmental_data/Tank_to_Treatment.csv", header=T, sep=",", na.string="NA") #read in data file 
@@ -71,7 +71,7 @@ Blch$SpGroup <- paste(Blch$Treatment, Blch$Species)
 ```
 
 ```{r}
-write.table(Blch, file = "Physiology_variables/Bleaching_Score.csv", append = FALSE, quote = TRUE, sep = ",",
+write.table(Blch, file = "Physiology_variables/Bleaching_Intensity/Bleaching_Score.csv", append = FALSE, quote = TRUE, sep = ",",
             eol = "\n", na = "NA", dec = ".", row.names = TRUE,
             col.names = TRUE, qmethod = c("escape", "double"),
             fileEncoding = "")
@@ -85,7 +85,7 @@ Bleaching.Score <- read.csv("Physiology_variables/Bleaching_Score.csv", header=T
 ```
 
 ```{r}
-pdf("Physiology_variables/Photographic_Bleaching.pdf")
+pdf("Physiology_variables/Bleaching_Intensity/Photographic_Bleaching.pdf")
 par(mar=c(10,4,2,2)) #bottom, left, top and right margins respectively
 boxplot(Bleaching.Score ~ Group, data = Blch, lwd = 1, ylab = 'PC1Color', las=2) #plot boxplot of PC1 color score by Genotype and timepoint
 stripchart(Bleaching.Score ~ Group, vertical = TRUE, data = Blch, 
@@ -121,17 +121,19 @@ All.Means$se[is.na(All.Means$se)] <- 0
 All.Means$Group <- paste(All.Means$Timepoint, All.Means$Treatment, All.Means$Species)
 All.Means$SpGroup <- paste(All.Means$Treatment, All.Means$Species)
 
-cols <- c("lightblue", "blue", "salmon", "red3")
-#All.Means$Timepoint <- factor(All.Means$Timepoint, levels = c("Week1", "Week2", "Week3", "Week4", "Week5", "Week6", "Week7", "Week8", "Week9", "Week10", "Week11", "Week12", "Week13", "Week14", "Week15", "Week16"))
-All.Means$Timepoint <- factor(All.Means$Timepoint, levels = c("Time1", "Time2", "Time3", "Time4", "Time5", "Time6", "Time7", "Time8", "Time9", "Time10", "Time11", "Time12", "Time13", "Time14", "Time15", "Time16"))
+All.Means$Timepoint <- factor(All.Means$Timepoint, levels = c("Week1", "Week2", "Week3", "Week4", "Week5", "Week6", "Week7", "Week8", "Week9", "Week10", "Week11", "Week12", "Week13", "Week14", "Week15", "Week16"))
+
+# All.Means$Timepoint <- factor(All.Means$Timepoint, levels = c("Time1", "Time2", "Time3", "Time4", "Time5", "Time6", "Time7", "Time8", "Time9", "Time10", "Time11", "Time12", "Time13", "Time14", "Time15", "Time16"))
 
 rec <- data.frame(x1=c(1,3,1,5,4))
 ```
 
 ```{r}
+cols <- c("lightblue", "blue", "salmon", "red3")
+
 Fig.All <- ggplot(All.Means, aes(x=Timepoint, y=mean, group=SpGroup)) + 
   geom_line(aes(linetype= Species, colour=Treatment, group=SpGroup), position = position_dodge(width = 0.1), alpha=0.5) + # colour, group both depend on cond2
-  geom_errorbar(aes(ymin=All.Means$mean-All.Means$se, ymax=All.Means$mean+All.Means$se), colour="black", width=0, size=0.5, position = position_dodge(width = 0.1)) +
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), colour="black", width=0, size=0.5, position = position_dodge(width = 0.1)) +
   geom_point(aes(colour=Treatment, shape=Species), size = 1, position = position_dodge(width = 0.1)) +
   scale_colour_manual(values=cols) +
   #annotate("text", x=43, y=1.85, label = "a", size = 3) + #add text to the graphic for posthoc letters
@@ -140,8 +142,8 @@ Fig.All <- ggplot(All.Means, aes(x=Timepoint, y=mean, group=SpGroup)) +
   #annotate("text", x=c(141,141), y=c(3.15,3.4), label = "c", size = 3) + #add text to the graphic for posthoc letters
   #annotate("text", x=35, y=0.5, label = ".", size = 1) + #add text to the graphic for posthoc letters
   xlab("Timepoint") +
-  ylab(expression(paste("Bleaching Score"))) +
-  ylim(-110,30) +
+  ylab(expression(paste("Bleaching Intensity"))) +
+  ylim(-20, 110) +
   theme_bw() + #Set the background color
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
         axis.line = element_line(color = 'black'), #Set the axes color
@@ -155,12 +157,19 @@ Fig.All <- ggplot(All.Means, aes(x=Timepoint, y=mean, group=SpGroup)) +
                                   size = 10, 
                                   hjust = 0))
 Fig.All
+
+png("Physiology_variables/Bleaching_Intensity/Bleaching_All.png")
+print(Fig.All, newpage = FALSE)
+dev.off()
 ```
 
 ```{r}
 Mcap.Blch <- subset(Blch, Species=="Montipora")
 Pact.Blch <- subset(Blch, Species=="Pocillopora")
+```
 
+Calculating M.cap means and plotting bleaching intensity
+```{r}
 Mcap.Means <- ddply(Mcap.Blch, c('Timepoint','Species', 'Treatment'), summarize,
                   mean= mean(Bleaching.Score, na.rm=T), #mean pnet
                   N = sum(!is.na(Bleaching.Score)), # sample size
@@ -168,12 +177,9 @@ Mcap.Means <- ddply(Mcap.Blch, c('Timepoint','Species', 'Treatment'), summarize,
 Mcap.Means
 
 Mcap.Means$Timepoint <- factor(Mcap.Means$Timepoint, levels = c("Week1", "Week2", "Week3", "Week4", "Week5", "Week6", "Week7", "Week8", "Week9", "Week10", "Week11", "Week12", "Week13", "Week14", "Week15", "Week16"))
-```
 
-```{r}
-pdf("Physiology_variables/Montipora_Bleaching.pdf")
 Fig.MC <- ggplot(Mcap.Means, aes(x=Timepoint, y=mean, group=Treatment)) + 
-  geom_errorbar(aes(ymin=Mcap.Means$mean-Mcap.Means$se, ymax=Mcap.Means$mean+Mcap.Means$se), colour="black", width=.1, position = position_dodge(width = 0.1)) +
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), colour="black", width=.1, position = position_dodge(width = 0.1)) +
   geom_point(aes(colour=Treatment), size = 2, position = position_dodge(width = 0.1)) +
   geom_line(aes(colour=Treatment, group=Treatment), position = position_dodge(width = 0.2), alpha=0.4) + # colour, group both depend on cond2
   scale_colour_manual(values=cols) +
@@ -182,7 +188,7 @@ Fig.MC <- ggplot(Mcap.Means, aes(x=Timepoint, y=mean, group=Treatment)) +
   #annotate("text", x=c(43,43), y=c(2.45,2.2), label = "ab", size = 3) + #add text to the graphic for posthoc letters
   #annotate("text", x=c(141,141), y=c(3.15,3.4), label = "c", size = 3) + #add text to the graphic for posthoc letters
   #annotate("text", x=35, y=0.5, label = ".", size = 1) + #add text to the graphic for posthoc letters
-  xlab("Weeks") +
+  xlab("Timepoint") +
   ylab(expression(paste("Bleaching Score"))) +
   ylim(-20,31) +
   theme_bw() + #Set the background color
@@ -194,7 +200,7 @@ Fig.MC <- ggplot(Mcap.Means, aes(x=Timepoint, y=mean, group=Treatment)) +
         plot.background=element_blank(),  #Set the plot background
         legend.position='none') + #remove legend background
   ggtitle("M. capitata") +
-  theme(plot.title = element_text(face = 'bold', 
+  theme(plot.title = element_text(face = 'bold.italic', 
                                   size = 12, 
                                   hjust = 0)) +
   geom_vline(xintercept = c(8.45), colour="red", linetype="dotted") + 
@@ -205,11 +211,15 @@ Fig.MC <- ggplot(Mcap.Means, aes(x=Timepoint, y=mean, group=Treatment)) +
   # geom_text(aes(x=1, y=-30, label="2-month Stress"), size=2.5, colour="red", angle=90, vjust=-1, hjust=0) +
   # geom_text(aes(x=9, y=-30, label="2-month Recovery"), size=2.5, colour="blue", angle=90, vjust=-1, hjust=0) +
   # geom_text(aes(x=17, y=-30, label="Recurrent Stress"), size=2.5, colour="red", angle=90, vjust=-1, hjust=0) 
-dev.off()
 
 Fig.MC
+
+png("Physiology_variables/Bleaching_Intensity/Bleaching_Mont.png")
+print(Fig.MC, newpage = FALSE)
+dev.off()
 ```
 
+Calculating P. acuta means and plotting bleaching intensity
 ```{r}
 Pact.Means <- ddply(Pact.Blch, c('Timepoint','Species', 'Treatment'), summarize,
                     mean= mean(Bleaching.Score, na.rm=T), #mean pnet
@@ -229,7 +239,7 @@ Fig.PA <- ggplot(Pact.Means, aes(x=Timepoint, y=mean, group=Treatment)) +
   #annotate("text", x=c(43,43), y=c(2.45,2.2), label = "ab", size = 3) + #add text to the graphic for posthoc letters
   #annotate("text", x=c(141,141), y=c(3.15,3.4), label = "c", size = 3) + #add text to the graphic for posthoc letters
   #annotate("text", x=35, y=0.5, label = ".", size = 1) + #add text to the graphic for posthoc letters
-  xlab("Weeks") +
+  xlab("Timepoint") +
   ylab(expression(paste("Bleaching Intensity"))) +
   ylim(-20,100) +
   theme_bw() + #Set the background color
@@ -250,7 +260,7 @@ Fig.PA <- ggplot(Pact.Means, aes(x=Timepoint, y=mean, group=Treatment)) +
   geom_vline(xintercept = c(0.5), colour="red", linetype="dotted") 
 Fig.PA
 
-png("Physiology_variables/Poc_Bleaching.png")
+png("Physiology_variables/Bleaching_Intensity/Bleaching_Poc.png")
 print(Fig.PA, newpage = FALSE)
 dev.off()
 ```
