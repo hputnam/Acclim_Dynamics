@@ -1,6 +1,0 @@
-"0","Apex_Light <- subset(Apex_data, Tank==""1"") %>% select(Date.Time, PAR) "
-"0","# PAR$Date.Time <- parse_date_time(PAR$Date.Time, ""%m/%d/%y %I:%M:%S %p"", tz=""HST"")"
-"0","Licor_Light <- read.csv('Environmental_data/Discrete_Light_Licor193.csv', sep="","")"
-"0","Light_tank_info <-read.csv('Environmental_data/Tank_to_Treatment.csv', header=T, sep="","") %>% select(-Tank.Name)"
-"0","Licor_Light <- merge(Licor_Light, Light_tank_info, by=""Tank"") "
-"0","Licor_Light$Tank <- as.character(Licor_Light$Tank) # changing Tank values to character instead of numeric"

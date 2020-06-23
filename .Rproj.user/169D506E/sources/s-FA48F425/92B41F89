@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1591824634814.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1048383803",
+    "id" : "92B41F89",
+    "lastKnownWriteTime" : 1592939060,
+    "last_content_update" : 1592939291406,
+    "path" : "~/MyProjects/Acclim_Dynamics/Scripts/PI_Curves.Rmd",
+    "project_path" : "Scripts/PI_Curves.Rmd",
+    "properties" : {
+        "cursorPosition" : "93,10",
+        "last_setup_crc32" : "",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1",
+        "working_dir" : "project"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

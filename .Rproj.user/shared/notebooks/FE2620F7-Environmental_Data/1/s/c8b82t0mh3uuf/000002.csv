@@ -1,6 +1,0 @@
-"0","Hobos <- Hobos %>% "
-"0","  gather(""Tank_Number"", ""Temperature"", 2:13)"
-"0","Hobo_Treatment_Tanks <- read.csv('Environmental_data/Tank_to_Treatment.csv') %>% rename(Tank_Number = Tank.Name)"
-"2","Error in rename(., Tank_Number = Tank.Name) : 
-  unused argument (Tank_Number = Tank.Name)
-"
