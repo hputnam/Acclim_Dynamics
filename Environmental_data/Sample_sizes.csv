@@ -1,0 +1,25 @@
+﻿Date,Sampling_type,Montipora,Pocillopora,Total_N
+20180922,Physiology,12,12,24
+20180923,Physiology,24,24,48
+20180929,Physiology,24,24,48
+20181006,Physiology,24,24,48
+20181020,Physiology,24,24,48
+20181103,Physiology,24,24,48
+20181117,Physiology,24,24,48
+20181215,Physiology,23*,13*,36
+20190112,Physiology,20*,12*,32
+20180922,Molecular,36,36,72
+20180923,Molecular,12,12,24
+20180929,Molecular,12,12,24
+20181006,Molecular,12,12,24
+20181020,Molecular,12,12,24
+20181103,Molecular,12,12,24
+20181117,Molecular,12,12,24
+20181215,Molecular,12,12,24
+20190112,Molecular,12,0,12
+,,,,
+,,,,
+Physiology total,380,,,
+Molecular total,252,,,
+,,,,
+*Uneven sample sizes; decide which to do,,,,
