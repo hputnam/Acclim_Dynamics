@@ -9,11 +9,6 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Clear workspace. 
-```{r}
-rm(list=ls())
-```
-
 Installing and loading in required libraries. 
 ```{r}
 ## install packages if you dont already have them in your library
@@ -27,7 +22,7 @@ if ("lubridate" %in% rownames(installed.packages()) == 'FALSE') install.packages
 if ("chron" %in% rownames(installed.packages()) == 'FALSE') install.packages('chron') 
 if ("plyr" %in% rownames(installed.packages()) == 'FALSE') install.packages('plyr') 
 if ("dplyr" %in% rownames(installed.packages()) == 'FALSE') install.packages('dplyr') 
-if ("phytotools" %in% rownames(installed.packages()) == 'FALSE') install.packages('phytotools') 
+#if ("phytotools" %in% rownames(installed.packages()) == 'FALSE') install.packages('phytotools') 
 
 #Read in required libraries
 ##### Include Versions of libraries
@@ -41,7 +36,7 @@ library("lubridate")
 library("chron")
 library('plyr')
 library('dplyr')
-library('phytotools')
+#library('phytotools')
 ```
 
 Setting path and loading in required files. 
@@ -64,10 +59,10 @@ Sample.Info$Fragment.ID <- paste(Sample.Info$Fragment.ID,"_",Sample.Info$Light_L
 Subset the data by light step using time breaks in the data. 
 ```{r}
 for(i in 1:length(file.names.full)) { # for every file in list start at the first and run this following function
-  Photo.Data1 <-read.table(file.path(path.p,file.names.full[i]),  header=F, sep=",", skip=1, na.string="NA", fill = TRUE, as.is=TRUE, fileEncoding="latin1") #reads in the data files
+  Photo.Data1 <-read.table(file.path(path.p,file.names.full[i]),  header=T, sep=",", skip=1, na.string="NA", fill = TRUE, as.is=TRUE, fileEncoding="latin1") #reads in the data files
   Photo.Data1  <- as.data.frame(cbind(Photo.Data1$Time, Photo.Data1$Value, Photo.Data1$Temp)) #subset columns of interest
   colnames(Photo.Data1) <- c("Time", "Value", "Temp")
-  Photo.Data1$Time <- as.POSIXct(Photo.Data1$Time,format="%H:%M:%S") #convert time from character to time
+  Photo.Data1$Time <- as.POSIXct(Photo.Data1$Time,format="%H:%M") #convert time from character to time
   brk <- unique(as.POSIXct(Sample.Info$Start.time,format="%H:%M"))
   Step1 <- subset(Photo.Data1, Photo.Data1$Time > brk[1] & Photo.Data1$Time < brk[2])
   Step2 <- subset(Photo.Data1, Photo.Data1$Time > brk[2] & Photo.Data1$Time < brk[3])
