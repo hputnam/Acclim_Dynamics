@@ -1,6 +1,0 @@
-"0","### Pocillopora acuta"
-"0","Pa.Data <- subset(Data.Trt.x, Species==""Pacuta"")"
-"0","Pa.km <- with(Pa.Data, Surv(lifespan, status))"
-"0","Pa.km_fit <- survfit(Surv(lifespan, status) ~ Treatment, data=Pa.Data) #*Origin"
-"0","Pa.sur <- summary(Pa.km_fit, times = c(1:58))"
-"0","autoplot(Pa.km_fit)"

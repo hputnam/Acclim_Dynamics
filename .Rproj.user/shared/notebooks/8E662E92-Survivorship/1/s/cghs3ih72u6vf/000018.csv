@@ -1,6 +1,0 @@
-"0","# Surv.figs <- arrange_ggsurvplots(Fig.Mcap, Fig.PA, print = FALSE)"
-"0","  # ncol = 1,"
-"0","  # nrow = 2,"
-"0","  # title = ""Survivorship Probability"")"
-"0","# ggsave(Fig.PA, file = ""Physiology_variables/Poc_Survival.pdf"", print(Fig.PA))"
-"0","png(""Physiology_variables/Poc_Survival.png"")"
