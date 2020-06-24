@@ -270,9 +270,14 @@ Pacuta %>% group_by(Treatment, Timepoint) %>% shapiro_test(Bleaching.Score)
 ggqqplot(Mcap, "Bleaching.Score", ggtheme = theme_bw()) + facet_grid(Timepoint ~ Treatment, labeller = "label_both")
 
 
+```
+
+Two-way repeated measures ANOVA. 
+```{r}
 Mcap.aov <- anova_test(data = Mcap, dv = Bleaching.Score, wid = PLUG.ID, within = c(Treatment, Timepoint))
 get_anova_table(Mcap.aov)
 
+## checking residuals for normality and outlier assumptions
 hist(Mcap.Pgross.aov$residuals)
 plot(Mcap.Pgross.aov$fitted.values, Mcap.Pgross.aov$residuals)
 shapiro.test(Mcap.Pgross.aov$residuals) 
