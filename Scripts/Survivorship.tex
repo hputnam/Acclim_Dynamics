@@ -112,14 +112,6 @@
 \begin{document}
 \maketitle
 
-Clear workspace.
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\KeywordTok{rm}\NormalTok{(}\DataTypeTok{list=}\KeywordTok{ls}\NormalTok{())}
-\end{Highlighting}
-\end{Shaded}
-
 Installing and loading required libraries.
 
 \begin{Shaded}
@@ -139,23 +131,48 @@ Installing and loading required libraries.
 \CommentTok{#Read in required libraries}
 \NormalTok{##### Include Versions of libraries}
 \KeywordTok{library}\NormalTok{(tidyr)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: package 'tidyr' was built under R version 3.6.2
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
 \KeywordTok{library}\NormalTok{(tidyverse)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
-## -- Attaching packages --------------------------------------- tidyverse 1.3.0 --
+## -- Attaching packages -------------------------------------------------------------------------------------------------- tidyverse 1.3.0 --
 \end{verbatim}
 
 \begin{verbatim}
-## v ggplot2 3.3.1     v dplyr   0.8.5
-## v tibble  2.1.3     v stringr 1.4.0
-## v readr   1.3.1     v forcats 0.5.0
-## v purrr   0.3.3
+## v ggplot2 3.3.1     v dplyr   1.0.0
+## v tibble  3.0.1     v stringr 1.4.0
+## v readr   1.3.1     v forcats 0.4.0
+## v purrr   0.3.4
 \end{verbatim}
 
 \begin{verbatim}
-## -- Conflicts ------------------------------------------ tidyverse_conflicts() --
+## Warning: package 'ggplot2' was built under R version 3.6.2
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: package 'tibble' was built under R version 3.6.2
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: package 'purrr' was built under R version 3.6.2
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: package 'dplyr' was built under R version 3.6.2
+\end{verbatim}
+
+\begin{verbatim}
+## -- Conflicts ----------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
 ## x dplyr::filter() masks stats::filter()
 ## x dplyr::lag()    masks stats::lag()
 \end{verbatim}
@@ -191,6 +208,15 @@ Installing and loading required libraries.
 \KeywordTok{library}\NormalTok{(ggplot2)}
 \KeywordTok{library}\NormalTok{(dplyr)}
 \KeywordTok{library}\NormalTok{(ggfortify)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: package 'ggfortify' was built under R version 3.6.2
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
 \KeywordTok{library}\NormalTok{(gridExtra)}
 \end{Highlighting}
 \end{Shaded}
@@ -211,6 +237,10 @@ Installing and loading required libraries.
 \KeywordTok{library}\NormalTok{(survminer)}
 \end{Highlighting}
 \end{Shaded}
+
+\begin{verbatim}
+## Warning: package 'survminer' was built under R version 3.6.2
+\end{verbatim}
 
 \begin{verbatim}
 ## Loading required package: ggpubr
@@ -241,7 +271,7 @@ Loading dataframes.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{Data <-}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\StringTok{"Physiology_variables/coral_survivorship_QC.csv"}\NormalTok{, }\DataTypeTok{header=}\NormalTok{T, }\DataTypeTok{sep=}\StringTok{","}\NormalTok{, }\DataTypeTok{na.string=}\StringTok{"NA"}\NormalTok{, }\DataTypeTok{stringsAsFactors =}\NormalTok{ F) }\CommentTok{#read in data file}
+\NormalTok{Data <-}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\StringTok{"Physiology_variables/Survivorship/coral_survivorship_QC.csv"}\NormalTok{, }\DataTypeTok{header=}\NormalTok{T, }\DataTypeTok{sep=}\StringTok{","}\NormalTok{, }\DataTypeTok{na.string=}\StringTok{"NA"}\NormalTok{, }\DataTypeTok{stringsAsFactors =}\NormalTok{ F) }\CommentTok{#read in data file}
 \NormalTok{Tank.Info <-}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\StringTok{"Environmental_data/Tank_to_Treatment.csv"}\NormalTok{, }\DataTypeTok{header=}\NormalTok{T, }\DataTypeTok{sep=}\StringTok{","}\NormalTok{, }\DataTypeTok{na.string=}\StringTok{"NA"}\NormalTok{) }\CommentTok{#read in data file }
 \NormalTok{Data.Trt <-}\StringTok{ }\KeywordTok{merge}\NormalTok{(Data, Tank.Info, }\DataTypeTok{by=}\StringTok{"Tank"}\NormalTok{)}
 \end{Highlighting}
@@ -309,7 +339,7 @@ Survivorship analysis.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{Survivorship_files/figure-latex/unnamed-chunk-5-1.pdf}
+\includegraphics{Survivorship_files/figure-latex/unnamed-chunk-4-1.pdf}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -322,87 +352,48 @@ Survivorship analysis.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{Survivorship_files/figure-latex/unnamed-chunk-5-2.pdf}
+\includegraphics{Survivorship_files/figure-latex/unnamed-chunk-4-2.pdf}
 
 Plotting survivorship analysis.
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{## Montipora capitata}
-\NormalTok{Fig.Mcap <-}\StringTok{ }\KeywordTok{ggsurvplot}\NormalTok{(Mc.km_fit, }\DataTypeTok{data=}\NormalTok{Mc.Data, }\DataTypeTok{size =} \DecValTok{1}\NormalTok{,  }\CommentTok{# change line size}
+
+\NormalTok{splots <-}\StringTok{ }\KeywordTok{list}\NormalTok{()}
+
+\NormalTok{splots[[}\DecValTok{1}\NormalTok{]] <-}\StringTok{ }\KeywordTok{ggsurvplot}\NormalTok{(Mc.km_fit, }\DataTypeTok{data=}\NormalTok{Mc.Data, }\DataTypeTok{size =} \DecValTok{1}\NormalTok{,  }\CommentTok{# change line size}
            \DataTypeTok{linetype =} \StringTok{"strata"}\NormalTok{, }\CommentTok{# change line type by groups}
            \DataTypeTok{break.time.by =} \DecValTok{7}\NormalTok{, }\CommentTok{# break time axis}
            \DataTypeTok{palette =} \KeywordTok{c}\NormalTok{(}\StringTok{"blue"}\NormalTok{, }\StringTok{"lightblue"}\NormalTok{, }\StringTok{"salmon"}\NormalTok{, }\StringTok{"red3"}\NormalTok{), }\CommentTok{# custom color palette}
            \DataTypeTok{conf.int =} \OtherTok{TRUE}\NormalTok{, }\CommentTok{# Add confidence interval}
            \DataTypeTok{legend.title =} \StringTok{""}\NormalTok{, }\CommentTok{# remove legend title}
-           \DataTypeTok{title =} \StringTok{"Montipora capitata"}\NormalTok{,}
+           \DataTypeTok{title =} \StringTok{"C) Montipora capitata"}\NormalTok{,}
            \DataTypeTok{xlab =} \StringTok{"Time in days"}\NormalTok{,}
            \DataTypeTok{font.title =} \KeywordTok{c}\NormalTok{(}\DecValTok{14}\NormalTok{, }\StringTok{"bold.italic"}\NormalTok{, }\StringTok{"black"}\NormalTok{), }\CommentTok{#title italicized}
+           \DataTypeTok{font.tickslab =} \KeywordTok{c}\NormalTok{(}\DecValTok{8}\NormalTok{, }\StringTok{"bold"}\NormalTok{, }\StringTok{"black"}\NormalTok{),}
            \DataTypeTok{legend.labs =} \KeywordTok{c}\NormalTok{(}\StringTok{"ATAC"}\NormalTok{, }\StringTok{"ATHC"}\NormalTok{,}\StringTok{"HTAC"}\NormalTok{, }\StringTok{"HTHC"}\NormalTok{), }\DataTypeTok{pval =} \OtherTok{TRUE}\NormalTok{, }\CommentTok{# Add p-value and change legend labels}
-           \DataTypeTok{legend=}\KeywordTok{c}\NormalTok{(}\FloatTok{0.115}\NormalTok{, }\FloatTok{0.45}\NormalTok{))}
-\NormalTok{Fig.Mcap}
-\end{Highlighting}
-\end{Shaded}
+           \DataTypeTok{legend=}\KeywordTok{c}\NormalTok{(}\FloatTok{0.115}\NormalTok{, }\FloatTok{0.5}\NormalTok{))}
 
-\includegraphics{Survivorship_files/figure-latex/unnamed-chunk-6-1.pdf}
 
-\begin{Shaded}
-\begin{Highlighting}[]
 \NormalTok{## Pocillopora acuta}
-\NormalTok{Fig.PA <-}\StringTok{ }\KeywordTok{ggsurvplot}\NormalTok{(Pa.km_fit, }\DataTypeTok{data=}\NormalTok{Pa.Data, }\DataTypeTok{size =} \DecValTok{1}\NormalTok{,  }\CommentTok{# change line size}
+\NormalTok{splots[[}\DecValTok{2}\NormalTok{]] <-}\StringTok{ }\KeywordTok{ggsurvplot}\NormalTok{(Pa.km_fit, }\DataTypeTok{data=}\NormalTok{Pa.Data, }\DataTypeTok{size =} \DecValTok{1}\NormalTok{,  }\CommentTok{# change line size}
            \DataTypeTok{linetype =} \StringTok{"strata"}\NormalTok{, }\CommentTok{# change line type by groups}
            \DataTypeTok{break.time.by =} \DecValTok{7}\NormalTok{, }\CommentTok{# break time axis}
            \DataTypeTok{palette =} \KeywordTok{c}\NormalTok{(}\StringTok{"blue"}\NormalTok{, }\StringTok{"lightblue"}\NormalTok{, }\StringTok{"salmon"}\NormalTok{, }\StringTok{"red3"}\NormalTok{), }\CommentTok{# custom color palette}
            \DataTypeTok{conf.int =} \OtherTok{TRUE}\NormalTok{, }\CommentTok{# Add confidence interval}
            \DataTypeTok{legend.title =} \StringTok{""}\NormalTok{, }\CommentTok{# remove legend title}
-           \DataTypeTok{title =} \StringTok{"Pocillopora acuta"}\NormalTok{,}
+           \DataTypeTok{title =} \StringTok{"D) Pocillopora acuta"}\NormalTok{,}
            \DataTypeTok{xlab =} \StringTok{"Time in days"}\NormalTok{,}
            \DataTypeTok{font.title =} \KeywordTok{c}\NormalTok{(}\DecValTok{14}\NormalTok{, }\StringTok{"bold.italic"}\NormalTok{, }\StringTok{"black"}\NormalTok{), }\CommentTok{#title italicized}
+           \DataTypeTok{font.tickslab =} \KeywordTok{c}\NormalTok{(}\DecValTok{8}\NormalTok{, }\StringTok{"bold"}\NormalTok{, }\StringTok{"black"}\NormalTok{),}
            \DataTypeTok{legend.labs =} \KeywordTok{c}\NormalTok{(}\StringTok{"ATAC"}\NormalTok{, }\StringTok{"ATHC"}\NormalTok{,}\StringTok{"HTAC"}\NormalTok{, }\StringTok{"HTHC"}\NormalTok{), }\DataTypeTok{pval =} \OtherTok{TRUE}\NormalTok{, }\CommentTok{# Add p-value and change legend labels}
-           \DataTypeTok{legend=}\KeywordTok{c}\NormalTok{(}\FloatTok{0.115}\NormalTok{, }\FloatTok{0.45}\NormalTok{))}
-\NormalTok{Fig.PA}
-\end{Highlighting}
-\end{Shaded}
+           \DataTypeTok{legend =} \StringTok{"none"}\NormalTok{)}
 
-\includegraphics{Survivorship_files/figure-latex/unnamed-chunk-6-2.pdf}
+\NormalTok{surv <-}\StringTok{ }\KeywordTok{arrange_ggsurvplots}\NormalTok{(splots, }\DataTypeTok{print =} \OtherTok{FALSE}\NormalTok{, }\DataTypeTok{ncol =} \DecValTok{2}\NormalTok{, }\DataTypeTok{nrow =} \DecValTok{1}\NormalTok{)}
+\KeywordTok{ggsave}\NormalTok{(}\StringTok{"Output/All_survivorship.pdf"}\NormalTok{, surv, }\DataTypeTok{width =} \DecValTok{10}\NormalTok{,}\DataTypeTok{height =} \DecValTok{4}\NormalTok{)}
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{# Surv.figs <- arrange_ggsurvplots(Fig.Mcap, Fig.PA, print = FALSE)}
-  \CommentTok{# ncol = 1,}
-  \CommentTok{# nrow = 2,}
-  \CommentTok{# title = "Survivorship Probability")}
-
-\CommentTok{# ggsave(Fig.PA, file = "Physiology_variables/Poc_Survival.pdf", print(Fig.PA))}
-
-\KeywordTok{png}\NormalTok{(}\StringTok{"Physiology_variables/Poc_Survival.png"}\NormalTok{)}
-\KeywordTok{print}\NormalTok{(Fig.PA, }\DataTypeTok{newpage =} \OtherTok{FALSE}\NormalTok{)}
-\KeywordTok{dev.off}\NormalTok{()}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-## pdf 
-##   2
-\end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\KeywordTok{jpeg}\NormalTok{(}\StringTok{"Physiology_variables/Mont_Survival.jpeg"}\NormalTok{)}
-\KeywordTok{print}\NormalTok{(Fig.Mcap, }\DataTypeTok{newpage =} \OtherTok{FALSE}\NormalTok{)}
-\KeywordTok{dev.off}\NormalTok{()}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-## pdf 
-##   2
-\end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{# ggsave(Fig.PA, file = "Physiology_variables/Poc_Survival.pdf", width = 8, height = 11)}
-\CommentTok{# ggsave(Fig.Mcap, file = "Physiology_variables/Mont_Survival.pdf", width = 8, height = 11)}
+\KeywordTok{ggsave}\NormalTok{(}\StringTok{"Output/All_survivorship.png"}\NormalTok{, surv, }\DataTypeTok{width =} \DecValTok{10}\NormalTok{,}\DataTypeTok{height =} \DecValTok{4}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 

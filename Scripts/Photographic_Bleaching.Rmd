@@ -83,14 +83,15 @@ x<- Blch #assign values to test data frame to look for outliers
 par(mar=c(10,4,2,2)) #bottom, left, top and right margins respectively
 boxplot(Bleaching.Score ~ Group, data = x, lwd = 1, ylab = 'PC1Color', las=2, cex=0.8) #plot boxplot of PC1 color score by treatment and timepoint
 
-# for use in plotting to avoid having to run PCA again
-Bleaching.Score <- read.csv("Physiology_variables/Bleaching_Intensity/Bleaching_Score.csv", header=T, sep=",", na.string="NA") #read in data file
 ```
 
 ** Statistical Analysis and Plotting ** 
 ```{r}
 
-mod1 <- aov(sqrt(Bleaching.Score+200) ~ Treatment*Timepoint*Species, data=Blch) #run an ANOVA 
+# for use in plotting to avoid having to run PCA again
+Bleaching.Score <- read.csv("Physiology_variables/Bleaching_Intensity/Bleaching_Score.csv", header=T, sep=",", na.string="NA") #read in data file
+
+mod1 <- aov(sqrt(Bleaching.Score+200) ~ Treatment*Timepoint*Species, data=Bleaching.Score) #run an ANOVA 
 hist(residuals(mod1)) #look at normality of data
 boxplot(residuals(mod1)) #look at normality of data
 summary(mod1)
@@ -110,7 +111,7 @@ phlett
 
 Calculating means, sample size, and standard error for timepoint, species, and treatment groups. 
 ```{r}
-All.Means <- ddply(Blch, c('Timepoint','Species','Treatment'), summarize,
+All.Means <- ddply(Bleaching.Score, c('Timepoint','Species','Treatment'), summarize,
                     mean= mean(Bleaching.Score, na.rm=T), #mean pnet
                     N = sum(!is.na(Bleaching.Score)), # sample size
                     se = sd(Bleaching.Score, na.rm=T)/sqrt(N)) #SE
@@ -183,6 +184,7 @@ Fig.MC <- ggplot(Mcap.Blch, aes(x=Timepoint, y=mean, group=Treatment)) +
   #annotate("text", x=35, y=0.5, label = ".", size = 1) + #add text to the graphic for posthoc letters
   xlab("Timepoint") +
   ylab(expression(paste("Bleaching Score"))) +
+  ylim(-110,20)+
   theme_bw() + #Set the background color
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
         axis.line = element_line(color = 'black'), #Set the axes color
@@ -191,24 +193,14 @@ Fig.MC <- ggplot(Mcap.Blch, aes(x=Timepoint, y=mean, group=Treatment)) +
         panel.grid.minor = element_blank(), #Set the minor gridlines
         plot.background=element_blank(),  #Set the plot background
         legend.position='none') + #remove legend background
-  ggtitle("M. capitata") +
+  ggtitle("A) M. capitata") +
   theme(plot.title = element_text(face = 'bold.italic', 
                                   size = 12, 
                                   hjust = 0)) +
-  geom_vline(xintercept = c(8.45), colour="red", linetype="dotted") + 
-  geom_vline(xintercept = c(8.55), colour="blue", linetype="dotted") + 
-  geom_vline(xintercept = c(16.55), colour="red", linetype="dotted") + 
-  geom_vline(xintercept = c(16.45), colour="blue", linetype="dotted") +
-  geom_vline(xintercept = c(0.5), colour="red", linetype="dotted") 
-  # geom_text(aes(x=1, y=-30, label="2-month Stress"), size=2.5, colour="red", angle=90, vjust=-1, hjust=0) +
-  # geom_text(aes(x=9, y=-30, label="2-month Recovery"), size=2.5, colour="blue", angle=90, vjust=-1, hjust=0) +
-  # geom_text(aes(x=17, y=-30, label="Recurrent Stress"), size=2.5, colour="red", angle=90, vjust=-1, hjust=0) 
+  geom_vline(xintercept = c(8.45), colour="black", linetype="dotted")
 
 Fig.MC
 
-png("Physiology_variables/Bleaching_Intensity/Bleaching_Mont.png")
-print(Fig.MC, newpage = FALSE)
-dev.off()
 ```
 
 Calculating P. acuta means and plotting bleaching intensity
@@ -225,6 +217,7 @@ Fig.PA <- ggplot(Pact.Blch, aes(x=Timepoint, y=mean, group=Treatment)) +
   #annotate("text", x=35, y=0.5, label = ".", size = 1) + #add text to the graphic for posthoc letters
   xlab("Timepoint") +
   ylab(expression(paste("Bleaching Intensity"))) +
+  ylim(-110,20)+
   theme_bw() + #Set the background color
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
         axis.line = element_line(color = 'black'), #Set the axes color
@@ -233,19 +226,17 @@ Fig.PA <- ggplot(Pact.Blch, aes(x=Timepoint, y=mean, group=Treatment)) +
         panel.grid.minor = element_blank(), #Set the minor gridlines
         plot.background=element_blank(),  #Set the plot background
         legend.position='none') + #remove legend background
-  ggtitle("P. acuta") +
+  ggtitle("B) P. acuta") +
   theme(plot.title = element_text(face = 'bold.italic', 
                                   size = 12, 
                                   hjust = 0)) + 
-  geom_vline(xintercept = c(8.45), colour="red", linetype="dotted") + 
-  geom_vline(xintercept = c(8.55), colour="blue", linetype="dotted") + 
-  geom_vline(xintercept = c(16.45), colour="blue", linetype="dotted") +
-  geom_vline(xintercept = c(0.5), colour="red", linetype="dotted") 
+  geom_vline(xintercept = c(8.45), colour="black", linetype="dotted") 
+
 Fig.PA
 
-png("Physiology_variables/Bleaching_Intensity/Bleaching_Poc.png")
-print(Fig.PA, newpage = FALSE)
-dev.off()
+
+Colorscr <- ggarrange(Fig.MC, Fig.PA,ncol = 2, nrow = 1)
+ggsave("Output/All.Color.Score.pdf", Colorscr, width=10, height=4)
 ```
 
 
