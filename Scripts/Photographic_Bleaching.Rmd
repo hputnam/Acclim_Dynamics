@@ -9,6 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+Clearing workspace and loading in required libraries. 
 ```{r}
 rm(list=ls()) #clears workspace 
 
@@ -18,7 +19,7 @@ if ("gridExtra" %in% rownames(installed.packages()) == 'FALSE') install.packages
 if ("plyr" %in% rownames(installed.packages()) == 'FALSE') install.packages('plyr') 
 if ("lsmeans" %in% rownames(installed.packages()) == 'FALSE') install.packages('lsmeans') 
 if ("multcompView" %in% rownames(installed.packages()) == 'FALSE') install.packages('multcompView') 
-
+if ("rstatix" %in% rownames(installed.packages()) == 'FALSE') install.packages('rstatix') 
 
 #Read in required libraries
 ##### Include Versions of libraries
@@ -28,28 +29,31 @@ library("gridExtra")
 library("plyr") 
 library("lsmeans")
 library("multcompView")
+library("rstatix")
 ```
 
+Reading in quality controlled version of ImageJ data.
+Protocol for ImageJ Bleaching Score Analysis found [here](https://emmastrand.github.io/EmmaStrand_Notebook/ImageJ-Analysis-Protocols/).  
 ```{r}
 Data <- read.csv("Physiology_variables/Bleaching_Intensity/Bleaching_ImageJ_QC.csv", header=T, sep=",", na.string="NA") #read in data file
 Sample.Info <- read.csv("Environmental_data/Master_Fragment_20200616_QC.csv", header=T, sep=",", na.string="NA") #read in data file 
 Sample.Info <- Sample.Info[,c(7,5,9)]
 Tank.Info <- read.csv("Environmental_data/Tank_to_Treatment.csv", header=T, sep=",", na.string="NA") #read in data file 
 
-
+# Double checking the Plug IDs are associated with the correct tanks. 
 A <- Sample.Info$PLUG.ID
 B <- Data$PLUG.ID
 bad.id.tanks <- which(B %in% A ==FALSE)
 bad.id.tanks
 
-
-Data <-na.omit(Data)
+Data <-na.omit(Data) # removing all rows with NA values 
 ```
 
+Normalizing to color standards. 
 ```{r}
-Data$Red.Norm.Coral <- Data$Red.Coral/Data$Red.Standard #normalize to color standard
-Data$Green.Norm.Coral <- Data$Green.Coral/Data$Green.Standard #normalize to color standard
-Data$Blue.Norm.Coral <- Data$Blue.Coral/Data$Blue.Standard #normalize to color standard
+Data$Red.Norm.Coral <- Data$Red.Coral/Data$Red.Standard
+Data$Green.Norm.Coral <- Data$Green.Coral/Data$Green.Standard
+Data$Blue.Norm.Coral <- Data$Blue.Coral/Data$Blue.Standard
 ```
 
 ```{r}
@@ -70,6 +74,7 @@ Blch$Group <- paste(Blch$Timepoint, Blch$Treatment, Blch$Species)
 Blch$SpGroup <- paste(Blch$Treatment, Blch$Species)
 ```
 
+Output: Bleaching Score dataframe and checking for outliers in the dataset. 
 ```{r}
 write.table(Blch, file = "Physiology_variables/Bleaching_Intensity/Bleaching_Score.csv", append = FALSE, quote = TRUE, sep = ",",
             eol = "\n", na = "NA", dec = ".", row.names = TRUE,
@@ -78,12 +83,12 @@ write.table(Blch, file = "Physiology_variables/Bleaching_Intensity/Bleaching_Sco
 
 x<- Blch #assign values to test data frame to look for outliers
 par(mar=c(10,4,2,2)) #bottom, left, top and right margins respectively
-boxplot(Bleaching.Score ~ Group, data = x, lwd = 1, ylab = 'PC1Color', las=2, cex=0.8) #plot boxplot of PC1 color score by Genotype and timepoint
+boxplot(Bleaching.Score ~ Group, data = x, lwd = 1, ylab = 'PC1Color', las=2, cex=0.8) #plot boxplot of PC1 color score by treatment and timepoint
 
-## Sample Sizes 
-Bleaching.Score <- read.csv("Physiology_variables/Bleaching_Score.csv", header=T, sep=",", na.string="NA") #read in data file
+Bleaching.Score <- read.csv("Physiology_variables/Bleaching_Intensity/Bleaching_Score.csv", header=T, sep=",", na.string="NA") #read in data file
 ```
 
+** COME BACK AND CLEAN UP THIS SECTION ** 
 ```{r}
 pdf("Physiology_variables/Bleaching_Intensity/Photographic_Bleaching.pdf")
 par(mar=c(10,4,2,2)) #bottom, left, top and right margins respectively
@@ -111,8 +116,9 @@ CLD <- CLD[order(CLD$Timepoint, CLD$Treatment, CLD$Species),]
 CLD
 ```
 
+Calculating means, sample size, and standard error for timepoint, species, and treatment groups. 
 ```{r}
-All.Means <- ddply(Blch, c('Timepoint','Species', 'Treatment'), summarize,
+All.Means <- ddply(Blch, c('Timepoint','Species','Treatment'), summarize,
                     mean= mean(Bleaching.Score, na.rm=T), #mean pnet
                     N = sum(!is.na(Bleaching.Score)), # sample size
                     se = sd(Bleaching.Score, na.rm=T)/sqrt(N)) #SE
@@ -122,12 +128,9 @@ All.Means$Group <- paste(All.Means$Timepoint, All.Means$Treatment, All.Means$Spe
 All.Means$SpGroup <- paste(All.Means$Treatment, All.Means$Species)
 
 All.Means$Timepoint <- factor(All.Means$Timepoint, levels = c("Week1", "Week2", "Week3", "Week4", "Week5", "Week6", "Week7", "Week8", "Week9", "Week10", "Week11", "Week12", "Week13", "Week14", "Week15", "Week16"))
-
-# All.Means$Timepoint <- factor(All.Means$Timepoint, levels = c("Time1", "Time2", "Time3", "Time4", "Time5", "Time6", "Time7", "Time8", "Time9", "Time10", "Time11", "Time12", "Time13", "Time14", "Time15", "Time16"))
-
-rec <- data.frame(x1=c(1,3,1,5,4))
 ```
 
+Plotting bleaching intensity for both species, and for all timepoints and treatments. 
 ```{r}
 cols <- c("lightblue", "blue", "salmon", "red3")
 
@@ -163,22 +166,15 @@ print(Fig.All, newpage = FALSE)
 dev.off()
 ```
 
+Subsetting larger bleaching dataframe to species level.
 ```{r}
-Mcap.Blch <- subset(Blch, Species=="Montipora")
-Pact.Blch <- subset(Blch, Species=="Pocillopora")
+Mcap.Blch <- subset(All.Means, Species=="Montipora")
+Pact.Blch <- subset(All.Means, Species=="Pocillopora")
 ```
 
 Calculating M.cap means and plotting bleaching intensity
 ```{r}
-Mcap.Means <- ddply(Mcap.Blch, c('Timepoint','Species', 'Treatment'), summarize,
-                  mean= mean(Bleaching.Score, na.rm=T), #mean pnet
-                  N = sum(!is.na(Bleaching.Score)), # sample size
-                  se = sd(Bleaching.Score, na.rm=T)/sqrt(N)) #SE
-Mcap.Means
-
-Mcap.Means$Timepoint <- factor(Mcap.Means$Timepoint, levels = c("Week1", "Week2", "Week3", "Week4", "Week5", "Week6", "Week7", "Week8", "Week9", "Week10", "Week11", "Week12", "Week13", "Week14", "Week15", "Week16"))
-
-Fig.MC <- ggplot(Mcap.Means, aes(x=Timepoint, y=mean, group=Treatment)) + 
+Fig.MC <- ggplot(Mcap.Blch, aes(x=Timepoint, y=mean, group=Treatment)) + 
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se), colour="black", width=.1, position = position_dodge(width = 0.1)) +
   geom_point(aes(colour=Treatment), size = 2, position = position_dodge(width = 0.1)) +
   geom_line(aes(colour=Treatment, group=Treatment), position = position_dodge(width = 0.2), alpha=0.4) + # colour, group both depend on cond2
@@ -221,15 +217,7 @@ dev.off()
 
 Calculating P. acuta means and plotting bleaching intensity
 ```{r}
-Pact.Means <- ddply(Pact.Blch, c('Timepoint','Species', 'Treatment'), summarize,
-                    mean= mean(Bleaching.Score, na.rm=T), #mean pnet
-                    N = sum(!is.na(Bleaching.Score)), # sample size
-                    se = sd(Bleaching.Score, na.rm=T)/sqrt(N)) #SE
-Pact.Means
-
-Pact.Means$Timepoint <- factor(Pact.Means$Timepoint, levels = c("Week1", "Week2", "Week3", "Week4", "Week5", "Week6", "Week7", "Week8", "Week9", "Week10", "Week11", "Week12", "Week13", "Week14", "Week15", "Week16"))
-
-Fig.PA <- ggplot(Pact.Means, aes(x=Timepoint, y=mean, group=Treatment)) + 
+Fig.PA <- ggplot(Pact.Blch, aes(x=Timepoint, y=mean, group=Treatment)) + 
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se), colour="black", width=.1, position = position_dodge(width = 0.1)) +
   geom_point(aes(colour=Treatment), size = 2, position = position_dodge(width = 0.1)) +
   geom_line(aes(colour=Treatment, group=Treatment), position = position_dodge(width = 0.2), alpha=0.4) + # colour, group both depend on cond2
@@ -265,6 +253,29 @@ print(Fig.PA, newpage = FALSE)
 dev.off()
 ```
 
+Checking assumptions prior to statistical tests.
+```{r}
+Mcap <- subset(Blch, Species=="Montipora")
+Pacuta <- subset(Blch, Species=="Pocillopora")
 
+# Identifying outliers
+Mcap %>% group_by(Treatment, Timepoint) %>% identify_outliers(Bleaching.Score)
+Pacuta %>% group_by(Treatment, Timepoint) %>% identify_outliers(Bleaching.Score)
+
+# Normality Assumption 
+Mcap %>% group_by(Treatment, Timepoint) %>% shapiro_test(Bleaching.Score)
+Pacuta %>% group_by(Treatment, Timepoint) %>% shapiro_test(Bleaching.Score)
+
+# QQ plot 
+ggqqplot(Mcap, "Bleaching.Score", ggtheme = theme_bw()) + facet_grid(Timepoint ~ Treatment, labeller = "label_both")
+
+
+Mcap.aov <- anova_test(data = Mcap, dv = Bleaching.Score, wid = PLUG.ID, within = c(Treatment, Timepoint))
+get_anova_table(Mcap.aov)
+
+hist(Mcap.Pgross.aov$residuals)
+plot(Mcap.Pgross.aov$fitted.values, Mcap.Pgross.aov$residuals)
+shapiro.test(Mcap.Pgross.aov$residuals) 
+```
 
 
