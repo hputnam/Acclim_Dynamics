@@ -239,6 +239,28 @@ Colorscr <- ggarrange(Fig.MC, Fig.PA,ncol = 2, nrow = 1)
 ggsave("Output/All.Color.Score.pdf", Colorscr, width=10, height=4)
 ```
 
+Checking assumptions prior to statistical tests.
+```{r}
+Mcap <- subset(Blch, Species=="Montipora")
+Pacuta <- subset(Blch, Species=="Pocillopora")
+# Identifying outliers
+Mcap %>% group_by(Treatment, Timepoint) %>% identify_outliers(Bleaching.Score)
+Pacuta %>% group_by(Treatment, Timepoint) %>% identify_outliers(Bleaching.Score)
+# Normality Assumption 
+Mcap %>% group_by(Treatment, Timepoint) %>% shapiro_test(Bleaching.Score)
+Pacuta %>% group_by(Treatment, Timepoint) %>% shapiro_test(Bleaching.Score)
+# QQ plot 
+ggqqplot(Mcap, "Bleaching.Score", ggtheme = theme_bw()) + facet_grid(Timepoint ~ Treatment, labeller = "label_both")
+```
 
+Two-way repeated measures ANOVA. 
+```{r}
+Mcap.aov <- anova_test(data = Mcap, dv = Bleaching.Score, wid = PLUG.ID, within = c(Treatment, Timepoint))
+get_anova_table(Mcap.aov)
+## checking residuals for normality and outlier assumptions
+hist(Mcap.Pgross.aov$residuals)
+plot(Mcap.Pgross.aov$fitted.values, Mcap.Pgross.aov$residuals)
+shapiro.test(Mcap.Pgross.aov$residuals) 
+```
 
 
