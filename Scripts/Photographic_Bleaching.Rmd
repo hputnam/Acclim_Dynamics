@@ -66,8 +66,8 @@ summary(PCA.color) # view variance explained by PCs
 Blch <- as.data.frame(-PCA.color$scores[,1]) #extract PC1
 Blch$PLUG.ID <- rownames(blch.scor)
 
-Blch  <- cbind(Blch, Data$Timepoint, Data$Treatment, Data$Species) #make a dataframe of PC1 and experiment factors
-colnames(Blch) <- c("Bleaching.Score", "PLUG.ID", "Timepoint", "Treatment", "Species")
+Blch  <- cbind(Blch, Data$Timepoint, Data$Temperature, Data$CO2, Data$Treatment, Data$Species) #make a dataframe of PC1 and experiment factors
+colnames(Blch) <- c("Bleaching.Score", "PLUG.ID", "Timepoint", "Temperature", "CO2", "Treatment", "Species")
 Blch$Group <- paste(Blch$Timepoint, Blch$Treatment, Blch$Species)
 Blch$SpGroup <- paste(Blch$Treatment, Blch$Species)
 ```
@@ -89,15 +89,15 @@ boxplot(Bleaching.Score ~ Group, data = x, lwd = 1, ylab = 'PC1Color', las=2, ce
 ```{r}
 
 # for use in plotting to avoid having to run PCA again
-Bleaching.Score <- read.csv("Physiology_variables/Bleaching_Intensity/Bleaching_Score.csv", header=T, sep=",", na.string="NA") #read in data file
+Color.Score <- read.csv("Physiology_variables/Bleaching_Intensity/Bleaching_Score.csv", header=T, sep=",", na.string="NA") #read in data file
 
-mod1 <- aov(sqrt(Bleaching.Score+200) ~ Treatment*Timepoint*Species, data=Bleaching.Score) #run an ANOVA 
+mod1 <- aov(sqrt(Bleaching.Score+200) ~ Temperature*CO2*Timepoint*Species, data=Color.Score) #run an ANOVA 
 hist(residuals(mod1)) #look at normality of data
 boxplot(residuals(mod1)) #look at normality of data
 summary(mod1)
 
 #posthoc analyses
-marginal <- emmeans(mod1, ~ Treatment*Timepoint*Species)
+marginal <- emmeans(mod1, ~ Temperature*CO2*Timepoint*Species)
 
 #letter display of posthoc results
 phlett <- multcomp::cld(marginal,
@@ -105,13 +105,13 @@ phlett <- multcomp::cld(marginal,
           Letters=letters,
           adjust="tukey")
 
-phlett <- phlett[order(phlett$Timepoint, phlett$Treatment, phlett$Species),]
+phlett <- phlett[order(phlett$Timepoint, phlett$Temperature, phlett$CO2, phlett$Species),]
 phlett
 ```
 
 Calculating means, sample size, and standard error for timepoint, species, and treatment groups. 
 ```{r}
-All.Means <- ddply(Bleaching.Score, c('Timepoint','Species','Treatment'), summarize,
+All.Means <- ddply(Color.Score, c('Timepoint','Species','Treatment'), summarize,
                     mean= mean(Bleaching.Score, na.rm=T), #mean pnet
                     N = sum(!is.na(Bleaching.Score)), # sample size
                     se = sd(Bleaching.Score, na.rm=T)/sqrt(N)) #SE
@@ -139,7 +139,7 @@ Fig.All <- ggplot(All.Means, aes(x=Timepoint, y=mean, group=SpGroup)) +
   #annotate("text", x=c(141,141), y=c(3.15,3.4), label = "c", size = 3) + #add text to the graphic for posthoc letters
   #annotate("text", x=35, y=0.5, label = ".", size = 1) + #add text to the graphic for posthoc letters
   xlab("Timepoint") +
-  ylab(expression(paste("Bleaching Intensity"))) +
+  ylab(expression(paste("Color Score"))) +
   ylim(-110, 20) +
   theme_bw() + #Set the background color
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
@@ -183,7 +183,7 @@ Fig.MC <- ggplot(Mcap.Blch, aes(x=Timepoint, y=mean, group=Treatment)) +
   #annotate("text", x=c(141,141), y=c(3.15,3.4), label = "c", size = 3) + #add text to the graphic for posthoc letters
   #annotate("text", x=35, y=0.5, label = ".", size = 1) + #add text to the graphic for posthoc letters
   xlab("Timepoint") +
-  ylab(expression(paste("Bleaching Score"))) +
+  ylab(expression(paste("Color Score"))) +
   ylim(-110,20)+
   theme_bw() + #Set the background color
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
@@ -195,7 +195,7 @@ Fig.MC <- ggplot(Mcap.Blch, aes(x=Timepoint, y=mean, group=Treatment)) +
         legend.position='none') + #remove legend background
   ggtitle("A) M. capitata") +
   theme(plot.title = element_text(face = 'bold.italic', 
-                                  size = 12, 
+                                  size = 14, 
                                   hjust = 0)) +
   geom_vline(xintercept = c(8.45), colour="black", linetype="dotted")
 
@@ -216,7 +216,7 @@ Fig.PA <- ggplot(Pact.Blch, aes(x=Timepoint, y=mean, group=Treatment)) +
   #annotate("text", x=c(141,141), y=c(3.15,3.4), label = "c", size = 3) + #add text to the graphic for posthoc letters
   #annotate("text", x=35, y=0.5, label = ".", size = 1) + #add text to the graphic for posthoc letters
   xlab("Timepoint") +
-  ylab(expression(paste("Bleaching Intensity"))) +
+  ylab(expression(paste("Color Score"))) +
   ylim(-110,20)+
   theme_bw() + #Set the background color
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
@@ -228,7 +228,7 @@ Fig.PA <- ggplot(Pact.Blch, aes(x=Timepoint, y=mean, group=Treatment)) +
         legend.position='none') + #remove legend background
   ggtitle("B) P. acuta") +
   theme(plot.title = element_text(face = 'bold.italic', 
-                                  size = 12, 
+                                  size = 14, 
                                   hjust = 0)) + 
   geom_vline(xintercept = c(8.45), colour="black", linetype="dotted") 
 
@@ -237,30 +237,8 @@ Fig.PA
 
 Colorscr <- ggarrange(Fig.MC, Fig.PA,ncol = 2, nrow = 1)
 ggsave("Output/All.Color.Score.pdf", Colorscr, width=10, height=4)
-```
 
-Checking assumptions prior to statistical tests.
-```{r}
-Mcap <- subset(Blch, Species=="Montipora")
-Pacuta <- subset(Blch, Species=="Pocillopora")
-# Identifying outliers
-Mcap %>% group_by(Treatment, Timepoint) %>% identify_outliers(Bleaching.Score)
-Pacuta %>% group_by(Treatment, Timepoint) %>% identify_outliers(Bleaching.Score)
-# Normality Assumption 
-Mcap %>% group_by(Treatment, Timepoint) %>% shapiro_test(Bleaching.Score)
-Pacuta %>% group_by(Treatment, Timepoint) %>% shapiro_test(Bleaching.Score)
-# QQ plot 
-ggqqplot(Mcap, "Bleaching.Score", ggtheme = theme_bw()) + facet_grid(Timepoint ~ Treatment, labeller = "label_both")
+Colorscr <- ggarrange(Fig.MC, Fig.PA,ncol = 2, nrow = 1)
+ggsave("Output/All.Color.Score.png", Colorscr, width=10, height=4)
 ```
-
-Two-way repeated measures ANOVA. 
-```{r}
-Mcap.aov <- anova_test(data = Mcap, dv = Bleaching.Score, wid = PLUG.ID, within = c(Treatment, Timepoint))
-get_anova_table(Mcap.aov)
-## checking residuals for normality and outlier assumptions
-hist(Mcap.Pgross.aov$residuals)
-plot(Mcap.Pgross.aov$fitted.values, Mcap.Pgross.aov$residuals)
-shapiro.test(Mcap.Pgross.aov$residuals) 
-```
-
 

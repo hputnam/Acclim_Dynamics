@@ -89,7 +89,7 @@ splots[[1]] <- ggsurvplot(Mc.km_fit, data=Mc.Data, size = 1,  # change line size
            palette = c("blue", "lightblue", "salmon", "red3"), # custom color palette
            conf.int = TRUE, # Add confidence interval
            legend.title = "", # remove legend title
-           title = "C) Montipora capitata",
+           title = "C) M. capitata",
            xlab = "Time in days",
            font.title = c(14, "bold.italic", "black"), #title italicized
            font.tickslab = c(8, "bold", "black"),
@@ -104,7 +104,7 @@ splots[[2]] <- ggsurvplot(Pa.km_fit, data=Pa.Data, size = 1,  # change line size
            palette = c("blue", "lightblue", "salmon", "red3"), # custom color palette
            conf.int = TRUE, # Add confidence interval
            legend.title = "", # remove legend title
-           title = "D) Pocillopora acuta",
+           title = "D) P. acuta",
            xlab = "Time in days",
            font.title = c(14, "bold.italic", "black"), #title italicized
            font.tickslab = c(8, "bold", "black"),
