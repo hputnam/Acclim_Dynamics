@@ -9,8 +9,9 @@ rm(list=ls()) #clears workspace
 
 #Read in required libraries
 ##### Include Versions of libraries
-library('plyr')
-library('ggplot2')
+library("tidyverse")
+library("ggpubr")
+library("ggplot2")
 library("sciplot")
 library("plotrix")
 library("reshape2")
@@ -23,28 +24,25 @@ library("gridExtra")
 
 
 #Timepoints
-#Time0 - 20180920, 20180921
-#Time1 - 20180927, 20180928
-#Time2 - 201801004, 20181005
-#Time3 - 201801018, 201801019
-#Time4 - 201801101, 201801102
-#Time5 - 201801115, 201801116
-#Time6 - 201801129
-#Time7 - 201801213
-#Time8 - 201801227
-#Time9 - 20190110
+#Time0 - 20180920, 20180921 
+#Time1 - 20180927, 20180928 - Week 1
+#Time2 - 201801004, 20181005 - Week 2
+#Time3 - 201801018, 201801019 - Week 4
+#Time4 - 201801101, 201801102 - Week 6
+#Time5 - 201801115, 201801116 - Week 8 
+#Time6 - 201801129 - Week 10
+#Time7 - 201801213 - Week 12
+#Time8 - 201801227 - Week 14
+#Time9 - 20190110 - Week 16
 
-
-# Set Working Directory:
-setwd("~/MyProjects/Holobiont_Integration/RAnalysis/Data/Buoyant_Weight") #set working
 
 ##### Standards ##### 
-CalData<-read.csv('Buoyant_weight_calibration_curve.csv', header=T, sep=",")
+CalData<-read.csv('Physiology_variables/Growth_Buoyant_Weight/Buoyant_weight_calibration_curve.csv', header=T, sep=",")
 #Data with Standard weights in grams in deionized water, saltwater, and the temp that they were measured at
   # No deionized water measurements 20190405 EL Strand
 
 #plot relationship between temp and Standard in fresh and salt water
-pdf("Buoyant Weight Standard Curves.pdf")
+pdf("Physiology_variables/Growth_Buoyant_Weight/Buoyant Weight Standard Curves.pdf")
 plot(CalData$Temp, CalData$StandardSalt, col = 'red', ylab = 'Salt Weight (g)', xlab = 'Temp C')
 par(new=TRUE) #allows another set of data to be plotted on the same frame
 plot(CalData$Temp, CalData$StandardFresh, col = 'blue',xaxt="n",yaxt="n",xlab="",ylab="")
@@ -66,11 +64,6 @@ summary(StandardFreshModel)
 summary(StandardFreshModel)$r.squared
 StandardFreshModel$coef
 
-
-##### load coral weight data #####
-BW.data <-read.csv('Buoyant_Weight.csv', header=T, na.strings = "NA") 
-BW <- as.numeric(as.character(BW.data$Mass.g)) #assign mass data to BW for function
-Temp <- BW.data$Temp.C #assign temp to temp for function
 
 ##### BW Function #####
 BWCalc <- function(StandardAir= 31.348, Temp, BW, CoralDensity = 2.93){
@@ -105,232 +98,193 @@ CoralWeight <- BW/(1-(SWDensity/CoralDensity))
   
   return(CoralWeight) #returns coral dry weights in g
 }
-  
-BW.data$Dry.Weigh.g <- BWCalc(BW=BW, Temp=Temp) #use function to calculate dry weight
-hist(BW.data$Dry.Weigh.g, las=2) #examine data
-boxplot(BW.data$Dry.Weigh.g ~BW.data$Tank, las=2) #examine data
 
-##### Calculating Rates #####
+##### load coral weight data #####
+#Initial points
+T0.Init <- read.csv('Physiology_variables/Growth_Buoyant_Weight/Buoyant_Weight_Time0Init.csv', header=T, na.strings = "NA") 
+T0.Init$Dry.Weigh.g <- BWCalc(BW=T0.Init$Mass.g, Temp=T0.Init$Temp.C) #use function to calculate dry weight
+T1.Init <- read.csv('Physiology_variables/Growth_Buoyant_Weight/Buoyant_Weight_Time1Init.csv', header=T, na.strings = "NA") 
+T1.Init$Dry.Weigh.g <- BWCalc(BW=T1.Init$Mass.g, Temp=T1.Init$Temp.C) #use function to calculate dry weight
+T2.Init <- read.csv('Physiology_variables/Growth_Buoyant_Weight/Buoyant_Weight_Time2Init.csv', header=T, na.strings = "NA") 
+T2.Init$Dry.Weigh.g <- BWCalc(BW=T2.Init$Mass.g, Temp=T2.Init$Temp.C) #use function to calculate dry weight
+T3.Init <- read.csv('Physiology_variables/Growth_Buoyant_Weight/Buoyant_Weight_Time3Init.csv', header=T, na.strings = "NA") 
+T3.Init$Dry.Weigh.g <- BWCalc(BW=T3.Init$Mass.g, Temp=T3.Init$Temp.C) #use function to calculate dry weight
+T4.Init <- read.csv('Physiology_variables/Growth_Buoyant_Weight/Buoyant_Weight_Time4Init.csv', header=T, na.strings = "NA") 
+T4.Init$Dry.Weigh.g <- BWCalc(BW=T4.Init$Mass.g, Temp=T4.Init$Temp.C) #use function to calculate dry weight
+T5.Init <- read.csv('Physiology_variables/Growth_Buoyant_Weight/Buoyant_Weight_Time5Init.csv', header=T, na.strings = "NA") 
+T5.Init$Dry.Weigh.g <- BWCalc(BW=T5.Init$Mass.g, Temp=T5.Init$Temp.C) #use function to calculate dry weight
+T6.Init <- read.csv('Physiology_variables/Growth_Buoyant_Weight/Buoyant_Weight_Time6Init.csv', header=T, na.strings = "NA") 
+T6.Init$Dry.Weigh.g <- BWCalc(BW=T6.Init$Mass.g, Temp=T6.Init$Temp.C) #use function to calculate dry weight
+T7.Init <- read.csv('Physiology_variables/Growth_Buoyant_Weight/Buoyant_Weight_Time7Init.csv', header=T, na.strings = "NA") 
+T7.Init$Dry.Weigh.g <- BWCalc(BW=T7.Init$Mass.g, Temp=T7.Init$Temp.C) #use function to calculate dry weight
+T8.Init <- read.csv('Physiology_variables/Growth_Buoyant_Weight/Buoyant_Weight_Time8Init.csv', header=T, na.strings = "NA") 
+T8.Init$Dry.Weigh.g <- BWCalc(BW=T8.Init$Mass.g, Temp=T8.Init$Temp.C) #use function to calculate dry weight
 
-#Time0 - 20180920, 20180921
-#Time1 - 20180927, 20180928
-#Time2 - 201801004, 20181005
-#Time3 - 201801018, 201801019
-#Time4 - 201801101, 201801102
-#Time5 - 201801115, 201801116
-#Time6 - 201801129
-#Time7 - 201801213
-#Time8 - 201801227
-#Time9 - 20190110
+#Final points
+T0.Fin <- read.csv('Physiology_variables/Growth_Buoyant_Weight/Buoyant_Weight_Time0Fin.csv', header=T, na.strings = "NA") 
+T0.Fin$Dry.Weigh.g <- BWCalc(BW=T0.Fin$Mass.g, Temp=T0.Fin$Temp.C) #use function to calculate dry weight
+T1.Fin <- read.csv('Physiology_variables/Growth_Buoyant_Weight/Buoyant_Weight_Time1Fin.csv', header=T, na.strings = "NA") 
+T1.Fin$Dry.Weigh.g <- BWCalc(BW=T1.Fin$Mass.g, Temp=T1.Fin$Temp.C) #use function to calculate dry weight
+T2.Fin <- read.csv('Physiology_variables/Growth_Buoyant_Weight/Buoyant_Weight_Time2Fin.csv', header=T, na.strings = "NA") 
+T2.Fin$Dry.Weigh.g <- BWCalc(BW=T2.Fin$Mass.g, Temp=T2.Fin$Temp.C) #use function to calculate dry weight
+T3.Fin <- read.csv('Physiology_variables/Growth_Buoyant_Weight/Buoyant_Weight_Time3Fin.csv', header=T, na.strings = "NA") 
+T3.Fin$Dry.Weigh.g <- BWCalc(BW=T3.Fin$Mass.g, Temp=T3.Fin$Temp.C) #use function to calculate dry weight
+T4.Fin <- read.csv('Physiology_variables/Growth_Buoyant_Weight/Buoyant_Weight_Time4Fin.csv', header=T, na.strings = "NA") 
+T4.Fin$Dry.Weigh.g <- BWCalc(BW=T4.Fin$Mass.g, Temp=T4.Fin$Temp.C) #use function to calculate dry weight
+T5.Fin <- read.csv('Physiology_variables/Growth_Buoyant_Weight/Buoyant_Weight_Time5Fin.csv', header=T, na.strings = "NA") 
+T5.Fin$Dry.Weigh.g <- BWCalc(BW=T5.Fin$Mass.g, Temp=T5.Fin$Temp.C) #use function to calculate dry weight
+T6.Fin <- read.csv('Physiology_variables/Growth_Buoyant_Weight/Buoyant_Weight_Time6Fin.csv', header=T, na.strings = "NA") 
+T6.Fin$Dry.Weigh.g <- BWCalc(BW=T6.Fin$Mass.g, Temp=T6.Fin$Temp.C) #use function to calculate dry weight
+T7.Fin <- read.csv('Physiology_variables/Growth_Buoyant_Weight/Buoyant_Weight_Time7Fin.csv', header=T, na.strings = "NA") 
+T7.Fin$Dry.Weigh.g <- BWCalc(BW=T7.Fin$Mass.g, Temp=T7.Fin$Temp.C) #use function to calculate dry weight
+T8.Fin <- read.csv('Physiology_variables/Growth_Buoyant_Weight/Buoyant_Weight_Time8Fin.csv', header=T, na.strings = "NA") 
+T8.Fin$Dry.Weigh.g <- BWCalc(BW=T8.Fin$Mass.g, Temp=T8.Fin$Temp.C) #use function to calculate dry weight
 
-#Dry Weights
-data.0.curve <- subset(BW.data, Date==20180920 | Date==20180921)
-data.1.curve <- subset(BW.data, Date==20180927 | Date==20180928)
-data.2.curve <- subset(BW.data, Date==20181004 | Date==20181005)
-data.3.curve <- subset(BW.data, Date==20181018 | Date==20181019)
-data.4.curve <- subset(BW.data, Date==20181101 | Date==20181102)
-data.5.curve <- subset(BW.data, Date==20181115 | Date==20181116)
-data.6.curve <- subset(BW.data, Date==20181129)
-data.7.curve <- subset(BW.data, Date==20181213)
-data.8.curve <- subset(BW.data, Date==20181227)
-data.9.curve <- subset(BW.data, Date==20190110)
+#check for outliers by plotting dry weight by tank and time
+BW.data.long <- rbind(T0.Init,T0.Fin,T1.Init,T1.Fin,T2.Init,T2.Fin,T3.Init,T3.Fin,T4.Init,T4.Fin,
+                      T5.Init,T5.Fin,T6.Init,T6.Fin,T7.Init,T7.Fin,T8.Init,T8.Fin)
+ggboxplot(BW.data.long, x = "Tank", y = "Dry.Weigh.g", facet.by = "TimePoint")
 
-boxplot(data.0.curve$Dry.Weigh.g ~data.0.curve$Tank, las=2) #examine data
-boxplot(data.1.curve$Dry.Weigh.g ~data.1.curve$Tank, las=2) #examine data
-boxplot(data.2.curve$Dry.Weigh.g ~data.2.curve$Tank, las=2) #examine data
-boxplot(data.3.curve$Dry.Weigh.g ~data.3.curve$Tank, las=2) #examine data
-boxplot(data.4.curve$Dry.Weigh.g ~data.4.curve$Tank, las=2) #examine data
-boxplot(data.5.curve$Dry.Weigh.g ~data.5.curve$Tank, las=2) #examine data
-boxplot(data.6.curve$Dry.Weigh.g ~data.6.curve$Tank, las=2) #examine data
-boxplot(data.7.curve$Dry.Weigh.g ~data.7.curve$Tank, las=2) #examine data
-boxplot(data.8.curve$Dry.Weigh.g ~data.8.curve$Tank, las=2) #examine data
-boxplot(data.9.curve$Dry.Weigh.g ~data.9.curve$Tank, las=2) #examine data
-
-
-par(mfrow=c(2,4))
-boxplot(data.0.curve$Dry.Weigh.g ~data.0.curve$Tank, main="Time0", ylim=c(0,15), las=2) #examine data
-boxplot(data.1.curve$Dry.Weigh.g ~data.1.curve$Tank, main="Time1", ylim=c(0,15), las=2) #examine data
-boxplot(data.2.curve$Dry.Weigh.g ~data.2.curve$Tank, main="Time2", ylim=c(0,15), las=2) #examine data
-boxplot(data.3.curve$Dry.Weigh.g ~data.3.curve$Tank, main="Time3", ylim=c(0,15), las=2) #examine data
-boxplot(data.4.curve$Dry.Weigh.g ~data.4.curve$Tank, main="Time4", ylim=c(0,15), las=2) #examine data
-boxplot(data.5.curve$Dry.Weigh.g ~data.5.curve$Tank, main="Time5", ylim=c(0,15), las=2) #examine data
-boxplot(data.6.curve$Dry.Weigh.g ~data.6.curve$Tank, main="Time6", ylim=c(0,15), las=2) #examine data
-boxplot(data.7.curve$Dry.Weigh.g ~data.7.curve$Tank, main="Time7", ylim=c(0,15), las=2) #examine data
-boxplot(data.8.curve$Dry.Weigh.g ~data.8.curve$Tank, main="Time8", ylim=c(0,15), las=2) #examine data
-boxplot(data.9.curve$Dry.Weigh.g ~data.9.curve$Tank, main="Time9", ylim=c(0,15), las=2) #examine data
-
-######Compare with single point standard #####
-# #load coral weight data
-# BWdata <-read.csv('Plob_Buoyant_Weight.csv', header=T, na.strings = "NA") 
-# BW.std.data <- read.csv("BW_standards.csv", header=TRUE, sep=",", na.strings="NA") #load data with a header, separated by commas, with NA as NA
-# Arag <- 2.93 # density of aragonite g cm-3
-# BW.std.data$FW.Dens <- ((-0.000005*BW.std.data$Temp*BW.std.data$Temp)+(0.000007*BW.std.data$Temp)+1.0001) #g cm-3
-# BW.std.data$Ref.Dens <- ((BW.std.data$Ref.Dry.g*BW.std.data$FW.Dens)/(BW.std.data$Ref.Dry.g-BW.std.data$Ref.FW.g)) #g cm-3
-# BW.std.data$SW.Dens <- ((BW.std.data$Ref.Dens*(BW.std.data$Ref.Dry.g-BW.std.data$Ref.SW.g))/(BW.std.data$Ref.Dry.g))  #g cm-3
-# 
-# data.0 <- subset(BWdata, Date==20180127)
-# data.1 <- subset(BWdata, Date==20180317)
-# data.2 <- subset(BWdata, Date==20180507)
-# data.3 <- subset(BWdata, Date==20180827)
-# data.0$dry.weight <- ((as.numeric(as.character(data.0$Mass.g)))/(1-(BW.std.data[1,9]/Arag)))
-# data.1$dry.weight <- ((as.numeric(as.character(data.1$Mass.g)))/(1-(BW.std.data[2,9]/Arag)))
-# data.2$dry.weight <- ((as.numeric(as.character(data.2$Mass.g)))/(1-(BW.std.data[3,9]/Arag)))
-# data.3$dry.weight <- ((as.numeric(as.character(data.3$Mass.g)))/(1-(BW.std.data[4,9]/Arag)))
-# 
-# par(mfrow=c(2,2))
-# plot(data.0.curve$Dry.Weigh.g,data.0$dry.weight)
-# plot(data.1.curve$Dry.Weigh.g,data.1$dry.weight)
-# plot(data.2.curve$Dry.Weigh.g,data.2$dry.weight)
-# plot(data.3.curve$Dry.Weigh.g,data.3$dry.weight)
-# 
-# #can use standard curve data for all time points
-
-#####
-
-#####NEED TO DEAL WITH THOSE REGLUED #####
-#If else statements
-
-data <- reshape(BW.data, timevar = "TimePoint", drop = c("QC", "Mass.g","Temp.C", "Notes"), idvar=c("PLUG.ID","Species","Tank"), direction="wide")
-T2T<- read.csv("~/MyProjects/Holobiont_Integration/RAnalysis/Data/Tank_to_Treatment.csv", header=T, sep=",")
-colnames(T2T) <- c("Tank", "Tank.Num", "Treatment")
-data <- merge(data, T2T, by="Tank")
+#format to wide data for analysis
+data <- reshape(BW.data.long, timevar = "TimePoint",drop = c("Analysis", "Tank", "Mass.g", "Temp.C"), idvar=c("PLUG.ID","Species", "Temperature", "CO2", "Treatment"), direction="wide")
 
 #calculating time between measurements
-data$Days.Time1 <- as.Date(as.character(data$Date.Format.Time1), format="%m/%d/%y")-
-  as.Date(as.character(data$Date.Format.Time0), format="%m/%d/%y")
+data$Days.Time0 <- as.Date(as.character(data$Date.Format.Time0_Fin), format="%m/%d/%y")-
+  as.Date(as.character(data$Date.Format.Time0_Init), format="%m/%d/%y")
 
-data$Days.Time2 <- as.Date(as.character(data$Date.Format.Time2), format="%m/%d/%y")-
-  as.Date(as.character(data$Date.Format.Time1), format="%m/%d/%y")
+data$Days.Time1 <- as.Date(as.character(data$Date.Format.Time1_Fin), format="%m/%d/%y")-
+  as.Date(as.character(data$Date.Format.Time1_Init), format="%m/%d/%y")
 
-data$Days.Time3 <- as.Date(as.character(data$Date.Format.Time3), format="%m/%d/%y")-
-  as.Date(as.character(data$Date.Format.Time2), format="%m/%d/%y")
+data$Days.Time2 <- as.Date(as.character(data$Date.Format.Time2_Fin), format="%m/%d/%y")-
+  as.Date(as.character(data$Date.Format.Time2_Init), format="%m/%d/%y")
 
-data$Days.Time4 <- as.Date(as.character(data$Date.Format.Time4), format="%m/%d/%y")-
-  as.Date(as.character(data$Date.Format.Time3), format="%m/%d/%y")
+data$Days.Time3 <- as.Date(as.character(data$Date.Format.Time3_Fin), format="%m/%d/%y")-
+  as.Date(as.character(data$Date.Format.Time3_Init), format="%m/%d/%y")
 
-data$Days.Time5 <- as.Date(as.character(data$Date.Format.Time5), format="%m/%d/%y")-
-  as.Date(as.character(data$Date.Format.Time4), format="%m/%d/%y")
+data$Days.Time4 <- as.Date(as.character(data$Date.Format.Time4_Fin), format="%m/%d/%y")-
+  as.Date(as.character(data$Date.Format.Time4_Init), format="%m/%d/%y")
 
-data$Days.Time6 <- as.Date(as.character(data$Date.Format.Time6), format="%m/%d/%y")-
-  as.Date(as.character(data$Date.Format.Time5), format="%m/%d/%y")
+data$Days.Time5 <- as.Date(as.character(data$Date.Format.Time5_Fin), format="%m/%d/%y")-
+  as.Date(as.character(data$Date.Format.Time5_Init), format="%m/%d/%y")
 
-data$Days.Time7 <- as.Date(as.character(data$Date.Format.Time7), format="%m/%d/%y")-
-  as.Date(as.character(data$Date.Format.Time6), format="%m/%d/%y")
+data$Days.Time6 <- as.Date(as.character(data$Date.Format.Time6_Fin), format="%m/%d/%y")-
+  as.Date(as.character(data$Date.Format.Time6_Init), format="%m/%d/%y")
 
-data$Days.Time8 <- as.Date(as.character(data$Date.Format.Time8), format="%m/%d/%y")-
-  as.Date(as.character(data$Date.Format.Time7), format="%m/%d/%y")
+data$Days.Time7 <- as.Date(as.character(data$Date.Format.Time7_Fin), format="%m/%d/%y")-
+  as.Date(as.character(data$Date.Format.Time7_Init), format="%m/%d/%y")
 
-data$Days.Time9 <- as.Date(as.character(data$Date.Format.Time9), format="%m/%d/%y")-
-  as.Date(as.character(data$Date.Format.Time8), format="%m/%d/%y")
+data$Days.Time8 <- as.Date(as.character(data$Date.Format.Time8_Fin), format="%m/%d/%y")-
+  as.Date(as.character(data$Date.Format.Time8_Init), format="%m/%d/%y")
 
-#Growth Normalized to dry weight the time prior
-
-par(mfrow=c(2,4))
-data$time1.growth <- (((data$Dry.Weigh.g.Time1 - data$Dry.Weigh.g.Time0)/(data$Dry.Weigh.g.Time0))/as.numeric(data$Days.Time1))*100 #calculate growth rate 
-boxplot(data$time1.growth ~ data$Species, ylim=c(0,3), las=2)
-
-data$time2.growth <- (((data$Dry.Weigh.g.Time2 - data$Dry.Weigh.g.Time1)/(data$Dry.Weigh.g.Time1))/as.numeric(data$Days.Time2))*100 #calculate growth rate 
-boxplot(data$time2.growth ~ data$Species, ylim=c(0,3), las=2)
-
-data$time3.growth <- (((data$Dry.Weigh.g.Time3 - data$Dry.Weigh.g.Time2)/(data$Dry.Weigh.g.Time2))/as.numeric(data$Days.Time3))*100 #calculate growth rate 
-boxplot(data$time3.growth ~ data$Species, ylim=c(0,3), las=2)
-
-data$time4.growth <- (((data$Dry.Weigh.g.Time4 - data$Dry.Weigh.g.Time3)/(data$Dry.Weigh.g.Time3))/as.numeric(data$Days.Time4))*100 #calculate growth rate 
-boxplot(data$time4.growth ~ data$Species, ylim=c(0,3), las=2)
-
-data$time5.growth <- (((data$Dry.Weigh.g.Time5 - data$Dry.Weigh.g.Time4)/(data$Dry.Weigh.g.Time4))/as.numeric(data$Days.Time5))*100 #calculate growth rate 
-boxplot(data$time5.growth ~ data$Species, ylim=c(0,3), las=2)
-
-data$time6.growth <- (((data$Dry.Weigh.g.Time6 - data$Dry.Weigh.g.Time5)/(data$Dry.Weigh.g.Time5))/as.numeric(data$Days.Time6))*100 #calculate growth rate 
-boxplot(data$time6.growth ~ data$Species, ylim=c(0,3), las=2)
-
-data$time7.growth <- (((data$Dry.Weigh.g.Time7 - data$Dry.Weigh.g.Time6)/(data$Dry.Weigh.g.Time6))/as.numeric(data$Days.Time7))*100 #calculate growth rate 
-boxplot(data$time7.growth ~ data$Species, ylim=c(0,3), las=2)
-
-data$time8.growth <- (((data$Dry.Weigh.g.Time8 - data$Dry.Weigh.g.Time7)/(data$Dry.Weigh.g.Time7))/as.numeric(data$Days.Time8))*100 #calculate growth rate 
-boxplot(data$time8.growth ~ data$Species, ylim=c(0,3), las=2)
-
-data$time9.growth <- (((data$Dry.Weigh.g.Time9 - data$Dry.Weigh.g.Time8)/(data$Dry.Weigh.g.Time8))/as.numeric(data$Days.Time9))*100 #calculate growth rate 
-boxplot(data$time9.growth ~ data$Species, ylim=c(0,3), las=2)
+#Growth Normalized to surface area
+#Surface area by wax dipping Veal et al 
 
 
-range(na.omit(data$time1.growth))
-#outs <- which(data$time1.growth==min((na.omit(data$time1.growth))))
-#data <- data[-outs,]
+#load wax weight for standards
+Stnds <- read.csv("Physiology_variables/Wax_dipping_standards.csv", header=TRUE)
+Stnds$delta.mass.g <- Stnds$weight2.g-Stnds$weight1.g
+stnd.curve <- lm(Surface_area~delta.mass.g, data=Stnds)
+plot(Surface_area~delta.mass.g, data=Stnds)
 
-range(na.omit(data$time2.growth))
-#outs <- which(data$time2.growth==min((na.omit(data$time2.growth))))
-#data <- data[-outs,]
-#range(na.omit(data$time2.growth))
+#load wax weight for standards and samples
+SA <- read.csv("Physiology_variables/Wax_dipping.csv", header=TRUE)
+SA$delta.mass.g <- SA$weight2.g-SA$weight1.g
+SA$SA.cm2 <- (stnd.curve$coefficients[2]*SA$delta.mass.g) + stnd.curve$coefficients[1]
 
-range(na.omit(data$time3.growth))
-#outs <- which(data$time3.growth==min((na.omit(data$time3.growth))))
-#data <- data[-outs,]
-#range(na.omit(data$time3.growth))
+#merge growth and surface area
+data <- left_join(data, SA, by="PLUG.ID")
 
-range(na.omit(data$time4.growth))
-#outs <- which(data$time4.growth==min((na.omit(data$time4.growth))))
-#data <- data[-outs,]
-#range(na.omit(data$time4.growth))
+#Growth Rate (g/day/cm2)
+data$T0.g.d.cm2 <- ((data$Dry.Weigh.g.Time0_Fin -data$Dry.Weigh.g.Time0_Init)/as.numeric(data$Days.Time0))/data$SA.cm2
+data$T1.g.d.cm2 <- ((data$Dry.Weigh.g.Time1_Fin -data$Dry.Weigh.g.Time1_Init)/as.numeric(data$Days.Time1))/data$SA.cm2
+data$T2.g.d.cm2 <- ((data$Dry.Weigh.g.Time2_Fin -data$Dry.Weigh.g.Time2_Init)/as.numeric(data$Days.Time2))/data$SA.cm2
+data$T3.g.d.cm2 <- ((data$Dry.Weigh.g.Time3_Fin -data$Dry.Weigh.g.Time3_Init)/as.numeric(data$Days.Time3))/data$SA.cm2
+data$T4.g.d.cm2 <- ((data$Dry.Weigh.g.Time4_Fin -data$Dry.Weigh.g.Time4_Init)/as.numeric(data$Days.Time4))/data$SA.cm2
+data$T5.g.d.cm2 <- ((data$Dry.Weigh.g.Time5_Fin -data$Dry.Weigh.g.Time5_Init)/as.numeric(data$Days.Time5))/data$SA.cm2
+data$T6.g.d.cm2 <- ((data$Dry.Weigh.g.Time6_Fin -data$Dry.Weigh.g.Time6_Init)/as.numeric(data$Days.Time6))/data$SA.cm2
+data$T7.g.d.cm2 <- ((data$Dry.Weigh.g.Time7_Fin -data$Dry.Weigh.g.Time7_Init)/as.numeric(data$Days.Time7))/data$SA.cm2
+data$T8.g.d.cm2 <- ((data$Dry.Weigh.g.Time8_Fin -data$Dry.Weigh.g.Time8_Init)/as.numeric(data$Days.Time8))/data$SA.cm2
 
-range(na.omit(data$time5.growth))
-#outs <- which(data$time5.growth==min((na.omit(data$time5.growth))))
-#data <- data[-outs,]
-#range(na.omit(data$time5.growth))
+#check for outliers by plotting dry weight by tank and time
+par(mfrow=c(3,3))
+boxplot(T0.g.d.cm2 ~Species*Treatment, data=data)
+boxplot(T1.g.d.cm2 ~Species*Treatment, data=data)
+boxplot(T2.g.d.cm2 ~Species*Treatment, data=data)
+boxplot(T3.g.d.cm2 ~Species*Treatment, data=data)
+boxplot(T4.g.d.cm2 ~Species*Treatment, data=data)
+boxplot(T5.g.d.cm2 ~Species*Treatment, data=data)
+boxplot(T6.g.d.cm2 ~Species*Treatment, data=data)
+boxplot(T7.g.d.cm2 ~Species*Treatment, data=data)
+boxplot(T8.g.d.cm2 ~Species*Treatment, data=data)
 
-range(na.omit(data$time6.growth))
-#outs <- which(data$time6.growth==min((na.omit(data$time6.growth))))
-#data <- data[-outs,]
-#range(na.omit(data$time6.growth))
+#reshape to long dataframe
+data <- data[,c(1:5,75:83)]
+colnames(data)
+data.long <- pivot_longer(data, 
+                          cols=c("T0.g.d.cm2","T1.g.d.cm2",  "T2.g.d.cm2",  
+                                       "T3.g.d.cm2",  "T4.g.d.cm2",  "T5.g.d.cm2",
+                                       "T6.g.d.cm2", "T7.g.d.cm2",  "T8.g.d.cm2"),
+                          names_to = "TimePoint")
 
-range(na.omit(data$time7.growth))
-#outs <- which(data$time7.growth==min((na.omit(data$time7.growth))))
-#data <- data[-outs,]
-#range(na.omit(data$time7.growth))
+data.long <- na.omit(data.long)
 
-range(na.omit(data$time8.growth))
-#outs <- which(data$time8.growth==min((na.omit(data$time8.growth))))
-#data <- data[-outs,]
-#range(na.omit(data$time8.growth))
+ggboxplot(data.long, x = "TimePoint", y = "value", facet.by = "Species")
 
-range(na.omit(data$time9.growth))
-#outs <- which(data$time9.growth==min((na.omit(data$time9.growth))))
-#data <- data[-outs,]
-#range(na.omit(data$time9.growth))
+#remove outlier values > 0.01 
+data.long <- data.long %>%
+  filter(value < 0.005 )
 
-write.csv(data, "Data_before_trun.csv")
+ggboxplot(data.long, x = "TimePoint", y = "value", facet.by = "Species")
 
-trun.data <- data[,c(1,2,3,75:84)]
+#remove outlier values < -0.01 b
+data.long <- data.long %>%
+  filter(value > -0.001 )
 
-trun.data <- melt(trun.data)
-trun.data <- subset(trun.data, variable!="PLUG.ID")
+ggboxplot(data.long, x = "TimePoint", y = "value", facet.by = "Species")
 
-All.Means <- ddply(trun.data, c('variable','Species', 'Treatment'), summarize,
-                   mean= mean(value, na.rm=T), #mean pnet
-                   N = sum(!is.na(value)), # sample size
-                   se = sd(value, na.rm=T)/sqrt(N)) #SE
+data.long$mg.d.cm2 <- data.long$value*1000
+
+
+All.Means <- ddply(data.long, c('TimePoint','Species', 'Treatment'), summarize,
+                   mean= mean(mg.d.cm2, na.rm=T), #mean pnet
+                   N = sum(!is.na(mg.d.cm2)), # sample size
+                   se = sd(mg.d.cm2, na.rm=T)/sqrt(N)) #SE
 All.Means
 
-#All.Means <- na.omit(All.Means)
-colnames(All.Means) <- c("Timepoint", "Species", "Treatment", "mean", "N", "se")
-
-All.Means$Group <- paste(All.Means$Timepoint, All.Means$Treatment, All.Means$Species)
+All.Means$Group <- paste(All.Means$TimePoint, All.Means$Treatment, All.Means$Species)
 All.Means$SpGroup <- paste(All.Means$Treatment, All.Means$Species)
+
+Mcap.Means <- subset(All.Means, Species =="Mcapitata")
+Pact.Means <- subset(All.Means, Species =="Pacuta")
+
+#set time info for plotting
+Mcap.Means$week <- c("Week1", "Week1","Week1","Week1","Week2","Week2","Week2","Week2",
+                    "Week4", "Week4", "Week4", "Week4", "Week6", "Week6", "Week6", "Week6",
+                     "Week8", "Week8", "Week8", "Week8", "Week10", "Week10", "Week10", "Week10",
+                    "Week12", "Week12", "Week12", "Week12", "Week14", "Week14", "Week14", "Week14",
+                    "Week16", "Week16", "Week16", "Week16")
+Mcap.Means$week <- factor(Mcap.Means$week, levels=c("Week1","Week2","Week4","Week6","Week8","Week10","Week12","Week14","Week16"))
+
+
+#remove sample sizes of 2 or less 
+Pact.Means <- Pact.Means[-c(23,26),]
+
+Pact.Means$week <- c("Week1", "Week1","Week1","Week1","Week2","Week2","Week2","Week2",
+                     "Week4", "Week4", "Week4", "Week4", "Week6", "Week6", "Week6", "Week6",
+                     "Week8", "Week8", "Week8", "Week8", "Week10", "Week10", "Week12", "Week12", 
+                     "Week14", "Week14",  "Week16", "Week16")
+
+Pact.Means$week <- factor(Pact.Means$week, levels=c("Week1","Week2","Week4","Week6","Week8","Week10","Week12","Week14","Week16"))
 
 cols <- c("lightblue", "blue", "pink", "red")
 
-Fig.All <- ggplot(All.Means, aes(x=Timepoint, y=mean, group=SpGroup)) + 
-  geom_line(aes(linetype= Species, colour=Treatment, group=SpGroup), position = position_dodge(width = 0.1), alpha=0.5) + # colour, group both depend on cond2
-  geom_errorbar(aes(ymin=All.Means$mean-All.Means$se, ymax=All.Means$mean+All.Means$se), colour="darkgray", width=0, size=0.5, position = position_dodge(width = 0.1)) +
-  geom_point(aes(colour=Treatment, shape=Species), size = 1, position = position_dodge(width = 0.1)) +
+Fig.Mcap <- ggplot(Mcap.Means, aes(x=week, y=mean, group=Treatment)) + 
+  geom_line(aes(colour=Treatment, group=Treatment), position = position_dodge(width = 0.1), alpha=1) + # colour, group both depend on cond2
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), colour="darkgray", width=0, size=1, position = position_dodge(width = 0.1)) +
+  geom_point(aes(colour=Treatment), size = 3, position = position_dodge(width = 0.1)) +
   scale_colour_manual(values=cols) +
-  #annotate("text", x=43, y=1.85, label = "a", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=132, y=2.15, label = "b", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=c(43,43), y=c(2.45,2.2), label = "ab", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=c(141,141), y=c(3.15,3.4), label = "c", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=35, y=0.5, label = ".", size = 1) + #add text to the graphic for posthoc letters
   xlab("Timepoint") +
-  ylab(expression(paste("Growth % per day"))) +
+  ylab(expression(Growth  ~(mg ~CaCO[3] ~cm^-2 ~d^-1))) +
   ylim(-0.5,1.5) +
   theme_bw() + #Set the background color
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
@@ -338,14 +292,37 @@ Fig.All <- ggplot(All.Means, aes(x=Timepoint, y=mean, group=SpGroup)) +
         panel.border = element_blank(), #Set the border
         panel.grid.major = element_blank(), #Set the major gridlines
         panel.grid.minor = element_blank(), #Set the minor gridlines
+        legend.position = c(0.15, 0.8 ), #remove legend
         plot.background=element_blank())+  #Set the plot background
-  ggtitle("Growth") +
-  theme(plot.title = element_text(face = 'bold', 
+  ggtitle("A) M. capitata") +
+  theme(plot.title = element_text(face = 'bold.italic', 
                                   size = 12, 
                                   hjust = 0))
-Fig.All
+Fig.Mcap
 
-Gro.Figs <- arrangeGrob(Fig.All, ncol=1)
-ggsave(file="Output/Growth_percent_BW.pdf", Gro.Figs, width = 4, height = 3, units = c("in"))
+Fig.Pact <- ggplot(Pact.Means, aes(x=week, y=mean, group=Treatment)) + 
+  geom_line(aes(colour=Treatment, group=Treatment), position = position_dodge(width = 0.1), alpha=1) + # colour, group both depend on cond2
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), colour="darkgray", width=0, size=1, position = position_dodge(width = 0.1)) +
+  geom_point(aes(colour=Treatment, shape=Species), size = 3, position = position_dodge(width = 0.1)) +
+  scale_colour_manual(values=cols) +
+  xlab("Timepoint") +
+  ylab(expression(Growth  ~(mg ~CaCO[3] ~cm^-2 ~d^-1))) +
+  ylim(-0.5,1.5) +
+  theme_bw() + #Set the background color
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
+        axis.line = element_line(color = 'black'), #Set the axes color
+        panel.border = element_blank(), #Set the border
+        panel.grid.major = element_blank(), #Set the major gridlines
+        panel.grid.minor = element_blank(), #Set the minor gridlines
+        legend.position = "none", #remove legend
+        plot.background=element_blank())+  #Set the plot background
+  ggtitle("B) P. acuta") +
+  theme(plot.title = element_text(face = 'bold.italic', 
+                                  size = 12, 
+                                  hjust = 0))
+Fig.Pact
 
+Gro.Figs <- arrangeGrob(Fig.Mcap, Fig.Pact, ncol=2)
+ggsave(file="Output/Growth_percent_BW.pdf", Gro.Figs, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Growth_percent_BW.png", Gro.Figs, width = 11, height = 6, units = c("in"))
 
