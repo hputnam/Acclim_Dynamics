@@ -10,6 +10,7 @@ rm(list=ls()) #clears workspace
 #Read in required libraries
 ##### Include Versions of libraries
 library("tidyverse")
+library("plyr")
 library("ggpubr")
 library("ggplot2")
 library("sciplot")
@@ -17,7 +18,6 @@ library("plotrix")
 library("reshape2")
 library("nlme") #mixed model, repeated measures ANOVA
 library("lsmeans") #mixed model posthoc  statistical comparisons
-if ("gridExtra" %in% rownames(installed.packages()) == 'FALSE') install.packages('gridExtra') 
 library("gridExtra")
 
 #Required Data files
