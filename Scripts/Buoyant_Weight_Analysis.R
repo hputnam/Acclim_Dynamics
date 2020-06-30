@@ -295,6 +295,7 @@ Fig.Mcap <- ggplot(Mcap.Means, aes(x=week, y=mean, group=Treatment)) +
         legend.position = c(0.15, 0.8 ), #remove legend
         plot.background=element_blank())+  #Set the plot background
   ggtitle("A) M. capitata") +
+  geom_vline(xintercept = c(5.6), colour="black", linetype="dotted")+
   theme(plot.title = element_text(face = 'bold.italic', 
                                   size = 12, 
                                   hjust = 0))
@@ -317,6 +318,7 @@ Fig.Pact <- ggplot(Pact.Means, aes(x=week, y=mean, group=Treatment)) +
         legend.position = "none", #remove legend
         plot.background=element_blank())+  #Set the plot background
   ggtitle("B) P. acuta") +
+  geom_vline(xintercept = c(5.6), colour="black", linetype="dotted")+
   theme(plot.title = element_text(face = 'bold.italic', 
                                   size = 12, 
                                   hjust = 0))
