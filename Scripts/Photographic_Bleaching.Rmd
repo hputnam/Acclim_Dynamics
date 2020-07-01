@@ -224,8 +224,8 @@ Fig.PA <- ggplot(Pact.Blch, aes(x=Timepoint, y=mean, group=Treatment)) +
         panel.border = element_blank(), #Set the border
         panel.grid.major = element_blank(), #Set the major gridlines
         panel.grid.minor = element_blank(), #Set the minor gridlines
-        plot.background=element_blank(),  #Set the plot background
-        legend.position='none') + #remove legend background
+        plot.background=element_blank()) +  #Set the plot background
+       # legend.position='none') + #remove legend background
   ggtitle("B) P. acuta") +
   theme(plot.title = element_text(face = 'bold.italic', 
                                   size = 14, 
