@@ -86,7 +86,7 @@ splots <- list()
 splots[[1]] <- ggsurvplot(Mc.km_fit, data=Mc.Data, size = 1,  # change line size
            linetype = "strata", # change line type by groups
            break.time.by = 7, # break time axis
-           palette = c("blue", "lightblue", "salmon", "red3"), # custom color palette
+           palette = c("lightblue", "blue", "salmon", "red3"), # custom color palette
            conf.int = TRUE, # Add confidence interval
            legend.title = "", # remove legend title
            title = "C) M. capitata",
@@ -101,7 +101,7 @@ splots[[1]] <- ggsurvplot(Mc.km_fit, data=Mc.Data, size = 1,  # change line size
 splots[[2]] <- ggsurvplot(Pa.km_fit, data=Pa.Data, size = 1,  # change line size
            linetype = "strata", # change line type by groups
            break.time.by = 7, # break time axis
-           palette = c("blue", "lightblue", "salmon", "red3"), # custom color palette
+           palette = c("lightblue", "blue", "salmon", "red3"), # custom color palette
            conf.int = TRUE, # Add confidence interval
            legend.title = "", # remove legend title
            title = "D) P. acuta",
