@@ -1,0 +1,97 @@
+---
+title: "Tissue_Biomass"
+author: "EL Strand"
+date: "7/18/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+## install packages if you dont already have them
+if (!require("tidyverse")) install.packages("tidyverse")
+if (!require("plotrix")) install.packages("plotrix")
+
+# load packages
+library(tidyverse)
+library(plotrix)
+```
+
+Read in Ash-Free Dry Weight raw data, surface area, homogenate volume, and master datasheets
+```{r}
+AFDW_raw <- read.csv("Physiology_variables/Tissue_Biomass/AFDW_data.csv") %>% filter(!is.na(colony_id))
+
+# Load surface area and homogenate volume values; merge dataframes from chla, chlc means 
+Surface_area <- read.csv("Physiology_variables/Respirometry/coral_surface_area.csv") %>% dplyr::rename(colony_id = Sample_ID) %>%
+  select(colony_id, surface.area.cm2)
+Homogenate_volume <- read.csv("Physiology_variables/Physiology_Master.csv") %>% dplyr::rename(colony_id = Plug_ID) %>%
+  select(colony_id, Homogenate_Vol_mL)
+Master_fragment <- read.csv("Environmental_data/Master_Fragment_20200616_QC.csv") %>% dplyr::rename(colony_id = PLUG.ID) %>%
+  select(colony_id, Species, TREATMENT, Sample.Date)
+Master_fragment$colony_id <- as.character(Master_fragment$colony_id)
+
+AFDW_raw <- join_all(list(AFDW_raw, Surface_area, Homogenate_volume, Master_fragment), by='colony_id', type='left')
+```
+
+Calculate mass per mL
+```{r}
+#different volumes for sym (4ml) and host (5ml)
+sym <- 5
+host <- 4
+AFDW <- AFDW_raw %>%
+  mutate(dry.pan.mass.g.ml = case_when(partner=="Host" ~ dry.pan.mass.g/sym, partner=="Sym" ~dry.pan.mass.g/host),
+         burnt.pan.mass.g.ml = case_when(partner=="Host" ~ burnt.pan.mass.g/sym, partner=="Sym" ~burnt.pan.mass.g/host))
+```
+
+Calculate Dry Weight and Ash-Free Dry Weight; standardizing by homogenate volume and surface area
+```{r}
+AFDW <- AFDW %>%
+  mutate(dry.bioimass.g.ml = (dry.pan.mass.g.ml - burnt.pan.mass.g.ml),
+         dry.bioimass.g = dry.pan.mass.g.ml * Homogenate_Vol_mL,
+         burnt.bioimass.g = burnt.pan.mass.g.ml * Homogenate_Vol_mL,
+         DW.mg.cm2 = ((dry.bioimass.g)*1000) / surface.area.cm2,
+         AFDW.mg.cm2 = ((dry.bioimass.g-burnt.bioimass.g)*1000) / surface.area.cm2)
+
+AFDW
+```
+
+Reading in bleaching test information. 
+```{r}
+Phys_testing <- read.csv("Physiology_variables/phys_testing.csv")
+Phys_testing$colony_id <- as.character(Phys_testing$colony_id)
+AFDW$colony_id <- as.character(AFDW$colony_id)
+
+AFDW_final <- full_join(AFDW, Phys_testing, by="colony_id") %>% 
+  select(colony_id, partner, Species, TREATMENT, Sample.Date, DW.mg.cm2, AFDW.mg.cm2, status, bleaching_score)
+
+AFDW_final <- gather(AFDW_final, "Measurement", "Value", 6:7) # changing columns to rows to allow for easier facet_grid in graphing section
+```
+
+Graphing bleach test data. 
+```{r}
+ggplot(AFDW_final, aes(x=status, y=Value, fill=partner)) + geom_boxplot(alpha=0.5) +
+  geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() + 
+  theme(legend.position = "left") + 
+  facet_grid(Measurement ~ Species)
+```
+
+```{r}
+cols <- c("lightblue", "blue", "salmon", "red3")
+
+ggplot(AFDW_final, aes(x=TREATMENT, y=Value, fill=partner)) + geom_boxplot(alpha=0.5) +
+  geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() + 
+  theme(legend.position = "left") + 
+  facet_grid(Measurement ~ Species)
+```
+
+
+```{r}
+ggplot(AFDW_final, aes(x=bleaching_score, y=Value, color=partner)) + geom_point() + 
+  xlab("Bleaching Score") + theme_bw() + 
+  facet_grid(Measurement ~ Species) + 
+  theme(legend.position = "left")
+```
+
+
