@@ -1,0 +1,67 @@
+---
+title: "Chlorophyll_a-c"
+author: "EL Strand"
+date: "7/17/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+## install packages if you dont already have them
+if (!require("tidyverse")) install.packages("tidyverse")
+if (!require("plotrix")) install.packages("plotrix")
+if (!require("dplyr")) install.packages("dplyr")
+if (!require("plyr")) install.packages("plyr")
+if (!require("Rmisc")) install.packages("Rmisc")
+
+# load packages
+library(tidyverse)
+library(plotrix)
+library(dplyr)
+library(plyr)
+library(Rmisc)
+```
+
+Reading in datafiles and merging into one large dataframe. 
+```{r}
+Test_630 <- read.csv("Physiology_variables/Chlorophyll-a_c/20200717_plate1_630.csv")
+Test_663 <- read.csv("Physiology_variables/Chlorophyll-a_c/20200717_plate1_663.csv")
+Test_750 <- read.csv("Physiology_variables/Chlorophyll-a_c/20200717_plate1_750.csv")
+Test_platemap <- read.csv("Physiology_variables/Chlorophyll-a_c/20200717_Chl_platemap.csv")
+
+Chl_raw_data <- join_all(list(Test_630, Test_663, Test_750, Test_platemap), by='Well', type='left') %>% filter(!is.na(colony_id)) %>% select(-Well)
+Chl_raw_data <- gather(Chl_raw_data, "Wavelength", "Absorbance", 1:3) 
+```
+
+Calculating Chlorophyll a and c values. 
+```{r}
+# average all technical replicates for each plate/sample/wavelength, including all acetone blanks together 
+Chl_means <- summarySE(Chl_raw_data, measurevar="Absorbance", groupvars=c("colony_id", "Wavelength")) %>%
+  select(colony_id, Wavelength, Absorbance) %>% spread(Wavelength, Absorbance)
+
+# get the acetone blank 750 absorbace, and subtract from 630 and 663 values for each sample  
+# and accounting for path length (0.584 cm) from Warren 2007
+Chl_means <- Chl_means %>%
+  mutate(blank750 = `Chl.750`[colony_id == "BK"]) %>%
+  mutate(adj630 = (`Chl.630` - blank750)/0.584,
+         adj663 = (`Chl.663` - blank750)/0.584)
+
+# calculate chla and chlc2 values based on equations from Jeffrey and Humphrey 1975; units µg/ml
+Chl_means <- Chl_means %>%
+  mutate(chla.ug.ml = 11.43 * adj663 - 0.64 * adj630,
+        chlc2.ug.ml = 27.09 * adj630 - 3.63 * adj663)
+```
+
+Reading in master fragment information. 
+```{r}
+Master_fragment <- read.csv("Environmental_data/Master_Fragment_20200616_QC.csv") %>% dplyr::rename(colony_id = PLUG.ID)
+Master_fragment$colony_id <- as.character(Master_fragment$colony_id)
+
+Chl_final <- select(Chl_means, colony_id, chla.ug.ml, chlc2.ug.ml)  
+Chl_final$colony_id <- as.character(Chl_final$colony_id)
+
+Chl_final <- full_join(Master_fragment, Chl_final, by="colony_id") %>% select(colony_id, Species, TREATMENT, Sample.Date, chla.ug.ml, chlc2.ug.ml) %>%
+  filter(!is.na(chla.ug.ml))
+```
+
