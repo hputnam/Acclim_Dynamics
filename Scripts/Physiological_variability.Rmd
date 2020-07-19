@@ -1,0 +1,72 @@
+---
+title: "Physiological_variability"
+author: "EL Strand"
+date: "7/19/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+library(data.table)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+```
+
+Based on Tanner et al 2019.
+
+Reading in growth and bleaching score dataset.
+```{r}
+## Bleaching Score
+Bleaching_score <- read.csv("Physiology_variables/Bleaching_Score/Bleaching_Score.csv", header=T, sep=",", na.string="NA") 
+Bleaching_score$Group <- as.character(Bleaching_score$Group)
+Bleaching_score$PLUG.ID <- as.character(Bleaching_score$PLUG.ID)
+
+##Growth
+Growth <- read.csv("Physiology_variables/Growth_Buoyant_Weight/Growth_Rates.csv") %>%
+  select(PLUG.ID, Species, Treatment, T0.g.d.cm2, T1.g.d.cm2, T2.g.d.cm2, T3.g.d.cm2, T4.g.d.cm2, T5.g.d.cm2, T6.g.d.cm2, T7.g.d.cm2, T8.g.d.cm2) %>%
+  gather("Timepoint", "Growth_Rate", 4:12) %>% filter(!is.na(Growth_Rate))
+Growth$PLUG.ID <- as.character(Growth$PLUG.ID)
+  
+Growth_variability_Mcap <- subset(Growth, Species=="Mcapitata")
+Growth_variability_Pacuta <- subset(Growth, Species=="Pacuta")
+```
+
+Transforming the dataframes into a matrix format of groups and response variable values.
+```{r}
+## Bleaching Score
+Bleaching_score <- spread(Bleaching_score, Group, Bleaching.Score) 
+Bleaching_variability <- select(Bleaching_score, contains("Week")) 
+
+# coerce to data.table in place, move NAs to the bottom of each column, maintain the original order of non-NA values
+Bleaching_variability <- data.table(Bleaching_variability)[, lapply(.SD, function(x) x[order(is.na(x))])]
+
+# Bleaching_variability <- Bleaching_variability[!Bleaching_variability[, Reduce(`&`, lapply(.SD, is.na))]]
+```
+
+
+
+
+Calculating the Median Absolute Deviation (MAD) for each treatment group at each timepoint.
+MAD is a robust estimate of variance calculated using the absolute deviations of each sampled value (Xi) from the median (∼X) of the respective treatment group (Hampel, 1974).
+https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/mad
+```{r}
+## Creating a function for the MAD calculation
+Median_abs_dev <- function(x) {
+  MAD <- mad(x, center = median(x), constant = 1, na.rm = TRUE, low = FALSE, high = FALSE)
+  return(MAD)
+}
+
+## Creating a loop to calculate MAD for every column in the Bleaching_variability dataframe
+MAD <- vector("integer", ncol(Bleaching_variability)) # 1. defining output as a new list
+for (i in seq_along(Bleaching_variability)) {            # 2. sequence: for every column in the dataframe, do what is defined in #3
+  MAD[[i]] <- Median_abs_dev(Bleaching_variability[[i]])      # 3. body: function desired during the loop
+}
+
+MAD_values <- data.frame(MAD, colnames(Bleaching_variability)) %>% dplyr::rename(Group = colnames.Bleaching_variability.) %>%
+  separate(Group, c("Timepoint", "Treatment", "Species"))
+
+
+mad(Bleaching_variability$`Week1 ATAC Montipora`, center = median(Bleaching_variability$`Week1 ATAC Montipora`), constant = 1, na.rm = TRUE, low = FALSE, high = FALSE)
+```

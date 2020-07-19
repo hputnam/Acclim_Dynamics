@@ -19,6 +19,9 @@ library(tidyverse)
 library(plotrix)
 ```
 
+Dry Weight - organic and inorganic compounds
+Ash-Free Dry Weight - organic compounds 
+
 Read in Ash-Free Dry Weight raw data, surface area, homogenate volume, and master datasheets
 ```{r}
 AFDW_raw <- read.csv("Physiology_variables/Tissue_Biomass/AFDW_data.csv") %>% filter(!is.na(colony_id))
@@ -74,7 +77,7 @@ Graphing bleach test data.
 ggplot(AFDW_final, aes(x=status, y=Value, fill=partner)) + geom_boxplot(alpha=0.5) +
   geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() + 
   theme(legend.position = "left") + 
-  facet_grid(Measurement ~ Species)
+  facet_grid(Measurement ~ Species, scales = "free")
 ```
 
 ```{r}
@@ -83,14 +86,14 @@ cols <- c("lightblue", "blue", "salmon", "red3")
 ggplot(AFDW_final, aes(x=TREATMENT, y=Value, fill=partner)) + geom_boxplot(alpha=0.5) +
   geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() + 
   theme(legend.position = "left") + 
-  facet_grid(Measurement ~ Species)
+  facet_grid(Measurement ~ Species, scales = "free")
 ```
 
 
 ```{r}
 ggplot(AFDW_final, aes(x=bleaching_score, y=Value, color=partner)) + geom_point() + 
   xlab("Bleaching Score") + theme_bw() + 
-  facet_grid(Measurement ~ Species) + 
+  facet_grid(Measurement ~ Species, scales = "free") + 
   theme(legend.position = "left")
 ```
 

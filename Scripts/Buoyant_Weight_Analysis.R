@@ -205,6 +205,11 @@ data$T6.g.d.cm2 <- ((data$Dry.Weigh.g.Time6_Fin -data$Dry.Weigh.g.Time6_Init)/as
 data$T7.g.d.cm2 <- ((data$Dry.Weigh.g.Time7_Fin -data$Dry.Weigh.g.Time7_Init)/as.numeric(data$Days.Time7))/data$SA.cm2
 data$T8.g.d.cm2 <- ((data$Dry.Weigh.g.Time8_Fin -data$Dry.Weigh.g.Time8_Init)/as.numeric(data$Days.Time8))/data$SA.cm2
 
+write.table(data, file = "Physiology_variables/Growth_Buoyant_Weight/Growth_Rates.csv", append = FALSE, quote = TRUE, sep = ",",
+            eol = "\n", na = "NA", dec = ".", row.names = TRUE,
+            col.names = TRUE, qmethod = c("escape", "double"),
+            fileEncoding = "")
+
 #check for outliers by plotting dry weight by tank and time
 par(mfrow=c(3,3))
 boxplot(T0.g.d.cm2 ~Species*Treatment, data=data)

@@ -107,7 +107,7 @@ Graphing bleaching test data.
 ggplot(Chl_final, aes(x=status, y=Value, fill=status)) + geom_boxplot(alpha=0.5) +
   geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() + 
   theme(legend.position = "none") + 
-  facet_grid(Measurement ~ Species)
+  facet_grid(Measurement ~ Species, scales = "free")
 ```
 
 ```{r}
@@ -117,13 +117,13 @@ ggplot(Chl_final, aes(x=TREATMENT, y=Value, fill=TREATMENT)) + geom_boxplot() +
   geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() + 
   scale_fill_manual(values=cols) +
   theme(legend.position = "none") + 
-  facet_grid(Measurement ~ Species)
+  facet_grid(Measurement ~ Species, scales = "free")
 ```
 
 ```{r}
 ggplot(Chl_final, aes(x=bleaching_score, y=Value, color=Measurement)) + geom_point() + 
   xlab("Bleaching Score") + theme_bw() + 
-  facet_grid(Measurement ~ Species) + 
+  facet_grid(Measurement ~ Species, scales = "free") + 
   theme(legend.position = "none")
 ```
  
