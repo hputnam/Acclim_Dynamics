@@ -23,14 +23,8 @@ Bleaching_score <- read.csv("Physiology_variables/Bleaching_Score/Bleaching_Scor
 Bleaching_score$Group <- as.character(Bleaching_score$Group)
 Bleaching_score$PLUG.ID <- as.character(Bleaching_score$PLUG.ID)
 
-##Growth
-Growth <- read.csv("Physiology_variables/Growth_Buoyant_Weight/Growth_Rates.csv") %>%
-  select(PLUG.ID, Species, Treatment, T0.g.d.cm2, T1.g.d.cm2, T2.g.d.cm2, T3.g.d.cm2, T4.g.d.cm2, T5.g.d.cm2, T6.g.d.cm2, T7.g.d.cm2, T8.g.d.cm2) %>%
-  gather("Timepoint", "Growth_Rate", 4:12) %>% filter(!is.na(Growth_Rate))
-Growth$PLUG.ID <- as.character(Growth$PLUG.ID)
-  
-Growth_variability_Mcap <- subset(Growth, Species=="Mcapitata")
-Growth_variability_Pacuta <- subset(Growth, Species=="Pacuta")
+Bleaching_variability <- reshape(Bleaching_score, timevar = "Timepoint",drop = c("Group", "SpGroup"), idvar=c("PLUG.ID","Species", "Temperature", "CO2", "Treatment"), direction="wide")
+
 ```
 
 Transforming the dataframes into a matrix format of groups and response variable values.
