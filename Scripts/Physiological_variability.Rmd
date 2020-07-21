@@ -46,8 +46,6 @@ Bleaching_variability <- data.table(Bleaching_variability)[, lapply(.SD, functio
 ```
 
 
-
-
 Calculating the Median Absolute Deviation (MAD) for each treatment group at each timepoint.
 MAD is a robust estimate of variance calculated using the absolute deviations of each sampled value (Xi) from the median (∼X) of the respective treatment group (Hampel, 1974).
 https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/mad
