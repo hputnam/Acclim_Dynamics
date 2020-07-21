@@ -97,4 +97,27 @@ ggplot(AFDW_final, aes(x=bleaching_score, y=Value, color=partner)) + geom_point(
   theme(legend.position = "left")
 ```
 
+Statistical analysis. 
+```{r}
+AFDW.stats <- subset(AFDW_final, Measurement=="AFDW.mg.cm2")
+  
+index <- c("ATAC", "ATHC", "HTAC", "HTHC")
+Tmp <- c("Ambient", "Ambient", "High", "High")
+pCO2 <- c("Ambient", "High", "Ambient", "High")
 
+AFDW.stats$Tmp.Trt <- Tmp[match(AFDW.stats$TREATMENT, index)]
+AFDW.stats$pCO2.Trt <- pCO2[match(AFDW.stats$TREATMENT, index)]
+
+Mcap.AFDW <- subset(AFDW.stats, Species=="Montipora")
+Pact.AFDW  <- subset(AFDW.stats, Species=="Pocillopora") 
+
+## M.cap 
+# Net Photosynthetic Rates
+Pact.AFDW.aov <- aov(Value ~ pCO2.Trt*Tmp.Trt*Sample.Date, data = Pact.AFDW)
+summary(Pact.AFDW.aov)
+# TukeyHSD(Pact.AFDW.aov)
+
+hist(Pact.AFDW.aov$residuals)
+plot(Pact.AFDW.aov$fitted.values, Pact.AFDW.aov$residuals)
+shapiro.test(Pact.AFDW.aov$residuals)
+```

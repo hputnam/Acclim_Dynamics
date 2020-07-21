@@ -202,7 +202,7 @@ Calculating gross photosynthesis (Pnet -  negative Rdark)
 resp.data <- merge(Photo[,c(1,2,3,6,8,15,18,19,38)],Resp[,c(3,38)], by="Fragment.ID.x")
 
 #rename the columns
-names(resp.data)[names(resp.data) == "umol.cm2.hr.x"]<- "Pnet_umol.cm2.hr" 
+names(resp.data)[names(resp.data) == "umol.cm2.hr.x"] <- "Pnet_umol.cm2.hr" 
 names(resp.data)[names(resp.data) == "umol.cm2.hr.y"] <- "Rdark_umol.cm2.hr"
 
 # calculating Pgross
@@ -337,27 +337,32 @@ Resp.Figs <- combine_plots(Mcap.Pg, Pact.Pg, Mcap.Pn, Pact.Pn, Mcap.Rd,Pact.Rd,
 
 ggsave(file="Output/Respirometry.pdf", Resp.Figs, width = 11, height = 10, units = c("in"))
 ggsave(file="Output/Respirometry.jpg", Resp.Figs, width = 11, height = 10, units = c("in"))
-
-
 ```
 
 Statistical analyses. 
 ```{r}
+index <- c("ATAC", "ATHC", "HTAC", "HTHC")
+Tmp <- c("Ambient", "Ambient", "High", "High")
+pCO2 <- c("Ambient", "High", "Ambient", "High")
+
+resp.data$Tmp.Trt <- Tmp[match(resp.data$Treatment, index)]
+resp.data$pCO2.Trt <- pCO2[match(resp.data$Treatment, index)]
+
 Mcap.All <- subset(resp.data, Species.x=="Montipora")
 Pact.All  <- subset(resp.data, Species.x=="Pocillopora") 
 
 ## P. acuta
 # Net Photosynthetic Rates
-Pact.Pnet.aov <- aov(Pnet_umol.cm2.hr ~ Treatment*Date.x, data = Pact.All)
+Pact.Pnet.aov <- aov(Pnet_umol.cm2.hr ~ pCO2.Trt*Tmp.Trt*Date.x, data = Pact.All)
 summary(Pact.Pnet.aov)
-#TukeyHSD(Pact.Pnet.aov)
+# TukeyHSD(Pact.Pnet.aov)
 
 hist(Pact.Pnet.aov$residuals)
 plot(Pact.Pnet.aov$fitted.values, Pact.Pnet.aov$residuals)
 shapiro.test(Pact.Pnet.aov$residuals) 
 
 # Gross Photosynthetic Rates
-Pact.Pgross.aov <- aov(Pgross_umol.cm2.hr ~ Treatment*Date.x, data = Pact.All)
+Pact.Pgross.aov <- aov(Pgross_umol.cm2.hr ~ pCO2.Trt*Tmp.Trt*Date.x, data = Pact.All)
 summary(Pact.Pgross.aov)
 #TukeyHSD(Pact.Pgross.aov)
 
@@ -366,7 +371,7 @@ plot(Pact.Pgross.aov$fitted.values, Pact.Pgross.aov$residuals)
 shapiro.test(Pact.Pgross.aov$residuals) 
 
 # Dark Respiration Rates
-Pact.Rdark.aov <- aov(Rdark_umol.cm2.hr ~ Treatment*Date.x, data = Pact.All)
+Pact.Rdark.aov <- aov(Rdark_umol.cm2.hr ~ pCO2.Trt*Tmp.Trt*Date.x, data = Pact.All)
 summary(Pact.Rdark.aov)
 #TukeyHSD(Pact.Rdark.aov)
 
@@ -377,7 +382,7 @@ shapiro.test(Pact.Rdark.aov$residuals)
 
 ## M. capitata
 # Net Photosynthetic Rates
-Mcap.Pnet.aov <- aov(log10(Pnet_umol.cm2.hr) ~ Treatment*Date.x, data = Mcap.All)
+Mcap.Pnet.aov <- aov(log10(Pnet_umol.cm2.hr) ~ pCO2.Trt*Tmp.Trt*Date.x, data = Mcap.All)
 summary(Mcap.Pnet.aov)
 #TukeyHSD(Mcap.Pnet.aov)
 
@@ -386,7 +391,7 @@ plot(Mcap.Pnet.aov$fitted.values, Mcap.Pnet.aov$residuals)
 shapiro.test(Mcap.Pnet.aov$residuals) 
 
 # Gross Photosynthetic Rates
-Mcap.Pgross.aov <- aov(log10(Pgross_umol.cm2.hr) ~ Treatment*Date.x, data = Mcap.All)
+Mcap.Pgross.aov <- aov(log10(Pgross_umol.cm2.hr) ~ pCO2.Trt*Tmp.Trt*Date.x, data = Mcap.All)
 summary(Mcap.Pgross.aov)
 #TukeyHSD(Mcap.Pgross.aov)
 
@@ -395,7 +400,7 @@ plot(Mcap.Pgross.aov$fitted.values, Mcap.Pgross.aov$residuals)
 shapiro.test(Mcap.Pgross.aov$residuals) 
 
 # Dark Respiration Rates
-Mcap.Rdark.aov <- aov(Rdark_umol.cm2.hr ~ Treatment*Date.x, data = Mcap.All)
+Mcap.Rdark.aov <- aov(Rdark_umol.cm2.hr ~ pCO2.Trt*Tmp.Trt*Date.x, data = Mcap.All)
 summary(Mcap.Rdark.aov)
 #TukeyHSD(Mcap.Rdark.aov)
 
