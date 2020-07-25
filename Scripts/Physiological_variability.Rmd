@@ -12,53 +12,57 @@ library(data.table)
 library(tidyverse)
 library(ggplot2)
 library(dplyr)
+library(stats)
 ```
 
-Based on Tanner et al 2019.
-
-Reading in growth and bleaching score dataset.
+Reading in data and calculating MAD
 ```{r}
 ## Bleaching Score
-Bleaching_score <- read.csv("Physiology_variables/Bleaching_Score/Bleaching_Score.csv", header=T, sep=",", na.string="NA") 
-Bleaching_score$Group <- as.character(Bleaching_score$Group)
-Bleaching_score$PLUG.ID <- as.character(Bleaching_score$PLUG.ID)
+Bleaching_score_data <- read.csv("Physiology_variables/Bleaching_Score/Bleaching_Score.csv", header=T, sep=",", na.string="NA") 
+Bleaching_score_data$Group <- as.character(Bleaching_score_data$Group)
+Bleaching_score_data$PLUG.ID <- as.character(Bleaching_score_data$PLUG.ID)
+str(Bleaching_score_data)
 
-Bleaching_variability <- reshape(Bleaching_score, timevar = "Timepoint",drop = c("Group", "SpGroup"), idvar=c("PLUG.ID","Species", "Temperature", "CO2", "Treatment"), direction="wide")
-
+ MADS <- Bleaching_score_data %>% 
+      group_by(Species, Timepoint, Treatment) %>%
+      summarize(MADev = mad(Bleaching.Score, center = median(Bleaching.Score), constant = 1.4826, na.rm = TRUE))
+ 
+MADS$SpGroup <- paste0(MADS$Species, MADS$Treatment)
+ 
 ```
-
-Transforming the dataframes into a matrix format of groups and response variable values.
+ 
+Plotting MAD through Time
 ```{r}
-## Bleaching Score
-Bleaching_score <- spread(Bleaching_score, Group, Bleaching.Score) 
-Bleaching_variability <- select(Bleaching_score, contains("Week")) 
 
-# coerce to data.table in place, move NAs to the bottom of each column, maintain the original order of non-NA values
-Bleaching_variability <- data.table(Bleaching_variability)[, lapply(.SD, function(x) x[order(is.na(x))])]
+cols <- c("lightblue", "blue", "salmon", "red3")
 
-# Bleaching_variability <- Bleaching_variability[!Bleaching_variability[, Reduce(`&`, lapply(.SD, is.na))]]
+MADS$Timepoint <- factor(MADS$Timepoint, levels = c("Week1", "Week2", "Week3", "Week4", "Week5", "Week6", "Week7", "Week8", "Week9", "Week10", "Week11", "Week12", "Week13", "Week14", "Week15", "Week16"))
+
+Fig.All <- ggplot(MADS, aes(x=Timepoint, y=MADev, group=SpGroup)) + 
+  geom_line(aes(linetype= Species, colour=Treatment, group=SpGroup), position = position_dodge(width = 0.1), alpha=0.5) + # colour, group both depend on cond2
+  geom_point(aes(colour=Treatment, shape=Species), size = 1, position = position_dodge(width = 0.1)) +
+  scale_colour_manual(values=cols) +
+  #annotate("text", x=43, y=1.85, label = "a", size = 3) + #add text to the graphic for posthoc letters
+  #annotate("text", x=132, y=2.15, label = "b", size = 3) + #add text to the graphic for posthoc letters
+  #annotate("text", x=c(43,43), y=c(2.45,2.2), label = "ab", size = 3) + #add text to the graphic for posthoc letters
+  #annotate("text", x=c(141,141), y=c(3.15,3.4), label = "c", size = 3) + #add text to the graphic for posthoc letters
+  #annotate("text", x=35, y=0.5, label = ".", size = 1) + #add text to the graphic for posthoc letters
+  xlab("Timepoint") +
+  ylab(expression(paste("MAD Color Score"))) +
+  theme_bw() + #Set the background color
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
+        axis.line = element_line(color = 'black'), #Set the axes color
+        panel.border = element_blank(), #Set the border
+        panel.grid.major = element_blank(), #Set the major gridlines
+        panel.grid.minor = element_blank(), #Set the minor gridlines
+        plot.background=element_blank(),  #Set the plot background
+        legend.position= "right") + #remove legend background
+  ggtitle("A") +
+  theme(plot.title = element_text(face = 'bold', 
+                                  size = 10, 
+                                  hjust = 0))
+Fig.All
+ 
+
 ```
 
-
-Calculating the Median Absolute Deviation (MAD) for each treatment group at each timepoint.
-MAD is a robust estimate of variance calculated using the absolute deviations of each sampled value (Xi) from the median (∼X) of the respective treatment group (Hampel, 1974).
-https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/mad
-```{r}
-## Creating a function for the MAD calculation
-Median_abs_dev <- function(x) {
-  MAD <- mad(x, center = median(x), constant = 1, na.rm = TRUE, low = FALSE, high = FALSE)
-  return(MAD)
-}
-
-## Creating a loop to calculate MAD for every column in the Bleaching_variability dataframe
-MAD <- vector("integer", ncol(Bleaching_variability)) # 1. defining output as a new list
-for (i in seq_along(Bleaching_variability)) {            # 2. sequence: for every column in the dataframe, do what is defined in #3
-  MAD[[i]] <- Median_abs_dev(Bleaching_variability[[i]])      # 3. body: function desired during the loop
-}
-
-MAD_values <- data.frame(MAD, colnames(Bleaching_variability)) %>% dplyr::rename(Group = colnames.Bleaching_variability.) %>%
-  separate(Group, c("Timepoint", "Treatment", "Species"))
-
-
-mad(Bleaching_variability$`Week1 ATAC Montipora`, center = median(Bleaching_variability$`Week1 ATAC Montipora`), constant = 1, na.rm = TRUE, low = FALSE, high = FALSE)
-```
