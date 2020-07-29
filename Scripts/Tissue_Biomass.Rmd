@@ -62,28 +62,19 @@ AFDW <- AFDW %>%
          AFDW.mg.cm2 = ((dry.bioimass.g-burnt.bioimass.g)*1000) / surface.area.cm2)
 
 AFDW
+
+AFDW_final <- AFDW %>% select(colony_id, partner, Species, TREATMENT, Sample.Date, DW.mg.cm2, AFDW.mg.cm2) %>%
+  gather("Measurement", "Value", 6:7)
 ```
 
-Reading in bleaching test information. 
+Calculating means per treatment and timepoint. 
 ```{r}
-Phys_testing <- read.csv("Physiology_variables/phys_testing.csv")
-Phys_testing$colony_id <- as.character(Phys_testing$colony_id)
-AFDW$colony_id <- as.character(AFDW$colony_id)
+AFDW_final$Sample.Date <- as.character(AFDW_final$Sample.Date)
 
-AFDW_final <- full_join(AFDW, Phys_testing, by="colony_id") %>% 
-  select(colony_id, partner, Species, TREATMENT, Sample.Date, DW.mg.cm2, AFDW.mg.cm2, status, bleaching_score)
-
-AFDW_final <- gather(AFDW_final, "Measurement", "Value", 6:7) # changing columns to rows to allow for easier facet_grid in graphing section
+AFDW_means <- summarySE(AFDW_final, measurevar="Value", groupvars=c("partner", "Sample.Date", "TREATMENT", "Species", "Measurement"))
 ```
 
-Graphing bleach test data. 
-```{r}
-ggplot(AFDW_final, aes(x=status, y=Value, fill=partner)) + geom_boxplot(alpha=0.5) +
-  geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() + 
-  theme(legend.position = "left") + 
-  facet_grid(Measurement ~ Species, scales = "free")
-```
-
+Graphing data.
 ```{r}
 cols <- c("lightblue", "blue", "salmon", "red3")
 
@@ -93,35 +84,19 @@ ggplot(AFDW_final, aes(x=TREATMENT, y=Value, fill=partner)) + geom_boxplot(alpha
   facet_grid(Measurement ~ Species, scales = "free")
 ```
 
-
 ```{r}
-ggplot(AFDW_final, aes(x=bleaching_score, y=Value, color=partner)) + geom_point() + 
-  xlab("Bleaching Score") + theme_bw() + 
-  facet_grid(Measurement ~ Species, scales = "free") + 
-  theme(legend.position = "left")
+AFDW <- subset(AFDW_means, Measurement=="AFDW.mg.cm2")
+
+ggplot(AFDW, aes(x=Sample.Date, y = Value, group = TREATMENT, color = TREATMENT)) +
+  geom_line() + geom_point() +
+  facet_grid(partner ~ Species, scales = "free") +
+  geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("Date") + 
+  ylab("Chlorophyll-a ug.cm2") + # y-axis label and y axis range
+  # ylim() + # y-axis label and y axis range
+  theme_bw() + 
+  theme(legend.position = "none") 
 ```
 
-<!-- Statistical analysis.  -->
-<!-- ```{r} -->
-<!-- AFDW.stats <- subset(AFDW_final, Measurement=="AFDW.mg.cm2") -->
 
-<!-- index <- c("ATAC", "ATHC", "HTAC", "HTHC") -->
-<!-- Tmp <- c("Ambient", "Ambient", "High", "High") -->
-<!-- pCO2 <- c("Ambient", "High", "Ambient", "High") -->
-
-<!-- AFDW.stats$Tmp.Trt <- Tmp[match(AFDW.stats$TREATMENT, index)] -->
-<!-- AFDW.stats$pCO2.Trt <- pCO2[match(AFDW.stats$TREATMENT, index)] -->
-
-<!-- Mcap.AFDW <- subset(AFDW.stats, Species=="Montipora") -->
-<!-- Pact.AFDW  <- subset(AFDW.stats, Species=="Pocillopora")  -->
-
-<!-- ## M.cap  -->
-<!-- # Net Photosynthetic Rates -->
-<!-- Pact.AFDW.aov <- aov(Value ~ pCO2.Trt*Tmp.Trt*Sample.Date, data = Pact.AFDW) -->
-<!-- summary(Pact.AFDW.aov) -->
-<!-- # TukeyHSD(Pact.AFDW.aov) -->
-
-<!-- hist(Pact.AFDW.aov$residuals) -->
-<!-- plot(Pact.AFDW.aov$fitted.values, Pact.AFDW.aov$residuals) -->
-<!-- shapiro.test(Pact.AFDW.aov$residuals) -->
-<!-- ``` -->
