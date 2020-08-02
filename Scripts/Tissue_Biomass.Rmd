@@ -15,12 +15,14 @@ if (!require("tidyverse")) install.packages("tidyverse")
 if (!require("plotrix")) install.packages("plotrix")
 if (!require("dplyr")) install.packages("dplyr")
 if (!require("plyr")) install.packages("plyr")
+if (!require("Rmisc")) install.packages("Rmisc")
 
 # load packages
 library(tidyverse)
 library(plotrix)
 library(dplyr)
 library(plyr)
+library(Rmisc)
 ```
 
 Dry Weight - organic and inorganic compounds
@@ -93,7 +95,7 @@ ggplot(AFDW, aes(x=Sample.Date, y = Value, group = TREATMENT, color = TREATMENT)
   geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2) +
   scale_color_manual(values = cols) + 
   xlab("Date") + 
-  ylab("Chlorophyll-a ug.cm2") + # y-axis label and y axis range
+  ylab("Ash-Free Dry Weight (mg.cm2)") + # y-axis label and y axis range
   # ylim() + # y-axis label and y axis range
   theme_bw() + 
   theme(legend.position = "none") 
