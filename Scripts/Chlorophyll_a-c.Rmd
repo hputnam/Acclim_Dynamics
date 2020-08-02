@@ -206,47 +206,8 @@ ggsave(file="Output/Chlorophyll.pdf", chl.Figs, width = 11, height = 6, units = 
 
 ```
 
-
-
-
-
-
-
-
-
-Reading in bleaching test information. 
+Correlation of chl and color score
 ```{r}
-Phys_testing <- read.csv("Physiology_variables/phys_testing.csv")
-Phys_testing$colony_id <- as.character(Phys_testing$colony_id)
-Chl_final <- full_join(Chl_final, Phys_testing, by="colony_id")
 
-Chl_final <- gather(Chl_final, "Measurement", "Value", 5:6) # changing columns to rows to allow for easier facet_grid in graphing section
+
 ```
-
-Graphing bleaching test data.
-```{r}
-ggplot(Chl_final, aes(x=status, y=Value, fill=status)) + geom_boxplot(alpha=0.5) +
-  geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() + 
-  theme(legend.position = "none") + 
-  facet_grid(Measurement ~ Species, scales = "free")
-```
-
-```{r}
-cols <- c("lightblue", "blue", "salmon", "red3")
-
-ggplot(Chl_final, aes(x=TREATMENT, y=Value, fill=TREATMENT)) + geom_boxplot() +
-  geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() + 
-  scale_fill_manual(values=cols) +
-  theme(legend.position = "none") + 
-  facet_grid(Measurement ~ Species, scales = "free")
-```
-
-```{r}
-ggplot(Chl_final, aes(x=bleaching_score, y=Value, color=Measurement)) + geom_point() + 
-  xlab("Bleaching Score") + theme_bw() + 
-  facet_grid(Measurement ~ Species, scales = "free") + 
-  theme(legend.position = "none")
-```
- 
- 
- 
