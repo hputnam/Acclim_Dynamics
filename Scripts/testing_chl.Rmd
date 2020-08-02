@@ -1,0 +1,53 @@
+---
+title: "testing_chl"
+author: "EL Strand"
+date: "8/2/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+## install packages if you dont already have them
+if (!require("tidyverse")) install.packages("tidyverse")
+if (!require("plotrix")) install.packages("plotrix")
+if (!require("dplyr")) install.packages("dplyr")
+if (!require("plyr")) install.packages("plyr")
+if (!require("Rmisc")) install.packages("Rmisc")
+if (!require("ggplot2")) install.packages("ggplot2")
+
+# load packages
+library(tidyverse)
+library(plotrix)
+library(dplyr)
+library(plyr)
+library(Rmisc)
+library(ggplot2)
+```
+
+```{r}
+read_chl <- function(file) {
+  chl_data <- read_csv(file) %>%
+  gather("wavelength", "absorbance", 2:4)
+}
+
+# List chlorophyll data files
+chl_path <- "Physiology_variables/Chlorophyll-a_c/"                                        # Path to chlorophyll data directory
+all_chl_files <- list.files(path = chl_path, pattern = "*.csv")          # List all files in directory
+chl_platemaps <- list.files(path = chl_path, pattern = "platemap")       # List platemap files
+chl_data_files <- setdiff(all_chl_files, chl_platemaps)                  # List absorbance data files
+
+# Read in all files into tibble
+df <- tibble(file = chl_data_files) %>%
+  mutate(platemap = map(file, ~ read_csv(paste0(chl_path, tools::file_path_sans_ext(.), "_platemap.csv"))),
+         chl_data = map(file, ~ read_chl(paste0(chl_path, .))))
+
+# Merge platemap and data for each plate
+df <- df %>%
+  mutate(merged = map2(platemap, chl_data, ~ right_join(.x, .y)))
+```
+```
