@@ -12,171 +12,207 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 if (!require("tidyverse")) install.packages("tidyverse")
 if (!require("plotrix")) install.packages("plotrix")
 if (!require("dplyr")) install.packages("dplyr")
-if (!require("plyr")) install.packages("plyr")
 if (!require("Rmisc")) install.packages("Rmisc")
 if (!require("ggplot2")) install.packages("ggplot2")
+if (!require("gridExtra")) install.packages("gridExtra")
 
 # load packages
 library(tidyverse)
 library(plotrix)
 library(dplyr)
-library(plyr)
 library(Rmisc)
 library(ggplot2)
+library(gridExtra)
 ```
 
 Reading in datafiles and merging into one large dataframe. 
 ```{r}
-read_chl <- function(file) {
-  chl_data <- read_csv(file) %>%
-  gather("wavelength", "absorbance", 2:4)
-}
 
-# List chlorophyll data files
-chl_path <- "Physiology_variables/Chlorophyll-a_c/"                                        # Path to chlorophyll data directory
-all_chl_files <- list.files(path = chl_path, pattern = "*.csv")          # List all files in directory
-chl_platemaps <- list.files(path = chl_path, pattern = "platemap")       # List platemap files
-chl_data_files <- setdiff(all_chl_files, chl_platemaps)                  # List absorbance data files
+df.platemaps <-
+  list.files(path = 'Physiology_variables/Chlorophyll-a_c',pattern = "platemap.csv", full.names = TRUE) %>% 
+  # list files in directory following a particular pattern
+  set_names(.) %>% # get the column names
+  map_dfr(read.csv, .id = "file.ID") %>% # join all files together in one data frame by file ID
+ group_by(file.ID) 
 
-# Read in all files into tibble
-df <- tibble(file = chl_data_files) %>%
-  mutate(platemap = map(file, ~ read_csv(paste0(chl_path, tools::file_path_sans_ext(.), "_platemap.csv"))),
-         chl_data = map(file, ~ read_chl(paste0(chl_path, .))))
+df.platemaps$file.ID <- gsub("Physiology_variables/Chlorophyll-a_c/", "", df.platemaps$file.ID)
+df.platemaps$file.ID <- gsub("_platemap.csv", "", df.platemaps$file.ID)
+
+df.data <-
+  list.files(path = 'Physiology_variables/Chlorophyll-a_c',pattern = "data.csv", full.names = TRUE) %>% 
+  # list files in directory following a particular pattern
+  set_names(.) %>% # get the column names
+  map_dfr(read.csv, .id = "file.ID") %>% # join all files together in one data frame by file ID
+ group_by(file.ID)
+
+df.data$file.ID <- gsub("Physiology_variables/Chlorophyll-a_c/", "", df.data$file.ID)
+df.data$file.ID <- gsub("_data.csv", "", df.data$file.ID)
+
 
 # Merge platemap and data for each plate
-df <- df %>%
-  mutate(merged = map2(platemap, chl_data, ~ right_join(.x, .y)))
+df <- left_join(df.data,df.platemaps)
+str(df)
+
 ```
 
 # Calculate chlorophyll concentrations
 ```{r}
-# average all technical replicates for each plate/sample/wavelength, including all acetone blanks together (per plate)
+# average all technical replicates for each the sample duplicates per plate
 df <- df %>%
-  unnest(merged) %>%
-  filter(!is.na(colony_id)) %>%                         # remove empty wells (colony_id is NA)
-  group_by(file, colony_id, wavelength) %>%
-  summarise(n = n(), mean_abs = mean(absorbance)) %>%
-  spread(wavelength, mean_abs)
+  filter(!is.na(colony_id)) #remove empty wells (colony_id is NA)
+  
+df.1 <- df %>%
+  dplyr::group_by(file.ID, colony_id) %>% #group by day and sample
+  dplyr::summarise(mean_A630 = mean(X630), #calculate means
+                   mean_A663 = mean(X663),
+                   mean_A750 = mean(X750))
+  
 
 # get the acetone blank 750 absorbace for each file (i.e., plate), and subtract from 630 and 663 values for each sample
-df <- df %>%
-  group_by(file) %>%
-  mutate(blank750 = `750`[colony_id == "BK"]) %>%
-  ungroup() %>%
-  mutate(adj630 = `630` - blank750,
-         adj663 = `663` - blank750)
+df.1 <- df.1 %>%
+  dplyr::mutate(adj630 = mean_A630 - mean_A750,
+         adj663 = mean_A663 - mean_A750)
 
 # calculate chla and chlc2 values based on equations from Jeffrey and Humphrey 1975
 # units µg/ml
-df <- df %>%
-  mutate(chla.ug.ml = 11.43 * adj663 - 0.64 * adj630,
-        chlc2.ug.ml = 27.09 * adj630 - 3.63 * adj663)
+df.1 <- df.1 %>%
+  dplyr::mutate(chla.ug.ml = (11.43 * adj663) - (0.64 * adj630),
+        chlc2.ug.ml = (27.09 * adj630) - (3.63 * adj663))
 
-# path length adjustments for chlorophyll?
+# path length adjustments for chlorophyll in 96 well quartz plate (0.584 cm)
+df.1 <- df.1 %>%
+  dplyr::mutate(chla.ug.ml = chla.ug.ml*0.584,
+        chlc2.ug.ml = chlc2.ug.ml*0.584)
+
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#############################
-
-
-
-
-Calculating Chlorophyll a and c values. 
-```{r}
-# average all technical replicates for each plate/sample/wavelength, including all acetone blanks together 
-Chl_means <- summarySE(df, measurevar="Absorbance", groupvars=c("colony_id", "Wavelength")) %>%
-  select(colony_id, Wavelength, Absorbance) %>% spread(Wavelength, Absorbance)
-
-# get the acetone blank 750 absorbace, and subtract from 630 and 663 values for each sample  
-# and accounting for path length (0.584 cm) from Warren 2007
-Chl_means <- Chl_means %>%
-  mutate(blank750 = `Chl.750`[colony_id == "BK"]) %>%
-  mutate(adj630 = (`Chl.630` - blank750)/0.584,
-         adj663 = (`Chl.663` - blank750)/0.584)
-
-# calculate chla and chlc2 values based on equations from Jeffrey and Humphrey 1975; units µg/ml
-Chl_means <- Chl_means %>%
-  mutate(chla.ug.ml = 11.43 * adj663 - 0.64 * adj630,
-         chlc2.ug.ml = 27.09 * adj630 - 3.63 * adj663)
-
-Chl_means
-```
 
 Standardize to surface area and homogenate volume. 
 ```{r}
 # Load homogenate volume
-homog.vol <- read_csv("Physiology_variables/Respirometry/coral_surface_area.csv") %>% dplyr::rename(colony_id = Sample_ID)
-  select(colony_id, surface.area.cm2)
-chl <- full_join(df, homog.vol)
-
 # Load surface area
-sa <- read_csv("Physiology_variables/Physiology_Master.csv") %>% dplyr::rename(colony_id = Plug_ID) %>%
-  select(colony_id, Homogenate_Vol_mL)
-chl <- full_join(chl, sa)
-
-# Multiply chlorophyll by the homogenate volume and divide by surface area
-chl <- chl %>%
-  mutate(chla.ug.cm2 = chla.ug.ml * homog_vol_ml / surface.area.cm2,
-         chlc2.ug.cm2 = chlc2.ug.ml * homog_vol_ml / surface.area.cm2)
-
-# remove blanks and NAs
-chl <- filter(chl, !colony_id %in% c("NA", "BK"))
-
-# write chlorophyll data to file
-chl %>%
-  select(colony_id, chla.ug.cm2, chlc2.ug.cm2) %>%
-  write_csv(path = "Output/chlorophyll.csv")
-```
-
-Standardize to surface area and homogenate volume. 
-```{r}
-# Load surface area and homogenate volume values; merge dataframes from chla, chlc means 
-Surface_area <- read.csv("Physiology_variables/Respirometry/coral_surface_area.csv") %>% dplyr::rename(colony_id = Sample_ID) %>%
+sa <- read_csv("Physiology_variables/Respirometry/coral_surface_area.csv") %>% dplyr::rename(colony_id = Sample_ID) %>%
   select(colony_id, surface.area.cm2)
-Homogenate_volume <- read.csv("Physiology_variables/Physiology_Master.csv") %>% dplyr::rename(colony_id = Plug_ID) %>%
+sa$colony_id <- as.factor(sa$colony_id)
+str(sa)
+
+df.chl <- left_join(sa, df.1)
+
+# Load homogenate volume
+homog.vol <- read_csv("Physiology_variables/Physiology_Master.csv") %>% dplyr::rename(colony_id = Plug_ID) %>%
   select(colony_id, Homogenate_Vol_mL)
+homog.vol$colony_id <- as.factor(homog.vol$colony_id)
+str(homog.vol)
 
-Chl_standardized <- join_all(list(Chl_means, Surface_area, Homogenate_volume), by='colony_id', type='left') %>%
-  select(colony_id, surface.area.cm2, Homogenate_Vol_mL, chla.ug.ml, chlc2.ug.ml)
+df.chl <- left_join(df.chl, homog.vol)
 
-# Multiply chlorophyll by the homogenate volume and divide by surface area
-Chl_standardized <- Chl_standardized %>%
-  mutate(chla.ug.cm2 = chla.ug.ml * Homogenate_Vol_mL / surface.area.cm2,
-         chlc2.ug.cm2 = chlc2.ug.ml * Homogenate_Vol_mL / surface.area.cm2) 
-  
+# Account for homogenate volume and normalize to surface area
+df.chl <- df.chl %>%
+  mutate(chla.ug.cm2 = (chla.ug.ml * Homogenate_Vol_mL) / surface.area.cm2,
+         chlc2.ug.cm2 = (chlc2.ug.ml * Homogenate_Vol_mL) / surface.area.cm2)
+
 # remove blanks and NAs
-Chl_standardized <- filter(Chl_standardized, !colony_id %in% c("NA", "BK"))
+df.chl <- filter(df.chl, !colony_id %in% c("NA", "BK"))
 
 # write chlorophyll data to file
-Chl_standardized %>% 
-  select(colony_id, chla.ug.cm2, chlc2.ug.cm2) %>% 
+df.chl %>%
+  select(colony_id, chla.ug.cm2, chlc2.ug.cm2) %>%
   write_csv(path = "Output/chlorophyll.csv")
 ```
 
 Reading in master fragment information. 
 ```{r}
-Master_fragment <- read.csv("Environmental_data/Master_Fragment_20200616_QC.csv") %>% dplyr::rename(colony_id = PLUG.ID)
+Master_fragment <- read.csv("Environmental_data/Master_Fragment_20200616_QC.csv", header=T, sep=",", na.string="NA") %>% #read in data file
+  dplyr::rename(colony_id = PLUG.ID)
 Master_fragment$colony_id <- as.character(Master_fragment$colony_id)
-Chl <- read.csv("Physiology_variables/Chlorophyll-a_c/chlorophyll.csv") 
-Chl$colony_id <- as.character(Chl$colony_id)
+Master_fragment <- Master_fragment %>% select(colony_id, Species, Timepoint, Temperature, TREATMENT, CO2)
+str(df.chl)
 
-Chl_final <- full_join(Master_fragment, Chl, by="colony_id") %>% select(colony_id, Species, TREATMENT, Sample.Date, chla.ug.cm2, chlc2.ug.cm2) %>%
-  filter(!is.na(chla.ug.cm2))
+Chl_final <- left_join(df.chl, Master_fragment, by="colony_id")  
 ```
+
+Plotting timeseries
+```{r}
+mean.chl.a <- Chl_final %>%
+  dplyr::group_by(Species,Timepoint, Temperature, CO2, TREATMENT) %>%
+  dplyr::summarise(mean= mean(chla.ug.cm2), #mean 
+                   N = sum(chla.ug.cm2), # sample size
+                   se = sd(chla.ug.cm2)/sqrt(N)) #SE
+mean.chl.a$Timepoint <- factor(mean.chl.a$Timepoint, levels=c("TP1","TP3","TP4","TP5","TP6","TP7","TP8","TP9","TP10","TP11","TP12"))
+
+mean.chl.c <- Chl_final %>%
+  dplyr::group_by(Species,Timepoint, Temperature, CO2, TREATMENT) %>%
+  dplyr::summarise(mean= mean(chlc2.ug.cm2), #mean 
+                   N = sum(chlc2.ug.cm2), # sample size
+                   se = sd(chlc2.ug.cm2)/sqrt(N)) #SE
+mean.chl.c$Timepoint <- factor(mean.chl.c$Timepoint, levels=c("TP1","TP3","TP4","TP5","TP6","TP7","TP8","TP9","TP10","TP11","TP12"))
+
+
+cols <- c("lightblue", "blue", "pink", "red")
+
+Fig.chla <- ggplot(mean.chl.a, aes(x=Timepoint, y=mean, group=TREATMENT)) + 
+  geom_line(aes(colour=TREATMENT, group=TREATMENT), position = position_dodge(width = 0.1), alpha=1) + # colour, group both depend on cond2
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), colour="darkgray", width=0, size=1, position = position_dodge(width = 0.1)) +
+  geom_point(aes(colour=TREATMENT), size = 3, position = position_dodge(width = 0.1)) +
+  scale_colour_manual(values=cols) +
+  xlab("Timepoint") +
+  ylab(expression(Chl-a ~(µg ~cm^-2))) +
+  #ylim(-0.5,1.5) +
+  theme_bw() + #Set the background color
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
+        axis.line = element_line(color = 'black'), #Set the axes color
+        panel.border = element_blank(), #Set the border
+        panel.grid.major = element_blank(), #Set the major gridlines
+        panel.grid.minor = element_blank(), #Set the minor gridlines
+        legend.position = "none", #remove legend
+        plot.background=element_blank())+  #Set the plot background
+  ggtitle("A) Chla") +
+  facet_grid(rows=vars(Species), scales="free_y") +
+  geom_vline(xintercept = c(5.6), colour="black", linetype="dotted")+
+  theme(plot.title = element_text(face = 'bold.italic', 
+                                  size = 12, 
+                                  hjust = 0))
+Fig.chla
+
+Fig.chlc2 <- ggplot(mean.chl.c, aes(x=Timepoint, y=mean, group=TREATMENT)) + 
+  geom_line(aes(colour=TREATMENT, group=TREATMENT), position = position_dodge(width = 0.1), alpha=1) + # colour, group both depend on cond2
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), colour="darkgray", width=0, size=1, position = position_dodge(width = 0.1)) +
+  geom_point(aes(colour=TREATMENT), size = 3, position = position_dodge(width = 0.1)) +
+  scale_colour_manual(values=cols) +
+  xlab("Timepoint") +
+  ylab(expression(Chl-c2 ~(µg ~cm^-2))) +
+  #ylim(-0.5,1.5) +
+  theme_bw() + #Set the background color
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
+        axis.line = element_line(color = 'black'), #Set the axes color
+        panel.border = element_blank(), #Set the border
+        panel.grid.major = element_blank(), #Set the major gridlines
+        panel.grid.minor = element_blank(), #Set the minor gridlines
+        legend.position = "none", #remove legend
+        plot.background=element_blank())+  #Set the plot background
+  ggtitle("B) Chlc2") +
+  facet_grid(rows=vars(Species), scales="free_y") +
+  geom_vline(xintercept = c(5.6), colour="black", linetype="dotted")+
+  theme(plot.title = element_text(face = 'bold.italic', 
+                                  size = 12, 
+                                  hjust = 0))
+Fig.chlc2
+
+chl.Figs <- arrangeGrob(Fig.chla, Fig.chlc2, ncol=2)
+ggsave(file="Output/Chlorophyll.pdf", chl.Figs, width = 11, height = 6, units = c("in"))
+
+
+
+
+```
+
+
+
+
+
+
+
+
 
 Reading in bleaching test information. 
 ```{r}
