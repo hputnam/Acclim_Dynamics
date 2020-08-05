@@ -16,6 +16,7 @@ if (!require("plotrix")) install.packages("plotrix")
 if (!require("dplyr")) install.packages("dplyr")
 if (!require("plyr")) install.packages("plyr")
 if (!require("Rmisc")) install.packages("Rmisc")
+if (!require("ggstatsplot")) install.packages("ggstatsplot")
 
 # load packages
 library(tidyverse)
@@ -23,6 +24,7 @@ library(plotrix)
 library(dplyr)
 library(plyr)
 library(Rmisc)
+library(ggstatsplot)
 ```
 
 Dry Weight - organic and inorganic compounds
@@ -35,7 +37,7 @@ AFDW_raw <- read.csv("Physiology_variables/Tissue_Biomass/AFDW_data.csv") %>% fi
 # Load surface area and homogenate volume values; merge dataframes from chla, chlc means 
 Surface_area <- read.csv("Physiology_variables/Respirometry/coral_surface_area.csv") %>% dplyr::rename(colony_id = Sample_ID) %>%
   select(colony_id, surface.area.cm2)
-Homogenate_volume <- read.csv("Physiology_variables/Physiology_Master.csv") %>% dplyr::rename(colony_id = Plug_ID) %>%
+Homogenate_volume <- read.csv("Physiology_variables/Physiology_Master_QC.csv") %>% dplyr::rename(colony_id = Plug_ID) %>%
   select(colony_id, Homogenate_Vol_mL)
 Master_fragment <- read.csv("Environmental_data/Master_Fragment_20200616_QC.csv") %>% dplyr::rename(colony_id = PLUG.ID) %>%
   select(colony_id, Species, TREATMENT, Sample.Date)
@@ -99,6 +101,40 @@ ggplot(AFDW, aes(x=Sample.Date, y = Value, group = TREATMENT, color = TREATMENT)
   # ylim() + # y-axis label and y axis range
   theme_bw() + 
   theme(legend.position = "none") 
+```
+
+############## Bleaching Fragment Test prior to running the rest of the samples. 
+
+Reading in bleaching test information. 
+```{r}
+Phys_testing <- read.csv("Physiology_variables/phys_testing.csv")
+Phys_testing$colony_id <- as.character(Phys_testing$colony_id)
+AFDW$colony_id <- as.character(AFDW$colony_id)
+
+AFDW_testing <- full_join(AFDW, Phys_testing, by="colony_id") %>% 
+select(colony_id, partner, Species, TREATMENT, Sample.Date, DW.mg.cm2, AFDW.mg.cm2, status, bleaching_score) %>% filter(!is.na(status))
+
+AFDW_testing <- gather(AFDW_testing, "Measurement", "Value", 6:7) # changing columns to rows to allow for easier facet_grid in graphing section
+```
+
+Graphing bleach test data. 
+```{r}
+Bleached1 <- ggplot(AFDW_testing, aes(x=status, y=Value, fill=partner)) + geom_boxplot(alpha=0.5) +
+  geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() + 
+  theme(legend.position = "left") + 
+  facet_grid(Measurement ~ Species, scales = "free")
+Bleached1
+
+Bleached2 <- ggplot(AFDW_testing, aes(x=bleaching_score, y=Value, color=partner)) + geom_point() + 
+  xlab("Bleaching Score") + theme_bw() + 
+  facet_grid(Measurement ~ Species, scales = "free") + 
+  theme(legend.position = "left")
+Bleached2
+
+Bleached.Figs <- combine_plots(Bleached1, Bleached2,
+  labels = c("A", "B"), ncol=2)
+
+ggsave(file="Output/Phystest_AFDW.pdf", Bleached.Figs, width = 11, height = 10, units = c("in"))
 ```
 
 
