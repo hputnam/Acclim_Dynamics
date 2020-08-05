@@ -1,0 +1,133 @@
+---
+title: "Soluble_Protein"
+author: "EL Strand"
+date: "8/5/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+rm(list=ls())
+```
+
+Load in required libraries. 
+```{r}
+## install packages if you dont already have them
+if (!require("dplyr")) install.packages("dplyr")
+if (!require("ggplot2")) install.packages("ggplot2")
+if (!require("tidyverse")) install.packages("tidyverse")
+if (!require("broom")) install.packages("broom")
+
+# load packages
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(broom)
+```
+
+Based on Pierce BCA Rapid Gold Protein Kit.
+
+Reading in datafiles. 
+```{r}
+plate1_platemap <- read.csv("Physiology_variables/Soluble_Protein/20200804_Plate1_SP_platemap.csv") 
+  plate1_platemap$Plug_ID <- as.character(plate1_platemap$Plug_ID)
+plate1_data <- read.csv("Physiology_variables/Soluble_Protein/20200804_plate1_TP.csv", header=T) 
+  plate1_data$X480 <- gsub("OVRFLW", "NA", plate1_data$X480) # replacing OVRFLW valuew with NA
+  plate1_data$X480 <- as.numeric(plate1_data$X480)
+
+plate1 <- full_join(plate1_platemap, plate1_data, by="Well") %>% dplyr::rename(Abs480 = X480) %>% filter(!is.na(Plug_ID)) # joining two above dataframes; renaming X480 column; removing all wells with NA values
+
+# new dataframe (standards) with the standard values and renaming that column
+standards <- plate1 %>% filter(grepl("Standard", Plug_ID)) %>% dplyr::rename(Standard = Plug_ID)
+```
+
+Plot standard curve. 
+```{r}
+standards <- standards %>%
+  dplyr::group_by(Standard) %>%
+  summarise(Abs480 = mean(Abs480)) %>%
+  mutate(Abs480.adj = Abs480 - Abs480[Standard == "StandardI"])
+
+st.name <- c("StandardA", "StandardB", "StandardC", "StandardD", "StandardE", "StandardF", "StandardG", "StandardH", "StandardI")
+concentration <- c("2500", "1500", "1000", "750", "500", "250", "125", "25", "0")
+standards$BSA_ug.mL <- concentration[match(standards$Standard, st.name)]
+  standards$BSA_ug.mL <- as.numeric(standards$BSA_ug.mL)
+
+## Fit nonlinear model for standard curve
+mod <- nls(formula = BSA_ug.mL ~ z + a * exp(b * Abs480.adj), start = list(z = 0, a = 1, b = 1), data = standards)
+fitted <- mod %>% broom::augment()
+
+# Plot standard curve
+std_curve_plot <- standards %>%
+  ggplot(aes(x = Abs480.adj, y = BSA_ug.mL)) +
+  geom_point(color = "red", size = 3) + 
+  theme_bw()
+
+std_curve_plot + 
+  geom_line(data = fitted, aes(x = Abs480.adj, y = .fitted)) +
+  labs(title = "Standard curve")
+```
+
+Calculating protein concentrations based on standard curve. 
+```{r}
+protein <- plate1 %>% filter(!grepl("Standard", Plug_ID)) %>%
+  filter(!is.na(Plug_ID)) %>%
+  group_by(Plug_ID) %>%
+  summarise(Abs480 = mean(Abs480)) %>%
+  mutate(Abs480.adj = Abs480 - standards$Abs480[standards$Standard == "StandardI"],  # Subtract blank standard (Standard I) from mean absorbance values
+         prot_ug.mL = map_dbl(Abs480.adj, ~ predict(mod, newdata = data.frame(Abs480.adj = .))))    # Use standard curve to convert absorbance to protein
+
+std_curve_plot + 
+  geom_point(data = protein, aes(x = Abs480.adj, y = prot_ug.mL), pch = "X", cex = 5, alpha = 0.3) +
+  labs(title = "All samples projected on standard curve")
+```
+
+Normalize to surface area. 
+```{r}
+sa <- read_csv("Physiology_variables/Respirometry/coral_surface_area.csv") %>% dplyr::rename(Plug_ID = Sample_ID) %>% select(Plug_ID, surface.area.cm2)
+  sa$Plug_ID <- as.character(sa$Plug_ID)
+homog.vol <- read_csv("Physiology_variables/Physiology_Master_QC.csv") %>% select(Plug_ID, Homogenate_Vol_mL)
+  homog.vol$Plug_ID <- as.character(homog.vol$Plug_ID)
+
+Master_fragment <- read.csv("Environmental_data/Master_Fragment_20200616_QC.csv", header=T, sep=",", na.string="NA") %>% select(Plug_ID, Species, Timepoint, Temperature, Treatment, CO2)
+  Master_fragment$Plug_ID <- as.character(Master_fragment$Plug_ID)
+  
+metadata <- full_join(sa, homog.vol, by='Plug_ID', type='left') %>% 
+  full_join(Master_fragment)
+
+protein <- left_join(protein, metadata) %>%
+  mutate(prot_ug = prot_ug.mL * Homogenate_Vol_mL,
+         prot_ug.cm2 = prot_ug / surface.area.cm2)
+```
+
+
+
+############# Bleaching Test Information prior to processing all of the samples ############# 
+
+Reading in bleaching test info. 
+```{r}
+Phys_testing <- read.csv("Physiology_variables/phys_testing.csv")
+  Phys_testing$Plug_ID <- as.character(Phys_testing$Plug_ID)
+  
+Protein_testing <- full_join(protein, Phys_testing, by="Plug_ID")
+```
+
+Graphing bleaching test information.
+```{r}
+Bleached1 <- ggplot(Protein_testing, aes(x=status, y=prot_ug.cm2, fill=status)) + geom_boxplot(alpha=0.5) +
+  geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() + 
+  theme(legend.position = "") + 
+  facet_wrap(~Species)
+Bleached1
+
+Bleached2 <- ggplot(Protein_testing, aes(x=bleaching_score, y=prot_ug.cm2)) + geom_point() + 
+  xlab("Bleaching Score") + theme_bw() + 
+  facet_wrap(~Species) + 
+  theme(legend.position = "")
+Bleached2
+```
+
+
