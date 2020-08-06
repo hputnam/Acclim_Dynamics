@@ -1,0 +1,148 @@
+---
+title: "Total_antioxidant_capacity"
+author: "EL Strand"
+date: "8/5/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+rm(list=ls())
+```
+
+Load in required libraries. 
+```{r}
+## install packages if you dont already have them
+if (!require("dplyr")) install.packages("dplyr")
+if (!require("ggplot2")) install.packages("ggplot2")
+if (!require("tidyverse")) install.packages("tidyverse")
+if (!require("broom")) install.packages("broom")
+
+# load packages
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(broom)
+```
+
+Based on Total Antioxidant Capacity kit. 
+Protocol found here. 
+
+Reading in datafiles. 
+```{r}
+plate1_TAC_platemap <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20200804_Plate1_TAC_platemap.csv") 
+  plate1_TAC_platemap$Plug_ID <- as.character(plate1_TAC_platemap$Plug_ID)
+plate1_TAC_final <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20200804_plate1_final.csv", header=T) %>% dplyr::rename(Abs_final = X490.490)
+plate1_TAC_initial <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20200804_plate1_initial.csv", header=T) %>% dplyr::rename(Abs_initial = X490.490)
+
+plate1_TAC <- full_join(plate1_TAC_platemap, plate1_TAC_initial, by="Well") %>%
+  full_join(plate1_TAC_final) %>%
+  filter(!is.na(Plug_ID))
+
+# new dataframe (standards) with the standard values and renaming that column
+TAC_standards <- plate1_TAC %>% filter(grepl("Standard", Plug_ID)) %>% dplyr::rename(Standard = Plug_ID)
+```
+
+Plot standard curve. 
+```{r}
+TAC_standards <- TAC_standards %>%
+  mutate(Abs_net = Abs_final - Abs_initial) %>% 
+  dplyr::group_by(Standard) %>%
+  summarise(Abs_net = mean(Abs_net)) %>%
+  mutate(Abs_net.adj = Abs_net - Abs_net[Standard == "Standard10"])
+
+st.name <- c("Standard1", "Standard2", "Standard3", "Standard4", "Standard5", "Standard6", "Standard7", "Standard8", "Standard9", "Standard10")
+concentration <- c("1", "0.5", "0.25", "0.125", "0.0625", "0.03125", "0.01560", "0.00780", "0.00390", "0")
+TAC_standards$conc_mM <- concentration[match(TAC_standards$Standard, st.name)]
+  TAC_standards$conc_mM <- as.numeric(TAC_standards$conc_mM)
+
+ggplot(TAC_standards, aes(x=Abs_net, y=conc_mM)) + geom_point() + theme_bw()
+
+## Fit nonlinear model for standard curve
+TAC_mod <- nls(formula = conc_mM ~ z + a * exp(b * Abs_net.adj), start = list(z = 0, a = 1, b = 1), data = TAC_standards)
+TAC_fitted <- TAC_mod %>% broom::augment()
+
+std_curve_plot <- TAC_standards %>%
+  ggplot(aes(x = Abs_net.adj, y = conc_mM)) +
+  geom_point(color = "red", size = 1.5) + 
+  theme_bw()
+std_curve_plot
+
+std_curve_plot + geom_line(data = TAC_fitted, aes(x = Abs_net.adj, y = .fitted)) +
+  labs(title = "TAC Standard curve")
+```
+
+Calculate Total Antioxidant Capacity based on the standard curve model from above.
+```{r}
+TAC <- plate1_TAC %>% filter(!grepl("Standard", Plug_ID)) %>%
+  mutate(Abs_net = Abs_final - Abs_initial) %>%
+  dplyr::group_by(Plug_ID) %>%
+  summarise(Abs_net = mean(Abs_net)) %>%
+  mutate(Abs_net.adj = Abs_net - TAC_standards$Abs_net[TAC_standards$Standard == "Standard10"],
+         uae.mmol.L = map_dbl(Abs_net.adj, ~ predict(mod, newdata = data.frame(Abs_net.adj = .))))
+
+std_curve_plot +
+  geom_point(data = TAC, aes(x = Abs_net.adj, y = uae.mmol.L), pch = "X", cex = 3, alpha = 0.3) +
+    labs(title = "All TAC samples projected on standard curve")
+```
+
+Normalize to surface area, soluble protein, and homogenate volume. 
+```{r}
+sa <- read_csv("Physiology_variables/Respirometry/coral_surface_area.csv") %>% dplyr::rename(Plug_ID = Sample_ID) %>% select(Plug_ID, surface.area.cm2)
+  sa$Plug_ID <- as.character(sa$Plug_ID)
+homog.vol <- read_csv("Physiology_variables/Physiology_Master_QC.csv") %>% select(Plug_ID, Homogenate_Vol_mL)
+  homog.vol$Plug_ID <- as.character(homog.vol$Plug_ID)
+
+Master_fragment <- read.csv("Environmental_data/Master_Fragment_20200616_QC.csv", header=T, sep=",", na.string="NA") %>% select(Plug_ID, Species, Timepoint, Temperature, Treatment, CO2)
+  Master_fragment$Plug_ID <- as.character(Master_fragment$Plug_ID)
+
+prot <- read_csv("output/soluble_protein.csv") 
+  prot$Plug_ID <- as.character(prot$Plug_ID)
+
+metadata <- full_join(sa, homog.vol, by='Plug_ID', type='left') %>% 
+  full_join(Master_fragment) %>%
+  full_join(prot)
+
+TAC <- left_join(TAC, metadata) %>%
+  mutate(uae.mmol = uae.mmol.L * (Homogenate_Vol_mL / 1000),
+         uae.mmol.cm2 = uae.mmol / surface.area.cm2,
+         uae.mmol.ugprot = uae.mmol.cm2 / prot_ug.cm2)
+```
+
+Write data to output file
+```{r}
+TAC %>%
+  select(Plug_ID, uae.mmol, uae.mmol.cm2, uae.mmol.ugprot) %>%
+  write_csv(., path = "output/antioxidant_capacity.csv")
+```
+
+############# Bleaching Test Information prior to processing all of the samples ############# 
+
+Reading in bleaching test info. 
+```{r}
+Phys_testing <- read.csv("Physiology_variables/phys_testing.csv")
+  Phys_testing$Plug_ID <- as.character(Phys_testing$Plug_ID)
+  
+TAC_testing <- full_join(TAC, Phys_testing, by="Plug_ID")
+```
+
+Graphing bleaching test information.
+```{r}
+Bleached1 <- ggplot(TAC_testing, aes(x=status, y=uae.mmol.ugprot, fill=status)) + geom_boxplot(alpha=0.5) +
+  geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() + 
+  theme(legend.position = "") + 
+  facet_wrap(~Species)
+Bleached1
+
+Bleached2 <- ggplot(TAC_testing, aes(x=bleaching_score, y=uae.mmol.ugprot)) + geom_point() + 
+  xlab("Bleaching Score") + theme_bw() + 
+  facet_wrap(~Species) + 
+  theme(legend.position = "")
+Bleached2
+```
+
+
+

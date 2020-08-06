@@ -29,6 +29,7 @@ library(broom)
 ```
 
 Based on Pierce BCA Rapid Gold Protein Kit.
+Protocol found here. 
 
 Reading in datafiles. 
 ```{r}
@@ -101,6 +102,14 @@ metadata <- full_join(sa, homog.vol, by='Plug_ID', type='left') %>%
 protein <- left_join(protein, metadata) %>%
   mutate(prot_ug = prot_ug.mL * Homogenate_Vol_mL,
          prot_ug.cm2 = prot_ug / surface.area.cm2)
+```
+
+# Write data to output file
+```{r}
+# Write protein data to output file
+protein %>%
+  select(Plug_ID, prot_ug, prot_ug.cm2) %>%
+  write_csv(., path = "output/soluble_protein.csv")
 ```
 
 
