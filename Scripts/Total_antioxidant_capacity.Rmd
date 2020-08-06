@@ -33,17 +33,17 @@ Protocol found here.
 
 Reading in datafiles. 
 ```{r}
-plate1_TAC_platemap <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20200804_Plate1_TAC_platemap.csv") 
-  plate1_TAC_platemap$Plug_ID <- as.character(plate1_TAC_platemap$Plug_ID)
-plate1_TAC_final <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20200804_plate1_final.csv", header=T) %>% dplyr::rename(Abs_final = X490.490)
-plate1_TAC_initial <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20200804_plate1_initial.csv", header=T) %>% dplyr::rename(Abs_initial = X490.490)
+plate2_TAC_platemap <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20200806_Plate2_TAC_platemap.csv") 
+  plate2_TAC_platemap$Plug_ID <- as.character(plate2_TAC_platemap$Plug_ID)
+plate2_TAC_final <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20200806_plate2_final.csv", header=T) %>% dplyr::rename(Abs_final = X490.490)
+plate2_TAC_initial <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20200806_plate2_initial.csv", header=T) %>% dplyr::rename(Abs_initial = X490.490)
 
-plate1_TAC <- full_join(plate1_TAC_platemap, plate1_TAC_initial, by="Well") %>%
-  full_join(plate1_TAC_final) %>%
+plate2_TAC <- full_join(plate2_TAC_platemap, plate2_TAC_initial, by="Well") %>%
+  full_join(plate2_TAC_final) %>%
   filter(!is.na(Plug_ID))
 
 # new dataframe (standards) with the standard values and renaming that column
-TAC_standards <- plate1_TAC %>% filter(grepl("Standard", Plug_ID)) %>% dplyr::rename(Standard = Plug_ID)
+TAC_standards <- plate2_TAC %>% filter(grepl("Standard", Plug_ID)) %>% dplyr::rename(Standard = Plug_ID)
 ```
 
 Plot standard curve. 
@@ -59,15 +59,13 @@ concentration <- c("1", "0.5", "0.25", "0.125", "0.0625", "0.03125", "0.01560", 
 TAC_standards$conc_mM <- concentration[match(TAC_standards$Standard, st.name)]
   TAC_standards$conc_mM <- as.numeric(TAC_standards$conc_mM)
 
-ggplot(TAC_standards, aes(x=Abs_net, y=conc_mM)) + geom_point() + theme_bw()
-
 ## Fit nonlinear model for standard curve
 TAC_mod <- nls(formula = conc_mM ~ z + a * exp(b * Abs_net.adj), start = list(z = 0, a = 1, b = 1), data = TAC_standards)
 TAC_fitted <- TAC_mod %>% broom::augment()
 
 std_curve_plot <- TAC_standards %>%
-  ggplot(aes(x = Abs_net.adj, y = conc_mM)) +
-  geom_point(color = "red", size = 1.5) + 
+  ggplot(aes(x = conc_mM, y = Abs_net.adj)) +
+  geom_point(color = "blue", size = 1.5) + 
   theme_bw()
 std_curve_plot
 
@@ -77,7 +75,7 @@ std_curve_plot + geom_line(data = TAC_fitted, aes(x = Abs_net.adj, y = .fitted))
 
 Calculate Total Antioxidant Capacity based on the standard curve model from above.
 ```{r}
-TAC <- plate1_TAC %>% filter(!grepl("Standard", Plug_ID)) %>%
+TAC <- plate2_TAC %>% filter(!grepl("Standard", Plug_ID)) %>%
   mutate(Abs_net = Abs_final - Abs_initial) %>%
   dplyr::group_by(Plug_ID) %>%
   summarise(Abs_net = mean(Abs_net)) %>%
