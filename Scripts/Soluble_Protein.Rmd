@@ -67,21 +67,6 @@ std_curve_plot <- standards %>%
   labs(title = "Soluble Protein Standard curve") + 
   geom_smooth(method = "lm")
 std_curve_plot
-
-## Fit nonlinear model for standard curve
-# mod <- nls(formula = BSA_ug.mL ~ z + a * exp(b * Abs480.adj), start = list(z = 0, a = 1, b = 1), data = standards)
-# summary(mod)
-# fitted <- mod %>% broom::augment()
-
-# Plot standard curve
-# std_curve_plot <- standards %>%
- # ggplot(aes(x = Abs480.adj, y = BSA_ug.mL)) +
- # geom_point(color = "red", size = 3) + 
- # theme_bw()
-
-#std_curve_plot + 
- # geom_line(data = fitted, aes(x = Abs480.adj, y = .fitted)) +
- # labs(title = "Standard curve")
 ```
 
 Calculating protein concentrations based on standard curve. 
