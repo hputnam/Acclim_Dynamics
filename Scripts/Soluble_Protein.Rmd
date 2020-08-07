@@ -57,19 +57,31 @@ concentration <- c("2500", "1500", "1000", "750", "500", "250", "125", "25", "0"
 standards$BSA_ug.mL <- concentration[match(standards$Standard, st.name)]
   standards$BSA_ug.mL <- as.numeric(standards$BSA_ug.mL)
 
+SP_mod_lin <- lm(BSA_ug.mL ~ Abs480.adj, data = standards)
+summary(SP_mod_lin)
+
+std_curve_plot <- standards %>%
+  ggplot(aes(x = BSA_ug.mL, y = Abs480.adj)) +
+  geom_point(color = "blue", size = 1.5) + 
+  theme_bw() + 
+  labs(title = "Soluble Protein Standard curve") + 
+  geom_smooth(method = "lm")
+std_curve_plot
+
 ## Fit nonlinear model for standard curve
-mod <- nls(formula = BSA_ug.mL ~ z + a * exp(b * Abs480.adj), start = list(z = 0, a = 1, b = 1), data = standards)
-fitted <- mod %>% broom::augment()
+# mod <- nls(formula = BSA_ug.mL ~ z + a * exp(b * Abs480.adj), start = list(z = 0, a = 1, b = 1), data = standards)
+# summary(mod)
+# fitted <- mod %>% broom::augment()
 
 # Plot standard curve
-std_curve_plot <- standards %>%
-  ggplot(aes(x = Abs480.adj, y = BSA_ug.mL)) +
-  geom_point(color = "red", size = 3) + 
-  theme_bw()
+# std_curve_plot <- standards %>%
+ # ggplot(aes(x = Abs480.adj, y = BSA_ug.mL)) +
+ # geom_point(color = "red", size = 3) + 
+ # theme_bw()
 
-std_curve_plot + 
-  geom_line(data = fitted, aes(x = Abs480.adj, y = .fitted)) +
-  labs(title = "Standard curve")
+#std_curve_plot + 
+ # geom_line(data = fitted, aes(x = Abs480.adj, y = .fitted)) +
+ # labs(title = "Standard curve")
 ```
 
 Calculating protein concentrations based on standard curve. 
@@ -79,10 +91,10 @@ protein <- plate1 %>% filter(!grepl("Standard", Plug_ID)) %>%
   group_by(Plug_ID) %>%
   summarise(Abs480 = mean(Abs480)) %>%
   mutate(Abs480.adj = Abs480 - standards$Abs480[standards$Standard == "StandardI"],  # Subtract blank standard (Standard I) from mean absorbance values
-         prot_ug.mL = map_dbl(Abs480.adj, ~ predict(mod, newdata = data.frame(Abs480.adj = .))))    # Use standard curve to convert absorbance to protein
+         prot_ug.mL = map_dbl(Abs480.adj, ~ predict(SP_mod_lin, newdata = data.frame(Abs480.adj = .))))    # Use standard curve to convert absorbance to protein
 
 std_curve_plot + 
-  geom_point(data = protein, aes(x = Abs480.adj, y = prot_ug.mL), pch = "X", cex = 5, alpha = 0.3) +
+  geom_point(data = protein, aes(x = prot_ug.mL, y = Abs480.adj), pch = "X", cex = 5, alpha = 0.3) +
   labs(title = "All samples projected on standard curve")
 ```
 

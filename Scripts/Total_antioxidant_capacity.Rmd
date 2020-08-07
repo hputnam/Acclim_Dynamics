@@ -59,18 +59,16 @@ concentration <- c("1", "0.5", "0.25", "0.125", "0.0625", "0.03125", "0.01560", 
 TAC_standards$conc_mM <- concentration[match(TAC_standards$Standard, st.name)]
   TAC_standards$conc_mM <- as.numeric(TAC_standards$conc_mM)
 
-## Fit nonlinear model for standard curve
-TAC_mod <- nls(formula = conc_mM ~ z + a * exp(b * Abs_net.adj), start = list(z = 0, a = 1, b = 1), data = TAC_standards)
-TAC_fitted <- TAC_mod %>% broom::augment()
+TAC_mod_lin <- lm(conc_mM ~ Abs_net.adj, data = TAC_standards)
+summary(TAC_mod_lin)
 
 std_curve_plot <- TAC_standards %>%
   ggplot(aes(x = conc_mM, y = Abs_net.adj)) +
   geom_point(color = "blue", size = 1.5) + 
-  theme_bw()
+  theme_bw() + 
+  labs(title = "TAC Standard curve") + 
+  geom_smooth(method = "lm")
 std_curve_plot
-
-std_curve_plot + geom_line(data = TAC_fitted, aes(x = Abs_net.adj, y = .fitted)) +
-  labs(title = "TAC Standard curve")
 ```
 
 Calculate Total Antioxidant Capacity based on the standard curve model from above.
@@ -80,7 +78,7 @@ TAC <- plate2_TAC %>% filter(!grepl("Standard", Plug_ID)) %>%
   dplyr::group_by(Plug_ID) %>%
   summarise(Abs_net = mean(Abs_net)) %>%
   mutate(Abs_net.adj = Abs_net - TAC_standards$Abs_net[TAC_standards$Standard == "Standard10"],
-         uae.mmol.L = map_dbl(Abs_net.adj, ~ predict(mod, newdata = data.frame(Abs_net.adj = .))))
+         uae.mmol.L = map_dbl(Abs_net.adj, ~ predict(TAC_mod_lin, newdata = data.frame(Abs_net.adj = .))))
 
 std_curve_plot +
   geom_point(data = TAC, aes(x = Abs_net.adj, y = uae.mmol.L), pch = "X", cex = 3, alpha = 0.3) +
