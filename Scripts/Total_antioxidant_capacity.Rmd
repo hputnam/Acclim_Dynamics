@@ -149,4 +149,86 @@ Bleached2
 ```
 
 
+###########################
+
+Reading in datafiles. 
+```{r}
+plate1_TAC_platemap <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20200804_Plate1_TAC_platemap.csv") 
+  plate1_TAC_platemap$Plug_ID <- as.character(plate1_TAC_platemap$Plug_ID)
+plate1_TAC_final <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20200804_plate1_final.csv", header=T) %>% dplyr::rename(Abs_final = X490.490)
+plate1_TAC_initial <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20200804_plate1_initial.csv", header=T) %>% dplyr::rename(Abs_initial = X490.490)
+
+plate1_TAC <- full_join(plate1_TAC_platemap, plate1_TAC_initial, by="Well") %>%
+  full_join(plate1_TAC_final) %>%
+  filter(!is.na(Plug_ID))
+
+# new dataframe (standards) with the standard values and renaming that column
+TAC_standards1 <- plate1_TAC %>% filter(grepl("Standard", Plug_ID)) %>% dplyr::rename(Standard = Plug_ID)
+```
+Plot standard curve. 
+```{r}
+TAC_standards1 <- TAC_standards1 %>%
+  mutate(Abs_net = Abs_final - Abs_initial) %>% 
+  dplyr::group_by(Standard) %>%
+  summarise(Abs_net = mean(Abs_net)) %>%
+  mutate(Abs_net.adj = Abs_net - Abs_net[Standard == "Standard10"])
+TAC_standards1 <- TAC_standards1[-c(1, 3), ]
+
+st.name <- c("Standard3", "Standard4", "Standard5", "Standard6", "Standard7", "Standard8", "Standard9", "Standard10")
+concentration <- c("0.25", "0.125", "0.0625", "0.03125", "0.01560", "0.00780", "0.00390", "0")
+TAC_standards1$conc_mM <- concentration[match(TAC_standards1$Standard, st.name)]
+  TAC_standards1$conc_mM <- as.numeric(TAC_standards1$conc_mM)
+
+TAC_mod_lin1 <- lm(conc_mM ~ Abs_net.adj, data = TAC_standards1)
+summary(TAC_mod_lin1)
+
+std_curve_plot1 <- TAC_standards1 %>%
+  ggplot(aes(x = conc_mM, y = Abs_net.adj)) +
+  geom_point(color = "blue", size = 1.5) + 
+  theme_bw() + 
+  labs(title = "TAC Standard curve1") + 
+  geom_smooth(method = "lm")
+std_curve_plot1
+```
+
+```{r}
+TAC1 <- plate1_TAC %>% filter(!grepl("Standard", Plug_ID)) %>%
+  mutate(Abs_net = Abs_final - Abs_initial) %>%
+  dplyr::group_by(Plug_ID) %>%
+  summarise(Abs_net = mean(Abs_net)) %>%
+  mutate(Abs_net.adj = Abs_net - TAC_standards1$Abs_net[TAC_standards1$Standard == "Standard10"],
+         uae.mmol.L = map_dbl(Abs_net.adj, ~ predict(TAC_mod_lin1, newdata = data.frame(Abs_net.adj = .))),
+         CRE.mmol.L = uae.mmol.L*2189)
+
+std_curve_plot1 +
+  geom_point(data = TAC1, aes(x = Abs_net.adj, y = uae.mmol.L), pch = "X", cex = 3, alpha = 0.3) +
+    labs(title = "All TAC samples projected on standard curve")
+```
+
+Normalize to surface area, soluble protein, and homogenate volume. 
+```{r}
+sa <- read_csv("Physiology_variables/Respirometry/coral_surface_area.csv") %>% dplyr::rename(Plug_ID = Sample_ID) %>% select(Plug_ID, surface.area.cm2)
+  sa$Plug_ID <- as.character(sa$Plug_ID)
+homog.vol <- read_csv("Physiology_variables/Physiology_Master_QC.csv") %>% select(Plug_ID, Homogenate_Vol_mL)
+  homog.vol$Plug_ID <- as.character(homog.vol$Plug_ID)
+
+Master_fragment <- read.csv("Environmental_data/Master_Fragment_20200616_QC.csv", header=T, sep=",", na.string="NA") %>% select(Plug_ID, Species, Timepoint, Temperature, Treatment, CO2)
+  Master_fragment$Plug_ID <- as.character(Master_fragment$Plug_ID)
+
+prot <- read_csv("output/soluble_protein.csv") 
+  prot$Plug_ID <- as.character(prot$Plug_ID)
+
+metadata <- full_join(sa, homog.vol, by='Plug_ID', type='left') %>% 
+  full_join(Master_fragment) %>%
+  full_join(prot)
+
+TAC1 <- left_join(TAC1, metadata) %>%
+  mutate(uae.mmol = uae.mmol.L * (Homogenate_Vol_mL / 1000),
+         uae.mmol.cm2 = uae.mmol / surface.area.cm2,
+         uae.mmol.ugprot = uae.mmol.cm2 / prot_ug.cm2) %>%
+  mutate(CRE.mmol = CRE.mmol.L * (Homogenate_Vol_mL / 1000),
+         CRE.mmol.cm2 = CRE.mmol / surface.area.cm2,
+         CRE.mmol.ugprot = CRE.mmol.cm2 / prot_ug.cm2) %>%
+  mutate(CRE.umol.mgprot = CRE.mmol.ugprot*1000*1000)
+```
 
