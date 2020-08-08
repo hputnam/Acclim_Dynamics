@@ -87,7 +87,7 @@ Normalize to surface area.
 ```{r}
 sa <- read_csv("Physiology_variables/Respirometry/coral_surface_area.csv") %>% dplyr::rename(Plug_ID = Sample_ID) %>% select(Plug_ID, surface.area.cm2)
   sa$Plug_ID <- as.character(sa$Plug_ID)
-homog.vol <- read_csv("Physiology_variables/Physiology_Master_QC.csv") %>% select(Plug_ID, Homogenate_Vol_mL)
+Homogenate_volume <- read.csv("Physiology_variables/homogenate_vol.csv") %>% select(Plug_ID, vol_mL)
   homog.vol$Plug_ID <- as.character(homog.vol$Plug_ID)
 
 Master_fragment <- read.csv("Environmental_data/Master_Fragment_20200616_QC.csv", header=T, sep=",", na.string="NA") %>% select(Plug_ID, Species, Timepoint, Temperature, Treatment, CO2)
@@ -97,7 +97,7 @@ metadata <- full_join(sa, homog.vol, by='Plug_ID', type='left') %>%
   full_join(Master_fragment)
 
 protein <- left_join(protein, metadata) %>%
-  mutate(prot_ug = prot_ug.mL * Homogenate_Vol_mL,
+  mutate(prot_ug = prot_ug.mL * vol_mL,
          prot_ug.cm2 = prot_ug / surface.area.cm2)
 ```
 

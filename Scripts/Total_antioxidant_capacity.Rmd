@@ -93,7 +93,7 @@ Normalize to surface area, soluble protein, and homogenate volume.
 ```{r}
 sa <- read_csv("Physiology_variables/Respirometry/coral_surface_area.csv") %>% dplyr::rename(Plug_ID = Sample_ID) %>% select(Plug_ID, surface.area.cm2)
   sa$Plug_ID <- as.character(sa$Plug_ID)
-homog.vol <- read_csv("Physiology_variables/Physiology_Master_QC.csv") %>% select(Plug_ID, Homogenate_Vol_mL)
+Homogenate_volume <- read.csv("Physiology_variables/homogenate_vol.csv") %>% select(Plug_ID, vol_mL)
   homog.vol$Plug_ID <- as.character(homog.vol$Plug_ID)
 
 Master_fragment <- read.csv("Environmental_data/Master_Fragment_20200616_QC.csv", header=T, sep=",", na.string="NA") %>% select(Plug_ID, Species, Timepoint, Temperature, Treatment, CO2)
@@ -107,10 +107,10 @@ metadata <- full_join(sa, homog.vol, by='Plug_ID', type='left') %>%
   full_join(prot)
 
 TAC <- left_join(TAC, metadata) %>%
-  mutate(uae.mmol = uae.mmol.L * (Homogenate_Vol_mL / 1000),
+  mutate(uae.mmol = uae.mmol.L * (vol_mL / 1000),
          uae.mmol.cm2 = uae.mmol / surface.area.cm2,
          uae.mmol.ugprot = uae.mmol.cm2 / prot_ug.cm2) %>%
-  mutate(CRE.mmol = CRE.mmol.L * (Homogenate_Vol_mL / 1000),
+  mutate(CRE.mmol = CRE.mmol.L * (vol_mL / 1000),
          CRE.mmol.cm2 = CRE.mmol / surface.area.cm2,
          CRE.mmol.ugprot = CRE.mmol.cm2 / prot_ug.cm2) %>%
   mutate(CRE.umol.mgprot = CRE.mmol.ugprot*1000*1000)
