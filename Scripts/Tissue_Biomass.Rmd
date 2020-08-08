@@ -16,7 +16,6 @@ if (!require("plotrix")) install.packages("plotrix")
 if (!require("dplyr")) install.packages("dplyr")
 if (!require("plyr")) install.packages("plyr")
 if (!require("Rmisc")) install.packages("Rmisc")
-if (!require("ggstatsplot")) install.packages("ggstatsplot")
 
 # load packages
 library(tidyverse)
@@ -24,7 +23,6 @@ library(plotrix)
 library(dplyr)
 library(plyr)
 library(Rmisc)
-library(ggstatsplot)
 ```
 
 Dry Weight - organic and inorganic compounds
@@ -32,18 +30,22 @@ Ash-Free Dry Weight - organic compounds
 
 Read in Ash-Free Dry Weight raw data, surface area, homogenate volume, and master datasheets
 ```{r}
-AFDW_raw <- read.csv("Physiology_variables/Tissue_Biomass/AFDW_data.csv") %>% filter(!is.na(colony_id))
+AFDW_raw <- read.csv("Physiology_variables/Tissue_Biomass/AFDW_data.csv") %>% filter(!is.na(Plug_ID))
 
 # Load surface area and homogenate volume values; merge dataframes from chla, chlc means 
-Surface_area <- read.csv("Physiology_variables/Respirometry/coral_surface_area.csv") %>% dplyr::rename(colony_id = Sample_ID) %>%
-  select(colony_id, surface.area.cm2)
-Homogenate_volume <- read.csv("Physiology_variables/Physiology_Master_QC.csv") %>% dplyr::rename(colony_id = Plug_ID) %>%
-  select(colony_id, Homogenate_Vol_mL)
-Master_fragment <- read.csv("Environmental_data/Master_Fragment_20200616_QC.csv") %>% dplyr::rename(colony_id = PLUG.ID) %>%
-  select(colony_id, Species, TREATMENT, Sample.Date)
-Master_fragment$colony_id <- as.character(Master_fragment$colony_id)
+Surface_area <- read.csv("Physiology_variables/Respirometry/coral_surface_area.csv") %>% dplyr::rename(Plug_ID = Sample_ID) %>%
+  select(Plug_ID, surface.area.cm2)
+Homogenate_volume <- read.csv("Physiology_variables/homogenate_vol.csv") %>%
+  select(Plug_ID, vol_mL)
+Master_fragment <- read.csv("Environmental_data/Master_Fragment_20200616_QC.csv") %>%
+  select(Plug_ID, Species, Treatment, Sample.Date)
+  Master_fragment$Plug_ID <- as.character(Master_fragment$Plug_ID)
+  Master_fragment$Sample.Date <- as.character(Master_fragment$Sample.Date)
+Sampling_days <- read.csv("Environmental_data/Sampling_dates.csv") %>% dplyr::rename(Sample.Date = Date)
+  Sampling_days$Sample.Date <- as.character(Sampling_days$Sample.Date)
 
-AFDW_raw <- join_all(list(AFDW_raw, Surface_area, Homogenate_volume, Master_fragment), by='colony_id', type='left')
+AFDW_raw <- join_all(list(AFDW_raw, Surface_area, Homogenate_volume, Master_fragment), by='Plug_ID', type='left')
+AFDW_raw <- full_join(AFDW_raw, Sampling_days, by="Sample.Date", type='left')
 ```
 
 Calculate mass per mL
@@ -56,51 +58,74 @@ AFDW <- AFDW_raw %>%
          burnt.pan.mass.g.ml = case_when(partner=="Host" ~ burnt.pan.mass.g/sym, partner=="Sym" ~burnt.pan.mass.g/host))
 ```
 
-Calculate Dry Weight and Ash-Free Dry Weight; standardizing by homogenate volume and surface area
+Calculating Tissue Biomass (AFDW)
 ```{r}
+# Calculating Dry Weight and Ash-Free Dry Weight; standardizing by homogenate volume and surface area
 AFDW <- AFDW %>%
   mutate(dry.bioimass.g.ml = (dry.pan.mass.g.ml - burnt.pan.mass.g.ml),
-         dry.bioimass.g = dry.pan.mass.g.ml * Homogenate_Vol_mL,
-         burnt.bioimass.g = burnt.pan.mass.g.ml * Homogenate_Vol_mL,
+         dry.bioimass.g = dry.pan.mass.g.ml * vol_mL,
+         burnt.bioimass.g = burnt.pan.mass.g.ml * vol_mL,
          DW.mg.cm2 = ((dry.bioimass.g)*1000) / surface.area.cm2,
          AFDW.mg.cm2 = ((dry.bioimass.g-burnt.bioimass.g)*1000) / surface.area.cm2)
-
 AFDW
 
-AFDW_final <- AFDW %>% select(colony_id, partner, Species, TREATMENT, Sample.Date, DW.mg.cm2, AFDW.mg.cm2) %>%
-  gather("Measurement", "Value", 6:7)
-```
+# Transforming the dataframe to be easily analyzed and visualized by type of measurement
+AFDW_final <- AFDW %>% select(Plug_ID, partner, Species, Treatment, Sample.Date, Day_Number, DW.mg.cm2, AFDW.mg.cm2) %>%
+  gather("Measurement", "Value", 7:8) %>%
+  filter(!is.na(Value))
 
-Calculating means per treatment and timepoint. 
-```{r}
-AFDW_final$Sample.Date <- as.character(AFDW_final$Sample.Date)
+## temporarily taking out samples that will need to be re-done
+AFDW_final <- AFDW_final %>% filter(Value > 0)
+AFDW_final
 
-AFDW_means <- summarySE(AFDW_final, measurevar="Value", groupvars=c("partner", "Sample.Date", "TREATMENT", "Species", "Measurement"))
+# Calculating means per treatment and timepoint. 
+AFDW_means_dayno <- summarySE(AFDW_final, measurevar="Value", groupvars=c("partner", "Day_Number", "Treatment", "Species", "Measurement")) %>%
+  subset(Measurement=="AFDW.mg.cm2")
+AFDW_means_dayno
+
+AFDW_means_date <- summarySE(AFDW_final, measurevar="Value", groupvars=c("partner", "Sample.Date", "Treatment", "Species", "Measurement")) %>%
+  subset(Measurement=="AFDW.mg.cm2")
+AFDW_means_date
 ```
 
 Graphing data.
 ```{r}
 cols <- c("lightblue", "blue", "salmon", "red3")
 
-ggplot(AFDW_final, aes(x=TREATMENT, y=Value, fill=partner)) + geom_boxplot(alpha=0.5) +
+ggplot(AFDW_final, aes(x=Treatment, y=Value, fill=partner)) + geom_boxplot(alpha=0.5) +
   geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() + 
   theme(legend.position = "left") + 
-  facet_grid(Measurement ~ Species, scales = "free")
+  facet_grid(Measurement ~ Species, scales = "free") 
 ```
 
 ```{r}
-AFDW <- subset(AFDW_means, Measurement=="AFDW.mg.cm2")
-
-ggplot(AFDW, aes(x=Sample.Date, y = Value, group = TREATMENT, color = TREATMENT)) +
+ggplot(AFDW_means_dayno, aes(x=Day_Number, y = Value, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
   facet_grid(partner ~ Species, scales = "free") +
   geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2) +
   scale_color_manual(values = cols) + 
-  xlab("Date") + 
+  xlab("Number of Days") + 
   ylab("Ash-Free Dry Weight (mg.cm2)") + # y-axis label and y axis range
-  # ylim() + # y-axis label and y axis range
   theme_bw() + 
-  theme(legend.position = "none") 
+  ggtitle("A) Ash-Free Dry Weight") +
+  theme(legend.position = "none") +
+  geom_vline(xintercept = c(58), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.5)) #Set the text angle
+
+ggplot(AFDW_means_date, aes(x=Sample.Date, y = Value, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(partner ~ Species, scales = "free") +
+  geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("Sample Date") + 
+  ylab("Ash-Free Dry Weight (mg.cm2)") + # y-axis label and y axis range
+  theme_bw() + 
+  ggtitle("A) Ash-Free Dry Weight") +
+  theme(legend.position = "none") +
+  geom_vline(xintercept = c(58), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.5)) #Set the text angle
 ```
 
 ############## Bleaching Fragment Test prior to running the rest of the samples. 
