@@ -15,7 +15,8 @@ Last Revised: 20200101
 Contents  
 - [**Materials**](#Materials)   
 - [**Protocol**](#Protocol)  
-- [**References**](#References)  
+- [**References**](#References)
+- [**R Script**](#R_Script)  
 
 1. <a name="Materials"></a> **Materials**
     - 	100% acetone
@@ -24,9 +25,8 @@ Contents
     - 	1ml pipette and tips
     -  1.5 ml microfuge tubes
 
-2. <a name="Protocol"></a> **Protocol**
+<a name="Protocol"></a> **Protocol**
 
-**Sample Preparation**  
 1. Thaw homogenate aliquot.  
 2. Centrifuge the 1000 μL aliquot of adult homogenate at 13,000 rpm for 3 minutes to separate the host and Symbiodiniaceae cells.  
 3. Remove and discard the supernatant.  
@@ -47,6 +47,10 @@ Chlorophyll a and c2 concentrations are calculated from the equations in [Jeffre
 
 ![Equations for Dinos in 100% acetone](/Users/hputnam/MyProjects/urol-e5/protocols/images/JH_EQ.png)
 
-4. <a name="References"></a> **References**
+<a name="References"></a> **References**
 
     1.  XX
+
+<a name="R_Script"></a> **R Script**
+
+The script used to analyze these data can be found [here](https://github.com/hputnam/Acclim_Dynamics/blob/master/Scripts/Chlorophyll_a-c.Rmd).
