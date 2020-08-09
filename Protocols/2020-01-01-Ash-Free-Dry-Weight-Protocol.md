@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Airbrushing
+title: Ash Free Dry Weight
 date: '2020-01-01'
 categories: Protocols
 tags: AFDW, coral, physiology
