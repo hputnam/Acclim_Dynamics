@@ -90,7 +90,7 @@ sa <- read_csv("Physiology_variables/Respirometry/coral_surface_area.csv") %>% d
 Homogenate_volume <- read.csv("Physiology_variables/homogenate_vol.csv") %>% select(Plug_ID, vol_mL)
   homog.vol$Plug_ID <- as.character(homog.vol$Plug_ID)
 
-Master_fragment <- read.csv("Environmental_data/Master_Fragment_20200616_QC.csv", header=T, sep=",", na.string="NA") %>% select(Plug_ID, Species, Timepoint, Temperature, Treatment, CO2)
+Master_fragment <- read.csv("Environmental_data/Master_Fragment.csv", header=T, sep=",", na.string="NA") %>% select(Plug_ID, Species, Timepoint, Temperature, Treatment, CO2)
   Master_fragment$Plug_ID <- as.character(Master_fragment$Plug_ID)
   
 metadata <- full_join(sa, homog.vol, by='Plug_ID', type='left') %>% 
@@ -106,7 +106,7 @@ protein <- left_join(protein, metadata) %>%
 # Write protein data to output file
 protein %>%
   select(Plug_ID, prot_ug, prot_ug.cm2) %>%
-  write_csv(., path = "output/soluble_protein.csv")
+  write_csv(., path = "Output/soluble_protein.csv")
 ```
 
 

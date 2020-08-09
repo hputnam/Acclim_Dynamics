@@ -6,6 +6,10 @@ output:
   html_document: default
   pdf_document: default
 ---
+Clears workspace. 
+```{r}
+rm(list=ls())
+```
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
@@ -37,15 +41,11 @@ Surface_area <- read.csv("Physiology_variables/Respirometry/coral_surface_area.c
   select(Plug_ID, surface.area.cm2)
 Homogenate_volume <- read.csv("Physiology_variables/homogenate_vol.csv") %>%
   select(Plug_ID, vol_mL)
-Master_fragment <- read.csv("Environmental_data/Master_Fragment_20200616_QC.csv") %>%
-  select(Plug_ID, Species, Treatment, Temperature, CO2, Sample.Date)
+Master_fragment <- read.csv("Environmental_data/Master_Fragment.csv") %>%
+  select(Plug_ID, Species, Treatment, Temperature, CO2, Timepoint)
   Master_fragment$Plug_ID <- as.character(Master_fragment$Plug_ID)
-  Master_fragment$Sample.Date <- as.character(Master_fragment$Sample.Date)
-Sampling_days <- read.csv("Environmental_data/Sampling_dates.csv") %>% dplyr::rename(Sample.Date = Date)
-  Sampling_days$Sample.Date <- as.character(Sampling_days$Sample.Date)
 
 AFDW_raw <- join_all(list(AFDW_raw, Surface_area, Homogenate_volume, Master_fragment), by='Plug_ID', type='left')
-AFDW_raw <- full_join(AFDW_raw, Sampling_days, by="Sample.Date", type='left')
 ```
 
 Calculate mass per mL
@@ -70,8 +70,8 @@ AFDW <- AFDW %>%
 AFDW
 
 # Transforming the dataframe to be easily analyzed and visualized by type of measurement
-AFDW_final <- AFDW %>% select(Plug_ID, partner, Species, Treatment, Temperature, CO2, Sample.Date, Day_Number, DW.mg.cm2, AFDW.mg.cm2) %>%
-  gather("Measurement", "Value", 9:10) %>%
+AFDW_final <- AFDW %>% select(Plug_ID, partner, Species, Treatment, Temperature, CO2, Timepoint, DW.mg.cm2, AFDW.mg.cm2) %>%
+  gather("Measurement", "Value", 8:9) %>%
   filter(!is.na(Value))
 
 ## temporarily taking out samples that will need to be re-done
@@ -79,13 +79,16 @@ AFDW_final <- AFDW_final %>% filter(Value > 0)
 AFDW_final
 
 # Calculating means per treatment and timepoint. 
-AFDW_means_dayno <- summarySE(AFDW_final, measurevar="Value", groupvars=c("partner", "Day_Number", "Treatment", "Temperature", "CO2", "Species", "Measurement")) %>%
+AFDW_means <- summarySE(AFDW_final, measurevar="Value", groupvars=c("partner", "Timepoint", "Treatment", "Temperature", "CO2", "Species", "Measurement")) %>%
   subset(Measurement=="AFDW.mg.cm2")
-AFDW_means_dayno
+AFDW_means
 
-AFDW_means_date <- summarySE(AFDW_final, measurevar="Value", groupvars=c("partner", "Sample.Date", "Treatment", "Temperature", "CO2", "Species", "Measurement")) %>%
-  subset(Measurement=="AFDW.mg.cm2")
-AFDW_means_date
+AFDW_means$Timepoint <- factor(AFDW_means$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
+
+# write AFDW data to file
+AFDW %>%
+  select(Plug_ID, DW.mg.cm2, AFDW.mg.cm2) %>%
+  write_csv(path = "Output/Tissue_Biomass.csv")
 ```
 
 Graphing data.
@@ -99,36 +102,27 @@ ggplot(AFDW_final, aes(x=Treatment, y=Value, fill=partner)) + geom_boxplot(alpha
 ```
 
 ```{r}
-ggplot(AFDW_means_dayno, aes(x=Day_Number, y = Value, group = Treatment, color = Treatment)) +
+AFDW_plot <- ggplot(AFDW_means, aes(x=Timepoint, y = Value, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
   facet_grid(partner ~ Species, scales = "free") +
   geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2) +
   scale_color_manual(values = cols) + 
-  xlab("Number of Days") + 
+  xlab("Timepoint") + 
   ylab("Ash-Free Dry Weight (mg.cm2)") + # y-axis label and y axis range
   theme_bw() + 
   ggtitle("A) Ash-Free Dry Weight") +
   theme(legend.position = "none") +
-  geom_vline(xintercept = c(58), colour="black", linetype="dotted") +
+  geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
-  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.5)) #Set the text angle
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.4)) #Set the text angle
+AFDW_plot
 
-ggplot(AFDW_means_date, aes(x=Sample.Date, y = Value, group = Treatment, color = Treatment)) +
-  geom_line() + geom_point() +
-  facet_grid(partner ~ Species, scales = "free") +
-  geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2) +
-  scale_color_manual(values = cols) + 
-  xlab("Sample Date") + 
-  ylab("Ash-Free Dry Weight (mg.cm2)") + # y-axis label and y axis range
-  theme_bw() + 
-  ggtitle("A) Ash-Free Dry Weight") +
-  theme(legend.position = "none") +
-  geom_vline(xintercept = c(58), colour="black", linetype="dotted") +
-  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
-  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.5)) #Set the text angle
+ggsave(file="Output/Tissue_Biomass.pdf", AFDW_plot, width = 11, height = 6, units = c("in"))
 ```
 
-############## Bleaching Fragment Test prior to running the rest of the samples. 
+############## Bleaching Fragment Test prior to running the rest of the samples.
+
+This was a test batch of 12 samples to make sure we would get a signal from both healthy and bleached samples. 
 
 Reading in bleaching test information. 
 ```{r}

@@ -5,6 +5,11 @@ date: "7/17/2020"
 output: html_document
 ---
 
+Clears workspace. 
+```{r}
+rm(list=ls())
+```
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
@@ -96,7 +101,7 @@ str(sa)
 df.chl <- left_join(sa, df.1)
 
 # Load homogenate volume
-homog.vol <- read_csv("Physiology_variables/Physiology_Master.csv") %>%
+homog.vol <- read.csv("Physiology_variables/homogenate_vol.csv") %>%
   select(Plug_ID, vol_mL)
 homog.vol$Plug_ID <- as.factor(homog.vol$Plug_ID)
 str(homog.vol)
@@ -110,40 +115,40 @@ df.chl <- df.chl %>%
 
 # remove blanks and NAs
 df.chl <- filter(df.chl, !Plug_ID %in% c("NA", "BK"))
-
-# write chlorophyll data to file
-df.chl %>%
-  select(Plug_ID, chla.ug.cm2, chlc2.ug.cm2) %>%
-  write_csv(path = "Output/chlorophyll.csv")
 ```
 
 Reading in master fragment information. 
 ```{r}
-Master_fragment <- read.csv("Environmental_data/Master_Fragment_20200616_QC.csv", header=T, sep=",", na.string="NA") #read in data file
-Master_fragment$colony_id <- as.character(Master_fragment$Plug_ID)
+Master_fragment <- read.csv("Environmental_data/Master_Fragment.csv", header=T, sep=",", na.string="NA") #read in data file
+Master_fragment$Plug_ID <- as.character(Master_fragment$Plug_ID)
 Master_fragment <- Master_fragment %>% select(Plug_ID, Species, Timepoint, Temperature, Treatment, CO2)
 str(df.chl)
 
-Chl_final <- left_join(df.chl, Master_fragment, by="colony_id")  
+Chl_final <- left_join(df.chl, Master_fragment, by="Plug_ID")  
+Chl_final$Timepoint <- factor(Chl_final$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
+
+Chl_final %>%
+  select(Plug_ID, Species, Timepoint, Temperature, Treatment, CO2, chla.ug.cm2, chlc2.ug.cm2) %>%
+  write_csv(path = "Output/chlorophyll.csv")
 ```
 
-Plotting timeseries
+Calculating mean values for each timepoint and treatment group.
 ```{r}
 mean.chl.a <- Chl_final %>%
   dplyr::group_by(Species, Timepoint, Temperature, CO2, Treatment) %>%
   dplyr::summarise(mean= mean(chla.ug.cm2), #mean 
                    N = sum(chla.ug.cm2), # sample size
                    se = sd(chla.ug.cm2)/sqrt(N)) #SE
-mean.chl.a$Timepoint <- factor(mean.chl.a$Timepoint, levels=c("TP1","TP3","TP4","TP5","TP6","TP7","TP8","TP9","TP10","TP11","TP12"))
 
 mean.chl.c <- Chl_final %>%
   dplyr::group_by(Species, Timepoint, Temperature, CO2, Treatment) %>%
   dplyr::summarise(mean= mean(chlc2.ug.cm2), #mean 
                    N = sum(chlc2.ug.cm2), # sample size
                    se = sd(chlc2.ug.cm2)/sqrt(N)) #SE
-mean.chl.c$Timepoint <- factor(mean.chl.c$Timepoint, levels=c("TP1","TP3","TP4","TP5","TP6","TP7","TP8","TP9","TP10","TP11","TP12"))
+```
 
-
+Plotting timeseries
+```{r}
 cols <- c("lightblue", "blue", "pink", "red")
 
 Fig.chla <- ggplot(mean.chl.a, aes(x=Timepoint, y=mean, group=Treatment)) + 
@@ -164,7 +169,7 @@ Fig.chla <- ggplot(mean.chl.a, aes(x=Timepoint, y=mean, group=Treatment)) +
         plot.background=element_blank())+  #Set the plot background
   ggtitle("A) Chla") +
   facet_grid(rows=vars(Species), scales="free_y") +
-  geom_vline(xintercept = c(5.6), colour="black", linetype="dotted")+
+  geom_vline(xintercept = c(7.2), colour="black", linetype="dotted")+
   theme(plot.title = element_text(face = 'bold.italic', 
                                   size = 12, 
                                   hjust = 0))
@@ -188,7 +193,7 @@ Fig.chlc2 <- ggplot(mean.chl.c, aes(x=Timepoint, y=mean, group=Treatment)) +
         plot.background=element_blank())+  #Set the plot background
   ggtitle("B) Chlc2") +
   facet_grid(rows=vars(Species), scales="free_y") +
-  geom_vline(xintercept = c(5.6), colour="black", linetype="dotted")+
+  geom_vline(xintercept = c(7.2), colour="black", linetype="dotted")+
   theme(plot.title = element_text(face = 'bold.italic', 
                                   size = 12, 
                                   hjust = 0))
@@ -196,10 +201,6 @@ Fig.chlc2
 
 chl.Figs <- arrangeGrob(Fig.chla, Fig.chlc2, ncol=2)
 ggsave(file="Output/Chlorophyll.pdf", chl.Figs, width = 11, height = 6, units = c("in"))
-
-
-
-
 ```
 
 Correlation of chl and color score
