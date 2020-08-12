@@ -127,11 +127,11 @@ This was a test batch of 12 samples to make sure we would get a signal from both
 Reading in bleaching test information. 
 ```{r}
 Phys_testing <- read.csv("Physiology_variables/phys_testing.csv")
-Phys_testing$colony_id <- as.character(Phys_testing$colony_id)
-AFDW$colony_id <- as.character(AFDW$colony_id)
+Phys_testing$Plug_ID <- as.character(Phys_testing$Plug_ID)
+AFDW$Plug_ID <- as.character(AFDW$Plug_ID)
 
-AFDW_testing <- full_join(AFDW, Phys_testing, by="colony_id") %>% 
-select(colony_id, partner, Species, TREATMENT, Sample.Date, DW.mg.cm2, AFDW.mg.cm2, status, bleaching_score) %>% filter(!is.na(status))
+AFDW_testing <- full_join(AFDW, Phys_testing, by="Plug_ID") %>% 
+select(Plug_ID, partner, Species, Treatment, Timepoint, DW.mg.cm2, AFDW.mg.cm2, status, bleaching_score) %>% filter(!is.na(status))
 
 AFDW_testing <- gather(AFDW_testing, "Measurement", "Value", 6:7) # changing columns to rows to allow for easier facet_grid in graphing section
 ```
