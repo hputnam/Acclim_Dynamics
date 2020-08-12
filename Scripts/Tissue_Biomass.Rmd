@@ -20,6 +20,7 @@ if (!require("plotrix")) install.packages("plotrix")
 if (!require("dplyr")) install.packages("dplyr")
 if (!require("plyr")) install.packages("plyr")
 if (!require("Rmisc")) install.packages("Rmisc")
+if (!require("gridExtra")) install.packages("gridExtra")
 
 # load packages
 library(tidyverse)
@@ -27,6 +28,7 @@ library(plotrix)
 library(dplyr)
 library(plyr)
 library(Rmisc)
+library(gridExtra)
 ```
 
 Dry Weight - organic and inorganic compounds
@@ -150,10 +152,9 @@ Bleached2 <- ggplot(AFDW_testing, aes(x=bleaching_score, y=Value, color=partner)
   theme(legend.position = "left")
 Bleached2
 
-Bleached.Figs <- combine_plots(Bleached1, Bleached2,
-  labels = c("A", "B"), ncol=2)
+AFDW.Blch.Figs <- arrangeGrob(Bleached1, Bleached2, ncol=2)
 
-ggsave(file="Output/Phystest_AFDW.pdf", Bleached.Figs, width = 11, height = 10, units = c("in"))
+ggsave(file="Output/Phystest_AFDW.pdf", AFDW.Blch.Figs, width = 15, height = 10, units = c("in"))
 ```
 
 

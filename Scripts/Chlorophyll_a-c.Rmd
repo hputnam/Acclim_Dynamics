@@ -208,3 +208,41 @@ Correlation of chl and color score
 
 
 ```
+
+
+############## Bleaching Fragment Test prior to running the rest of the samples.
+
+This was a test batch of 12 samples to make sure we would get a signal from both healthy and bleached samples. 
+
+Reading in bleaching test information. 
+```{r}
+Phys_testing <- read.csv("Physiology_variables/phys_testing.csv")
+Phys_testing$Plug_ID <- as.character(Phys_testing$Plug_ID)
+
+Chl_testing <- full_join(Chl_final, Phys_testing, by="Plug_ID") %>% filter(!is.na(status))
+
+Chl_testing <- gather(Chl_testing, "Measurement", "Value", 9:10) # changing columns to rows to allow for easier facet_grid in graphing section
+```
+
+Graphing bleach test data. 
+```{r}
+Bleached1.chl <- ggplot(Chl_testing, aes(x=status, y=Value, fill=status)) + geom_boxplot(alpha=0.5) +
+  geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() + 
+  theme(legend.position = "left") + 
+  facet_grid(Measurement ~ Species, scales = "free")
+Bleached1.chl
+
+Bleached2.chl <- ggplot(Chl_testing, aes(x=bleaching_score, y=Value, color=status)) + geom_point() + 
+  xlab("Bleaching Score") + theme_bw() + 
+  facet_grid(Measurement ~ Species, scales = "free") + 
+  theme(legend.position = "left")
+Bleached2.chl
+
+Chl.Blch.Figs <- arrangeGrob(Bleached1.chl, Bleached2.chl, ncol=2)
+
+ggsave(file="Output/Phystest_Chl.pdf", Chl.Blch.Figs, width = 15, height = 10, units = c("in"))
+```
+
+
+
+
