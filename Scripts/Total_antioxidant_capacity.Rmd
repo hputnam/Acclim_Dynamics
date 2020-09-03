@@ -83,7 +83,7 @@ TAC <- plate2_TAC %>% filter(!grepl("Standard", Plug_ID)) %>%
   summarise(Abs_net = mean(Abs_net)) %>%
   mutate(Abs_net.adj = Abs_net - TAC_standards$Abs_net[TAC_standards$Standard == "Standard10"],
          uae.mmol.L = map_dbl(Abs_net.adj, ~ predict(TAC_mod_lin, newdata = data.frame(Abs_net.adj = .))),
-         CRE.mmol.L = uae.mmol.L*2189)
+         CRE.umol.L = uae.mmol.L*2189)
 
 std_curve_plot +
   geom_point(data = TAC, aes(x = Abs_net.adj, y = uae.mmol.L), pch = "X", cex = 3, alpha = 0.3) +
@@ -108,7 +108,8 @@ metadata <- full_join(sa, Homogenate_volume, by='Plug_ID', type='left') %>%
   full_join(prot)
 
 TAC <- left_join(TAC, metadata) %>%
-  mutate(CRE.uM.mgprot = (((CRE.mmol.L*(1/prot_ug.mL))/1000)*1000*1000))
+  mutate(CRE.trial = CRE.umol.L/prot_ug.mL) %>%
+  mutate(CRE.uM.mgprot = (((CRE.umol.L*(1/prot_ug.mL))/1000)*1000*1000)) 
 
 ## CRE output (mmol/L) divided by protein value (ug/mL)
 ## Divided by 1000 to cancel out volume units; result is mmol.ug 

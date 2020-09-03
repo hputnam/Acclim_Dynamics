@@ -25,15 +25,20 @@ library(dplyr)
 
 Reading in the output files from physiological assays. 
 ```{r}
-AFDW <- read.csv("Output/Tissue_Biomass.csv") %>% select(Plug_ID, AFDW.mg.cm2)
-Chl <- read.csv("Output/chlorophyll.csv")
+AFDW <- read.csv("Output/Tissue_Biomass.csv") %>% select(Plug_ID, partner, AFDW.mg.cm2)
+Chl <- read.csv("Output/chlorophyll.csv") %>% select(Plug_ID, chla.ug.cm2, chlc2.ug.cm2)
 TAC <- read.csv("Output/antioxidant_capacity.csv") %>% select(Plug_ID, CRE.umol.mgprot)
 SP <- read.csv("Output/soluble_protein.csv") %>% select(Plug_ID, prot_ug.cm2)
 Homog_vol <- read.csv("Physiology_variables/homogenate_vol.csv") %>% select(Plug_ID, vol_mL)
 Master <- read.csv("Environmental_data/Master_Fragment.csv") %>%
   filter(!ANALYSIS == "Molecular") %>% filter(!ANALYSIS == "Bleaching") %>% filter(!ANALYSIS == "NA") %>% 
   filter(!ANALYSIS == "Molecular Melted") %>% filter(!ANALYSIS == "Molecular BB") %>% # need to keep "Physiology" and "Physiology/Molecular"
-  select(Plug_ID, ANALYSIS, Timepoint)
+  select(Plug_ID, ANALYSIS, Timepoint, Treatment)
+
+# Filtering out the currently missing corals (16). 
+Missing.list <- c("2008", "2512", "2522", "2523", "2752", "2880", "2976", "3003", "1603", "1739", "2200", "2528", "2740", "2859", "2981", "2984")
+Missing.list <- as.list(Missing.list)
+Master <- Master[!grepl(paste(Missing.list, collapse = "|"), Master$Plug_ID),]
 
 Resp <- read.csv("Physiology_variables/Respirometry/Output/Respiration.rates.csv") %>%
   select(Fragment.ID.x, umol.L.sec) %>% dplyr::rename(Plug_ID = Fragment.ID.x) %>% dplyr::rename(Resp_value = umol.L.sec)
@@ -56,12 +61,13 @@ Physiology %>%
   write_csv(path = "Output/physiological_assays.csv")
 ```
 
-Filtering out the currently missing corals (16). 
+List of missing corals from each assay. 
 ```{r}
-Missing.list <- c("2008", "2512", "2522", "2523", "2752", "2880", "2976", "3003", "1603", "1739", "2200", "2528", "2740", "2859", "2981", "2984")
-Missing.list <- as.list(Missing.list)
-Master <- Master[!grepl(paste(Missing.list, collapse = "|"), Master$Plug_ID),]
+AFDW.missing <- Physiology %>% select(Plug_ID, partner, AFDW.mg.cm2) %>% filter(AFDW.mg.cm2 == "NA")
+  
+  
 ```
+
 
 List samples that do not have a chlorophyll value. 
 ```{r}

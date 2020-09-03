@@ -11,6 +11,11 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+Clears workspace. 
+```{r}
+rm(list=ls())
+```
+
 Installing and loading required libraries.
 ```{r}
 if ("tidyr" %in% rownames(installed.packages()) == 'FALSE') install.packages('tidyr') 

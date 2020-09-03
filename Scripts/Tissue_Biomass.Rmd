@@ -89,7 +89,7 @@ AFDW_means$Timepoint <- factor(AFDW_means$Timepoint, levels=c("Day 1","Day 2","1
 
 # write AFDW data to file
 AFDW %>%
-  select(Plug_ID, DW.mg.cm2, AFDW.mg.cm2) %>%
+  select(Plug_ID, partner, DW.mg.cm2, AFDW.mg.cm2) %>%
   write_csv(path = "Output/Tissue_Biomass.csv")
 ```
 

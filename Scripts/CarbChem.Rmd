@@ -1,0 +1,125 @@
+---
+title: "CarbChem"
+author: "EL Strand"
+date: "9/3/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Contents:
+1. [Experimental Tank Conditions](#exp_tank) 
+
+
+Clears workspace. 
+```{r}
+rm(list=ls())
+```
+
+Load in required libraries.
+```{r}
+if("lubridate" %in% rownames(installed.packages()) == 'FALSE') install.packages('lubridate') 
+if("tidyverse" %in% rownames(installed.packages()) == 'FALSE') install.packages('tidyverse') 
+if("seacarb" %in% rownames(installed.packages()) == 'FALSE') install.packages('seacarb') 
+if("vegan" %in% rownames(installed.packages()) == 'FALSE') install.packages('vegan') 
+if("emmeans" %in% rownames(installed.packages()) == 'FALSE') install.packages('emmeans') 
+if("gridExtra" %in% rownames(installed.packages()) == 'FALSE') install.packages('gridExtra') 
+if("plotrix" %in% rownames(installed.packages()) == 'FALSE') install.packages('plotrix') 
+if("Rmisc" %in% rownames(installed.packages()) == 'FALSE') install.packages('Rmisc') 
+
+library(lubridate)
+library(tidyverse)
+library(seacarb) 
+library(vegan)
+library(emmeans)
+library(gridExtra)
+library(plotrix)
+library(Rmisc)
+```
+
+##### <a name= ="exp_tank"></a> Experimental Tank Conditions ##### 
+Discrete pH calculations from Tris calibrations.
+```{r}
+path <-("Environmental_data/Calibration_Files/Tris_calibrations") #set path to calibration files
+file.names<-list.files(path = path, pattern = "csv$") #list all the file names in the folder to get only get the csv files
+pH.cals <- data.frame(matrix(NA, nrow=length(file.names), ncol=3, dimnames=list(file.names,c("Date", "Intercept", "Slope")))) #generate a 3 column dataframe with specific column names
+
+for(i in 1:length(file.names)) { # for every file in list start at the first and run this following function
+  Calib.Data <-read.table(file.path(path,file.names[i]), header=TRUE, sep=",", na.string="NA", as.is=TRUE) #reads in the data files
+  file.names[i]
+  model <-lm(mVTris ~ TTris, data=Calib.Data) #runs a linear regression of mV as a function of temperature
+  coe <- coef(model) #extracts the coeffecients
+  summary(model)$r.squared #extracts the r squared
+  plot(Calib.Data$mVTris, Calib.Data$TTris) #plots the regression data
+  pH.cals[i,2:3] <- coe #inserts coefficients in the dataframe
+  pH.cals[i,1] <- substr(file.names[i],1,8) #stores the file name in the Date column
+}
+colnames(pH.cals) <- c("Calib.Date",  "Intercept",  "Slope") #rename columns
+pH.cals #view data
+
+#constants for use in pH calculation 
+R <- 8.31447215 #gas constant in J mol-1 K-1 
+F <-96485.339924 #Faraday constant in coulombs mol-1
+```
+
+Read in probe measurements of pH, temperature from tanks.
+```{r}
+daily <- read.csv("Environmental_data/Daily_Temp_pH_Sal.csv", header=TRUE, sep=",", na.strings="NA") #load data with a header, separated by commas, with NA as NA
+
+#merge with Seawater chemistry file
+SW.chem <- merge(pH.cals, daily, by="Calib.Date")
+```
+
+Calculate total pH
+```{r}
+mvTris <- SW.chem$Temperature*SW.chem$Slope+SW.chem$Intercept #calculate the mV of the tris standard using the temperature mv relationships in the measured standard curves 
+STris<-35 #salinity of the Tris
+phTris<- (11911.08-18.2499*STris-0.039336*STris^2)*(1/(SW.chem$Temperature+273.15))-366.27059+ 0.53993607*STris+0.00016329*STris^2+(64.52243-0.084041*STris)*log(SW.chem$Temperature+273.15)-0.11149858*(SW.chem$Temperature+273.15) #calculate the pH of the tris (Dickson A. G., Sabine C. L. and Christian J. R., SOP 6a)
+SW.chem$pH.Total<-phTris+(mvTris/1000-SW.chem$pH.MV/1000)/(R*(SW.chem$Temperature+273.15)*log(10)/F) #calculate the pH on the total scale (Dickson A. G., Sabine C. L. and Christian J. R., SOP 6a)
+```
+
+Quality check calculated tank conditions. This is helpful to run while the experiment is on-going to catch any typos in the datasheet or mis-typed equations.
+```{r}
+boxplot(SW.chem$Temperature)
+range(na.omit(SW.chem$Temperature))
+
+boxplot(SW.chem$pH.Total~SW.chem$Treatment)
+min(na.omit(SW.chem$pH.Total))
+which(SW.chem$pH.Total == min(na.omit(SW.chem$pH.Total)))
+
+boxplot(SW.chem$Salinity)
+range(na.omit(SW.chem$Salinity))
+```
+
+Removing acclimation and testing periods. 
+```{r}
+#remove CO2 and heat test tanks
+SW.chem <- SW.chem %>%
+  filter(Treatment != "Heat_Test") %>%
+  filter(Treatment != "CO2_Test")
+
+unique(as.character(SW.chem$Treatment))
+
+#remove acclimation period
+Trt.SW.chem  <- SW.chem %>%
+  filter(Treatment != "Acclimation")
+```
+
+Plot Temp and pH for all daily measures.
+```{r}
+#arrange to longer format
+Trt.SW.chem <- pivot_longer(Trt.SW.chem, c(Temperature, pH.Total)) %>% na.omit(Trt.SW.chem)
+
+pdf("Output/Daily.Chem.pdf", width=10, height=4)
+Trt.SW.chem %>%
+  group_by(Date, Treatment) %>%
+  ggplot(aes(x=Treatment, y=value)) +
+  geom_boxplot() +
+  facet_grid(name ~ ., scales="free_y")+
+  theme_classic()
+
+Trt.SW.chem.means <- summarySE(Trt.SW.chem, measurevar="value", groupvars=c("Treatment", "name"))
+dev.off()
+```
