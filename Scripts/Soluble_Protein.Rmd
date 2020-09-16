@@ -57,19 +57,16 @@ concentration <- c("2500", "1500", "1000", "750", "500", "250", "125", "25", "0"
 standards$BSA_ug.mL <- concentration[match(standards$Standard, st.name)]
   standards$BSA_ug.mL <- as.numeric(standards$BSA_ug.mL)
 
-## Fit nonlinear model for standard curve
-mod <- nls(formula = BSA_ug.mL ~ z + a * exp(b * Abs480.adj), start = list(z = 0, a = 1, b = 1), data = standards)
-fitted <- mod %>% broom::augment()
+SP_mod_lin <- lm(BSA_ug.mL ~ Abs480.adj, data = standards)
+summary(SP_mod_lin)
 
-# Plot standard curve
 std_curve_plot <- standards %>%
-  ggplot(aes(x = Abs480.adj, y = BSA_ug.mL)) +
-  geom_point(color = "red", size = 3) + 
-  theme_bw()
-
-std_curve_plot + 
-  geom_line(data = fitted, aes(x = Abs480.adj, y = .fitted)) +
-  labs(title = "Standard curve")
+  ggplot(aes(x = BSA_ug.mL, y = Abs480.adj)) +
+  geom_point(color = "blue", size = 1.5) + 
+  theme_bw() + 
+  labs(title = "Soluble Protein Standard curve") + 
+  geom_smooth(method = "lm")
+std_curve_plot
 ```
 
 Calculating protein concentrations based on standard curve. 
@@ -79,10 +76,10 @@ protein <- plate1 %>% filter(!grepl("Standard", Plug_ID)) %>%
   group_by(Plug_ID) %>%
   summarise(Abs480 = mean(Abs480)) %>%
   mutate(Abs480.adj = Abs480 - standards$Abs480[standards$Standard == "StandardI"],  # Subtract blank standard (Standard I) from mean absorbance values
-         prot_ug.mL = map_dbl(Abs480.adj, ~ predict(mod, newdata = data.frame(Abs480.adj = .))))    # Use standard curve to convert absorbance to protein
+         prot_ug.mL = map_dbl(Abs480.adj, ~ predict(SP_mod_lin, newdata = data.frame(Abs480.adj = .))))    # Use standard curve to convert absorbance to protein
 
 std_curve_plot + 
-  geom_point(data = protein, aes(x = Abs480.adj, y = prot_ug.mL), pch = "X", cex = 5, alpha = 0.3) +
+  geom_point(data = protein, aes(x = prot_ug.mL, y = Abs480.adj), pch = "X", cex = 5, alpha = 0.3) +
   labs(title = "All samples projected on standard curve")
 ```
 
@@ -90,17 +87,17 @@ Normalize to surface area.
 ```{r}
 sa <- read_csv("Physiology_variables/Respirometry/coral_surface_area.csv") %>% dplyr::rename(Plug_ID = Sample_ID) %>% select(Plug_ID, surface.area.cm2)
   sa$Plug_ID <- as.character(sa$Plug_ID)
-homog.vol <- read_csv("Physiology_variables/Physiology_Master_QC.csv") %>% select(Plug_ID, Homogenate_Vol_mL)
-  homog.vol$Plug_ID <- as.character(homog.vol$Plug_ID)
+Homogenate_volume <- read.csv("Physiology_variables/homogenate_vol.csv") %>% select(Plug_ID, vol_mL)
+  Homogenate_volume$Plug_ID <- as.character(Homogenate_volume$Plug_ID)
 
-Master_fragment <- read.csv("Environmental_data/Master_Fragment_20200616_QC.csv", header=T, sep=",", na.string="NA") %>% select(Plug_ID, Species, Timepoint, Temperature, Treatment, CO2)
+Master_fragment <- read.csv("Environmental_data/Master_Fragment.csv", header=T, sep=",", na.string="NA") %>% select(Plug_ID, Species, Timepoint, Temperature, Treatment, CO2)
   Master_fragment$Plug_ID <- as.character(Master_fragment$Plug_ID)
   
-metadata <- full_join(sa, homog.vol, by='Plug_ID', type='left') %>% 
+metadata <- full_join(sa, Homogenate_volume, by='Plug_ID', type='left') %>% 
   full_join(Master_fragment)
 
 protein <- left_join(protein, metadata) %>%
-  mutate(prot_ug = prot_ug.mL * Homogenate_Vol_mL,
+  mutate(prot_ug = prot_ug.mL * vol_mL,
          prot_ug.cm2 = prot_ug / surface.area.cm2)
 ```
 
@@ -108,8 +105,8 @@ protein <- left_join(protein, metadata) %>%
 ```{r}
 # Write protein data to output file
 protein %>%
-  select(Plug_ID, prot_ug, prot_ug.cm2) %>%
-  write_csv(., path = "output/soluble_protein.csv")
+  select(Plug_ID, prot_ug.mL, prot_ug, prot_ug.cm2) %>%
+  write_csv(., path = "Output/soluble_protein.csv")
 ```
 
 

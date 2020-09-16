@@ -6,6 +6,10 @@ output:
   html_document: default
   pdf_document: default
 ---
+Clears workspace. 
+```{r}
+rm(list=ls())
+```
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
@@ -16,7 +20,7 @@ if (!require("plotrix")) install.packages("plotrix")
 if (!require("dplyr")) install.packages("dplyr")
 if (!require("plyr")) install.packages("plyr")
 if (!require("Rmisc")) install.packages("Rmisc")
-if (!require("ggstatsplot")) install.packages("ggstatsplot")
+if (!require("gridExtra")) install.packages("gridExtra")
 
 # load packages
 library(tidyverse)
@@ -24,7 +28,7 @@ library(plotrix)
 library(dplyr)
 library(plyr)
 library(Rmisc)
-library(ggstatsplot)
+library(gridExtra)
 ```
 
 Dry Weight - organic and inorganic compounds
@@ -32,18 +36,18 @@ Ash-Free Dry Weight - organic compounds
 
 Read in Ash-Free Dry Weight raw data, surface area, homogenate volume, and master datasheets
 ```{r}
-AFDW_raw <- read.csv("Physiology_variables/Tissue_Biomass/AFDW_data.csv") %>% filter(!is.na(colony_id))
+AFDW_raw <- read.csv("Physiology_variables/Tissue_Biomass/AFDW_data.csv") %>% filter(!is.na(Plug_ID))
 
 # Load surface area and homogenate volume values; merge dataframes from chla, chlc means 
-Surface_area <- read.csv("Physiology_variables/Respirometry/coral_surface_area.csv") %>% dplyr::rename(colony_id = Sample_ID) %>%
-  select(colony_id, surface.area.cm2)
-Homogenate_volume <- read.csv("Physiology_variables/Physiology_Master_QC.csv") %>% dplyr::rename(colony_id = Plug_ID) %>%
-  select(colony_id, Homogenate_Vol_mL)
-Master_fragment <- read.csv("Environmental_data/Master_Fragment_20200616_QC.csv") %>% dplyr::rename(colony_id = PLUG.ID) %>%
-  select(colony_id, Species, TREATMENT, Sample.Date)
-Master_fragment$colony_id <- as.character(Master_fragment$colony_id)
+Surface_area <- read.csv("Physiology_variables/Respirometry/coral_surface_area.csv") %>% dplyr::rename(Plug_ID = Sample_ID) %>%
+  select(Plug_ID, surface.area.cm2)
+Homogenate_volume <- read.csv("Physiology_variables/homogenate_vol.csv") %>%
+  select(Plug_ID, vol_mL)
+Master_fragment <- read.csv("Environmental_data/Master_Fragment.csv") %>%
+  select(Plug_ID, Species, Treatment, Temperature, CO2, Timepoint)
+  Master_fragment$Plug_ID <- as.character(Master_fragment$Plug_ID)
 
-AFDW_raw <- join_all(list(AFDW_raw, Surface_area, Homogenate_volume, Master_fragment), by='colony_id', type='left')
+AFDW_raw <- join_all(list(AFDW_raw, Surface_area, Homogenate_volume, Master_fragment), by='Plug_ID', type='left')
 ```
 
 Calculate mass per mL
@@ -56,63 +60,80 @@ AFDW <- AFDW_raw %>%
          burnt.pan.mass.g.ml = case_when(partner=="Host" ~ burnt.pan.mass.g/sym, partner=="Sym" ~burnt.pan.mass.g/host))
 ```
 
-Calculate Dry Weight and Ash-Free Dry Weight; standardizing by homogenate volume and surface area
+Calculating Tissue Biomass (AFDW)
 ```{r}
+# Calculating Dry Weight and Ash-Free Dry Weight; standardizing by homogenate volume and surface area
 AFDW <- AFDW %>%
   mutate(dry.bioimass.g.ml = (dry.pan.mass.g.ml - burnt.pan.mass.g.ml),
-         dry.bioimass.g = dry.pan.mass.g.ml * Homogenate_Vol_mL,
-         burnt.bioimass.g = burnt.pan.mass.g.ml * Homogenate_Vol_mL,
+         dry.bioimass.g = dry.pan.mass.g.ml * vol_mL,
+         burnt.bioimass.g = burnt.pan.mass.g.ml * vol_mL,
          DW.mg.cm2 = ((dry.bioimass.g)*1000) / surface.area.cm2,
          AFDW.mg.cm2 = ((dry.bioimass.g-burnt.bioimass.g)*1000) / surface.area.cm2)
-
 AFDW
 
-AFDW_final <- AFDW %>% select(colony_id, partner, Species, TREATMENT, Sample.Date, DW.mg.cm2, AFDW.mg.cm2) %>%
-  gather("Measurement", "Value", 6:7)
-```
+# Transforming the dataframe to be easily analyzed and visualized by type of measurement
+AFDW_final <- AFDW %>% select(Plug_ID, partner, Species, Treatment, Temperature, CO2, Timepoint, DW.mg.cm2, AFDW.mg.cm2) %>%
+  gather("Measurement", "Value", 8:9) %>%
+  filter(!is.na(Value))
 
-Calculating means per treatment and timepoint. 
-```{r}
-AFDW_final$Sample.Date <- as.character(AFDW_final$Sample.Date)
+## temporarily taking out samples that will need to be re-done
+AFDW_final <- AFDW_final %>% filter(Value > 0)
+AFDW_final
 
-AFDW_means <- summarySE(AFDW_final, measurevar="Value", groupvars=c("partner", "Sample.Date", "TREATMENT", "Species", "Measurement"))
+# Calculating means per treatment and timepoint. 
+AFDW_means <- summarySE(AFDW_final, measurevar="Value", groupvars=c("partner", "Timepoint", "Treatment", "Temperature", "CO2", "Species", "Measurement")) %>%
+  subset(Measurement=="AFDW.mg.cm2")
+AFDW_means
+
+AFDW_means$Timepoint <- factor(AFDW_means$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
+
+# write AFDW data to file
+AFDW %>%
+  select(Plug_ID, partner, DW.mg.cm2, AFDW.mg.cm2) %>%
+  write_csv(path = "Output/Tissue_Biomass.csv")
 ```
 
 Graphing data.
 ```{r}
 cols <- c("lightblue", "blue", "salmon", "red3")
 
-ggplot(AFDW_final, aes(x=TREATMENT, y=Value, fill=partner)) + geom_boxplot(alpha=0.5) +
+ggplot(AFDW_final, aes(x=Treatment, y=Value, fill=partner)) + geom_boxplot(alpha=0.5) +
   geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() + 
   theme(legend.position = "left") + 
-  facet_grid(Measurement ~ Species, scales = "free")
+  facet_grid(Measurement ~ Species, scales = "free") 
 ```
 
 ```{r}
-AFDW <- subset(AFDW_means, Measurement=="AFDW.mg.cm2")
-
-ggplot(AFDW, aes(x=Sample.Date, y = Value, group = TREATMENT, color = TREATMENT)) +
+AFDW_plot <- ggplot(AFDW_means, aes(x=Timepoint, y = Value, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
   facet_grid(partner ~ Species, scales = "free") +
   geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2) +
   scale_color_manual(values = cols) + 
-  xlab("Date") + 
+  xlab("Timepoint") + 
   ylab("Ash-Free Dry Weight (mg.cm2)") + # y-axis label and y axis range
-  # ylim() + # y-axis label and y axis range
   theme_bw() + 
-  theme(legend.position = "none") 
+  ggtitle("A) Ash-Free Dry Weight") +
+  theme(legend.position = "none") +
+  geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.4)) #Set the text angle
+AFDW_plot
+
+ggsave(file="Output/Tissue_Biomass.pdf", AFDW_plot, width = 11, height = 6, units = c("in"))
 ```
 
-############## Bleaching Fragment Test prior to running the rest of the samples. 
+############## Bleaching Fragment Test prior to running the rest of the samples.
+
+This was a test batch of 12 samples to make sure we would get a signal from both healthy and bleached samples. 
 
 Reading in bleaching test information. 
 ```{r}
 Phys_testing <- read.csv("Physiology_variables/phys_testing.csv")
-Phys_testing$colony_id <- as.character(Phys_testing$colony_id)
-AFDW$colony_id <- as.character(AFDW$colony_id)
+Phys_testing$Plug_ID <- as.character(Phys_testing$Plug_ID)
+AFDW$Plug_ID <- as.character(AFDW$Plug_ID)
 
-AFDW_testing <- full_join(AFDW, Phys_testing, by="colony_id") %>% 
-select(colony_id, partner, Species, TREATMENT, Sample.Date, DW.mg.cm2, AFDW.mg.cm2, status, bleaching_score) %>% filter(!is.na(status))
+AFDW_testing <- full_join(AFDW, Phys_testing, by="Plug_ID") %>% 
+select(Plug_ID, partner, Species, Treatment, Timepoint, DW.mg.cm2, AFDW.mg.cm2, status, bleaching_score) %>% filter(!is.na(status))
 
 AFDW_testing <- gather(AFDW_testing, "Measurement", "Value", 6:7) # changing columns to rows to allow for easier facet_grid in graphing section
 ```
@@ -131,10 +152,9 @@ Bleached2 <- ggplot(AFDW_testing, aes(x=bleaching_score, y=Value, color=partner)
   theme(legend.position = "left")
 Bleached2
 
-Bleached.Figs <- combine_plots(Bleached1, Bleached2,
-  labels = c("A", "B"), ncol=2)
+AFDW.Blch.Figs <- arrangeGrob(Bleached1, Bleached2, ncol=2)
 
-ggsave(file="Output/Phystest_AFDW.pdf", Bleached.Figs, width = 11, height = 10, units = c("in"))
+ggsave(file="Output/Phystest_AFDW.pdf", AFDW.Blch.Figs, width = 15, height = 10, units = c("in"))
 ```
 
 
