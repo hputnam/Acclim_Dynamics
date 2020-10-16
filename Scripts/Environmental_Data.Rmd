@@ -318,7 +318,17 @@ ggplot(Apex_Light, aes(x=Date.Time, y = PAR)) +
 ## stuck on same issue as Apex data, trimming the date down
 ```
 
+Testing if is there a significant difference between tank positions. 
+```{r}
+Licor_bytank <- Licor_Light %>% subset(Measure_Type=="Six-point") %>% subset(Instrument=="LICOR-193")
+Licor_means <- summarySE(Licor_bytank, measurevar="PAR", groupvars=c("Position", "Tank"))
+
+licor_anova <- aov(PAR ~ Position, data = Licor_bytank)
+summary(licor_anova)
+```
+
 Visualizing Licor light data. 
+This includes six-point and one-point measurements, and both hand-held apogee and LICOR-193 instruments. 
 ```{r}
 treatment_colors <- c("blue", "lightblue", "salmon", "red3")
 tank_colors <- c("blue", "red3", "lightblue", "lightblue", "red3", "lightblue", "salmon", "red3", "blue", "salmon", "blue", "salmon")

@@ -63,8 +63,9 @@ Physiology %>%
 
 List of missing corals from each assay. 
 ```{r}
-AFDW.missing <- Physiology %>% select(Plug_ID, partner, AFDW.mg.cm2) %>% filter(AFDW.mg.cm2 == "NA")
-  
+AFDW.missing <- Physiology %>% select(Plug_ID, partner, AFDW.mg.cm2) %>% filter(AFDW.mg.cm2 < 0)
+
+Missing_values <- Physiology %>% filter(is.na(Physiology))
   
 ```
 

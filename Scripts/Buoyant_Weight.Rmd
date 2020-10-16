@@ -1,47 +1,57 @@
-#Title: Buoyant Weight Data
-#Project: NSF BSF
-#Author: HM Putnam 
-#Edited by: HM Putnam; EL Strand
-#Date Last Modified: 20190405
-#See Readme file for details
+---
+title: "Buoyant_Weight"
+author: "EL Strand"
+date: "9/30/2020"
+output: html_document
+---
 
-rm(list=ls()) #clears workspace 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 
-#Read in required libraries
-##### Include Versions of libraries
-library("tidyverse")
-library("plyr")
-library("ggpubr")
-library("ggplot2")
-library("sciplot")
-library("plotrix")
-library("reshape2")
-library("nlme") #mixed model, repeated measures ANOVA
-library("lsmeans") #mixed model posthoc  statistical comparisons
-library("gridExtra")
+Clears workspace. 
+```{r}
+rm(list=ls())
+```
 
-#Required Data files
+Load required libraries.
+```{r}
+if (!require("dplyr")) install.packages("dplyr")
+if (!require("ggplot2")) install.packages("ggplot2")
+if (!require("tidyverse")) install.packages("tidyverse")
+if (!require("plyr")) install.packages("plyr")
+if (!require("ggpubr")) install.packages("ggpubr")
+if (!require("sciplot")) install.packages("sciplot")
+if (!require("plotrix")) install.packages("plotrix")
+if (!require("reshape2")) install.packages("reshape2")
+if (!require("nlme")) install.packages("nlme")
+if (!require("lsmeans")) install.packages("lsmeans")
+if (!require("gridExtra")) install.packages("gridExtra")
 
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(plyr)
+library(ggpubr)
+library(sciplot)
+library(plotrix)
+library(reshape2)
+library(nlme) #mixed model, repeated measures ANOVA
+library(lsmeans) #mixed model posthoc  statistical comparisons
+library(gridExtra)
+```
 
-#Timepoints
-#Time0 - 20180920, 20180921 
-#Time1 - 20180927, 20180928 - Week 1
-#Time2 - 201801004, 20181005 - Week 2
-#Time3 - 201801018, 201801019 - Week 4
-#Time4 - 201801101, 201801102 - Week 6
-#Time5 - 201801115, 201801116 - Week 8 
-#Time6 - 201801129 - Week 10
-#Time7 - 201801213 - Week 12
-#Time8 - 201801227 - Week 14
-#Time9 - 20190110 - Week 16
+### Buoyant Weight Standard Curve 
 
-
-##### Standards ##### 
+Reading in file. 
+```{r}
 CalData<-read.csv('Physiology_variables/Growth_Buoyant_Weight/Buoyant_weight_calibration_curve.csv', header=T, sep=",")
 #Data with Standard weights in grams in deionized water, saltwater, and the temp that they were measured at
   # No deionized water measurements 20190405 EL Strand
+```
 
-#plot relationship between temp and Standard in fresh and salt water
+Plot relationship between temp and Standard in fresh and salt water.
+```{r}
 pdf("Physiology_variables/Growth_Buoyant_Weight/Buoyant Weight Standard Curves.pdf")
 plot(CalData$Temp, CalData$StandardSalt, col = 'red', ylab = 'Salt Weight (g)', xlab = 'Temp C')
 par(new=TRUE) #allows another set of data to be plotted on the same frame
@@ -50,8 +60,10 @@ axis(4) #adds a fourth axis on the right of the graph
 mtext("'Fresh Weight (g)'",side=4,line=3) # text isn't printing on the graph
 legend("topleft",col=c("red","blue"),lty=1,legend=c("Salt","Fresh"), bty = "n")
 dev.off()
+```
 
-#linear regression between temp and Standard
+Linear regression between temp and Standard
+```{r}
 #Salt water standard measures
 StandardSaltModel <- lm(CalData$StandardSalt~CalData$Temp)
 summary(StandardSaltModel)
@@ -63,9 +75,25 @@ StandardFreshModel <- lm(CalData$StandardFresh~CalData$Temp)
 summary(StandardFreshModel)
 summary(StandardFreshModel)$r.squared
 StandardFreshModel$coef
+```
 
 
-##### BW Function #####
+### Buoyant Weight Calculations 
+
+Timepoints:
+Time0 - 20180920, 20180921 
+Time1 - 20180927, 20180928 - Week 1
+Time2 - 201801004, 20181005 - Week 2
+Time3 - 201801018, 201801019 - Week 4
+Time4 - 201801101, 201801102 - Week 6
+Time5 - 201801115, 201801116 - Week 8 
+Time6 - 201801129 - Week 10
+Time7 - 201801213 - Week 12
+Time8 - 201801227 - Week 14
+Time9 - 20190110 - Week 16
+
+Buoyant Weight Function.
+```{r}
 BWCalc <- function(StandardAir= 31.348, Temp, BW, CoralDensity = 2.93){
   #Parameters---------------------------------------------------------------
   # StandardAir is the weight of the Standard in air (Default set at the grams weighed on top of the balance)
@@ -98,8 +126,10 @@ CoralWeight <- BW/(1-(SWDensity/CoralDensity))
   
   return(CoralWeight) #returns coral dry weights in g
 }
+```
 
-##### load coral weight data #####
+Load coral weight data. 
+```{r}
 #Initial points
 T0.Init <- read.csv('Physiology_variables/Growth_Buoyant_Weight/Buoyant_Weight_Time0Init.csv', header=T, na.strings = "NA") 
 T0.Init$Dry.Weigh.g <- BWCalc(BW=T0.Init$Mass.g, Temp=T0.Init$Temp.C) #use function to calculate dry weight
@@ -139,16 +169,22 @@ T7.Fin <- read.csv('Physiology_variables/Growth_Buoyant_Weight/Buoyant_Weight_Ti
 T7.Fin$Dry.Weigh.g <- BWCalc(BW=T7.Fin$Mass.g, Temp=T7.Fin$Temp.C) #use function to calculate dry weight
 T8.Fin <- read.csv('Physiology_variables/Growth_Buoyant_Weight/Buoyant_Weight_Time8Fin.csv', header=T, na.strings = "NA") 
 T8.Fin$Dry.Weigh.g <- BWCalc(BW=T8.Fin$Mass.g, Temp=T8.Fin$Temp.C) #use function to calculate dry weight
+```
 
-#check for outliers by plotting dry weight by tank and time
+Check for outliers by plotting dry weight by tank and time.
+```{r}
 BW.data.long <- rbind(T0.Init,T0.Fin,T1.Init,T1.Fin,T2.Init,T2.Fin,T3.Init,T3.Fin,T4.Init,T4.Fin,
                       T5.Init,T5.Fin,T6.Init,T6.Fin,T7.Init,T7.Fin,T8.Init,T8.Fin)
 ggboxplot(BW.data.long, x = "Tank", y = "Dry.Weigh.g", facet.by = "TimePoint")
+```
 
-#format to wide data for analysis
+Format to wide data for analysis.
+```{r}
 data <- reshape(BW.data.long, timevar = "TimePoint",drop = c("Analysis", "Tank", "Mass.g", "Temp.C"), idvar=c("PLUG.ID","Species", "Temperature", "CO2", "Treatment"), direction="wide")
+```
 
-#calculating time between measurements
+Calculating time between measurements.
+```{r}
 data$Days.Time0 <- as.Date(as.character(data$Date.Format.Time0_Fin), format="%m/%d/%y")-
   as.Date(as.character(data$Date.Format.Time0_Init), format="%m/%d/%y")
 
@@ -175,11 +211,10 @@ data$Days.Time7 <- as.Date(as.character(data$Date.Format.Time7_Fin), format="%m/
 
 data$Days.Time8 <- as.Date(as.character(data$Date.Format.Time8_Fin), format="%m/%d/%y")-
   as.Date(as.character(data$Date.Format.Time8_Init), format="%m/%d/%y")
+```
 
-#Growth Normalized to surface area
-#Surface area by wax dipping Veal et al 
-
-
+Growth normalized to surface areas (Veal et al).
+```{r}
 #load wax weight for standards
 Stnds <- read.csv("Physiology_variables/Wax_dipping_standards.csv", header=TRUE)
 Stnds$delta.mass.g <- Stnds$weight2.g-Stnds$weight1.g
@@ -193,8 +228,10 @@ SA$SA.cm2 <- (stnd.curve$coefficients[2]*SA$delta.mass.g) + stnd.curve$coefficie
 
 #merge growth and surface area
 data <- left_join(data, SA, by="PLUG.ID")
+```
 
-#Growth Rate (g/day/cm2)
+Growth Rate (g/day/cm2).
+```{r}
 data$T0.g.d.cm2 <- ((data$Dry.Weigh.g.Time0_Fin -data$Dry.Weigh.g.Time0_Init)/as.numeric(data$Days.Time0))/data$SA.cm2
 data$T1.g.d.cm2 <- ((data$Dry.Weigh.g.Time1_Fin -data$Dry.Weigh.g.Time1_Init)/as.numeric(data$Days.Time1))/data$SA.cm2
 data$T2.g.d.cm2 <- ((data$Dry.Weigh.g.Time2_Fin -data$Dry.Weigh.g.Time2_Init)/as.numeric(data$Days.Time2))/data$SA.cm2
@@ -209,8 +246,10 @@ write.table(data, file = "Physiology_variables/Growth_Buoyant_Weight/Growth_Rate
             eol = "\n", na = "NA", dec = ".", row.names = TRUE,
             col.names = TRUE, qmethod = c("escape", "double"),
             fileEncoding = "")
+```
 
-#check for outliers by plotting dry weight by tank and time
+Check for outliers by plotting dry weight by tank and time
+```{r}
 par(mfrow=c(3,3))
 boxplot(T0.g.d.cm2 ~Species*Treatment, data=data)
 boxplot(T1.g.d.cm2 ~Species*Treatment, data=data)
@@ -221,8 +260,10 @@ boxplot(T5.g.d.cm2 ~Species*Treatment, data=data)
 boxplot(T6.g.d.cm2 ~Species*Treatment, data=data)
 boxplot(T7.g.d.cm2 ~Species*Treatment, data=data)
 boxplot(T8.g.d.cm2 ~Species*Treatment, data=data)
+```
 
-#reshape to long dataframe
+Reshape to long dataframe. 
+```{r}
 data <- data[,c(1:5,75:83)]
 colnames(data)
 data.long <- pivot_longer(data, 
@@ -234,7 +275,10 @@ data.long <- pivot_longer(data,
 data.long <- na.omit(data.long)
 
 ggboxplot(data.long, x = "TimePoint", y = "value", facet.by = "Species")
+```
 
+Removing outliers. 
+```{r}
 #remove outlier values > 0.01 
 data.long <- data.long %>%
   filter(value < 0.005 )
@@ -248,8 +292,10 @@ data.long <- data.long %>%
 ggboxplot(data.long, x = "TimePoint", y = "value", facet.by = "Species")
 
 data.long$mg.d.cm2 <- data.long$value*1000
+```
 
-
+Calculating means.
+```{r}
 All.Means <- ddply(data.long, c('TimePoint','Species', 'Treatment'), summarize,
                    mean= mean(mg.d.cm2, na.rm=T), #mean pnet
                    N = sum(!is.na(mg.d.cm2)), # sample size
@@ -261,17 +307,20 @@ All.Means$SpGroup <- paste(All.Means$Treatment, All.Means$Species)
 
 Mcap.Means <- subset(All.Means, Species =="Mcapitata")
 Pact.Means <- subset(All.Means, Species =="Pacuta")
+```
 
-#set time info for plotting
+Set time info for plotting.
+```{r}
 Mcap.Means$week <- c("Week1", "Week1","Week1","Week1","Week2","Week2","Week2","Week2",
                     "Week4", "Week4", "Week4", "Week4", "Week6", "Week6", "Week6", "Week6",
                      "Week8", "Week8", "Week8", "Week8", "Week10", "Week10", "Week10", "Week10",
                     "Week12", "Week12", "Week12", "Week12", "Week14", "Week14", "Week14", "Week14",
                     "Week16", "Week16", "Week16", "Week16")
 Mcap.Means$week <- factor(Mcap.Means$week, levels=c("Week1","Week2","Week4","Week6","Week8","Week10","Week12","Week14","Week16"))
+```
 
-
-#remove sample sizes of 2 or less 
+Remove sample sizes of 2 or less.
+```{r}
 Pact.Means <- Pact.Means[-c(23,26),]
 
 Pact.Means$week <- c("Week1", "Week1","Week1","Week1","Week2","Week2","Week2","Week2",
@@ -280,7 +329,10 @@ Pact.Means$week <- c("Week1", "Week1","Week1","Week1","Week2","Week2","Week2","W
                      "Week14", "Week14",  "Week16", "Week16")
 
 Pact.Means$week <- factor(Pact.Means$week, levels=c("Week1","Week2","Week4","Week6","Week8","Week10","Week12","Week14","Week16"))
+```
 
+Plotting data. 
+```{r}
 cols <- c("lightblue", "blue", "pink", "red")
 
 Fig.Mcap <- ggplot(Mcap.Means, aes(x=week, y=mean, group=Treatment)) + 
@@ -332,4 +384,20 @@ Fig.Pact
 Gro.Figs <- arrangeGrob(Fig.Mcap, Fig.Pact, ncol=2)
 ggsave(file="Output/Growth_percent_BW.pdf", Gro.Figs, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Growth_percent_BW.png", Gro.Figs, width = 11, height = 6, units = c("in"))
+```
+
+Statistics. 
+```{r}
+# Run on long formatted data frame using mg.d.cm2 corrected value 
+mod1 <- aov(mg.d.cm2 ~ Temperature*CO2*TimePoint*Species, data=data.long) #run an ANOVA 
+hist(residuals(mod1)) #look at normality of data
+boxplot(residuals(mod1)) #look at normality of data
+summary(mod1)
+
+## 20200930 ES notes: right/positively skewed data when no transformations applied. the tail of the skew looks close to 0 so left it for now. 
+```
+
+
+
+
 
