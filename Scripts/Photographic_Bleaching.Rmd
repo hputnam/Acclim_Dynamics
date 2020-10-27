@@ -9,6 +9,11 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+Clears workspace. 
+```{r}
+rm(list=ls())
+```
+
 Loading in required libraries. 
 ```{r}
 if ("vegan" %in% rownames(installed.packages()) == 'FALSE') install.packages('vegan') 
@@ -87,9 +92,8 @@ boxplot(Bleaching.Score ~ Group, data = x, lwd = 1, ylab = 'PC1Color', las=2, ce
 
 ** Statistical Analysis and Plotting ** 
 ```{r}
-
 # for use in plotting to avoid having to run PCA again
-Color.Score <- read.csv("Physiology_variables/Bleaching_Intensity/Bleaching_Score.csv", header=T, sep=",", na.string="NA") #read in data file
+Color.Score <- read.csv("Physiology_variables/Bleaching_Score/Bleaching_Score.csv", header=T, sep=",", na.string="NA") #read in data file
 
 mod1 <- aov(sqrt(Bleaching.Score+200) ~ Temperature*CO2*Timepoint*Species, data=Color.Score) #run an ANOVA 
 hist(residuals(mod1)) #look at normality of data
