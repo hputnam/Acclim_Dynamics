@@ -124,13 +124,37 @@ Master_fragment$Plug_ID <- as.character(Master_fragment$Plug_ID)
 Master_fragment <- Master_fragment %>% select(Plug_ID, Species, Timepoint, Temperature, Treatment, CO2)
 str(df.chl)
 
+Chl.plate.numbers <- read_csv("Physiology_variables/Chlorophyll-a_c/Chl_total_platemaps.csv") %>% 
+  select(-Well) %>% distinct()
+
 Chl_final <- left_join(df.chl, Master_fragment, by="Plug_ID")  
 Chl_final$Timepoint <- factor(Chl_final$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
+
+Chl_final <- full_join(Chl.plate.numbers, Chl_final, by="Plug_ID")
 
 Chl_final %>%
   select(Plug_ID, Species, Timepoint, Temperature, Treatment, CO2, chla.ug.cm2, chlc2.ug.cm2) %>%
   write_csv(path = "Output/chlorophyll.csv")
 ```
+
+Checking for effect of plate 
+```{r}
+chlplotting <- Chl_final %>% na.omit()
+
+ggplot(chlplotting, aes(x=Date, y=chlc2.ug.cm2, fill=Treatment)) + geom_boxplot(alpha=0.5) +
+  geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() + 
+  theme(legend.position = "right") + 
+  facet_wrap(~Species, scales = "free_y") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(chlplotting, aes(x=Date, y=chlc2.ug.cm2, fill=Species)) + geom_boxplot(alpha=0.5) +
+  geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() + 
+  theme(legend.position = "right") + 
+  facet_wrap(~Treatment, scales = "free_y") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
 
 Calculating mean values for each timepoint and treatment group.
 ```{r}
