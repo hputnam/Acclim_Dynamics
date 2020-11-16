@@ -71,13 +71,11 @@ Oct7plate3_platemap <- read.csv("Physiology_variables/Total_Antioxidant_Capacity
   Oct7plate3_platemap$Plug_ID <- as.character(Oct7plate3_platemap$Plug_ID)
 Oct7_plate3_final <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20201007_plate3_final.csv", header=T) %>% dplyr::rename(Abs_final = X490.490)
 Oct7_plate3_initial <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20201007_plate3_initial.csv", header=T) %>% dplyr::rename(Abs_initial = X490.490)
-
 Oct7_plate3 <- full_join(Oct7plate3_platemap, Oct7_plate3_initial, by="Well") %>%
   full_join(Oct7_plate3_final) %>%
   filter(!is.na(Plug_ID))
 
 Oct7 <- union(Oct7_plate1, Oct7_plate2) %>% union(Oct7_plate3)
-
 # Oct 7 standards 
 Oct7_st <- Oct7 %>% filter(grepl("Standard", Plug_ID)) %>% dplyr::rename(Standard = Plug_ID)
 
@@ -154,13 +152,30 @@ Oct25 <- union(Oct25_plate1, Oct25_plate2) %>% union(Oct25_plate3)
 # Oct 25 standards 
 Oct25_st <- Oct25 %>% filter(grepl("Standard", Plug_ID)) %>% dplyr::rename(Standard = Plug_ID)
 
+## 20201110 Plate 10 
+Nov10plate1_platemap <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20201110_Plate1_TAC_platemap.csv") 
+  Nov10plate1_platemap$Plug_ID <- as.character(Nov10plate1_platemap$Plug_ID)
+Nov10_plate1_final <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20201110_plate1_final.csv", header=T) %>% dplyr::rename(Abs_final = X490.490)
+Nov10_plate1_initial <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20201110_plate1_initial.csv", header=T) %>% dplyr::rename(Abs_initial = X490.490)
+
+Nov10 <- full_join(Nov10plate1_platemap, Nov10_plate1_initial, by="Well") %>%
+  full_join(Nov10_plate1_final) %>%
+  filter(!is.na(Plug_ID))
+
+Nov10_st <- Nov10 %>% filter(grepl("Standard", Plug_ID)) %>% dplyr::rename(Standard = Plug_ID)
 ```
 
 Checking for outliers, duplicates, and effect of plate. 
 ```{r}
-QC <- union(Oct7, Oct14) %>% union(Oct25)
+QC <- union(Oct7, Oct14) %>% union(Oct25) %>% union(Nov10)
 boxplot(QC$Abs_final)
 hist(QC$Abs_final)
+
+TAC.plate.numbers <- read_csv("Physiology_variables/Total_antioxidant_capacity/total_TAC_platemaps.csv") %>% 
+  select(-Well) %>% distinct()
+
+finalbydate <- full_join(TAC.plate.numbers, QC, by="Plug_ID")
+ggplot(finalbydate, aes(x=Plate, y=Abs_final)) + geom_boxplot() + theme(axis.text.x = element_text(angle = 90))
 
 Duplicates <- QC %>% dplyr::group_by(Plug_ID) %>% 
   dplyr::summarise(n = n()) %>% filter(n > 2)
@@ -262,6 +277,29 @@ std_curve_plot4 <- Oct25_st %>%
                      "; TAC Standard Curve Oct 25 Standards")) + 
   geom_smooth(method = "lm")
 std_curve_plot4
+
+## 20201110
+Nov10_st <- Nov10_st %>%
+  mutate(Abs_net = Abs_final - Abs_initial) %>% 
+  dplyr::group_by(Standard) %>%
+  summarise(Abs_net = mean(Abs_net)) %>%
+  mutate(Abs_net.adj = Abs_net - Abs_net[Standard == "Standard10"])
+
+Nov10_st$conc_mM <- concentration[match(Nov10_st$Standard, st.name)]
+  Nov10_st$conc_mM <- as.numeric(Nov10_st$conc_mM)
+
+TAC_mod_lin5 <- lm(conc_mM ~ Abs_net.adj, data = Nov10_st)
+summary(TAC_mod_lin5)
+
+std_curve_plot5 <- Nov10_st %>%
+  ggplot(aes(x = Abs_net.adj, y = conc_mM)) +
+  geom_point(color = "blue", size = 1.5) + 
+  theme_bw() + 
+  xlim(0,1.5) +
+  labs(title = paste("Adj R2 = ", signif(summary(TAC_mod_lin5)$adj.r.squared, 5),
+                     "; TAC Standard Curve Nov 10 Standards")) + 
+  geom_smooth(method = "lm")
+std_curve_plot5
 ```
 
 Calculate Total Antioxidant Capacity based on the standard curve model from above.
@@ -302,8 +340,8 @@ Oct14 <- Oct14 %>%
   dplyr::group_by(Plug_ID) %>% # group to calculate mean
   summarise(Abs_net = mean(Abs_net)) %>% #calculate mean abs of duplicates
   mutate(Abs_net.adj = Abs_net - Oct14_st$Abs_net[Oct14_st$Standard == "Standard10"],
-         uae.mM = map_dbl(Abs_net.adj, ~ predict(TAC_mod_lin3, newdata = data.frame(Abs_net.adj = .)))) #use the regression to calculate all the mean UAE values from the abs values
-std_curve_plot3 + #plot the standard curve to check this against the protocol
+         uae.mM = map_dbl(Abs_net.adj, ~ predict(TAC_mod_lin2, newdata = data.frame(Abs_net.adj = .)))) #use the regression to calculate all the mean UAE values from the abs values
+std_curve_plot2 + #plot the standard curve to check this against the protocol
   geom_point(data = Oct14, aes(x = Abs_net.adj, y = uae.mM), pch = "X", cex = 3, alpha = 0.3) +
     labs(title = "Oct 14 samples projected on standard curve 3")
 
@@ -313,10 +351,23 @@ Oct25 <- Oct25 %>%
   dplyr::group_by(Plug_ID) %>% # group to calculate mean
   summarise(Abs_net = mean(Abs_net)) %>% #calculate mean abs of duplicates
   mutate(Abs_net.adj = Abs_net - Oct25_st$Abs_net[Oct25_st$Standard == "Standard10"],
-         uae.mM = map_dbl(Abs_net.adj, ~ predict(TAC_mod_lin4, newdata = data.frame(Abs_net.adj = .)))) #use the regression to calculate all the mean UAE values from the abs values
-std_curve_plot4 + #plot the standard curve to check this against the protocol
+         uae.mM = map_dbl(Abs_net.adj, ~ predict(TAC_mod_lin2, newdata = data.frame(Abs_net.adj = .)))) #use the regression to calculate all the mean UAE values from the abs values
+std_curve_plot2 + #plot the standard curve to check this against the protocol
   geom_point(data = Oct25, aes(x = Abs_net.adj, y = uae.mM), pch = "X", cex = 3, alpha = 0.3) +
     labs(title = "Oct 25 samples projected on standard curve 4")
+
+#### THE ABOVE ARE PROJECTED ON THE FIRST STANDARD CURVE 
+
+## November 10 Plate
+Nov10 <- Nov10 %>% 
+  mutate(Abs_net = Abs_final - Abs_initial) %>% #subtract initial from final to get delta abs
+  dplyr::group_by(Plug_ID) %>% # group to calculate mean
+  summarise(Abs_net = mean(Abs_net)) %>% #calculate mean abs of duplicates
+  mutate(Abs_net.adj = Abs_net - Nov10_st$Abs_net[Nov10_st$Standard == "Standard10"],
+         uae.mM = map_dbl(Abs_net.adj, ~ predict(TAC_mod_lin5, newdata = data.frame(Abs_net.adj = .)))) #use the regression to calculate all the mean UAE values from the abs values
+std_curve_plot5 + #plot the standard curve to check this against the protocol
+  geom_point(data = Nov10, aes(x = Abs_net.adj, y = uae.mM), pch = "X", cex = 3, alpha = 0.3) +
+    labs(title = "Nov10 samples projected on standard curve 5")
 ```
 
 Samples above highest standard point for that plate need to be diluted and re-done.  
@@ -332,12 +383,17 @@ Oct14dilute.tac <- Oct14 %>% filter(uae.mM > 1.004828) # output is 0 samples
 ## October 25 plates
 filter(Oct25, Plug_ID == "Standard1") # uae.mM is 1.005419	
 Oct25dilut.tac <- Oct25 %>% filter(uae.mM > 1.005419) # output is 1075
+## 1075 re-done on Nov10 plate
+
+## November 10 plate 
+filter(Nov10, Plug_ID == "Standard1") # uae.mM is 0.995335	
+Nov10dilut.tac <- Nov10 %>% filter(uae.mM > 0.995335)   # output is 0 samples
 
 # combine list 
-Dilute.TAC.list <- union(Oct7dilute.tac, Oct14dilute.tac) %>% union(Oct25dilut.tac)
+Dilute.TAC.list <- union(Oct7dilute.tac, Oct14dilute.tac) %>% union(Oct25dilut.tac) %>% union(Nov10dilut.tac)
 Dilute.TAC.list
 
-##output as of 20201109 is only 1075 needs to be re-done.
+##output as of 20201110 = none to re-do. 
 ```
 
 Reading in to surface area, soluble protein, and homogenate volume. 
@@ -375,11 +431,11 @@ Test <- left_join(Blch_TAC, prot) %>% select(Plug_ID, uae.mM, prot_mg.mL) %>%
          prot.mg.L = prot_mg.mL*1000, # Step 3
          CRE.uM.mg = CRE.umol/prot.mg.L) # Step 4
 
-# combine Oct7, Oct14, Oct25 files; filter out standard values
-OctTAC <- union(Oct7, Oct14) %>% union(Oct25) 
-OctTAC <- OctTAC[!grepl("Standard", OctTAC$Plug_ID),] 
+# combine Oct7, Oct14, Oct25 files, Nov10; filter out standard values
+totalTAC <- union(Oct7, Oct14) %>% union(Oct25) %>% union(Nov10)
+totalTAC <- totalTAC[!grepl("Standard", totalTAC$Plug_ID),] 
 
-OctTAC <- left_join(OctTAC, prot) %>% select(Plug_ID, uae.mM, prot_mg.mL) %>%
+totalTAC <- left_join(totalTAC, prot) %>% select(Plug_ID, uae.mM, prot_mg.mL) %>%
    mutate(CRE.umol.L = uae.mM*2189, # Step 1 of calculation described above
          CRE.umol = CRE.umol.L*0.00002, # Step 2
          prot.mg.L = prot_mg.mL*1000, # Step 3
@@ -388,10 +444,10 @@ OctTAC <- left_join(OctTAC, prot) %>% select(Plug_ID, uae.mM, prot_mg.mL) %>%
 
 Combining TAC values for all plates and write TAC output file.
 ```{r}
-OctTAC <- OctTAC %>%
+totalTAC <- totalTAC %>%
   write_csv(., path = "Output/antioxidant_capacity.csv")
 
-TAC_final <- OctTAC %>% select(Plug_ID, CRE.uM.mg) 
+TAC_final <- totalTAC %>% select(Plug_ID, CRE.uM.mg) 
 TAC_final <- full_join(TAC_final, metadata)
 ```
 
