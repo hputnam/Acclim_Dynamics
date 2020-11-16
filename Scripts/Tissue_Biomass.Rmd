@@ -91,6 +91,9 @@ AFDW_means$Timepoint <- factor(AFDW_means$Timepoint, levels=c("Day 1","Day 2","1
 AFDW %>%
   select(Plug_ID, partner, DW.mg.cm2, AFDW.mg.cm2) %>%
   write_csv(path = "Output/Tissue_Biomass.csv")
+
+dplyr::filter(AFDW, AFDW.mg.cm2 > 5)
+dplyr::filter(AFDW, AFDW.mg.cm2 < 0)
 ```
 
 Graphing data.
@@ -113,7 +116,7 @@ AFDW_plot <- ggplot(AFDW_means, aes(x=Timepoint, y = Value, group = Treatment, c
   ylab("Ash-Free Dry Weight (mg.cm2)") + # y-axis label and y axis range
   theme_bw() + 
   ggtitle("A) Ash-Free Dry Weight") +
-  theme(legend.position = "none") +
+  theme(legend.position = "left") +
   geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.4)) #Set the text angle
