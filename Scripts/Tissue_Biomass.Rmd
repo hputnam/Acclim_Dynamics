@@ -93,7 +93,11 @@ AFDW %>%
   write_csv(path = "Output/Tissue_Biomass.csv")
 
 dplyr::filter(AFDW, AFDW.mg.cm2 > 5)
-dplyr::filter(AFDW, AFDW.mg.cm2 < 0)
+dplyr::filter(AFDW, AFDW.mg.cm2 < 0) # output should be zero since negative values are not possible. 
+
+AFDW.duplicates <- AFDW %>% dplyr::group_by(Plug_ID) %>% 
+  dplyr::summarise(n = n()) %>% filter(n > 2)
+AFDW.duplicates # Output should be zero 
 ```
 
 Graphing data.

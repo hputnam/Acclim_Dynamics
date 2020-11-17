@@ -130,11 +130,20 @@ Chl.plate.numbers <- read_csv("Physiology_variables/Chlorophyll-a_c/Chl_total_pl
 Chl_final <- left_join(df.chl, Master_fragment, by="Plug_ID")  
 Chl_final$Timepoint <- factor(Chl_final$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
 
-Chl_final <- full_join(Chl.plate.numbers, Chl_final, by="Plug_ID")
+Chl_final <- full_join(Chl.plate.numbers, Chl_final, by="Plug_ID") %>% na.omit(surface.area.cm2)
 
-Chl_final %>%
+Chl_final %>% 
   select(Plug_ID, Species, Timepoint, Temperature, Treatment, CO2, chla.ug.cm2, chlc2.ug.cm2) %>%
   write_csv(path = "Output/chlorophyll.csv")
+```
+
+
+Checking for duplicates. 
+```{r}
+Chl.duplicates <- Chl_final %>% dplyr::group_by(Plug_ID) %>% 
+  dplyr::summarise(n = n()) %>% filter(n > 1)
+Chl.duplicates
+# output should be zero bc NA and blanks taken out 
 ```
 
 Checking for effect of plate 

@@ -305,7 +305,7 @@ Master_fragment <- read.csv("Environmental_data/Master_Fragment.csv", header=T, 
 Homogenate_volume <- read.csv("Physiology_variables/homogenate_vol.csv") %>% select(Plug_ID, vol_mL)
   Homogenate_volume$Plug_ID <- as.character(Homogenate_volume$Plug_ID)
   
-prot.plate.numbers <- read_csv("Physiology_variables/Soluble_Protein/total_platemaps.csv") %>% 
+prot.plate.numbers <- read_csv("Physiology_variables/Soluble_Protein/SP_total_platemaps.csv") %>% 
   select(-Well) %>% distinct()
 
 metadata <- full_join(sa, Homogenate_volume, by='Plug_ID', type='left') %>% 

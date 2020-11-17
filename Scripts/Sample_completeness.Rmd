@@ -18,15 +18,19 @@ Loading required libraries.
 ```{r}
 if (!require("plyr")) install.packages("plyr")
 if (!require("dplyr")) install.packages("dplyr")
+if (!require("tidyr")) install.packages("tidyr")
+if (!require("readr")) install.packages("readr")
 
 library(plyr)
 library(dplyr)
+library(tidyr)
+library(readr)
 ```
 
 Reading in the output files from physiological assays. 
 ```{r}
 AFDW <- read.csv("Output/Tissue_Biomass.csv") %>% select(Plug_ID, partner, AFDW.mg.cm2)
-Chl <- read.csv("Output/chlorophyll.csv") %>% select(Plug_ID, chla.ug.cm2, chlc2.ug.cm2)
+Chl <- read.csv("Output/chlorophyll.csv") %>% select(Plug_ID, chla.ug.cm2)
 TAC <- read.csv("Output/antioxidant_capacity.csv") %>% select(Plug_ID, CRE.uM.mg)
 SP <- read.csv("Output/soluble_protein.csv") %>% select(Plug_ID, prot_mg.cm2)
 Homog_vol <- read.csv("Physiology_variables/homogenate_vol.csv") %>% select(Plug_ID, vol_mL)
@@ -36,9 +40,9 @@ Master <- read.csv("Environmental_data/Master_Fragment.csv") %>%
   select(Plug_ID, ANALYSIS, Timepoint, Treatment)
 
 # Filtering out the currently missing corals (16) we already knew about. 
-Missing.list <- c("2008", "2512", "2522", "2523", "2752", "2880", "2976", "3003", "1603", "1739", "2200", "2528", "2740", "2859", "2981", "2984")
-Missing.list <- as.list(Missing.list)
-Master <- Master[!grepl(paste(Missing.list, collapse = "|"), Master$Plug_ID),]
+#Missing.list <- c("2008", "2512", "2522", "2523", "2752", "2880", "2976", "3003", "1603", "1739", "2200", "2528", "2740", "2859", "2981", "2984")
+#Missing.list <- as.list(Missing.list)
+#Master <- Master[!grepl(paste(Missing.list, collapse = "|"), Master$Plug_ID),]
 
 Resp <- read.csv("Physiology_variables/Respirometry/Output/Respiration.rates.csv") %>%
   select(Fragment.ID.x, umol.L.sec) %>% dplyr::rename(Plug_ID = Fragment.ID.x) %>% dplyr::rename(Resp_value = umol.L.sec)
@@ -61,32 +65,23 @@ Physiology %>%
   write_csv(path = "Output/physiological_assays.csv")
 ```
 
-List of missing corals from each assay. 
+Checking for duplicates in plug ID
 ```{r}
-AFDW.missing <- Physiology %>% select(Plug_ID, partner, AFDW.mg.cm2) %>% filter(AFDW.mg.cm2 < 0)
+Sample.duplicates <- Physiology %>% dplyr::group_by(Plug_ID) %>% 
+  dplyr::summarise(n = n()) %>% filter(n > 2)
+Sample.duplicates
+# each sample will have 2 at least (one host, one sym for AFDW)
 
-Missing_values <- Physiology %>% filter(is.na(Physiology))
-  
+filter(Physiology, Plug_ID == "1092")
+filter(Physiology, Plug_ID == "1724")
 ```
 
 
-List samples that do not have a chlorophyll value. 
+List all NA values.
 ```{r}
-Chl_IDs <- Chl %>% select(Plug_ID)
-Master_IDs <- Master %>% select(Plug_ID)
-Homog_vol
+AFDW.NA <- Physiology %>% filter(Physiology, AFDW.mg.cm2 == "NA")
 
-# rows that appear in Chl datasheet but not in Master
-  ## dplyr::setdiff(y, z)  : rows that appear in y but not in z
-# output is the corals that have a chlorophyll data point but were not in master spreadsheet
-Chl_mismatched <- setdiff(Chl_IDs, Master_IDs) 
-Chl_mismatched
-
-Chl_mismatched2 <- setdiff(Master_IDs, Chl_IDs) 
-Chl_mismatched2
-
-
-
+# Error: Result must have length 765, not 9180 
 ```
 
 
