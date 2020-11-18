@@ -79,14 +79,15 @@ Oct14_plate1 <- full_join(Oct14plate1_platemap, Oct14_plate1_initial, by="Well")
   filter(!is.na(Plug_ID))
 
 # Plate 2 (5th plate total)
-Oct14plate2_platemap <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20201014_Plate2_TAC_platemap.csv") 
-  Oct14plate2_platemap$Plug_ID <- as.character(Oct14plate2_platemap$Plug_ID)
-Oct14_plate2_final <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20201014_plate2_final.csv", header=T) %>% dplyr::rename(Abs_final = X490.490)
-Oct14_plate2_initial <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20201014_plate2_initial.csv", header=T) %>% dplyr::rename(Abs_initial = X490.490)
+#Oct14plate2_platemap <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20201014_Plate2_TAC_platemap.csv") 
+ # Oct14plate2_platemap$Plug_ID <- as.character(Oct14plate2_platemap$Plug_ID)
+#Oct14_plate2_final <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20201014_plate2_final.csv", header=T) %>% dplyr::rename(Abs_final = X490.490)
 
-Oct14_plate2 <- full_join(Oct14plate2_platemap, Oct14_plate2_initial, by="Well") %>%
-  full_join(Oct14_plate2_final) %>%
-  filter(!is.na(Plug_ID))
+#Oct14_plate2_initial <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20201014_plate2_initial.csv", header=T) %>% dplyr::rename(Abs_initial = X490.490)
+
+#Oct14_plate2 <- full_join(Oct14plate2_platemap, Oct14_plate2_initial, by="Well") %>%
+#  full_join(Oct14_plate2_final) %>%
+ # filter(!is.na(Plug_ID))
 
 # Plate 3 (6th plate total) 
 Oct14plate3_platemap <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20201014_Plate3_TAC_platemap.csv") 
@@ -98,7 +99,7 @@ Oct14_plate3 <- full_join(Oct14plate3_platemap, Oct14_plate3_initial, by="Well")
   full_join(Oct14_plate3_final) %>%
   filter(!is.na(Plug_ID))
 
-Oct14 <- union(Oct14_plate1, Oct14_plate2) %>% union(Oct14_plate3)
+Oct14 <- union(Oct14_plate1, Oct14_plate3) # %>% union(Oct14_plate3)
 
 # Oct 14 standards 
 Oct14_st <- Oct14 %>% filter(grepl("Standard", Plug_ID)) %>% dplyr::rename(Standard = Plug_ID)

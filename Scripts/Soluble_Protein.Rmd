@@ -38,22 +38,9 @@ Based on Pierce BCA Rapid Gold Protein Kit.
 
 Reading in datafiles. 
 ```{r}
-## Bleaching Test Plate 1 
-plate1_platemap <- read.csv("Physiology_variables/Soluble_Protein/20200804_Plate1_SP_platemap.csv") 
-  plate1_platemap$Plug_ID <- as.character(plate1_platemap$Plug_ID)
-plate1_data <- read.csv("Physiology_variables/Soluble_Protein/20200804_plate1_SP.csv", header=T) 
-  plate1_data$X480 <- gsub("OVRFLW", "NA", plate1_data$X480) # replacing OVRFLW valuew with NA
-  plate1_data$X480 <- as.numeric(plate1_data$X480)
-
-plate1 <- full_join(plate1_platemap, plate1_data, by="Well") %>% dplyr::rename(Abs480 = X480) %>% filter(!is.na(Plug_ID)) # joining two above dataframes; renaming X480 column; removing all wells with NA values
-
-# new dataframe (standards) with the standard values and renaming that column
-standards1 <- plate1 %>% filter(grepl("Standard", Plug_ID)) %>% dplyr::rename(Standard = Plug_ID)
-
-## 20201007 Plate numbers 1, 2, 3 
+## 20201007 
 Oct7_plate1 <- read.csv("Physiology_variables/Soluble_Protein/20201007_plate1_SP.csv")
   Oct7_plate1$X480 <- as.numeric(Oct7_plate1$X480)
-  Oct7_plate1$plate.number <- rep(1,nrow(Oct7_plate1))
 Oct7_platemap1 <- read.csv("Physiology_variables/Soluble_Protein/20201007_platemap1.csv")
   Oct7_platemap1$Plug_ID <- as.character(Oct7_platemap1$Plug_ID)
 
@@ -61,7 +48,6 @@ Oct7_plate1 <- full_join(Oct7_platemap1, Oct7_plate1, by="Well") %>% dplyr::rena
 
 Oct7_plate2 <- read.csv("Physiology_variables/Soluble_Protein/20201007_plate2_SP.csv")
   Oct7_plate2$X480 <- as.numeric(Oct7_plate2$X480)
-  Oct7_plate2$plate.number <- rep(2,nrow(Oct7_plate2))
 Oct7_platemap2 <- read.csv("Physiology_variables/Soluble_Protein/20201007_platemap2.csv")
   Oct7_platemap2$Plug_ID <- as.character(Oct7_platemap2$Plug_ID)
 
@@ -69,7 +55,6 @@ Oct7_plate2 <- full_join(Oct7_platemap2, Oct7_plate2, by="Well") %>% dplyr::rena
 
 Oct7_plate3 <- read.csv("Physiology_variables/Soluble_Protein/20201007_plate3_SP.csv")
   Oct7_plate3$X480 <- as.numeric(Oct7_plate3$X480)
-  Oct7_plate3$plate.number <- rep(3,nrow(Oct7_plate3))
 Oct7_platemap3 <- read.csv("Physiology_variables/Soluble_Protein/20201007_platemap3.csv")
   Oct7_platemap3$Plug_ID <- as.character(Oct7_platemap3$Plug_ID)
 
@@ -78,24 +63,21 @@ Oct7_plate3 <- full_join(Oct7_platemap3, Oct7_plate3, by="Well") %>% dplyr::rena
 Oct7 <- union(Oct7_plate1, Oct7_plate2) %>% union(Oct7_plate3)
   Oct7.standards <- Oct7 %>% filter(grepl("Standard", Plug_ID)) %>% dplyr::rename(Standard = Plug_ID) 
 
-## 20201014 Plate numbers 4, 5, 6
+## 20201014 
 Oct14_plate1 <- read.csv("Physiology_variables/Soluble_Protein/20201014_plate1_SP.csv")
   Oct14_plate1$X480 <- as.numeric(Oct14_plate1$X480)
-  Oct14_plate1$plate.number <- rep(4,nrow(Oct14_plate1))
 Oct14_platemap1 <- read.csv("Physiology_variables/Soluble_Protein/20201014_platemap1.csv")
   Oct14_platemap1$Plug_ID <- as.character(Oct14_platemap1$Plug_ID)
 Oct14_plate1 <- full_join(Oct14_platemap1, Oct14_plate1, by="Well") %>% dplyr::rename(Abs480 = X480) %>% filter(!is.na(Plug_ID))
 
 Oct14_plate2 <- read.csv("Physiology_variables/Soluble_Protein/20201014_plate2_SP.csv")
   Oct14_plate2$X480 <- as.numeric(Oct14_plate2$X480)
-  Oct14_plate2$plate.number <- rep(5,nrow(Oct14_plate2))
 Oct14_platemap2 <- read.csv("Physiology_variables/Soluble_Protein/20201014_platemap2.csv")
   Oct14_platemap2$Plug_ID <- as.character(Oct14_platemap2$Plug_ID)
 Oct14_plate2 <- full_join(Oct14_platemap2, Oct14_plate2, by="Well") %>% dplyr::rename(Abs480 = X480) %>% filter(!is.na(Plug_ID))
 
 Oct14_plate3 <- read.csv("Physiology_variables/Soluble_Protein/20201014_plate3_SP.csv")
   Oct14_plate3$X480 <- as.numeric(Oct14_plate3$X480)
-  Oct14_plate3$plate.number <- rep(6,nrow(Oct14_plate3))
 Oct14_platemap3 <- read.csv("Physiology_variables/Soluble_Protein/20201014_platemap3.csv")
   Oct14_platemap3$Plug_ID <- as.character(Oct14_platemap3$Plug_ID)
 Oct14_plate3 <- full_join(Oct14_platemap3, Oct14_plate3, by="Well") %>% dplyr::rename(Abs480 = X480) %>% filter(!is.na(Plug_ID))
@@ -103,40 +85,57 @@ Oct14_plate3 <- full_join(Oct14_platemap3, Oct14_plate3, by="Well") %>% dplyr::r
 Oct14 <- union(Oct14_plate1, Oct14_plate2) %>% union(Oct14_plate3)
   Oct14.standards <- Oct14 %>% filter(grepl("Standard", Plug_ID)) %>% dplyr::rename(Standard = Plug_ID) 
   
-## 20201025 Plate numbers 7, 8, 9
+## 20201025 
 Oct25_plate1 <- read.csv("Physiology_variables/Soluble_Protein/20201025_plate1_SP.csv")
   Oct25_plate1$X480 <- as.numeric(Oct25_plate1$X480)
-  Oct25_plate1$plate.number <- rep(7,nrow(Oct25_plate1))
 Oct25_platemap1 <- read.csv("Physiology_variables/Soluble_Protein/20201025_platemap1.csv")
   Oct25_platemap1$Plug_ID <- as.character(Oct25_platemap1$Plug_ID)
 Oct25_plate1 <- full_join(Oct25_platemap1, Oct25_plate1, by="Well") %>% dplyr::rename(Abs480 = X480) %>% filter(!is.na(Plug_ID))
 
 Oct25_plate2 <- read.csv("Physiology_variables/Soluble_Protein/20201025_plate2_SP.csv")
   Oct25_plate2$X480 <- as.numeric(Oct25_plate2$X480)
-  Oct25_plate2$plate.number <- rep(8,nrow(Oct25_plate2))
 Oct25_platemap2 <- read.csv("Physiology_variables/Soluble_Protein/20201025_platemap2.csv")
   Oct25_platemap2$Plug_ID <- as.character(Oct25_platemap2$Plug_ID)
 Oct25_plate2 <- full_join(Oct25_platemap2, Oct25_plate2, by="Well") %>% dplyr::rename(Abs480 = X480) %>% filter(!is.na(Plug_ID))
 
 Oct25_plate3 <- read.csv("Physiology_variables/Soluble_Protein/20201025_plate3_SP.csv")
   Oct25_plate3$X480 <- as.numeric(Oct25_plate3$X480)
-  Oct25_plate3$plate.number <- rep(9,nrow(Oct25_plate3))
 Oct25_platemap3 <- read.csv("Physiology_variables/Soluble_Protein/20201025_platemap3.csv")
   Oct25_platemap3$Plug_ID <- as.character(Oct25_platemap3$Plug_ID)
 Oct25_plate3 <- full_join(Oct25_platemap3, Oct25_plate3, by="Well") %>% dplyr::rename(Abs480 = X480) %>% filter(!is.na(Plug_ID))
 
 Oct25 <- union(Oct25_plate1, Oct25_plate2) %>% union(Oct25_plate3)
   Oct25.standards <- Oct25 %>% filter(grepl("Standard", Plug_ID)) %>% dplyr::rename(Standard = Plug_ID)
+  
+## 20201117 
+Nov17_plate1 <- read.csv("Physiology_variables/Soluble_Protein/20201117_plate1_SP.csv")
+  Nov17_plate1$X480 <- as.numeric(Nov17_plate1$X480)
+Nov17_platemap1 <- read.csv("Physiology_variables/Soluble_Protein/20201117_platemap1.csv")
+  Nov17_platemap1$Plug_ID <- as.character(Nov17_platemap1$Plug_ID)
+Nov17_plate1 <- full_join(Nov17_platemap1, Nov17_plate1, by="Well") %>% dplyr::rename(Abs480 = X480) %>% filter(!is.na(Plug_ID))
+
+Nov17_plate2 <- read.csv("Physiology_variables/Soluble_Protein/20201117_plate2_SP.csv")
+  Nov17_plate2$X480 <- as.numeric(Nov17_plate2$X480)
+Nov17_platemap2 <- read.csv("Physiology_variables/Soluble_Protein/20201117_platemap2.csv")
+  Nov17_platemap2$Plug_ID <- as.character(Nov17_platemap2$Plug_ID)
+Nov17_plate2 <- full_join(Nov17_platemap2, Nov17_plate2, by="Well") %>% dplyr::rename(Abs480 = X480) %>% filter(!is.na(Plug_ID))
+
+Nov17 <- union(Nov17_plate1, Nov17_plate2)
+  Nov17.standards <- Nov17 %>% filter(grepl("Standard", Plug_ID)) %>% dplyr::rename(Standard = Plug_ID)
+  
 ```
 
 Checking for outliers, duplicates, and effect of plate. 
 ```{r}
-QC <- union(Oct7, Oct14) %>% union(Oct25)
+QC <- union(Oct7, Oct14) %>% union(Oct25) %>% union(Nov17)
 boxplot(QC$Abs480)
 hist(QC$Abs480)
 
 Duplicates <- QC %>% dplyr::group_by(Plug_ID) %>% 
   dplyr::summarise(n = n()) %>% filter(n > 2)
+Duplicates
+
+# filter(QC, Plug_ID == "1208")
 ## output is list of samples that were run more than once; each standard should have the equal number of days run (Oct7, 14, 25) x2 replicates
 ```
 
@@ -144,27 +143,6 @@ Plot standard curves.
 ```{r}
 st.name <- c("StandardA", "StandardB", "StandardC", "StandardD", "StandardE", "StandardF", "StandardG", "StandardH", "StandardI")
 concentration <- c("2000", "1500", "1000", "750", "500", "250", "125", "25", "0")
-
-## Bleaching Test Plate 1 
-standards1 <- standards1 %>%
-  dplyr::group_by(Standard) %>%
-  dplyr::summarise(Abs480 = mean(Abs480)) %>%
-  mutate(Abs480.adj = Abs480 - Abs480[Standard == "StandardI"])
-
-standards1$BSA_ug.mL <- concentration[match(standards1$Standard, st.name)]
-  standards1$BSA_ug.mL <- as.numeric(standards1$BSA_ug.mL)
-
-SP_mod_lin1 <- lm(BSA_ug.mL ~ Abs480.adj, data = standards1)
-summary(SP_mod_lin1)
-
-std_curve_plot1 <- standards1 %>%
-  ggplot(aes(x = BSA_ug.mL, y = Abs480.adj)) +
-  geom_point(color = "blue", size = 1.5) + 
-  theme_bw() + 
-  geom_smooth(method = "lm") + 
-  labs(title = paste("Adj R2 = ", signif(summary(SP_mod_lin1)$adj.r.squared, 5),
-                     "; Soluble Protein Standard Curve Bleaching Plate 1"))
-std_curve_plot1
 
 ## 20201007  
 Oct7.standards <- Oct7.standards %>%
@@ -175,16 +153,16 @@ Oct7.standards$BSA_ug.mL <- concentration[match(Oct7.standards$Standard, st.name
   Oct7.standards$BSA_ug.mL <- as.numeric(Oct7.standards$BSA_ug.mL)
 SP_mod_lin_Oct7 <- lm(BSA_ug.mL ~ Abs480.adj, data = Oct7.standards)
 summary(SP_mod_lin_Oct7)
-std_curve_plot2 <- Oct7.standards %>%
+std_curve_plotOct7 <- Oct7.standards %>%
   ggplot(aes(x = Abs480.adj, y = BSA_ug.mL)) +
   geom_point(color = "blue", size = 1.5) + 
   theme_bw() + 
   geom_smooth(method = "lm") + 
   labs(title = paste("Adj R2 = ", signif(summary(SP_mod_lin_Oct7)$adj.r.squared, 5),
                      "; Soluble Protein Standard Curve Oct7 3 Plates"))
-std_curve_plot2
+std_curve_plotOct7
 
-## 20201014 Plates 4, 5, 6
+## 20201014  
 Oct14.standards <- Oct14.standards %>%
   dplyr::group_by(Standard) %>%
   dplyr::summarise(Abs480 = mean(Abs480)) %>%
@@ -193,16 +171,16 @@ Oct14.standards$BSA_ug.mL <- concentration[match(Oct14.standards$Standard, st.na
   Oct14.standards$BSA_ug.mL <- as.numeric(Oct14.standards$BSA_ug.mL)
 SP_mod_lin_Oct14 <- lm(BSA_ug.mL ~ Abs480.adj, data = Oct14.standards)
 summary(SP_mod_lin_Oct14)
-std_curve_plot3 <- Oct14.standards %>%
+std_curve_plotOct14 <- Oct14.standards %>%
   ggplot(aes(x = Abs480.adj, y = BSA_ug.mL)) +
   geom_point(color = "blue", size = 1.5) + 
   theme_bw() + 
   geom_smooth(method = "lm") + 
   labs(title = paste("Adj R2 = ", signif(summary(SP_mod_lin_Oct14)$adj.r.squared, 5),
                      "; Soluble Protein Standard Curve Oct14 3 Plates"))
-std_curve_plot3
+std_curve_plotOct14
 
-## 20201025 Plates 7, 8, 9
+## 20201025 
 Oct25.standards <- Oct25.standards %>%
   dplyr::group_by(Standard) %>%
   dplyr::summarise(Abs480 = mean(Abs480)) %>%
@@ -211,32 +189,38 @@ Oct25.standards$BSA_ug.mL <- concentration[match(Oct25.standards$Standard, st.na
   Oct25.standards$BSA_ug.mL <- as.numeric(Oct25.standards$BSA_ug.mL)
 SP_mod_lin_Oct25 <- lm(BSA_ug.mL ~ Abs480.adj, data = Oct25.standards)
 summary(SP_mod_lin_Oct25)
-std_curve_plot4 <- Oct25.standards %>%
+std_curve_plotOct25 <- Oct25.standards %>%
   ggplot(aes(x = Abs480.adj, y = BSA_ug.mL)) +
   geom_point(color = "blue", size = 1.5) + 
   theme_bw() + 
   geom_smooth(method = "lm") + 
   labs(title = paste("Adj R2 = ", signif(summary(SP_mod_lin_Oct25)$adj.r.squared, 5),
                      "; Soluble Protein Standard Curve Oct25 3 Plates"))
-std_curve_plot4
+std_curve_plotOct25
+
+## 20201117 
+Nov17.standards <- Nov17.standards %>%
+  dplyr::group_by(Standard) %>%
+  dplyr::summarise(Abs480 = mean(Abs480)) %>%
+  mutate(Abs480.adj = Abs480 - Abs480[Standard == "StandardI"])
+Nov17.standards$BSA_ug.mL <- concentration[match(Nov17.standards$Standard, st.name)]
+  Nov17.standards$BSA_ug.mL <- as.numeric(Nov17.standards$BSA_ug.mL)
+SP_mod_lin_Nov17 <- lm(BSA_ug.mL ~ Abs480.adj, data = Nov17.standards)
+summary(SP_mod_lin_Nov17)
+std_curve_plotNov17 <- Nov17.standards %>%
+  ggplot(aes(x = Abs480.adj, y = BSA_ug.mL)) +
+  geom_point(color = "blue", size = 1.5) + 
+  theme_bw() + 
+  geom_smooth(method = "lm") + 
+  labs(title = paste("Adj R2 = ", signif(summary(SP_mod_lin_Nov17)$adj.r.squared, 5),
+                     "; Soluble Protein Standard Curve Nov17"))
+std_curve_plotNov17
 ```
 
 The standard curve for the bleaching test sample has a high R squared value but the absorbance values look off. 
 
 Calculating protein concentrations based on standard curve. 
 ```{r}
-## Bleaching Test Plate 1
-protein1 <- plate1 %>% 
-  filter(!is.na(Plug_ID)) %>%
-  group_by(Plug_ID) %>%
-  summarise(Abs480 = mean(Abs480)) %>%
-  mutate(Abs480.adj = Abs480 - standards1$Abs480[standards1$Standard == "StandardI"],  # Subtract blank standard (Standard I) from mean absorbance values
-         prot_ug.mL = map_dbl(Abs480.adj, ~ predict(SP_mod_lin1, newdata = data.frame(Abs480.adj = .)))) # Use standard curve to convert absorbance to protein
-
-std_curve_plot1 + 
-  geom_point(data = protein1, aes(x = prot_ug.mL, y = Abs480.adj), pch = "X", cex = 5, alpha = 0.3) +
-  labs(title = "All samples projected on standard curve 1 - bleaching test")
-
 ## 20201007 3 Plates
 Oct7protein <- Oct7 %>% 
   filter(!is.na(Plug_ID)) %>%
@@ -244,7 +228,7 @@ Oct7protein <- Oct7 %>%
   summarise(Abs480 = mean(Abs480)) %>% 
   mutate(Abs480.adj = Abs480 - Oct7.standards$Abs480[Oct7.standards$Standard == "StandardI"],  # Subtract blank standard (Standard I) from mean absorbance values
          prot_ug.mL = map_dbl(Abs480.adj, ~ predict(SP_mod_lin_Oct7, newdata = data.frame(Abs480.adj = .)))) # Use standard curve to convert absorbance to protein
-std_curve_plot2 + 
+std_curve_plotOct7 + 
   geom_point(data = Oct7protein, aes(x = Abs480.adj, y = prot_ug.mL), pch = "X", cex = 5, alpha = 0.3) +
   labs(title = "All samples projected on standard curve 2 - Oct 7 3 Plates")
 
@@ -255,7 +239,7 @@ Oct14protein <- Oct14 %>%
   summarise(Abs480 = mean(Abs480)) %>% 
   mutate(Abs480.adj = Abs480 - Oct14.standards$Abs480[Oct14.standards$Standard == "StandardI"],  # Subtract blank standard (Standard I) from mean absorbance values
          prot_ug.mL = map_dbl(Abs480.adj, ~ predict(SP_mod_lin_Oct14, newdata = data.frame(Abs480.adj = .)))) # Use standard curve to convert absorbance to protein
-std_curve_plot3 + 
+std_curve_plotOct14 + 
   geom_point(data = Oct14protein, aes(x = Abs480.adj, y = prot_ug.mL), pch = "X", cex = 5, alpha = 0.3) +
   labs(title = "All samples projected on standard curve 3 - Oct 14 3 Plates")
 
@@ -266,9 +250,20 @@ Oct25protein <- Oct25 %>%
   summarise(Abs480 = mean(Abs480)) %>% 
   mutate(Abs480.adj = Abs480 - Oct25.standards$Abs480[Oct25.standards$Standard == "StandardI"],  # Subtract blank standard (Standard I) from mean absorbance values
          prot_ug.mL = map_dbl(Abs480.adj, ~ predict(SP_mod_lin_Oct25, newdata = data.frame(Abs480.adj = .)))) # Use standard curve to convert absorbance to protein
-std_curve_plot4 + 
+std_curve_plotOct25 + 
   geom_point(data = Oct25protein, aes(x = Abs480.adj, y = prot_ug.mL), pch = "X", cex = 5, alpha = 0.3) +
   labs(title = "All samples projected on standard curve 4 - Oct 25 3 Plates")
+
+## 2020117 2 Plates
+Nov17protein <- Nov17 %>%
+  filter(!is.na(Plug_ID)) %>%
+  group_by(Plug_ID) %>%
+  summarise(Abs480 = mean(Abs480)) %>% 
+  mutate(Abs480.adj = Abs480 - Nov17.standards$Abs480[Nov17.standards$Standard == "StandardI"],  # Subtract blank standard (Standard I) from mean absorbance values
+         prot_ug.mL = map_dbl(Abs480.adj, ~ predict(SP_mod_lin_Nov17, newdata = data.frame(Abs480.adj = .)))) # Use standard curve to convert absorbance to protein
+std_curve_plotNov17 + 
+  geom_point(data = Nov17protein, aes(x = Abs480.adj, y = prot_ug.mL), pch = "X", cex = 5, alpha = 0.3) +
+  labs(title = "All samples projected on standard curve 5 - Nov 17 2 Plates")
 ```
 
 Samples above highest standard point for that plate need to be diluted and re-done.  
@@ -285,16 +280,27 @@ Oct14dilute <- Oct14protein %>% filter(prot_ug.mL > 2026.931)
 filter(Oct25protein, Plug_ID == "StandardA") # prot_ug.mL is 2041.058	
 Oct25dilute <- Oct25protein %>% filter(prot_ug.mL > 2041.059)
 
+## November 17 plates
+filter(Nov17protein, Plug_ID == "StandardA") # prot_ug.mL is 2041.058	
+Nov17dilute <- Nov17protein %>% filter(prot_ug.mL > 1971.027)
+
 # combine list 
-Dilute.samples.list <- union(Oct7dilute, Oct14dilute) %>% union(Oct25dilute)
+Dilute.samples.list <- union(Oct7dilute, Oct14dilute) %>% union(Oct25dilute) %>% union(Nov17dilute)
 Dilute.samples.list
 ```
 
-Normalize to surface area; read in metadata. 
+2 samples diluted and need to be doubled below. 
 ```{r}
 ## Join all plates together
-protein <- union(Oct7protein, Oct14protein) %>% union(Oct25protein)
+protein <- union(Oct7protein, Oct14protein) %>% union(Oct25protein) %>% union(Nov17protein)
 
+filter(Nov17protein, Plug_ID == "1211") 
+filter(Nov17protein, Plug_ID == "1298")
+```
+
+
+Normalize to surface area; read in metadata. 
+```{r}
 sa <- read_csv("Physiology_variables/Respirometry/coral_surface_area.csv") %>% dplyr::rename(Plug_ID = Sample_ID) %>% select(Plug_ID, surface.area.cm2)
   sa$Plug_ID <- as.character(sa$Plug_ID)
   
