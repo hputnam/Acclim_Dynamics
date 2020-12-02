@@ -21,6 +21,10 @@ if (!require("dplyr")) install.packages("dplyr")
 if (!require("plyr")) install.packages("plyr")
 if (!require("Rmisc")) install.packages("Rmisc")
 if (!require("gridExtra")) install.packages("gridExtra")
+if (!require("formattable")) install.packages("formattable")
+if (!require("data.table")) install.packages("data.table")
+if (!require("htmltools")) install.packages("htmltools")
+if (!require("webshot")) install.packages("webshot")
 
 # load packages
 library(tidyverse)
@@ -29,6 +33,10 @@ library(dplyr)
 library(plyr)
 library(Rmisc)
 library(gridExtra)
+library(formattable)
+library(data.table)
+library(htmltools)
+library(webshot)
 ```
 
 Dry Weight - organic and inorganic compounds
@@ -37,27 +45,53 @@ Ash-Free Dry Weight - organic compounds
 Read in Ash-Free Dry Weight raw data, surface area, homogenate volume, and master datasheets
 ```{r}
 AFDW_raw <- read.csv("Physiology_variables/Tissue_Biomass/AFDW_data.csv") %>% filter(!is.na(Plug_ID))
+AFDW_raw$Plug_ID <- as.character(AFDW_raw$Plug_ID)
 
 # Load surface area and homogenate volume values; merge dataframes from chla, chlc means 
 Surface_area <- read.csv("Physiology_variables/Respirometry/coral_surface_area.csv") %>% dplyr::rename(Plug_ID = Sample_ID) %>%
   select(Plug_ID, surface.area.cm2)
 Homogenate_volume <- read.csv("Physiology_variables/homogenate_vol.csv") %>%
   select(Plug_ID, vol_mL)
-Master_fragment <- read.csv("Environmental_data/Master_Fragment.csv") %>%
-  select(Plug_ID, Species, Treatment, Temperature, CO2, Timepoint)
+Master_fragment <- read.csv("Environmental_data/Master_Fragment.csv") %>% filter(!ANALYSIS == "Molecular") %>% filter(!ANALYSIS == "Bleaching") %>% filter(!ANALYSIS == "NA") %>% 
+  filter(!ANALYSIS == "Molecular Melted") %>% filter(!ANALYSIS == "Molecular BB") %>% filter(!ANALYSIS == "Physiology BB") %>% # need to keep "Physiology" and "Physiology/Molecular"
+  select(Plug_ID, Species, Treatment, Temperature, CO2, Timepoint) 
   Master_fragment$Plug_ID <- as.character(Master_fragment$Plug_ID)
 
-AFDW_raw <- join_all(list(AFDW_raw, Surface_area, Homogenate_volume, Master_fragment), by='Plug_ID', type='left')
+AFDW_raw_metadata <- join_all(list(AFDW_raw, Surface_area, Homogenate_volume, Master_fragment), by='Plug_ID', type='left')
+```
+
+Checking to see if any samples from the master weren't done or any that were done aren't on the master. 
+```{r}
+Master_PlugID <- Master_fragment %>% select(Plug_ID)
+AFDW_IDs <- AFDW_raw %>% select(Plug_ID)
+
+# rows that appear in the AFDW spreadsheet but not in the master 
+  ## dplyr::setdiff(y, z)  : rows that appear in y but not in z
+# output is the corals that have a AFDW spreadsheet data point but were not in master ; output should be zero
+# any output is likely the plug ID written incorrectly during sample processing
+AFDW_mismatched <- setdiff(AFDW_IDs, Master_PlugID) 
+AFDW_mismatched
+
+# rows that appear in the master spreadsheet but not in the AFDW 
+  ## dplyr::setdiff(y, z)  : rows that appear in y but not in z
+# output is the corals that have a master spreadsheet data point but were not in AFDW ; output should be zero
+AFDW_mismatched2 <- setdiff(Master_PlugID, AFDW_IDs) 
+AFDW_mismatched2
+
+# Missing list: "2008", "2512", "2522", "2523", "2752", "2880", "2976", "3003", "1603", "1739", "2200", "2528", "2740", "2859", "2981", "2984"
+# Corals we won't have AFDW for: 1174, 1327, 1488 
+# output excluding those is 1
+# need to re-do 2863
 ```
 
 Calculate mass per mL
 ```{r}
-#different volumes for sym (4ml) and host (5ml)
+#different volumes for sym (5ml - just spun down) and host (4ml)
 sym <- 5
 host <- 4
-AFDW <- AFDW_raw %>%
-  mutate(dry.pan.mass.g.ml = case_when(partner=="Host" ~ dry.pan.mass.g/sym, partner=="Sym" ~dry.pan.mass.g/host),
-         burnt.pan.mass.g.ml = case_when(partner=="Host" ~ burnt.pan.mass.g/sym, partner=="Sym" ~burnt.pan.mass.g/host))
+AFDW <- AFDW_raw_metadata %>%
+  mutate(dry.pan.mass.g.ml = case_when(partner=="Host" ~ dry.pan.mass.g/sym, partner=="Sym" ~ dry.pan.mass.g/host),
+         burnt.pan.mass.g.ml = case_when(partner=="Host" ~ burnt.pan.mass.g/sym, partner=="Sym" ~ burnt.pan.mass.g/host))
 ```
 
 Calculating Tissue Biomass (AFDW)
@@ -72,42 +106,87 @@ AFDW <- AFDW %>%
 AFDW
 
 # Transforming the dataframe to be easily analyzed and visualized by type of measurement
-AFDW_final <- AFDW %>% select(Plug_ID, partner, Species, Treatment, Temperature, CO2, Timepoint, DW.mg.cm2, AFDW.mg.cm2) %>%
+AFDW_long <- AFDW %>% select(Plug_ID, partner, Species, Treatment, Temperature, CO2, Timepoint, DW.mg.cm2, AFDW.mg.cm2) %>%
   gather("Measurement", "Value", 8:9) %>%
-  filter(!is.na(Value))
+  filter(!is.na(Value)) %>% filter(!is.na(Species)) # filters out any data points that don't have a match in the master spreadsheet
+```
 
+Quality control.
+```{r}
 ## temporarily taking out samples that will need to be re-done
-AFDW_final <- AFDW_final %>% filter(Value > 0)
-AFDW_final
+#AFDW_long <- AFDW_long %>% filter(Value > 0)
+#AFDW_long
 
+dplyr::filter(AFDW, AFDW.mg.cm2 > 5) # unusually high values for AFDW; think about re-doing?
+dplyr::filter(AFDW, AFDW.mg.cm2 < 0) # output should be zero since negative values are not possible. 
+
+AFDW.duplicates <- AFDW_long %>% dplyr::group_by(Plug_ID) %>% 
+  dplyr::summarise(n = n()) %>% filter(n > 4)
+AFDW.duplicates # Output should be zero 
+```
+
+```{r}
 # Calculating means per treatment and timepoint. 
-AFDW_means <- summarySE(AFDW_final, measurevar="Value", groupvars=c("partner", "Timepoint", "Treatment", "Temperature", "CO2", "Species", "Measurement")) %>%
+AFDW_means <- summarySE(AFDW_long, measurevar="Value", groupvars=c("partner", "Timepoint", "Treatment", "Temperature", "CO2", "Species", "Measurement")) %>%
   subset(Measurement=="AFDW.mg.cm2")
 AFDW_means
 
 AFDW_means$Timepoint <- factor(AFDW_means$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
 
+# Looking at sample sizes 
+dplyr::filter(AFDW_means, N > 6) # this output should be zero b/c the biggest sample size is 6
+#seven <- AFDW_long %>% subset(Timepoint=="4 week") %>% subset(Treatment=="ATHC") %>% subset(partner=="Host") %>% subset(Measurement=="AFDW.mg.cm2") %>% subset(Species=="Mcapitata")
+#seven
+
+dplyr::filter(AFDW_long, Plug_ID=="2863")
+
 # write AFDW data to file
 AFDW %>%
   select(Plug_ID, partner, DW.mg.cm2, AFDW.mg.cm2) %>%
   write_csv(path = "Output/Tissue_Biomass.csv")
+```
 
-dplyr::filter(AFDW, AFDW.mg.cm2 > 5)
-dplyr::filter(AFDW, AFDW.mg.cm2 < 0) # output should be zero since negative values are not possible. 
+Write means and sample sizes for AFDW to file
+```{r}
+improvement_formatter <- formatter("span", style = x ~ style(font.weight = "bold", 
+              color = ifelse(x > 5, "black", ifelse(x < 6, "red", "black"))))
 
-AFDW.duplicates <- AFDW %>% dplyr::group_by(Plug_ID) %>% 
-  dplyr::summarise(n = n()) %>% filter(n > 2)
-AFDW.duplicates # Output should be zero 
+AFDW_ss <- arrange(AFDW_means, partner, N, Timepoint) %>% 
+  write_csv(path = "Output/Tissue_Biomass_means_samplesizes.csv")
+AFDW_ss
+
+AFDW.samples.sizes <- formattable(AFDW_ss, align =c("l","c","c","c","c", "c", "c", "c", "r"), 
+            list(`Indicator Name` = formatter("span", style = ~ style(color = "grey",font.weight = "bold")), `N` = improvement_formatter)) 
+AFDW.samples.sizes
+
+# I was having trouble with the below command and exporting correcty; function will run but not sure where the png is saving
+# export command for formattable
+export_formattable <- function(f, file, width = "100%", height = NULL, 
+                               background = "white", delay = 0.2)
+    {
+      w <- as.htmlwidget(f, width = width, height = height)
+      path <- html_print(w, background = background, viewer = NULL)
+      url <- paste0("file:///", gsub("\\\\", "/", normalizePath(path)))
+      webshot(url,
+              file = file,
+              selector = ".formattable_widget",
+              delay = delay)
+}
+
+export_formattable(AFDW.samples.sizes, file = "Output/Tissue_Biomass_means_samplesizes.png")
 ```
 
 Graphing data.
 ```{r}
 cols <- c("lightblue", "blue", "salmon", "red3")
 
-ggplot(AFDW_final, aes(x=Treatment, y=Value, fill=partner)) + geom_boxplot(alpha=0.5) +
+HostSym_plot <- ggplot(AFDW_long, aes(x=Treatment, y=Value, fill=partner)) + geom_boxplot(alpha=0.5) +
   geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() + 
   theme(legend.position = "left") + 
-  facet_grid(Measurement ~ Species, scales = "free") 
+  facet_grid(Measurement ~ Species, scales = "free")
+HostSym_plot
+
+ggsave(file="Output/Tissue_Biomass_HostvSym.pdf", HostSym_plot, width = 11, height = 6, units = c("in"))
 ```
 
 ```{r}
@@ -119,15 +198,24 @@ AFDW_plot <- ggplot(AFDW_means, aes(x=Timepoint, y = Value, group = Treatment, c
   xlab("Timepoint") + 
   ylab("Ash-Free Dry Weight (mg.cm2)") + # y-axis label and y axis range
   theme_bw() + 
-  ggtitle("A) Ash-Free Dry Weight") +
+  ggtitle("Ash-Free Dry Weight") +
   theme(legend.position = "left") +
   geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
-  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.4)) #Set the text angle
+  theme(axis.text.x = element_text(angle = 60, vjust = 0.5, hjust = 0.45)) #Set the text angle
 AFDW_plot
 
-ggsave(file="Output/Tissue_Biomass.pdf", AFDW_plot, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Tissue_Biomass.pdf", AFDW_plot, width = 11, height = 6, units = c("in"))
 ```
+
+
+AFDW things to address:
+1. Mcap outlier in HTHC at Day 2 - 1197. But this occurs with both the Host and Sym fraction and similar pattern holds in respiration rates. 
+2. Won't have AFDW values for 1327, 1174, or 1488. 
+3. 16 missing corals contribute to the wide ranges at 1, 2 days and 1 week.
+4. 2863 - redo this point 
+
+
 
 ############## Bleaching Fragment Test prior to running the rest of the samples.
 
