@@ -325,7 +325,7 @@ CHL <- ggplot(Chl_means, aes(x=Timepoint, y = Value, group = Treatment, color = 
   xlab("Timepoint") + 
   ylab("") +
   theme_bw() + 
-  ggtitle("Chlorophyll a/c concentration") +
+  ggtitle("Chlorophyll a/c concentration (ug/cm^-2)") +
   theme(legend.position = "left") +
   geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
