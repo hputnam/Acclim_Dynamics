@@ -44,7 +44,7 @@ Ash-Free Dry Weight - organic compounds
 
 Read in Ash-Free Dry Weight raw data, surface area, homogenate volume, and master datasheets
 ```{r}
-AFDW_raw <- read.csv("Physiology_variables/Tissue_Biomass/AFDW_data.csv") %>% filter(!is.na(Plug_ID))
+AFDW_raw <- read.csv("Physiology_variables/AFDW_data.csv") %>% filter(!is.na(Plug_ID))
 AFDW_raw$Plug_ID <- as.character(AFDW_raw$Plug_ID)
 
 # Load surface area and homogenate volume values; merge dataframes from chla, chlc means 
@@ -58,6 +58,9 @@ Master_fragment <- read.csv("Environmental_data/Master_Fragment.csv") %>% filter
   Master_fragment$Plug_ID <- as.character(Master_fragment$Plug_ID)
 
 AFDW_raw_metadata <- join_all(list(AFDW_raw, Surface_area, Homogenate_volume, Master_fragment), by='Plug_ID', type='left')
+AFDW_raw_metadata$Species <- as.character(AFDW_raw_metadata$Species)
+AFDW_raw_metadata$Species[AFDW_raw_metadata$Species == "Mcapitata"] <- "Montipora capitata"
+AFDW_raw_metadata$Species[AFDW_raw_metadata$Species == "Pacuta"] <- "Pocillopora acuta"
 ```
 
 Checking to see if any samples from the master weren't done or any that were done aren't on the master. 
@@ -196,13 +199,13 @@ AFDW_plot <- ggplot(AFDW_means, aes(x=Timepoint, y = Value, group = Treatment, c
   geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2) +
   scale_color_manual(values = cols) + 
   xlab("Timepoint") + 
-  ylab("Ash-Free Dry Weight (mg.cm2)") + # y-axis label and y axis range
   theme_bw() + 
-  ggtitle("Ash-Free Dry Weight") +
+  ylab("") +
+  ggtitle("Ash-Free Dry Weight (mg/cm^2)") +
   theme(legend.position = "left") +
   geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
-  theme(axis.text.x = element_text(angle = 60, vjust = 0.5, hjust = 0.45)) #Set the text angle
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) #Set the text angle
 AFDW_plot
 
 ggsave(file="Output/Final_Figures/Tissue_Biomass.pdf", AFDW_plot, width = 11, height = 6, units = c("in"))

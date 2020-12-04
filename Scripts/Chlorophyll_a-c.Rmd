@@ -20,6 +20,10 @@ if (!require("dplyr")) install.packages("dplyr")
 if (!require("Rmisc")) install.packages("Rmisc")
 if (!require("ggplot2")) install.packages("ggplot2")
 if (!require("gridExtra")) install.packages("gridExtra")
+if (!require("formattable")) install.packages("formattable")
+if (!require("data.table")) install.packages("data.table")
+if (!require("htmltools")) install.packages("htmltools")
+if (!require("webshot")) install.packages("webshot")
 
 # load packages
 library(tidyverse)
@@ -28,6 +32,10 @@ library(dplyr)
 library(Rmisc)
 library(ggplot2)
 library(gridExtra)
+library(formattable)
+library(data.table)
+library(htmltools)
+library(webshot)
 ```
 
 
@@ -316,20 +324,28 @@ Plotting timeseries with corrected means table.
 
 ```{r}
 cols <- c("lightblue", "blue", "pink", "red")
+species.names <- list(
+  'Mcapitata'="Montipora capitata",
+  'Pacuta'="Pocillopora acuta",
+  'chla.ug.cm2'="Chl-a (ug/cm^-2)",
+  'chlc2.ug.cm2'="Chl-c2 (ug/cm^-2)")
+
+species_labeller <- function(variable,value){
+  return(species.names[value])}
 
 CHL <- ggplot(Chl_means, aes(x=Timepoint, y = Value, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
-  facet_grid(Measurement ~ Species, scales = "free") +
+  facet_grid(Measurement ~ Species, scales = "free", labeller = species_labeller) +
   geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2) +
   scale_color_manual(values = cols) + 
   xlab("Timepoint") + 
-  ylab("") +
   theme_bw() + 
-  ggtitle("Chlorophyll a/c concentration (ug/cm^-2)") +
+  ylab("") +
+  ggtitle("Chlorophyll a and c2 concentration") +
   theme(legend.position = "left") +
   geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
-  theme(axis.text.x = element_text(angle = 60, vjust = 0.5, hjust = 0.45)) #Set the text angle
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) #Set the text angle
 CHL
 
 ggsave(file="Output/Final_Figures/Chlorophyll.pdf", CHL, width = 11, height = 6, units = c("in"))

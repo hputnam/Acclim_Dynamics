@@ -29,6 +29,8 @@ if ("dplyr" %in% rownames(installed.packages()) == 'FALSE') install.packages('dp
 if ("ggfortify" %in% rownames(installed.packages()) == 'FALSE') install.packages('ggfortify') 
 if ("gridExtra" %in% rownames(installed.packages()) == 'FALSE') install.packages('gridExtra') 
 if ("survminer" %in% rownames(installed.packages()) == 'FALSE') install.packages('survminer') 
+if ("graphics" %in% rownames(installed.packages()) == 'FALSE') install.packages('graphics') 
+if ("grid" %in% rownames(installed.packages()) == 'FALSE') install.packages('grid') 
 
 #Read in required libraries
 ##### Include Versions of libraries
@@ -43,11 +45,13 @@ library(dplyr)
 library(ggfortify)
 library(gridExtra)
 library(survminer)
+library(graphics)
+library(grid)
 ```
 
 Loading dataframes. 
 ```{r}
-Data <- read.csv("Physiology_variables/Survivorship/coral_survivorship_QC.csv", header=T, sep=",", na.string="NA", stringsAsFactors = F) #read in data file
+Data <- read.csv("Physiology_variables/coral_survivorship_QC.csv", header=T, sep=",", na.string="NA", stringsAsFactors = F) #read in data file
 Tank.Info <- read.csv("Environmental_data/Tank_to_Treatment.csv", header=T, sep=",", na.string="NA") #read in data file 
 Data.Trt <- merge(Data, Tank.Info, by="Tank")
 ```
@@ -94,12 +98,17 @@ splots[[1]] <- ggsurvplot(Mc.km_fit, data=Mc.Data, size = 1,  # change line size
            palette = c("lightblue", "blue", "salmon", "red3"), # custom color palette
            conf.int = TRUE, # Add confidence interval
            legend.title = "", # remove legend title
-           title = "C) M. capitata",
-           xlab = "Time in days",
+           title = "Montipora capitata",
+           xlab = "Timepoint",
            font.title = c(14, "bold.italic", "black"), #title italicized
-           font.tickslab = c(8, "bold", "black"),
+           font.tickslab = c(8, "black"),
            legend.labs = c("ATAC", "ATHC","HTAC", "HTHC"), pval = TRUE, # Add p-value and change legend labels
            legend=c(0.115, 0.5))
+  
+splots[[1]]$plot <- splots[[1]]$plot +
+  scale_x_continuous(breaks = sort(c(1,2,8,15,29,43,57,85,112)), labels = c("Day 1", "Day 2", "1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week")) + 
+  geom_vline(xintercept = 61, linetype = "dotted") + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3))
 
 
 ## Pocillopora acuta
@@ -109,18 +118,23 @@ splots[[2]] <- ggsurvplot(Pa.km_fit, data=Pa.Data, size = 1,  # change line size
            palette = c("lightblue", "blue", "salmon", "red3"), # custom color palette
            conf.int = TRUE, # Add confidence interval
            legend.title = "", # remove legend title
-           title = "D) P. acuta",
-           xlab = "Time in days",
+           title = "Pocillopora acuta",
+           xlab = "Timepoint",
            font.title = c(14, "bold.italic", "black"), #title italicized
-           font.tickslab = c(8, "bold", "black"),
+           font.tickslab = c(8, "black"),
            legend.labs = c("ATAC", "ATHC","HTAC", "HTHC"), pval = TRUE, # Add p-value and change legend labels
            legend = "none")
 
+splots[[2]]$plot <- splots[[2]]$plot +
+  scale_x_continuous(breaks = sort(c(1,2,8,15,29,43,57,85,112)), labels = c("Day 1", "Day 2", "1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week")) + 
+  geom_vline(xintercept = 61, linetype = "dotted") + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) 
+  # theme(axis.text.x = element_text(vjust = grid::unit(c(-2,0,0,0,0,0,0,0,0)), "points"))
+
 surv <- arrange_ggsurvplots(splots, print = FALSE, ncol = 2, nrow = 1)
-ggsave("Output/All_survivorship.pdf", surv, width = 10,height = 4)
+ggsave("Output/Final_Figures/All_survivorship.pdf", surv, width = 12, height = 6)
 
-ggsave("Output/All_survivorship.png", surv, width = 10,height = 4)
-
+# ggsave("Output/All_survivorship.png", surv, width = 6, height = 10)
 ```
 
 

@@ -38,8 +38,8 @@ library("rstatix")
 Reading in quality controlled version of ImageJ data.
 Protocol for ImageJ Bleaching Score Analysis found [here](https://emmastrand.github.io/EmmaStrand_Notebook/ImageJ-Analysis-Protocols/).  
 ```{r}
-Data <- read.csv("Physiology_variables/Bleaching_Intensity/Bleaching_ImageJ_QC.csv", header=T, sep=",", na.string="NA") #read in data file
-Sample.Info <- read.csv("Environmental_data/Master_Fragment_20200616_QC.csv", header=T, sep=",", na.string="NA") #read in data file 
+Data <- read.csv("Physiology_variables/Bleaching_ImageJ_QC.csv", header=T, sep=",", na.string="NA") #read in data file
+Sample.Info <- read.csv("Environmental_data/Master_Fragment.csv", header=T, sep=",", na.string="NA") #read in data file 
 Sample.Info <- Sample.Info[,c(7,5,9)]
 Tank.Info <- read.csv("Environmental_data/Tank_to_Treatment.csv", header=T, sep=",", na.string="NA") #read in data file 
 
@@ -79,7 +79,7 @@ Blch$SpGroup <- paste(Blch$Treatment, Blch$Species)
 
 Output: Bleaching Score dataframe and checking for outliers in the dataset. 
 ```{r}
-write.table(Blch, file = "Physiology_variables/Bleaching_Intensity/Bleaching_Score.csv", append = FALSE, quote = TRUE, sep = ",",
+write.table(Blch, file = "Physiology_variables/Bleaching_Score_Output.csv", append = FALSE, quote = TRUE, sep = ",",
             eol = "\n", na = "NA", dec = ".", row.names = TRUE,
             col.names = TRUE, qmethod = c("escape", "double"),
             fileEncoding = "")
@@ -93,7 +93,7 @@ boxplot(Bleaching.Score ~ Group, data = x, lwd = 1, ylab = 'PC1Color', las=2, ce
 ** Statistical Analysis and Plotting ** 
 ```{r}
 # for use in plotting to avoid having to run PCA again
-Color.Score <- read.csv("Physiology_variables/Bleaching_Score/Bleaching_Score.csv", header=T, sep=",", na.string="NA") #read in data file
+Color.Score <- read.csv("Physiology_variables/Bleaching_Score_Output.csv", header=T, sep=",", na.string="NA") #read in data file
 
 mod1 <- aov(sqrt(Bleaching.Score+200) ~ Temperature*CO2*Timepoint*Species, data=Color.Score) #run an ANOVA 
 hist(residuals(mod1)) #look at normality of data
@@ -159,13 +159,13 @@ Fig.All <- ggplot(All.Means, aes(x=Timepoint, y=mean, group=SpGroup)) +
                                   hjust = 0))
 Fig.All
 
-pdf("Physiology_variables/Bleaching_Intensity/Bleaching_All.pdf")
-print(Fig.All, newpage = FALSE)
-dev.off()
+#pdf("Physiology_variables/Bleaching_All.pdf")
+#print(Fig.All, newpage = FALSE)
+#dev.off()
 
-png("Physiology_variables/Bleaching_Intensity/Bleaching_All.png")
-print(Fig.All, newpage = FALSE)
-dev.off()
+#png("Physiology_variables/Bleaching_All.png")
+#print(Fig.All, newpage = FALSE)
+#dev.off()
 ```
 
 Subsetting larger bleaching dataframe to species level.
@@ -174,7 +174,39 @@ Mcap.Blch <- subset(All.Means, Species=="Montipora")
 Pact.Blch <- subset(All.Means, Species=="Pocillopora")
 ```
 
-Calculating M.cap means and plotting bleaching intensity
+Plotting Mcap and Pacuta together.
+```{r}
+species.names <- list(
+  'Montipora'="Montipora capitata",
+  'Pocillopora'="Pocillopora acuta")
+
+species_labeller <- function(variable,value){
+  return(species.names[value])}
+
+Blch_plot <- ggplot(All.Means, aes(x=Timepoint, y = mean, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(~Species, scales = "free", labeller = species_labeller) +
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + 
+  ylab("Bleaching Score") + # y-axis label and y axis range
+  theme_bw() + 
+  ggtitle("Photographic Bleaching") +
+  theme(legend.position = "left") +
+  geom_vline(xintercept = c(7.8), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  scale_x_discrete(breaks = c("Week1", "Week2", "Week4", "Week6", "Week8", "Week12", "Week16"), labels = c("1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week")) +
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) #Set the text angle 
+Blch_plot
+
+ggsave(file="Output/Final_Figures/Photographic_Bleaching.pdf", Blch_plot, width = 11, height = 6, units = c("in"))
+```
+
+
+
+
+
+Calculating M.cap means and plotting bleaching score
 ```{r}
 Fig.MC <- ggplot(Mcap.Blch, aes(x=Timepoint, y=mean, group=Treatment)) + 
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se), colour="black", width=.1, position = position_dodge(width = 0.1)) +
@@ -190,7 +222,7 @@ Fig.MC <- ggplot(Mcap.Blch, aes(x=Timepoint, y=mean, group=Treatment)) +
   ylab(expression(paste("Color Score"))) +
   ylim(-110,20)+
   theme_bw() + #Set the background color
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3), #Set the text angle
         axis.line = element_line(color = 'black'), #Set the axes color
         panel.border = element_blank(), #Set the border
         panel.grid.major = element_blank(), #Set the major gridlines
@@ -207,7 +239,7 @@ Fig.MC
 
 ```
 
-Calculating P. acuta means and plotting bleaching intensity
+Calculating P. acuta means and plotting bleaching score
 ```{r}
 Fig.PA <- ggplot(Pact.Blch, aes(x=Timepoint, y=mean, group=Treatment)) + 
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se), colour="black", width=.1, position = position_dodge(width = 0.1)) +
