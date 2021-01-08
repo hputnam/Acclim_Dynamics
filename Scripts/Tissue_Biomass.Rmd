@@ -52,8 +52,7 @@ Surface_area <- read.csv("Physiology_variables/Respirometry/coral_surface_area.c
   select(Plug_ID, surface.area.cm2)
 Homogenate_volume <- read.csv("Physiology_variables/homogenate_vol.csv") %>%
   select(Plug_ID, vol_mL)
-Master_fragment <- read.csv("Environmental_data/Master_Fragment.csv") %>% filter(!ANALYSIS == "Molecular") %>% filter(!ANALYSIS == "Bleaching") %>% filter(!ANALYSIS == "NA") %>% 
-  filter(!ANALYSIS == "Molecular Melted") %>% filter(!ANALYSIS == "Molecular BB") %>% filter(!ANALYSIS == "Physiology BB") %>% # need to keep "Physiology" and "Physiology/Molecular"
+Master_fragment <- read.csv("Environmental_data/Master_Fragment.csv") %>% subset(ANALYSIS=="Physiology" | ANALYSIS=="Physiology/Molecular") %>% # need to keep "Physiology" and "Physiology/Molecular"
   select(Plug_ID, Species, Treatment, Temperature, CO2, Timepoint) 
   Master_fragment$Plug_ID <- as.character(Master_fragment$Plug_ID)
 
@@ -200,8 +199,8 @@ AFDW_plot <- ggplot(AFDW_means, aes(x=Timepoint, y = Value, group = Treatment, c
   scale_color_manual(values = cols) + 
   xlab("Timepoint") + 
   theme_bw() + 
-  ylab("") +
-  ggtitle("Ash-Free Dry Weight (mg/cm^2)") +
+  ylab(expression(AFDW ~(mg ~cm^-2))) +
+  ggtitle("Tissue Biomass") +
   theme(legend.position = "left") +
   geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
