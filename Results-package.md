@@ -44,6 +44,14 @@ The following have been lost in transit from HIMB to URI or misplaced in a freez
 
 ### Univariate Physiology Results   
 
+**Survivorship**
+
+![suv](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/All_survivorship.png?raw=true)
+
+This dataset has been QC'd by Emma; final figure.  
+
 **Bleaching Score**
 
 ![blch](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Photographic_Bleaching.png?raw=true)
+
+This dataset has been QC'd by Emma; final figure.  
