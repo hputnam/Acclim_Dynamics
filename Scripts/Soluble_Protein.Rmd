@@ -21,6 +21,7 @@ if (!require("dplyr")) install.packages("dplyr")
 if (!require("ggplot2")) install.packages("ggplot2")
 if (!require("tidyverse")) install.packages("tidyverse")
 if (!require("broom")) install.packages("broom")
+if (!require("Rmisc")) install.packages("Rmisc")
 if (!require("lme4")) install.packages("lme4")
 if (!require("robcbi")) install.packages("robcbi")
 
@@ -29,6 +30,7 @@ library(plyr)
 library(dplyr)
 library(ggplot2)
 library(tidyverse)
+library(Rmisc)
 library(broom)
 library(lme4)
 library(robcbi)
@@ -289,13 +291,16 @@ Dilute.samples.list <- union(Oct7dilute, Oct14dilute) %>% union(Oct25dilute) %>%
 Dilute.samples.list
 ```
 
-2 samples diluted and need to be doubled below. 
+2 samples diluted 1:1 so protein value is doubled below. 
 ```{r}
 ## Join all plates together
 protein <- union(Oct7protein, Oct14protein) %>% union(Oct25protein) %>% union(Nov17protein)
 
-filter(Nov17protein, Plug_ID == "1211") 
-filter(Nov17protein, Plug_ID == "1298")
+filter(protein, Plug_ID == "1211") ## row 364; 1283.441 x 2 = 2566.882
+filter(protein, Plug_ID == "1298") ## row 367; 1288.635 x 2 = 2577.27
+
+protein["364", "prot_ug.mL"] <- 2566.882
+protein["367", "prot_ug.mL"] <- 2577.27
 ```
 
 
@@ -304,7 +309,7 @@ Normalize to surface area; read in metadata.
 sa <- read_csv("Physiology_variables/Respirometry/coral_surface_area.csv") %>% dplyr::rename(Plug_ID = Sample_ID) %>% select(Plug_ID, surface.area.cm2)
   sa$Plug_ID <- as.character(sa$Plug_ID)
   
-Master_fragment <- read.csv("Environmental_data/Master_Fragment.csv", header=T, sep=",", na.string="NA") %>% 
+Master_fragment <- read.csv("Environmental_data/Master_Fragment.csv", header=T, sep=",", na.string="NA") %>% subset(ANALYSIS=="Physiology" | ANALYSIS=="Physiology/Molecular") %>%
   select(Plug_ID, Species, Timepoint, Temperature, Treatment, CO2) 
   Master_fragment$Plug_ID <- as.character(Master_fragment$Plug_ID)
   
@@ -326,26 +331,23 @@ protein <- left_join(protein, metadata) %>%
          prot_mg.cm2 = prot_ug.cm2/1000)
 ```
 
-# Write data to output file
+Write data to output file. 
 ```{r}
 # Write protein data to output file
-protein %>% filter(!is.na(prot_mg.cm2)) %>% 
-  select(Plug_ID, prot_ug.mL, prot_ug, prot_ug.cm2, prot_mg.cm2) %>%
+protein %>% filter(!is.na(Species)) %>% 
+  #select(Plug_ID, prot_ug.mL, prot_ug, prot_ug.cm2, prot_mg.cm2) %>%
   write_csv(., path = "Output/soluble_protein.csv")
+
+prot.means <- summarySE(protein, measurevar="prot_mg.cm2", groupvars=c("Timepoint", "Treatment", "Temperature", "CO2", "Species")) %>% filter(!is.na(prot_mg.cm2))
+prot.means$Timepoint <- factor(prot.means$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
+
+# Looking at sample sizes 
+dplyr::filter(prot.means, N > 6) # this output should be zero b/c the biggest sample size is 6
 ```
 
-# Statistical Analyses
 Checking to see if there is an effect of plate.  
 ```{r}
-## Basic Visualizations; see mixed models below for better answer
-#protbyplate.wide <- full_join(plate.numbers, protein, by="Plug_ID") %>% select(-Abs480)
-#protbyplate.wide <- full_join(protbyplate.wide, Master_fragment, by="Plug_ID") %>% filter(!is.na(Species))
-
-#protbyplate.long <- full_join(plate.numbers, protein, by="Plug_ID") %>% gather("Measurement", "Value", 4:5)
-#protbyplate.long <- full_join(protbyplate.long, Master_fragment, by="Plug_ID") %>% filter(!is.na(Measurement)) %>% filter(!is.na(Species))
-
 Proteinplotting <- protein %>% na.omit()
-
 
 ggplot(Proteinplotting, aes(x=Plate, y=prot_mg.cm2, fill=Treatment)) + geom_boxplot(alpha=0.5) +
   geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() + 
@@ -358,119 +360,29 @@ ggplot(Proteinplotting, aes(x=Plate, y=prot_mg.cm2, fill=Species)) + geom_boxplo
   theme(legend.position = "right") + 
   facet_wrap(~Treatment, scales = "free_y") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
 ```
 
-Checking to see if protein value clusters by plate. 
-```{r}
-## ANOVA tests
-### had trouble with normality of data, went on to try mixed effect model
-mcap.plate <- subset(protein, Species=="Mcapitata")
-
-hist(mcap.plate$prot_ug.mL)
-
-prot.plate.anova <- aov(sqrt(prot_ug.mL) ~ Plate*Treatment, data=mcap.plate) 
-summary(prot.plate.anova)
-TukeyHSD(prot.plate.anova)
-
-hist(prot.plate.anova$residuals)
-plot(prot.plate.anova$fitted.values, prot.plate.anova$residuals)
-shapiro.test(prot.plate.anova$residuals) 
-## can't get mcap to pass normality test with sqrt or log transformation
-
-pacuta.plate <- subset(protbyplate.wide, Species=="Pacuta")
-hist(pacuta.plate$prot_ug.mL)
-
-pacuta.prot.plate.anova <- aov(sqrt(prot_ug.mL) ~ Plate*Treatment, data=pacuta.plate) 
-summary(pacuta.prot.plate.anova)
-TukeyHSD(pacuta.prot.plate.anova)
-
-hist(pacuta.prot.plate.anova$residuals)
-plot(pacuta.prot.plate.anova$fitted.values, pacuta.prot.plate.anova$residuals)
-shapiro.test(pacuta.prot.plate.anova$residuals) 
-## sqrt gets this closer to normal but still doesn't pass shapiro 
-
-### Mixed Effect Model
-# Fixed factors = species, treatment, timepoint; Random factors Plug ID, plate number
-lrt <- function(obj1, obj2) {
-  L0 <- logLik(obj1)
-  L1 <- logLik(obj2)
-  L01 <- as.vector(- 2*(L0 - L1))
-  df <- attr(L1, "df") - attr(L0, "df")
-  list(L01 = L01, df = df,
-    "p-value" = pchisq(L01, df, lower.tail = FALSE))
-}
-
-## Model1: Model with plate number and plug ID as random factor
-mixed.effect.model <- lmer(prot_ug.mL~Treatment*Species*Timepoint + (1|Plug_ID) + (1|Plate), data=protein, REML=FALSE)
-
-qnorm(resid(mixed.effect.model)) # Normality
-qqline(resid(mixed.effect.model)) # Normal -- Error in int_abline(a = a, b = b, h = h, v = v, untf = untf, ...) : plot.new has not been called yet
-
-boxplot(resid(mixed.effect.model)~protein$Treatment) # Variance 
-boxplot(resid(mixed.effect.model)~protein$Species)
-boxplot(resid(mixed.effect.model)~protein$Timepoint)
-
-# for all of the above:
-# Error in model.frame.default(formula = resid(mixed.effect.model) ~ protein$Timepoint) : variable lengths differ (found for 'protein$Timepoint')
-
-summary(mixed.effect.model)
-
-## Model2: Model with plug ID as random factor
-mixed.effect.model2 <- lmer(prot_ug.mL~Treatment*Species*Timepoint + (1|Plug_ID), data=protein, REML=FALSE)
-
-qnorm(resid(mixed.effect.model2)) # Normality
-qqline(resid(mixed.effect.model2)) # Normal -- Error in int_abline(a = a, b = b, h = h, v = v, untf = untf, ...) : plot.new has not been called yet
-
-boxplot(resid(mixed.effect.model2)~protein$Treatment) # Variance 
-boxplot(resid(mixed.effect.model2)~protein$Species)
-boxplot(resid(mixed.effect.model2)~protein$Timepoint)
-
-# for all of the above:
-# Error in model.frame.default(formula = resid(mixed.effect.model) ~ protein$Timepoint) : variable lengths differ (found for 'protein$Timepoint')
-
-summary(mixed.effect.model2)
-
-## Model3:  Model with plate number as random factor
-mixed.effect.model3 <- lmer(prot_ug.mL~Treatment*Species*Timepoint + (1|Plate), data=protein, REML=FALSE)
-
-qnorm(resid(mixed.effect.model3)) # Normality
-qqline(resid(mixed.effect.model3)) # Normal -- Error in int_abline(a = a, b = b, h = h, v = v, untf = untf, ...) : plot.new has not been called yet
-
-boxplot(resid(mixed.effect.model3)~protein$Treatment) # Variance 
-boxplot(resid(mixed.effect.model3)~protein$Species)
-boxplot(resid(mixed.effect.model3)~protein$Timepoint)
-
-# for all of the above:
-# Error in model.frame.default(formula = resid(mixed.effect.model) ~ protein$Timepoint) : variable lengths differ (found for 'protein$Timepoint')
-
-summary(mixed.effect.model3)
-
-# Model comparisons
-lrt(mixed.effect.model2, mixed.effect.model) 
-lrt(mixed.effect.model3, mixed.effect.model) 
-
-### AIC Values
-## Full Model: 4847.4 
-## Just Plug ID: 4888.2
-## Just Plate: 4845.4**
-## Lower AIC wins; plate has an effect but not much different than the full model
-
-# Output model selection
-Anova(mixed.effect.model3)
-
-## Principal Components Analysis (PCA)
-pca.datatable <- tbl_df(protbyplate.wide) %>% select(-Abs480.adj) %>% distinct(Plug_ID, .keep_all = TRUE)
-pca.datatable <- pca.datatable[,c(2,1,3,4,5)]
-rownames(pca.datatable) <- pca.datatable$Plug_ID
-
-
-protplate.pca <- prcomp(pca.datatable[,])
-
-```
 
 Visualize by treatment over time. 
 ```{r}
+cols <- c("lightblue", "blue", "pink", "red")
+
+PROT <- ggplot(prot.means, aes(x=Timepoint, y = prot_mg.cm2, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(~Species) +
+  geom_errorbar(aes(ymin=prot_mg.cm2-se, ymax=prot_mg.cm2+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + 
+  theme_bw() + 
+  ylab(expression(protein ~(mg ~cm^2))) +
+  ggtitle("Host soluble protein") +
+  theme(legend.position = "right") +
+  geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) #Set the text angle
+PROT
+
+ggsave(file="Output/Final_Figures/Host-Soluble-Protein.pdf", PROT, width = 11, height = 6, units = c("in"))
 ```
 
 

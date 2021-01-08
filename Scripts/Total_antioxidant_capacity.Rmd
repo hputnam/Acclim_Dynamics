@@ -318,13 +318,6 @@ avg_st_curve <- Average_standard_curve %>%
 avg_st_curve
 ```
 
-Calculate Total Antioxidant Capacity based on the standard curve model from above.
-“mM uric acid equivalents” (UAE) is the first calculation based on the fitted model. 
-“μM Copper Reducing Equivalents” (CRE) is the second calculation which is the reported value and equivalent to Total Antioxidant Capacity or Power. This calculation is done by: 
-1.) uric acid equivalence (UAE) concentration * 2189 μM Cu++/ mM uric acid = uM (umol/L) CRE
-2.) umol/L CRE * Volume of the sample (this kit is 20 uL aka 2.0 x 10^-5 L) = CRE umol 
-3.) Concentration of protein (mg/mL) * 1000mL = mg/L of protein
-4.) umol CRE / mg/L protein = uM/mg CRE
 
 ```{r}
 ## All points projected on Nov 10 standard curve ; standard curve 5 ; linear model 5
@@ -425,51 +418,43 @@ Master_fragment <- read.csv("Environmental_data/Master_Fragment.csv", header=T, 
 
 prot <- read_csv("output/soluble_protein.csv") 
   prot$Plug_ID <- as.character(prot$Plug_ID)
-prot <- prot %>% 
-  mutate(prot_mg.mL = prot_ug.mL/1000) %>% # future TAC calculations need protein values in mg/mL
-  select(Plug_ID, prot_mg.mL)
 
 TAC.plate.numbers <- read_csv("Physiology_variables/Total_antioxidant_capacity/total_TAC_platemaps.csv") %>% 
   select(-Well) %>% distinct()
 
 metadata <- full_join(sa, Homogenate_volume, by='Plug_ID', type='left') %>% 
   full_join(Master_fragment) %>% full_join(prot) %>% full_join(TAC.plate.numbers)
-
-# metadata$prot <- (metadata$prot_mg.mL*metadata$vol_mL)/metadata$surface.area.cm2
 ```
 
-Steps 2-4 of calculation above based on extraction UAE values from standard curve. 
-Expectation from the literature is ~20,000-150,000 µM CRE / mg protein
+Calculate TAC. 
 ```{r}
 # combine Oct7, Oct14, Oct25 files, Nov10, Nov18; filter out standard values
-totalTAC <- union(Oct7, Oct14) %>% union(Oct25) %>% union(Nov10) %>% union(Nov18)
-totalTAC <- totalTAC[!grepl("Standard", totalTAC$Plug_ID),] 
+TAC.values <- union(Oct7, Oct14) %>% union(Oct25) %>% union(Nov10) %>% union(Nov18)
+TAC.values <- TAC.values[!grepl("Standard", TAC.values$Plug_ID),] 
 
-totalTAC <- left_join(totalTAC, prot) %>% select(Plug_ID, uae.mM, prot_mg.mL) %>%
-   mutate(CRE.umol.L = uae.mM*2189, # Step 1 of calculation described above
-         CRE.umol = CRE.umol.L*0.00002, # Step 2
-         prot.mg.L = prot_mg.mL*1000, # Step 3
-         CRE.uM.mg = CRE.umol/prot.mg.L) # Step 4 
+TAC <- left_join(TAC.values, metadata) %>%
+   mutate(cre.umol.L = uae.mM * 2189) %>%   # Convert to CRE (see product manual) per unit sample volume
+   mutate(cre.umol = cre.umol.L * (vol_mL / 1000),  # Convert to CRE per coral by multiplying by homog. vol.
+          cre.umol.mgprot = cre.umol / (prot_ug / 1000))  # Convert to CRE per mg protein by dividing by total protein
 ```
 
-Combining TAC values for all plates and write TAC output file.
+Writing TAC output file. 
 ```{r}
-totalTAC <- totalTAC %>%
+TAC %>% select(Plug_ID, uae.mM, Species, Timepoint, Treatment, prot_ug, cre.umol.L, cre.umol, cre.umol.mgprot) %>%
   write_csv(., path = "Output/antioxidant_capacity.csv")
-
-TAC_final <- totalTAC %>% select(Plug_ID, CRE.uM.mg) 
-TAC_final <- full_join(TAC_final, metadata)
-
-TAC_final <- TAC_final %>% 
-  mutate(CRE.uM.mg.mL = CRE.uM.mg * vol_mL,
-         CRE.uM.mg.mL.cm2 = CRE.uM.mg.mL / surface.area.cm2)
 ```
+
+Calculating mean values per treatment per timepoint. 
+```{r}
+TAC <- TAC %>% na.omit()
+TAC.means <- summarySE(TAC, measurevar="cre.umol.mgprot", groupvars=c("Timepoint", "Treatment", "Temperature", "CO2", "Species"))
+TAC.means$Timepoint <- factor(TAC.means$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
+```
+
+
 
 Checking to see if there is an effect of plate.  
 ```{r}
-## Basic Visualizations; see mixed models below for better answer
-TACplotting <- TAC_final %>% na.omit()
-
 ggplot(TACplotting, aes(x=Plate, y=CRE.uM.mg.mL.cm2, fill=Treatment)) + geom_boxplot(alpha=0.5) +
   geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() + 
   theme(legend.position = "right") + 
@@ -481,6 +466,28 @@ ggplot(TACplotting, aes(x=Plate, y=CRE.uM.mg.mL.cm2, fill=Species)) + geom_boxpl
   theme(legend.position = "right") + 
   facet_wrap(~Treatment, scales = "free_y") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+Plotting over time and treatment. 
+```{r}
+cols <- c("lightblue", "blue", "pink", "red")
+
+TAC.plot <- ggplot(TAC.means, aes(x=Timepoint, y = cre.umol.mgprot, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(~Species) +
+  geom_errorbar(aes(ymin=cre.umol.mgprot-se, ymax=cre.umol.mgprot+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + 
+  theme_bw() + 
+  ylab(expression(CRE ~(umol ~mg^-1))) +
+  ggtitle("Total Antioxidant Capacity") +
+  theme(legend.position = "right") +
+  geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) #Set the text angle
+TAC.plot
+
+ggsave(file="Output/Final_Figures/Total-Antioxidant-Capacity.pdf", TAC.plot, width = 11, height = 6, units = c("in"))
 ```
 
 

@@ -129,8 +129,7 @@ df.chl <- filter(df.chl, !Plug_ID %in% c("NA", "BK"))
 Reading in master fragment information. 
 ```{r}
 Master_fragment <- read.csv("Environmental_data/Master_Fragment.csv", header=T, sep=",", na.string="NA") %>% 
-  filter(!ANALYSIS == "Molecular") %>% filter(!ANALYSIS == "Bleaching") %>% filter(!ANALYSIS == "NA") %>% filter(!ANALYSIS == "Molecular Melted") %>% 
-  filter(!ANALYSIS == "Molecular BB") %>% filter(!ANALYSIS == "Physiology BB") %>% # need to keep "Physiology" and "Physiology/Molecular"
+  subset(ANALYSIS=="Physiology" | ANALYSIS=="Physiology/Molecular") %>% # need to keep "Physiology" and "Physiology/Molecular"
   select(Plug_ID, Species, Treatment, Temperature, CO2, Timepoint) 
   Master_fragment$Plug_ID <- as.character(Master_fragment$Plug_ID)
 str(df.chl)
@@ -206,28 +205,31 @@ ggplot(chlplotting, aes(x=file.ID, y=chlc2.ug.cm2, fill=Species)) + geom_boxplot
 Calculating mean values for each timepoint and treatment group.
 ```{r}
 ## first two tables are not correct 
-mean.chl.a <- Chl_final %>%
+#mean.chl.a <- Chl_final %>%
   dplyr::group_by(Species, Timepoint, Temperature, CO2, Treatment) %>%
   dplyr::summarise(mean= mean(chla.ug.cm2), #mean 
                    N = sum(chla.ug.cm2), # sample size
                    se = sd(chla.ug.cm2)/sqrt(N)) #SE
 
-mean.chl.c <- Chl_final %>%
+#mean.chl.c <- Chl_final %>%
   dplyr::group_by(Species, Timepoint, Temperature, CO2, Treatment) %>%
   dplyr::summarise(mean= mean(chlc2.ug.cm2), #mean 
                    N = sum(chlc2.ug.cm2), # sample size
                    se = sd(chlc2.ug.cm2)/sqrt(N)) #SE
-mean.chl.c
+#mean.chl.c
 #### the above tables aren't calculating this correctly ; sample sizes are off. come back to this. I prefer the below summarySE function instead 
 
 ## use the following 
 Chl_long <- Chl_final %>% select(Plug_ID, surface.area.cm2, vol_mL, chla.ug.cm2, chlc2.ug.cm2, Species, Treatment, Temperature, CO2, Timepoint) %>%
   gather("Measurement", "Value", 4:5)
 
-Chl_means <- summarySE(Chl_long, measurevar="Value", groupvars=c("Timepoint", "Treatment", "Temperature", "CO2", "Species", "Measurement"))
-Chl_means
+Chlc2_means <- summarySE(Chl_final, measurevar="chlc2.ug.cm2", groupvars=c("Timepoint", "Treatment", "Temperature", "CO2", "Species"))
+Chlc2_means
+Chla_means <- summarySE(Chl_final, measurevar="chla.ug.cm2", groupvars=c("Timepoint", "Treatment", "Temperature", "CO2", "Species"))
+Chla_means
 
-Chl_means$Timepoint <- factor(Chl_means$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
+Chlc2_means$Timepoint <- factor(Chlc2_means$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
+Chla_means$Timepoint <- factor(Chla_means$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
 
 # Looking at sample sizes 
 dplyr::filter(Chl_means, N > 6) # this output should be zero b/c the biggest sample size is 6
@@ -352,16 +354,93 @@ ggsave(file="Output/Final_Figures/Chlorophyll.pdf", CHL, width = 11, height = 6,
 ```
 
 
+Plotting timeseries with corrected means table. 
+```{r}
+## Chlc2 
+Mcap.chlc <- Chlc2_means %>% subset(Species=="Mcapitata")
+Pacuta.chlc <- Chlc2_means %>% subset(Species=="Pacuta")
+  
+Mcap.Chlc2.fig <- ggplot(Mcap.chlc, aes(x=Timepoint, y = chlc2.ug.cm2, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  geom_errorbar(aes(ymin=chlc2.ug.cm2-se, ymax=chlc2.ug.cm2+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + 
+  ylab(expression(Chlc2 ~(ug ~cm^2))) +
+  theme_bw() + 
+  ylim(0,1.25) +
+  ggtitle("Montipora capitata") +
+  theme(legend.position = c(), legend.title = element_text(size=8), legend.text = element_text(size=7), legend.background = element_blank(), 
+       legend.key = element_blank()) +
+  geom_vline(xintercept = c(7.35), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) #Set the text angle 
+Mcap.Chlc2.fig
 
+Pacuta.Chlc2.fig <- ggplot(Pacuta.chlc, aes(x=Timepoint, y = chlc2.ug.cm2, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  geom_errorbar(aes(ymin=chlc2.ug.cm2-se, ymax=chlc2.ug.cm2+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + 
+  ylab(expression(Chlc2 ~(ug ~cm^2))) +
+  theme_bw() + 
+  ylim(0,1.25) +
+  ggtitle("Pocillopora acuta") +
+  theme(legend.position = c(0.9,0.8), legend.title = element_text(size=8), legend.text = element_text(size=7), legend.background = element_blank(), 
+        legend.key = element_blank()) +
+  geom_vline(xintercept = c(7.35), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) #Set the text angle 
+Pacuta.Chlc2.fig
 
+## Chla 
+Mcap.chla <- Chla_means %>% subset(Species=="Mcapitata")
+Pacuta.chla <- Chla_means %>% subset(Species=="Pacuta")
+  
+Mcap.Chla.fig <- ggplot(Mcap.chla, aes(x=Timepoint, y = chla.ug.cm2, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  geom_errorbar(aes(ymin=chla.ug.cm2-se, ymax=chla.ug.cm2+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + 
+  ylab(expression(Chla ~(ug ~cm^2))) +
+  theme_bw() + 
+  ylim(0,4.5) +
+  ggtitle("Montipora capitata") +
+  theme(legend.position = c(), legend.title = element_text(size=8), legend.text = element_text(size=7), legend.background = element_blank(), 
+       legend.key = element_blank()) +
+  geom_vline(xintercept = c(7.35), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) #Set the text angle 
+Mcap.Chla.fig
 
+Pacuta.Chla.fig <- ggplot(Pacuta.chla, aes(x=Timepoint, y = chla.ug.cm2, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  geom_errorbar(aes(ymin=chla.ug.cm2-se, ymax=chla.ug.cm2+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + 
+  ylab(expression(Chla ~(ug ~cm^2))) +
+  theme_bw() + 
+  ylim(0,4.5) +
+  ggtitle("Pocillopora acuta") +
+  theme(legend.position = c(0.9,0.8), legend.title = element_text(size=8), legend.text = element_text(size=7), legend.background = element_blank(), 
+        legend.key = element_blank()) +
+  geom_vline(xintercept = c(7.35), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) #Set the text angle 
+Pacuta.Chla.fig
 
+Chl.Figs2 <- arrangeGrob(Mcap.Chlc2.fig, Pacuta.Chlc2.fig, Mcap.Chla.fig, Pacuta.Chla.fig, ncol=2)
+ggsave(file="Output/Final_Figures/Chlorophyll-final2.pdf", Chl.Figs2, width = 11, height = 6, units = c("in"))
+```
 
-Correlation of chl and color score
+Statistics. 
 ```{r}
 
-
 ```
+
+
+
+
+
 
 
 ############## Bleaching Fragment Test prior to running the rest of the samples.
