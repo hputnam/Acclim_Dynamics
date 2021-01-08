@@ -45,3 +45,5 @@ The following have been lost in transit from HIMB to URI or misplaced in a freez
 ### Univariate Physiology Results   
 
 **Bleaching Score**
+
+![blch](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Photographic_Bleaching.png?raw=true)
