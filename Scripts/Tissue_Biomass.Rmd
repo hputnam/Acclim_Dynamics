@@ -208,14 +208,15 @@ AFDW_plot <- ggplot(AFDW_means, aes(x=Timepoint, y = Value, group = Treatment, c
 AFDW_plot
 
 ggsave(file="Output/Final_Figures/Tissue_Biomass.pdf", AFDW_plot, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Tissue_Biomass.png", AFDW_plot, width = 11, height = 6, units = c("in"))
 ```
 
 
 AFDW things to address:
 1. Mcap outlier in HTHC at Day 2 - 1197. But this occurs with both the Host and Sym fraction and similar pattern holds in respiration rates. 
 2. Won't have AFDW values for 1327, 1174, or 1488. 
-3. 16 missing corals contribute to the wide ranges at 1, 2 days and 1 week.
-4. 2863 - redo this point 
+3. 16 missing corals contribute to the wide ranges at 1 day and 1 week.
+4. 2863 - redo this point. "Host" written down twice. 
 
 
 

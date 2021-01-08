@@ -104,7 +104,7 @@ Figure as of 20210108.
 
 ### Tissue Biomass (AFDW)
 
-![AFDW]()
+![AFDW](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Tissue_Biomass.png?raw=true)
 
 This dataset has been QC'd by Emma; final figure as of 20210108.
 
