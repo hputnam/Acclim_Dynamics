@@ -110,7 +110,7 @@ This dataset has been QC'd by Emma; final figure as of 20210108.
 
 In addition to the missing list above, we won't have data for:  
 - 1174: there was no homogenate tissue in this falcon tube. Aliquots were made so this coral will have Chl, Prot, TAC, cell density.    
-- 1327: gained mass in AFDW protocol (not possible); not enough to do again.  
+- 1327: gained mass in AFDW protocol (not possible); not enough homogenate to do again.  
 - 1488: homogenate tube broke (froze and cracked) and we lost half of tissue homogenate. There was not enough left to do AFDW. There will be data for Chl, Prot, TAC, cell density.
 
 Need to re-do #2863. "Host" written down twice in notebook.
