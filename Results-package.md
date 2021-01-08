@@ -48,10 +48,19 @@ The following have been lost in transit from HIMB to URI or misplaced in a freez
 
 ![suv](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/All_survivorship.png?raw=true)
 
-This dataset has been QC'd by Emma; final figure.  
+This dataset has been QC'd by Emma; final figure as of 20210108.  
 
 **Bleaching Score**
 
 ![blch](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Photographic_Bleaching.png?raw=true)
 
-This dataset has been QC'd by Emma; final figure.  
+This dataset has been QC'd by Emma; final figure as of 20210108.
+
+**Growth**
+
+![grw](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Growth.png?raw=true)  
+
+1.) Do we like the above format? Or the format of the bleaching score figure?  
+2.) *P.acuta* Week 10 and 14 have the same value? This doesn't seem likely?
+
+**
