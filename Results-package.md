@@ -104,6 +104,10 @@ Figure as of 20210108.
 
 ### Respiration and photosynthetic rates
 
+
+
+
+
 ### Tissue Biomass (AFDW)
 
 ![AFDW](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Tissue_Biomass.png?raw=true)
