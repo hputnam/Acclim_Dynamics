@@ -102,6 +102,8 @@ This dataset has been QC'd by Emma; final figure as of 20210108.
 
 Figure as of 20210108.
 
+### Respiration and photosynthetic rates
+
 ### Tissue Biomass (AFDW)
 
 ![AFDW](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Tissue_Biomass.png?raw=true)
@@ -123,3 +125,13 @@ Need to re-do #2863. "Host" written down twice in notebook.
 | M. capitata 	| 4 week    	| ATHC      	| 5           	| 2863 will be redone                             	|
 | P. acuta    	| 8 week    	| HTAC      	| 5           	| 1327 no data                                    	|
 | P. acuta    	| 8 week    	| HTHC      	| 5           	| 1174 no data                                    	|
+
+### Chlorophyll concentration
+
+### Soluble Protein
+
+### Total Antioxidant Capacity
+
+## ITS2 Sequencing
+
+## Statistics
