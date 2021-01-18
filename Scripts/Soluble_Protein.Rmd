@@ -301,6 +301,10 @@ filter(protein, Plug_ID == "1298") ## row 367; 1288.635 x 2 = 2577.27
 
 protein["364", "prot_ug.mL"] <- 2566.882
 protein["367", "prot_ug.mL"] <- 2577.27
+
+# double checking this worked 
+filter(protein, Plug_ID == "1211") ## row 364; 1283.441 x 2 = 2566.882
+filter(protein, Plug_ID == "1298") ## row 367; 1288.635 x 2 = 2577.27
 ```
 
 
@@ -331,6 +335,20 @@ protein <- left_join(protein, metadata) %>%
          prot_mg.cm2 = prot_ug.cm2/1000)
 ```
 
+Outlier tests. 
+```{r}
+hist(protein$prot_mg.cm2)
+boxplot(protein$prot_mg.cm2)
+
+# outliers 
+out <- boxplot.stats(protein$prot_mg.cm2)$out
+out_ind <- which(protein$prot_mg.cm2 %in% c(out))
+out_ind # output is row #s 9  53 168 296 333
+protein[out_ind, ]
+
+```
+
+
 Write data to output file. 
 ```{r}
 # Write protein data to output file
@@ -343,6 +361,7 @@ prot.means$Timepoint <- factor(prot.means$Timepoint, levels=c("Day 1","Day 2","1
 
 # Looking at sample sizes 
 dplyr::filter(prot.means, N > 6) # this output should be zero b/c the biggest sample size is 6
+dplyr::filter(prot.means, N < 6) # this output should just be the Day 1, Day 2, Week 1, 12 week, and 16 week decreased sample sizes
 ```
 
 Checking to see if there is an effect of plate.  
@@ -383,6 +402,7 @@ PROT <- ggplot(prot.means, aes(x=Timepoint, y = prot_mg.cm2, group = Treatment, 
 PROT
 
 ggsave(file="Output/Final_Figures/Host-Soluble-Protein.pdf", PROT, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Host-Soluble-Protein.png", PROT, width = 11, height = 6, units = c("in"))
 ```
 
 
