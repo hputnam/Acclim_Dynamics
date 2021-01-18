@@ -106,7 +106,7 @@ Figure as of 20210108.
 
 ![resp](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Respirometry.png?raw=true)
 
-No groups with a decreased sample size.  
+No additional groups with a decreased sample size.  
 This dataset has been QC'd by Emma; final figure as of 20210118.
 
 ### Tissue Biomass (AFDW)
@@ -147,8 +147,9 @@ This dataset has been QC'd by Emma; final figure as of 20210118.
 
 ![prot](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Host-Soluble-Protein.png?raw=true)
 
-Week 4 P. acuta ATHC big drop, but samples are not in outlier tests. This still looks weird to me? 
+Week 4 P. acuta ATHC big drop, but samples are not in outlier tests. This still looks weird to me?
 
+No additional groups with a decreased sample size.    
 This dataset has been QC'd by Emma; final figure as of 20210118.
 
 ### Total Antioxidant Capacity
