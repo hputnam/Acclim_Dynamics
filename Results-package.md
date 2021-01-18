@@ -145,9 +145,11 @@ This dataset has been QC'd by Emma; final figure as of 20210118.
 
 ### Soluble Protein
 
-![prot]()
+![prot](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Host-Soluble-Protein.png?raw=true)
 
+Week 4 P. acuta ATHC big drop, but samples are not in outlier tests. This still looks weird to me? 
 
+This dataset has been QC'd by Emma; final figure as of 20210118.
 
 ### Total Antioxidant Capacity
 
