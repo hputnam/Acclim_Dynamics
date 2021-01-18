@@ -97,7 +97,7 @@ This dataset has been QC'd by Emma; final figure as of 20210108.
 
 ![grw](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Growth.png?raw=true)  
 
-1.) Do we like the above format? Or the format of the bleaching score figure?  
+1.) Do we like the figure format for Growth, Resp/photo rates, or AFDW/Chl?   
 2.) *P.acuta* Week 10 and 14 have the same value? This doesn't seem likely?
 
 Figure as of 20210108.
@@ -132,6 +132,10 @@ Need to re-do #2863. "Host" written down twice in notebook.
 | P. acuta    	| 8 week    	| HTHC      	| 5           	| 1174 no data                                    	|
 
 ### Chlorophyll concentration
+
+![chl]()
+
+P-2156 missing data; need to look at notebook photos to find this.  
 
 ### Soluble Protein
 

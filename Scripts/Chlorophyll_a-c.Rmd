@@ -206,33 +206,39 @@ Calculating mean values for each timepoint and treatment group.
 ```{r}
 ## first two tables are not correct 
 #mean.chl.a <- Chl_final %>%
-  dplyr::group_by(Species, Timepoint, Temperature, CO2, Treatment) %>%
-  dplyr::summarise(mean= mean(chla.ug.cm2), #mean 
-                   N = sum(chla.ug.cm2), # sample size
-                   se = sd(chla.ug.cm2)/sqrt(N)) #SE
+ # dplyr::group_by(Species, Timepoint, Temperature, CO2, Treatment) %>%
+ # dplyr::summarise(mean= mean(chla.ug.cm2), #mean 
+       #            N = sum(chla.ug.cm2), # sample size
+          #         se = sd(chla.ug.cm2)/sqrt(N)) #SE
 
 #mean.chl.c <- Chl_final %>%
-  dplyr::group_by(Species, Timepoint, Temperature, CO2, Treatment) %>%
-  dplyr::summarise(mean= mean(chlc2.ug.cm2), #mean 
-                   N = sum(chlc2.ug.cm2), # sample size
-                   se = sd(chlc2.ug.cm2)/sqrt(N)) #SE
+  #dplyr::group_by(Species, Timepoint, Temperature, CO2, Treatment) %>%
+#  dplyr::summarise(mean= mean(chlc2.ug.cm2), #mean 
+#                   N = sum(chlc2.ug.cm2), # sample size
+   #                se = sd(chlc2.ug.cm2)/sqrt(N)) #SE
 #mean.chl.c
 #### the above tables aren't calculating this correctly ; sample sizes are off. come back to this. I prefer the below summarySE function instead 
 
 ## use the following 
 Chl_long <- Chl_final %>% select(Plug_ID, surface.area.cm2, vol_mL, chla.ug.cm2, chlc2.ug.cm2, Species, Treatment, Temperature, CO2, Timepoint) %>%
   gather("Measurement", "Value", 4:5)
+Chl_means <- summarySE(Chl_long, measurevar="Value", groupvars=c("Timepoint", "Treatment", "Temperature", "CO2", "Species", "Measurement"))
 
 Chlc2_means <- summarySE(Chl_final, measurevar="chlc2.ug.cm2", groupvars=c("Timepoint", "Treatment", "Temperature", "CO2", "Species"))
 Chlc2_means
 Chla_means <- summarySE(Chl_final, measurevar="chla.ug.cm2", groupvars=c("Timepoint", "Treatment", "Temperature", "CO2", "Species"))
 Chla_means
 
+Chl_means$Timepoint <- factor(Chl_means$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
 Chlc2_means$Timepoint <- factor(Chlc2_means$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
 Chla_means$Timepoint <- factor(Chla_means$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
 
 # Looking at sample sizes 
-dplyr::filter(Chl_means, N > 6) # this output should be zero b/c the biggest sample size is 6
+dplyr::filter(Chlc2_means, N > 6) # this output should be zero b/c the biggest sample size is 6
+dplyr::filter(Chlc2_means, N < 6) 
+
+dplyr::filter(Chla_means, N > 6) # this output should be zero b/c the biggest sample size is 6
+dplyr::filter(Chla_means, N < 6) # this should be the exact same as above, just double checking
 ```
 
 Write means and sample sizes for AFDW to file
@@ -351,6 +357,7 @@ CHL <- ggplot(Chl_means, aes(x=Timepoint, y = Value, group = Treatment, color = 
 CHL
 
 ggsave(file="Output/Final_Figures/Chlorophyll.pdf", CHL, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Chlorophyll.png", CHL, width = 11, height = 6, units = c("in"))
 ```
 
 
@@ -430,6 +437,7 @@ Pacuta.Chla.fig
 
 Chl.Figs2 <- arrangeGrob(Mcap.Chlc2.fig, Pacuta.Chlc2.fig, Mcap.Chla.fig, Pacuta.Chla.fig, ncol=2)
 ggsave(file="Output/Final_Figures/Chlorophyll-final2.pdf", Chl.Figs2, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Chlorophyll-final2.png", Chl.Figs2, width = 11, height = 6, units = c("in"))
 ```
 
 Statistics. 
