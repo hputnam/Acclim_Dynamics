@@ -1,4 +1,4 @@
-# Results as of 20210108
+# Results as of 20210118
 
 ## Sampling Timeline
 |                      	| Acute Stress 	|       	| Chronic Stress 	|      	|      	|      	|      	|      	|      	|      	| Recovery 	|       	|       	|       	|       	|       	|       	|       	|
@@ -144,6 +144,10 @@ P-2156 missing data; need to look at notebook photos to find this.
 This dataset has been QC'd by Emma; final figure as of 20210118.
 
 ### Soluble Protein
+
+![prot]()
+
+
 
 ### Total Antioxidant Capacity
 
