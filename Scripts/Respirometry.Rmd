@@ -43,6 +43,7 @@ library("chron")
 library('plyr')
 library('dplyr')
 library('stringr')
+library('Rmisc')
 library("ggpubr")
 library("car")
 library("ggstatsplot")
@@ -237,6 +238,9 @@ AllMeans <- ddply(Missing, c('Date.x','Species.x', 'Treatment'), summarize,
 AllMeans
 colnames(AllMeans) <- c("Date", "Species", "Treatment", "Pnet.mean", "N",   "Pnet.se",  "Rdark.mean",   "Rdark.se", "Pgross.mean",  "Pgross.se")
 AllMeans$Group <- paste(AllMeans$Species, AllMeans$Treatment, sep = "_")
+
+# checking sample sizes
+dplyr::filter(AllMeans, N < 6)
 
 # exporting results 
 write.csv(resp.data, file="Physiology_variables/Respirometry/Output/Resp_AllRates.csv") # raw data

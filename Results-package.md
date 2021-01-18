@@ -104,9 +104,10 @@ Figure as of 20210108.
 
 ### Respiration and photosynthetic rates
 
+![resp](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Respirometry.png?raw=true)
 
-
-
+No groups with a decreased sample size.  
+This dataset has been QC'd by Emma; final figure as of 20210118.
 
 ### Tissue Biomass (AFDW)
 
