@@ -133,9 +133,15 @@ Need to re-do #2863. "Host" written down twice in notebook.
 
 ### Chlorophyll concentration
 
-![chl]()
+![chl](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Chlorophyll.png?raw=true)
+
+| Species  	| Timepoint 	| Treatment 	| Sample Size 	| Notes                                       	|
+|----------	|-----------	|-----------	|-------------	|---------------------------------------------	|
+| P. acuta 	| 8 week    	| HTAC      	| 5           	| 2156 missing data; need to look at notebook 	|
 
 P-2156 missing data; need to look at notebook photos to find this.  
+
+This dataset has been QC'd by Emma; final figure as of 20210118.
 
 ### Soluble Protein
 
