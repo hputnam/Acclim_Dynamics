@@ -154,6 +154,28 @@ This dataset has been QC'd by Emma; final figure as of 20210118.
 
 ### Total Antioxidant Capacity
 
+![TAC]()
+
+October 7th (3 plates) were done with an incorrectly diluted stop solution. Decide if need to be re-done.  
+
+Still having an issue with the standard curve variation. According to the [assay kit protocol](https://www.cellbiolabs.com/sites/default/files/STA-360-total-antioxidant-capacity-assay-kit.pdf), 1 mM concentration should be around 1.35 Abs490. The closest st. curve was from Nov 10th plate. All points have been projected onto the st. curve from Nov 10th and TAC calculated from this st. curve. We still need to address this.
+
+TAC calculation done by:  
+
+1. UAE * 2189. Convert to CRE  
+2. CRE.umol.L (from Step 1) * (homog vol/1000)  
+3. CRE.umol.mgprot = CRE.umol.L (from Step 2) / (prot ug / 1000)
+
+```
+TAC <- left_join(TAC.values, metadata) %>%
+   mutate(cre.umol.L = uae.mM * 2189) %>%   # Convert to CRE (see product manual) per unit sample volume
+   mutate(cre.umol = cre.umol.L * (vol_mL / 1000),  # Convert to CRE per coral by multiplying by homog. vol.
+          cre.umol.mgprot = cre.umol / (prot_ug / 1000))  # Convert to CRE per mg protein by dividing by total protein
+```
+
+This is still producing very small values (0.04840641-1.60261156 CRE umol.mg prot). The above calculation is what was recommended by Hollie and Ross. So we have to divide by liters to get uM.mg prot to compare to the literature?
+
+
 ## ITS2 Sequencing
 
 ## Statistics

@@ -124,7 +124,7 @@ Unused from TAC file.
 ```
 Calculate Total Antioxidant Capacity based on the standard curve model from above.
 “mM uric acid equivalents” (UAE) is the first calculation based on the fitted model.
-“μM Copper Reducing Equivalents” (CRE) is the second calculation which is the reported value and equivalent to Total Antioxidant Capacity or Power. This calculation is done by: 
+“μM Copper Reducing Equivalents” (CRE) is the second calculation which is the reported value and equivalent to Total Antioxidant Capacity or Power. This calculation is done by:
 1.) uric acid equivalence (UAE) concentration * 2189 μM Cu++/ mM uric acid = uM (umol/L) CRE
 2.) umol/L CRE * Volume of the sample (this kit is 20 uL aka 2.0 x 10^-5 L) = CRE umol
 3.) Concentration of protein (mg/mL) * 1000mL = mg/L of protein
@@ -132,4 +132,26 @@ Calculate Total Antioxidant Capacity based on the standard curve model from abov
 
 %>% # future TAC calculations need protein values in mg/mL
  select(Plug_ID, prot_mg.mL)
+```
+
+Checking to see if there is an effect of plate.  
+
+```{r}
+ggplot(TACplotting, aes(x=Plate, y=CRE.uM.mg.mL.cm2, fill=Treatment)) + geom_boxplot(alpha=0.5) +
+  geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() +
+  theme(legend.position = "right") +
+  facet_wrap(~Species, scales = "free_y") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(TACplotting, aes(x=Plate, y=CRE.uM.mg.mL.cm2, fill=Species)) + geom_boxplot(alpha=0.5) +
+  geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() +
+  theme(legend.position = "right") +
+  facet_wrap(~Treatment, scales = "free_y") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```
+#TAC.plate.numbers <- read_csv("Physiology_variables/Total_antioxidant_capacity/total_TAC_platemaps.csv") %>%
+ # select(-Well) %>% distinct()
+#%>% full_join(TAC.plate.numbers)
 ```

@@ -275,7 +275,7 @@ Mcap$Rdark.mean <- abs(Mcap$Rdark.mean)
 Plotting respiration and photosynthetic rates. 
 To plot a response variable with both species on one graph, use facet_wrap(~Species) function.
 ```{r}
-colors <- c("blue", "lightblue", "salmon", "red3")
+colors <- c("lightblue", "blue", "salmon", "red3")
 
 ## Montipora capitata
 Mcap.Pg <- ggplot(Mcap, aes(x=Timepoint, y = Pgross.mean, group = Treatment, color = Treatment)) +

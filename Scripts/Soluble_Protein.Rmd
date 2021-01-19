@@ -352,7 +352,7 @@ protein[out_ind, ]
 Write data to output file. 
 ```{r}
 # Write protein data to output file
-protein %>% filter(!is.na(Species)) %>% 
+protein %>% filter(!is.na(Species)) %>% select(-Plate) %>%
   #select(Plug_ID, prot_ug.mL, prot_ug, prot_ug.cm2, prot_mg.cm2) %>%
   write_csv(., path = "Output/soluble_protein.csv")
 

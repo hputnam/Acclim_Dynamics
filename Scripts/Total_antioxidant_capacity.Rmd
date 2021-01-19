@@ -320,64 +320,62 @@ avg_st_curve
 
 
 ```{r}
-## All points projected on Nov 10 standard curve ; standard curve 5 ; linear model 5
+## All points projected on Nov 10 standard curve plot (std_curve_plotNov18) ; standard curve 5 (Nov10_st) ; linear model 5 (TAC_mod_linNov10)
 
 ## October 7 Plates (3)
 Oct7 <- Oct7 %>% 
   mutate(Abs_net = Abs_final - Abs_initial) %>% #subtract initial from final to get delta abs
   dplyr::group_by(Plug_ID) %>% # group to calculate mean
   summarise(Abs_net = mean(Abs_net)) %>% #calculate mean abs of duplicates
-  mutate(Abs_net.adj = Abs_net - Average_standard_curve$Abs_net[Average_standard_curve$Standard == "Standard10"],
-         uae.mM = map_dbl(Abs_net.adj, ~ predict(AVG.STC.model, newdata = data.frame(Abs_net.adj = .)))) #use the regression to calculate all the mean UAE values from the abs values
-avg_st_curve + #plot the standard curve to check this against the protocol
+  mutate(Abs_net.adj = Abs_net - Nov10_st$Abs_net[Nov10_st$Standard == "Standard10"],
+         uae.mM = map_dbl(Abs_net.adj, ~ predict(TAC_mod_linNov10, newdata = data.frame(Abs_net.adj = .)))) #use the regression to calculate all the mean UAE values from the abs values
+std_curve_plotNov10 + #plot the standard curve to check this against the protocol
   geom_point(data = Oct7, aes(x = Abs_net.adj, y = uae.mM), pch = "X", cex = 3, alpha = 0.3) +
-    labs(title = "Oct 7 samples projected on average st curve")
+    labs(title = "Oct 7 samples projected on Nov 10 curve")
 
 ## October 14 Plates (3)
 Oct14 <- Oct14 %>% 
   mutate(Abs_net = Abs_final - Abs_initial) %>% #subtract initial from final to get delta abs
   dplyr::group_by(Plug_ID) %>% # group to calculate mean
   summarise(Abs_net = mean(Abs_net)) %>% #calculate mean abs of duplicates
-  mutate(Abs_net.adj = Abs_net - Average_standard_curve$Abs_net[Average_standard_curve$Standard == "Standard10"],
-         uae.mM = map_dbl(Abs_net.adj, ~ predict(AVG.STC.model, newdata = data.frame(Abs_net.adj = .)))) #use the regression to calculate all the mean UAE values from the abs values
-avg_st_curve + #plot the standard curve to check this against the protocol
+  mutate(Abs_net.adj = Abs_net - Nov10_st$Abs_net[Nov10_st$Standard == "Standard10"],
+         uae.mM = map_dbl(Abs_net.adj, ~ predict(TAC_mod_linNov10, newdata = data.frame(Abs_net.adj = .)))) #use the regression to calculate all the mean UAE values from the abs values
+std_curve_plotNov10 + #plot the standard curve to check this against the protocol
   geom_point(data = Oct14, aes(x = Abs_net.adj, y = uae.mM), pch = "X", cex = 3, alpha = 0.3) +
-    labs(title = "Oct 14 samples projected on average st curve")
+    labs(title = "Oct 14 samples projected on Nov 10 curve")
 
 ## October 25 Plates (3)
 Oct25 <- Oct25 %>% 
   mutate(Abs_net = Abs_final - Abs_initial) %>% #subtract initial from final to get delta abs
   dplyr::group_by(Plug_ID) %>% # group to calculate mean
   summarise(Abs_net = mean(Abs_net)) %>% #calculate mean abs of duplicates
-  mutate(Abs_net.adj = Abs_net - Average_standard_curve$Abs_net[Average_standard_curve$Standard == "Standard10"],
-         uae.mM = map_dbl(Abs_net.adj, ~ predict(AVG.STC.model, newdata = data.frame(Abs_net.adj = .)))) #use the regression to calculate all the mean UAE values from the abs values
-avg_st_curve + #plot the standard curve to check this against the protocol
+  mutate(Abs_net.adj = Abs_net - Nov10_st$Abs_net[Nov10_st$Standard == "Standard10"],
+         uae.mM = map_dbl(Abs_net.adj, ~ predict(TAC_mod_linNov10, newdata = data.frame(Abs_net.adj = .)))) #use the regression to calculate all the mean UAE values from the abs values
+std_curve_plotNov10 + #plot the standard curve to check this against the protocol
   geom_point(data = Oct25, aes(x = Abs_net.adj, y = uae.mM), pch = "X", cex = 3, alpha = 0.3) +
-    labs(title = "Oct 25 samples projected on average st curve")
-
-#### THE ABOVE ARE PROJECTED ON THE FIRST STANDARD CURVE 
+    labs(title = "Oct 25 samples projected on Nov 10 curve")
 
 ## November 10 Plate
 Nov10 <- Nov10 %>% 
   mutate(Abs_net = Abs_final - Abs_initial) %>% #subtract initial from final to get delta abs
   dplyr::group_by(Plug_ID) %>% # group to calculate mean
   summarise(Abs_net = mean(Abs_net)) %>% #calculate mean abs of duplicates
-  mutate(Abs_net.adj = Abs_net - Average_standard_curve$Abs_net[Average_standard_curve$Standard == "Standard10"],
-         uae.mM = map_dbl(Abs_net.adj, ~ predict(AVG.STC.model, newdata = data.frame(Abs_net.adj = .)))) #use the regression to calculate all the mean UAE values from the abs values
-avg_st_curve + #plot the standard curve to check this against the protocol
+  mutate(Abs_net.adj = Abs_net - Nov10_st$Abs_net[Nov10_st$Standard == "Standard10"],
+         uae.mM = map_dbl(Abs_net.adj, ~ predict(TAC_mod_linNov10, newdata = data.frame(Abs_net.adj = .)))) #use the regression to calculate all the mean UAE values from the abs values
+std_curve_plotNov10 + #plot the standard curve to check this against the protocol
   geom_point(data = Nov10, aes(x = Abs_net.adj, y = uae.mM), pch = "X", cex = 3, alpha = 0.3) +
-    labs(title = "Nov10 samples projected on average st curve")
+    labs(title = "Nov10 samples projected on Nov 10 curve")
 
 ## November 18 Plates
 Nov18 <- Nov18 %>% 
   mutate(Abs_net = Abs_final - Abs_initial) %>% #subtract initial from final to get delta abs
   dplyr::group_by(Plug_ID) %>% # group to calculate mean
   summarise(Abs_net = mean(Abs_net)) %>% #calculate mean abs of duplicates
-  mutate(Abs_net.adj = Abs_net - Average_standard_curve$Abs_net[Average_standard_curve$Standard == "Standard10"],
-         uae.mM = map_dbl(Abs_net.adj, ~ predict(AVG.STC.model, newdata = data.frame(Abs_net.adj = .)))) #use the regression to calculate all the mean UAE values from the abs values
-avg_st_curve + #plot the standard curve to check this against the protocol
+  mutate(Abs_net.adj = Abs_net - Nov10_st$Abs_net[Nov10_st$Standard == "Standard10"],
+         uae.mM = map_dbl(Abs_net.adj, ~ predict(TAC_mod_linNov10, newdata = data.frame(Abs_net.adj = .)))) #use the regression to calculate all the mean UAE values from the abs values
+std_curve_plotNov10 + #plot the standard curve to check this against the protocol
   geom_point(data = Nov18, aes(x = Abs_net.adj, y = uae.mM), pch = "X", cex = 3, alpha = 0.3) +
-    labs(title = "Nov18 samples projected on average st curve")
+    labs(title = "Nov18 samples projected on Nov 10 curve")
 ```
 
 Samples above highest standard point for that plate need to be diluted and re-done.  
@@ -399,11 +397,16 @@ Oct25dilut.tac <- Oct25 %>% filter(uae.mM > 1.005419) # output is 1075
 filter(Nov10, Plug_ID == "Standard1") # uae.mM is 0.995335	
 Nov10dilut.tac <- Nov10 %>% filter(uae.mM > 0.995335)   # output is 0 samples
 
+## November 18 plate 
+filter(Nov18, Plug_ID == "Standard1") # uae.mM is 0.6954394	
+Nov18dilut.tac <- Nov10 %>% filter(uae.mM > 0.6954394)   # output is 0 samples
+
 # combine list 
-Dilute.TAC.list <- union(Oct7dilute.tac, Oct14dilute.tac) %>% union(Oct25dilut.tac) %>% union(Nov10dilut.tac)
+Dilute.TAC.list <- union(Oct7dilute.tac, Oct14dilute.tac) %>% union(Oct25dilut.tac) %>% union(Nov10dilut.tac) %>%
+  union(Nov18dilut.tac)
 Dilute.TAC.list
 
-##output as of 20201110 = none to re-do. 
+##output as of 20210118 = none to re-do. 
 ```
 
 Reading in to surface area, soluble protein, and homogenate volume. 
@@ -419,11 +422,8 @@ Master_fragment <- read.csv("Environmental_data/Master_Fragment.csv", header=T, 
 prot <- read_csv("output/soluble_protein.csv") 
   prot$Plug_ID <- as.character(prot$Plug_ID)
 
-TAC.plate.numbers <- read_csv("Physiology_variables/Total_antioxidant_capacity/total_TAC_platemaps.csv") %>% 
-  select(-Well) %>% distinct()
-
 metadata <- full_join(sa, Homogenate_volume, by='Plug_ID', type='left') %>% 
-  full_join(Master_fragment) %>% full_join(prot) %>% full_join(TAC.plate.numbers)
+  full_join(Master_fragment) %>% full_join(prot) 
 ```
 
 Calculate TAC. 
@@ -436,6 +436,8 @@ TAC <- left_join(TAC.values, metadata) %>%
    mutate(cre.umol.L = uae.mM * 2189) %>%   # Convert to CRE (see product manual) per unit sample volume
    mutate(cre.umol = cre.umol.L * (vol_mL / 1000),  # Convert to CRE per coral by multiplying by homog. vol.
           cre.umol.mgprot = cre.umol / (prot_ug / 1000))  # Convert to CRE per mg protein by dividing by total protein
+
+range(TAC$cre.umol.mgprot)
 ```
 
 Writing TAC output file. 
@@ -444,28 +446,15 @@ TAC %>% select(Plug_ID, uae.mM, Species, Timepoint, Treatment, prot_ug, cre.umol
   write_csv(., path = "Output/antioxidant_capacity.csv")
 ```
 
-Calculating mean values per treatment per timepoint. 
+Calculating mean values per treatment per timepoint. Checking sample sizes. 
 ```{r}
 TAC <- TAC %>% na.omit()
 TAC.means <- summarySE(TAC, measurevar="cre.umol.mgprot", groupvars=c("Timepoint", "Treatment", "Temperature", "CO2", "Species"))
 TAC.means$Timepoint <- factor(TAC.means$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
-```
 
-
-
-Checking to see if there is an effect of plate.  
-```{r}
-ggplot(TACplotting, aes(x=Plate, y=CRE.uM.mg.mL.cm2, fill=Treatment)) + geom_boxplot(alpha=0.5) +
-  geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() + 
-  theme(legend.position = "right") + 
-  facet_wrap(~Species, scales = "free_y") + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-ggplot(TACplotting, aes(x=Plate, y=CRE.uM.mg.mL.cm2, fill=Species)) + geom_boxplot(alpha=0.5) +
-  geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() + 
-  theme(legend.position = "right") + 
-  facet_wrap(~Treatment, scales = "free_y") + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+# Looking at sample sizes 
+dplyr::filter(TAC.means, N > 6) # this output should be zero b/c the biggest sample size is 6
+dplyr::filter(TAC.means, N < 6) # this output should just be the Day 1, Day 2, Week 1, 12 week, and 16 week decreased sample sizes
 ```
 
 Plotting over time and treatment. 
@@ -488,6 +477,7 @@ TAC.plot <- ggplot(TAC.means, aes(x=Timepoint, y = cre.umol.mgprot, group = Trea
 TAC.plot
 
 ggsave(file="Output/Final_Figures/Total-Antioxidant-Capacity.pdf", TAC.plot, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Total-Antioxidant-Capacity.png", TAC.plot, width = 11, height = 6, units = c("in"))
 ```
 
 
@@ -495,29 +485,5 @@ Statistical analyses.
 ```{r}
 ```
 
-############# Bleaching Test Information prior to processing all of the samples ############# 
-
-Reading in bleaching test info. 
-```{r}
-Phys_testing <- read.csv("Physiology_variables/phys_testing.csv")
-  Phys_testing$Plug_ID <- as.character(Phys_testing$Plug_ID)
-  
-TAC_testing <- full_join(Blch_TAC, Phys_testing, by="Plug_ID")
-```
-
-Graphing bleaching test information.
-```{r}
-Bleached1 <- ggplot(TAC_testing, aes(x=status, y=CRE.umol.mgprot, fill=status)) + geom_boxplot(alpha=0.5) +
-  geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() + 
-  theme(legend.position = "") + 
-  facet_wrap(~Species)
-Bleached1
-
-Bleached2 <- ggplot(TAC_testing, aes(x=bleaching_score, y=CRE.umol.mgprot)) + geom_point() + 
-  xlab("Bleaching Score") + theme_bw() + 
-  facet_wrap(~Species) + 
-  theme(legend.position = "")
-Bleached2
-```
 
 
