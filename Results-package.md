@@ -4,9 +4,9 @@
 
 900 corals, 450 *M. capitata* and 450 *P. acuta*, were collected from 6 sites in Kaneohe Bay, Hawai'i. These corals were randomly assigned treatment tanks.  
 
-ATAC = Ambient Temperature (27C) Ambient pCO2 (~480 uatm)
+ATAC = Ambient Temperature (27C) Ambient pCO2 (~480 uatm)  
 ATHC = Ambient Temperature (27C) High pCO2 (~1,200 uatm)    
-HTAC = High Temperature (29.5C) Ambient pCO2 (~480 uatm)
+HTAC = High Temperature (29.5C) Ambient pCO2 (~480 uatm)  
 HTHC = High Temperature (29.5C) High pCO2 (~1,200 uatm)
 
 ## Sampling Timeline
