@@ -155,3 +155,28 @@ ggplot(TACplotting, aes(x=Plate, y=CRE.uM.mg.mL.cm2, fill=Species)) + geom_boxpl
  # select(-Well) %>% distinct()
 #%>% full_join(TAC.plate.numbers)
 ```
+
+############# Bleaching Test Information prior to processing all of the samples #############
+
+Reading in bleaching test info.
+```{r}
+Phys_testing <- read.csv("Physiology_variables/phys_testing.csv")
+  Phys_testing$Plug_ID <- as.character(Phys_testing$Plug_ID)
+  
+TAC_testing <- full_join(Blch_TAC, Phys_testing, by="Plug_ID")
+```
+
+Graphing bleaching test information.
+```{r}
+Bleached1 <- ggplot(TAC_testing, aes(x=status, y=CRE.umol.mgprot, fill=status)) + geom_boxplot(alpha=0.5) +
+  geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() +
+  theme(legend.position = "") +
+  facet_wrap(~Species)
+Bleached1
+
+Bleached2 <- ggplot(TAC_testing, aes(x=bleaching_score, y=CRE.umol.mgprot)) + geom_point() +
+  xlab("Bleaching Score") + theme_bw() +
+  facet_wrap(~Species) +
+  theme(legend.position = "")
+Bleached2
+```

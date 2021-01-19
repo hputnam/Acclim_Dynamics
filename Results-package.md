@@ -154,7 +154,9 @@ This dataset has been QC'd by Emma; final figure as of 20210118.
 
 ### Total Antioxidant Capacity
 
-![TAC]()
+![TAC](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Total-Antioxidant-Capacity.png?raw=true)
+
+No additional groups with a decreased sample size. 
 
 October 7th (3 plates) were done with an incorrectly diluted stop solution. Decide if need to be re-done.  
 
