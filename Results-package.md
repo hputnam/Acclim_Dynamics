@@ -1,5 +1,14 @@
 # Results as of 20210118
 
+![expt-sch](https://github.com/hputnam/Acclim_Dynamics/blob/master/Environmental_data/HoloInt-schematic.png?raw=true)
+
+900 corals, 450 *M. capitata* and 450 *P. acuta*, were collected from 6 sites in Kaneohe Bay, Hawai'i. These corals were randomly assigned treatment tanks.  
+
+ATAC = Ambient Temperature (27C) Ambient pCO2 (~480 uatm)
+ATHC = Ambient Temperature (27C) High pCO2 (~1,200 uatm)    
+HTAC = High Temperature (29.5C) Ambient pCO2 (~480 uatm)
+HTHC = High Temperature (29.5C) High pCO2 (~1,200 uatm)
+
 ## Sampling Timeline
 |                      	| Acute Stress 	|       	| Chronic Stress 	|      	|      	|      	|      	|      	|      	|      	| Recovery 	|       	|       	|       	|       	|       	|       	|       	|
 |----------------------	|--------------	|-------	|----------------	|------	|------	|------	|------	|------	|------	|------	|----------	|-------	|-------	|-------	|-------	|-------	|-------	|-------	|
@@ -158,7 +167,7 @@ This dataset has been QC'd by Emma; final figure as of 20210118.
 
 No additional groups with a decreased sample size.
 
-Week 4 ATHC P acuta points look wonky like the protein values. Day 2 and Week 1 have very small sample sizes likely leading to large variation above? 
+Week 4 ATHC P acuta points look wonky like the protein values. Day 2 and Week 1 have very small sample sizes likely leading to large variation above?
 
 October 7th (3 plates) were done with an incorrectly diluted stop solution. Decide if need to be re-done.  
 
