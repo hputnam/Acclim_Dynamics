@@ -326,7 +326,7 @@ Pact.Pg <- ggplot(Pact, aes(x=Timepoint, y = Pgross.mean, group = Treatment, col
   ylim(c(0, 4.5)) + # y-axis label and y axis range
   labs(title = "P. acuta") +
   theme_classic() + 
-  theme(legend.position = c(0.8, 0.8), axis.title.x = element_blank(), axis.text.x=element_blank(),
+  theme(legend.position = c(0.8, 0.9), axis.title.x = element_blank(), axis.text.x=element_blank(),
         plot.title = element_text(face="bold.italic", hjust=0.5, size=20)) + 
   theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) #Set the text angle
 Pact.Pg

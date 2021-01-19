@@ -2,7 +2,7 @@
 
 ![expt-sch](https://github.com/hputnam/Acclim_Dynamics/blob/master/Environmental_data/HoloInt-schematic.png?raw=true)
 
-900 corals, 450 *M. capitata* and 450 *P. acuta*, were collected from 6 sites in Kaneohe Bay, Hawai'i. These corals were randomly assigned treatment tanks.  
+900 corals, 450 *M. capitata* and 450 *P. acuta*, were collected from 6 sites in Kaneohe Bay, Hawai'i. These corals were randomly assigned to one of 12 treatment tanks.  
 
 ATAC = Ambient Temperature (27C) Ambient pCO2 (~480 uatm)  
 ATHC = Ambient Temperature (27C) High pCO2 (~1,200 uatm)    
@@ -49,7 +49,7 @@ The following have been lost in transit from HIMB to URI or misplaced in a freez
 
 ## Sample Sizes
 
-We had a time-limited first day of sampling in the field, resulting in the following sample sizes:
+We were not able to complete all of Day 1 sampling in the field because we originally included instantaneous calcification in our response variables. After Day 1 we cut out this variable, but this means the following groups have decreased sample sizes for Day 1:
 
 | Species     	| Timepoint 	| Treatment 	| Sample Size 	|
 |-------------	|-----------	|-----------	|-------------	|
@@ -62,7 +62,7 @@ We had a time-limited first day of sampling in the field, resulting in the follo
 | P. acuta    	| Day 1     	| ATAC      	| 4           	|
 | M. capitata 	| Day 1     	| HTAC      	| 4           	|
 
-Due to lower survivorship, recovery periods will have decreased sample sizes in the following:  
+Due to lower survivorship in recovery periods, there was limited availability for sampling, resulting a smaller sample size for the following groups:  
 
 | Species     	| Timepoint 	| Treatment 	| Sample Size 	| Notes                    	|
 |-------------	|-----------	|-----------	|-------------	|--------------------------	|
@@ -73,7 +73,7 @@ Due to lower survivorship, recovery periods will have decreased sample sizes in 
 | M. capitata 	| 16 week   	| ATHC      	| 5           	| will only be 5 available 	|
 | M. capitata 	| 16 week   	| HTHC      	| 5           	| will only be 5 available 	|
 
-Due to the list of missing corals, the following groups will have decreased sample sizes.  
+Due to the list of missing corals, the following groups will have decreased sample sizes:    
 
 | Species     	| Timepoint 	| Treatment 	| Sample Size 	| Notes              	|
 |-------------	|-----------	|-----------	|-------------	|--------------------	|
@@ -95,19 +95,25 @@ Some univariate physiology variables will also have decreased sample size groups
 ![suv](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/All_survivorship.png?raw=true)
 
 This dataset has been QC'd by Emma; final figure as of 20210108.  
+Survivorship was measured every day and each coral was noted as dead or alive for that day. This plot was made with [survfit() function](https://www.rdocumentation.org/packages/survival/versions/2.9-6/topics/survfit).
 
 ### Bleaching Score
 
 ![blch](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Photographic_Bleaching.png?raw=true)
 
-This dataset has been QC'd by Emma; final figure as of 20210108.
+This dataset has been QC'd by Emma; final figure as of 20210108. Corals photographed and red blue green color square quantified in ImageJ. 
+
+Week 5 data excluded because we didn't trust that set of values for any treatment. Come back to this?
 
 ### Growth
 
 ![grw](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Growth.png?raw=true)  
 
-1.) Do we like the figure format for Growth, Resp/photo rates, or AFDW/Chl?   
-2.) *P.acuta* Week 10 and 14 have the same value? This doesn't seem likely?
+Buoywant weight technique
+
+Do we like the figure format for Growth, Resp/photo rates, or AFDW/Chl?  
+
+*P.acuta* Week 10 and 14 have the same value? This doesn't seem likely?
 
 Figure as of 20210108.
 
