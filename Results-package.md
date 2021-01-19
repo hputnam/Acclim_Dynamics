@@ -49,42 +49,86 @@ The following have been lost in transit from HIMB to URI or misplaced in a freez
 
 ## Sample Sizes
 
-We were not able to complete all of Day 1 sampling in the field because we originally included instantaneous calcification in our response variables. After Day 1 we cut out this variable, but this means the following groups have decreased sample sizes for Day 1:
+| Species     	| Timepoint 	| Treatment 	| Sample Size 	| Notes                        	|
+|-------------	|-----------	|-----------	|-------------	|------------------------------	|
+| M. capitata 	| Day 1     	| ATAC      	| 4           	| Not enough time in the field 	|
+| M. capitata 	| Day 1     	| ATHC      	| 2           	| Not enough time in the field 	|
+| M. capitata 	| Day 1     	| HTAC      	| 4           	| Not enough time in the field 	|
+| M. capitata 	| Day 1     	| HTHC      	| 2           	| Not enough time in the field 	|
+| P. acuta    	| Day 1     	| ATAC      	| 4           	| Not enough time in the field 	|
+| P. acuta    	| Day 1     	| ATHC      	| 2           	| Not enough time in the field 	|
+| P. acuta    	| Day 1     	| HTAC      	| 4           	| Not enough time in the field 	|
+| P. acuta    	| Day 1     	| HTHC      	| 2           	| Not enough time in the field 	|
+| M. capitata 	| Day 2     	| ATAC      	| 6           	|                              	|
+| M. capitata 	| Day 2     	| ATHC      	| 4           	| Corals missing in transit    	|
+| M. capitata 	| Day 2     	| HTAC      	| 6           	|                              	|
+| M. capitata 	| Day 2     	| HTHC      	| 4           	| Corals missing in transit    	|
+| P. acuta    	| Day 2     	| ATAC      	| 6           	|                              	|
+| P. acuta    	| Day 2     	| ATHC      	| 4           	| Corals missing in transit    	|
+| P. acuta    	| Day 2     	| HTAC      	| 6           	|                              	|
+| P. acuta    	| Day 2     	| HTHC      	| 4           	| Corals missing in transit    	|
+| M. capitata 	| 1 week    	| ATAC      	| 6           	|                              	|
+| M. capitata 	| 1 week    	| ATHC      	| 4           	| Corals missing in transit    	|
+| M. capitata 	| 1 week    	| HTAC      	| 6           	|                              	|
+| M. capitata 	| 1 week    	| HTHC      	| 4           	| Corals missing in transit    	|
+| P. acuta    	| 1 week    	| ATAC      	| 6           	|                              	|
+| P. acuta    	| 1 week    	| ATHC      	| 4           	| Corals missing in transit    	|
+| P. acuta    	| 1 week    	| HTAC      	| 6           	|                              	|
+| P. acuta    	| 1 week    	| HTHC      	| 4           	| Corals missing in transit    	|
+| M. capitata 	| 2 week    	| ATAC      	| 6           	|                              	|
+| M. capitata 	| 2 week    	| ATHC      	| 6           	|                              	|
+| M. capitata 	| 2 week    	| HTAC      	| 6           	|                              	|
+| M. capitata 	| 2 week    	| HTHC      	| 6           	|                              	|
+| P. acuta    	| 2 week    	| ATAC      	| 6           	|                              	|
+| P. acuta    	| 2 week    	| ATHC      	| 6           	|                              	|
+| P. acuta    	| 2 week    	| HTAC      	| 6           	|                              	|
+| P. acuta    	| 2 week    	| HTHC      	| 6           	|                              	|
+| M. capitata 	| 4 week    	| ATAC      	| 6           	|                              	|
+| M. capitata 	| 4 week    	| ATHC      	| 6           	|                              	|
+| M. capitata 	| 4 week    	| HTAC      	| 6           	|                              	|
+| M. capitata 	| 4 week    	| HTHC      	| 6           	|                              	|
+| P. acuta    	| 4 week    	| ATAC      	| 6           	|                              	|
+| P. acuta    	| 4 week    	| ATHC      	| 6           	|                              	|
+| P. acuta    	| 4 week    	| HTAC      	| 6           	|                              	|
+| P. acuta    	| 4 week    	| HTHC      	| 6           	|                              	|
+| M. capitata 	| 6 week    	| ATAC      	| 6           	|                              	|
+| M. capitata 	| 6 week    	| ATHC      	| 6           	|                              	|
+| M. capitata 	| 6 week    	| HTAC      	| 6           	|                              	|
+| M. capitata 	| 6 week    	| HTHC      	| 6           	|                              	|
+| P. acuta    	| 6 week    	| ATAC      	| 6           	|                              	|
+| P. acuta    	| 6 week    	| ATHC      	| 6           	|                              	|
+| P. acuta    	| 6 week    	| HTAC      	| 6           	|                              	|
+| P. acuta    	| 6 week    	| HTHC      	| 6           	|                              	|
+| M. capitata 	| 8 week    	| ATAC      	| 6           	|                              	|
+| M. capitata 	| 8 week    	| ATHC      	| 6           	|                              	|
+| M. capitata 	| 8 week    	| HTAC      	| 6           	|                              	|
+| M. capitata 	| 8 week    	| HTHC      	| 6           	|                              	|
+| P. acuta    	| 8 week    	| ATAC      	| 6           	|                              	|
+| P. acuta    	| 8 week    	| ATHC      	| 6           	|                              	|
+| P. acuta    	| 8 week    	| HTAC      	| 6           	|                              	|
+| P. acuta    	| 8 week    	| HTHC      	| 6           	|                              	|
+| M. capitata 	| 12 week   	| ATAC      	| 5           	| only 5 available to sample   	|
+| M. capitata 	| 12 week   	| ATHC      	| 6           	|                              	|
+| M. capitata 	| 12 week   	| HTAC      	| 6           	|                              	|
+| M. capitata 	| 12 week   	| HTHC      	| 5           	| only 5 available to sample   	|
+| P. acuta    	| 12 week   	| ATAC      	| 6           	|                              	|
+| P. acuta    	| 12 week   	| ATHC      	| 6           	|                              	|
+| P. acuta    	| 12 week   	| HTAC      	| 2           	| only 2 available to sample   	|
+| P. acuta    	| 12 week   	| HTHC      	| 0           	|                              	|
+| M. capitata 	| 16 week   	| ATAC      	| 6           	|                              	|
+| M. capitata 	| 16 week   	| ATHC      	| 5           	| only 5 available to sample   	|
+| M. capitata 	| 16 week   	| HTAC      	| 4           	| only 4 available to sample   	|
+| M. capitata 	| 16 week   	| HTHC      	| 5           	| only 5 available to sample   	|
+| P. acuta    	| 16 week   	| ATAC      	| 6           	|                              	|
+| P. acuta    	| 16 week   	| ATHC      	| 6           	|                              	|
+| P. acuta    	| 16 week   	| HTAC      	| 0           	|                              	|
+| P. acuta    	| 16 week   	| HTHC      	| 0           	|                              	|
 
-| Species     	| Timepoint 	| Treatment 	| Sample Size 	|
-|-------------	|-----------	|-----------	|-------------	|
-| M. capitata 	| Day 1     	| ATHC      	| 2           	|
-| P. acuta    	| Day 1     	| ATHC      	| 2           	|
-| M. capitata 	| Day 1     	| HTHC      	| 2           	|
-| P. acuta    	| Day 1     	| HTHC      	| 2           	|
-| P. acuta    	| Day 1     	| HTAC      	| 4           	|
-| M. capitata 	| Day 1     	| ATAC      	| 4           	|
-| P. acuta    	| Day 1     	| ATAC      	| 4           	|
-| M. capitata 	| Day 1     	| HTAC      	| 4           	|
+Not enough time in the field: We were not able to complete all of Day 1 sampling in the field because we originally included instantaneous calcification in our response variables. After Day 1 we cut out this variable, but this means we have decreased sample sizes for Day 1.
 
-Due to lower survivorship in recovery periods, there was limited availability for sampling, resulting a smaller sample size for the following groups:  
+Corals missing in transit: Due to the list of missing corals, several groups on Day 2 and Week 1 will have decreased sample sizes.
 
-| Species     	| Timepoint 	| Treatment 	| Sample Size 	| Notes                    	|
-|-------------	|-----------	|-----------	|-------------	|--------------------------	|
-| P. acuta    	| 12 week   	| HTAC      	| 2           	| will only be 2 available 	|
-| M. capitata 	| 12 week   	| ATAC      	| 5           	| will only be 5 available 	|
-| M. capitata 	| 12 week   	| HTHC      	| 5           	| will only be 5 available 	|
-| M. capitata 	| 16 week   	| HTAC      	| 4           	| will only be 4 available 	|
-| M. capitata 	| 16 week   	| ATHC      	| 5           	| will only be 5 available 	|
-| M. capitata 	| 16 week   	| HTHC      	| 5           	| will only be 5 available 	|
-
-Due to the list of missing corals, the following groups will have decreased sample sizes:    
-
-| Species     	| Timepoint 	| Treatment 	| Sample Size 	| Notes              	|
-|-------------	|-----------	|-----------	|-------------	|--------------------	|
-| M. capitata 	| Day 2     	| ATHC      	| 4           	| 2976, 3003 missing 	|
-| P. acuta    	| Day 2     	| ATHC      	| 4           	| 2752, 2880 missing 	|
-| M. capitata 	| Day 2     	| HTHC      	| 4           	| 2008, 2512 missing 	|
-| P. acuta    	| Day 2     	| HTHC      	| 4           	| 2522, 2523 missing 	|
-| M. capitata 	| 1 week    	| ATHC      	| 4           	| 2740, 2528 missing 	|
-| P. acuta    	| 1 week    	| ATHC      	| 4           	| 2981, 2984 missing 	|
-| M. capitata 	| 1 week    	| HTHC      	| 4           	| 1603, 2200 missing 	|
-| P. acuta    	| 1 week    	| HTHC      	| 4           	| 1739, 2859 missing 	|
+Only X number available to sample: Due to lower survivorship in recovery periods, there was limited availability for sampling, resulting a smaller sample size for some groups.  
 
 Some univariate physiology variables will also have decreased sample size groups, see each section for additional notes.
 
@@ -101,7 +145,7 @@ Survivorship was measured every day and each coral was noted as dead or alive fo
 
 ![blch](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Photographic_Bleaching.png?raw=true)
 
-This dataset has been QC'd by Emma; final figure as of 20210108. Corals photographed and red blue green color square quantified in ImageJ. 
+This dataset has been QC'd by Emma; final figure as of 20210108. Corals photographed and red blue green color square quantified in ImageJ.
 
 Week 5 data excluded because we didn't trust that set of values for any treatment. Come back to this?
 
