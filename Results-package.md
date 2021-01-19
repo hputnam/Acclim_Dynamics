@@ -156,7 +156,9 @@ This dataset has been QC'd by Emma; final figure as of 20210118.
 
 ![TAC](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Total-Antioxidant-Capacity.png?raw=true)
 
-No additional groups with a decreased sample size. 
+No additional groups with a decreased sample size.
+
+Week 4 ATHC P acuta points look wonky like the protein values. Day 2 and Week 1 have very small sample sizes likely leading to large variation above? 
 
 October 7th (3 plates) were done with an incorrectly diluted stop solution. Decide if need to be re-done.  
 
