@@ -256,7 +256,7 @@ Sample sizes: n=3 per treatment per timepoint.
 
 | Species               	| Timepoint 	| Treatment 	| Sample Size 	| Notes 	|
 |-----------------------	|-----------	|-----------	|-------------	|-------	|
-| M. capitata; P. acuta 	| 0 hour    	| All       	| 3           	|       	|
+| M. capitata; P. acuta 	| 0 hour 	| All       	| 3           	|       	|
 | M. capitata; P. acuta 	| 6 hour    	| All       	| 3           	|       	|
 | M. capitata; P. acuta 	| 12 hour   	| All       	| 3           	|       	|
 | M. capitata; P. acuta 	| 24 hour   	| All       	| 3           	|       	|
@@ -272,21 +272,23 @@ Sample sizes: n=3 per treatment per timepoint.
 
 Notebook post coming soon. Symbiont Type Profiles made from [SymPortal](). We had 17 profiles in our samples. Group label on the x-axis refers to sample. Each bar is one coral.   
 
+Figure 20210120
+
 ![relab](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/rel.abund.its2.png?raw=true)
 
 Edits to ITS2 script confirm with Hollie, I changed:  
 
 ```
-# Line 44 originally said 3:14, but that was cutting off a profile
+# Line 44 originally said 3:14, but that was cutting off a profile at the beginning
 Pact <- as.matrix(Pact[,2:14])
 
-# Line 76 originally said 3:14, but that was cutting off a profile
+# Line 76 originally said 3:14, but that was cutting off a profile at the beginning
 Mcap <- as.matrix(Mcap[,2:14])
+
+# Line 107 was [2:12], but that was cutting off a profile at the end
+Rel.data <- data/rowSums(data[,2:13])
 ```
 
-The above figure is from prior running of the script, and below is what I'm getting on 20210119 - I'm not sure why mcap samples are being left out? Come back to this.  
-
-![newITS1fig](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/rel.abund.its2.png?raw=true)
 
 PERMANOVA results:  
 
@@ -332,6 +334,27 @@ Expression of proteins (DNMTs, TETs) that are involved in DNA methylation proces
 
 ![pact-tet](https://github.com/hputnam/Acclim_Dynamics/blob/master/Protein-Expression/Pact_TET1_expression.png?raw=true)
 
+Figures/code HP 20201013. X-axis is old timepoint labeling system (1 = 0 hour, 3 = 6 hour, 4 = 12 hour, 5 = 24 hour, 6 = 1 week, 7 = week, 8 = 4 week, 9 = 6 week, 10 = 8 week, 11 = 12 week, 12 = 16 week). TP2 = 1 hour melted in transit and is not usable. Timepoint #s were adjusted to exclude this timepoint thereafter. The dotted line is when recovery started - this should be slightly after TP 10, not 9.  
+
+Erin M. is also working on this, creating her own figures - code found [here](https://github.com/erinmags/Bioinformatics-Project).  
+
+Erin C. did something similar in her MZT project - code found [here](https://github.com/echille/Montipora_OA_Development_Timeseries/blob/master/RNAseq_Analyses/MZT_biomarker_expression.Rmd) (restricted access).
+
+Other proteins we could look into:  
+Epigenetic machinery:    
+- DNA methylation: DNMT1, DNMT3a   
+- DNA methylation interpretation: MBD1-4, C2H2 zinc finger, SET, RING finger  
+- Active demethylation: TET1-3, AID, APOBEC, TDG  
+- Histone acetylation: HAT
+- Histone deacetylation: Class I (nucleus): HDAC1-3,8. Class IIa (nucleus to cytosol): HDAC4,5,7,9, Class IIb (same as IIa): HDAC6,10. Class III: SIRT1,6,7 (nuclear), SIRT3,4=mitochondiral, SIRT2,5=cytosolic  
+- Histone methylation: HMTs, HDMs  
+- Histone demethylation: LSD1,2  
+
+Heat shock response:  
+- HSP70, 90, 60
+
+Antioxidant response:  
+- SOD, CAT, GPX, ChlAPX  
 
 
 ### DNA Methylation

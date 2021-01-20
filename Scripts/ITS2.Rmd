@@ -5,6 +5,11 @@ date: "2/14/2020"
 output: html_document
 ---
 
+Clear workspace. 
+```{r}
+rm(list=ls()) 
+```
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
@@ -99,7 +104,7 @@ autoplot(sym.pca.res, data = Mcap_meta, colour = 'TREATMENT', shape='SAMPLING.DA
 
 ```{r}
 #All Data
-Rel.data <- data/rowSums(data[,2:12])
+Rel.data <- data/rowSums(data[,2:13])
 Rel.data$sample_name <- rownames(Rel.data)
 all.data <- merge(Rel.data, meta, by="sample_name")
 all.data <- all.data[,-1]
