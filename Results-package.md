@@ -1,4 +1,4 @@
-# Results as of 20210118
+# Acclimatization Dynamics Results
 
 ![expt-sch](https://github.com/hputnam/Acclim_Dynamics/blob/master/Environmental_data/HoloInt-schematic.png?raw=true)
 
