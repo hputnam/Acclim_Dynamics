@@ -284,7 +284,9 @@ Pact <- as.matrix(Pact[,2:14])
 Mcap <- as.matrix(Mcap[,2:14])
 ```
 
-The above figure is from prior running of the script, and below is what I'm getting on 20210119 - I'm not sure why mcap samples are being left out? Come back to this. 
+The above figure is from prior running of the script, and below is what I'm getting on 20210119 - I'm not sure why mcap samples are being left out? Come back to this.  
+
+![newITS1fig](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/rel.abund.its2.png?raw=true)
 
 PERMANOVA results:  
 
