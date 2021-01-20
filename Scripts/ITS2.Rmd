@@ -41,7 +41,7 @@ Pact_meta <- Pact[,15:20]
 str(Pact_meta)
 Pact_meta$SAMPLING.DATE <- as.factor(Pact_meta$SAMPLING.DATE)
 rownames(Pact) <- Pact$sample_name
-Pact <- as.matrix(Pact[,3:14])
+Pact <- as.matrix(Pact[,2:14])
 
 Rel.Sym.Data <- Pact/rowSums(Pact) #calculate the Relative Abundance
 N <- rowSums(Rel.Sym.Data) # calculate row sums of the relative abundnaces, should sum to 1
@@ -73,7 +73,7 @@ Mcap_meta <- Mcap[,15:20]
 str(Mcap_meta)
 Mcap_meta$SAMPLING.DATE <- as.factor(Mcap_meta$SAMPLING.DATE)
 rownames(Mcap) <- Mcap$sample_name
-Mcap <- as.matrix(Mcap[,3:14])
+Mcap <- as.matrix(Mcap[,2:14])
 
 Rel.Sym.Data <- Mcap/rowSums(Mcap) #calculate the Relative Abundance
 N <- rowSums(Rel.Sym.Data) # calculate row sums of the relative abundnaces, should sum to 1
@@ -98,9 +98,8 @@ autoplot(sym.pca.res, data = Mcap_meta, colour = 'TREATMENT', shape='SAMPLING.DA
 ```
 
 ```{r}
-
 #All Data
-Rel.data <- data/rowSums(data[,1:12])
+Rel.data <- data/rowSums(data[,2:12])
 Rel.data$sample_name <- rownames(Rel.data)
 all.data <- merge(Rel.data, meta, by="sample_name")
 all.data <- all.data[,-1]

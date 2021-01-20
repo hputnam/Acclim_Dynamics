@@ -49,6 +49,9 @@ The following have been lost in transit from HIMB to URI or misplaced in a freez
 
 ## Physiology Sample Sizes
 
+This table applies to respiration rates, photosynthetic rates, chlorophyll, tissue biomass, protein, cell density, and TAC. No data in recovery period for respiration and photosynthetic rates. These are all individual corals (i.e. a week 1 coral will not be in any other timepoint).   
+Bleaching score, survivorship, and growth have different sample size values because corals were repetitively measured (i.e. a coral photographed in weeks 1-5 then physiologically sampled in week 6).   
+
 | Species     	| Timepoint 	| Treatment 	| Sample Size 	| Notes                         	|
 |-------------	|-----------	|-----------	|-------------	|-------------------------------	|
 | M. capitata 	| Day 1     	| ATAC      	| 4           	| Not enough time in the field  	|
@@ -251,13 +254,45 @@ This is still producing very small values (0.04840641-1.60261156 CRE umol.mg pro
 
 Sample sizes: n=3 per treatment per timepoint.
 
+| Species               	| Timepoint 	| Treatment 	| Sample Size 	| Notes 	|
+|-----------------------	|-----------	|-----------	|-------------	|-------	|
+| M. capitata; P. acuta 	| 0 hour    	| All       	| 3           	|       	|
+| M. capitata; P. acuta 	| 6 hour    	| All       	| 3           	|       	|
+| M. capitata; P. acuta 	| 12 hour   	| All       	| 3           	|       	|
+| M. capitata; P. acuta 	| 24 hour   	| All       	| 3           	|       	|
+| M. capitata; P. acuta 	| 1 week    	| All       	| 3           	|       	|
+| M. capitata; P. acuta 	| 2 week    	| All       	| 3           	|       	|
+| M. capitata; P. acuta 	| 4 week    	| All       	| 3           	|       	|
+| M. capitata; P. acuta 	| 6 week    	| All       	| 3           	|       	|
+| M. capitata; P. acuta 	| 8 week    	| All       	| 3           	|       	|
+| M. capitata; P. acuta 	| 12 week   	| All       	| 3           	|       	|
+| M. capitata; P. acuta 	| 16 week   	| All       	| 3           	|       	|
+
 ### ITS2 Sequencing
 
-Notebook post coming soon.
+Notebook post coming soon. Symbiont Type Profiles made from [SymPortal](). We had 17 profiles in our samples. Group label on the x-axis refers to sample. Each bar is one coral.   
 
 ![relab](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/rel.abund.its2.png?raw=true)
 
+Edits to ITS2 script confirm with Hollie, I changed:  
+
+```
+# Line 44 originally said 3:14, but that was cutting off a profile
+Pact <- as.matrix(Pact[,2:14])
+
+# Line 76 originally said 3:14, but that was cutting off a profile
+Mcap <- as.matrix(Mcap[,2:14])
+```
+
+The above figure is from prior running of the script, and below is what I'm getting on 20210119 - I'm not sure why mcap samples are being left out? Come back to this. 
+
 PERMANOVA results:  
+
+```
+MC.permanova <- adonis(MC.mat ~ TREATMENT*TIME.POINT, data=MC.info, method = "bray", permutations=999)
+
+
+```
 
 ### mtORF Sequencing
 
