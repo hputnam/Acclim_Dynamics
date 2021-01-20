@@ -274,7 +274,7 @@ Notebook post coming soon. Symbiont Type Profiles made from [SymPortal](). We ha
 
 Figure 20210120
 
-![relab](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/rel.abund.its2.png?raw=true)
+![relab](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/rel.abund.its2.png?raw=true)
 
 Edits to ITS2 script confirm with Hollie, I changed:  
 
