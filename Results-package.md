@@ -293,8 +293,37 @@ Rel.data <- data/rowSums(data[,2:13])
 PERMANOVA results:  
 
 ```
-MC.permanova <- adonis(MC.mat ~ TREATMENT*TIME.POINT, data=MC.info, method = "bray", permutations=999)
+# Mcap
+Call:
+adonis(formula = MC.mat ~ TREATMENT * TIME.POINT, data = MC.info,      permutations = 999, method = "bray")
 
+Permutation: free
+Number of permutations: 999
+
+Terms added sequentially (first to last)
+
+                      Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)
+TREATMENT              3     0.577 0.19241 0.61362 0.01419  0.766
+TIME.POINT             1     0.069 0.06911 0.22041 0.00170  0.902
+TREATMENT:TIME.POINT   3     1.160 0.38661 1.23293 0.02850  0.278
+Residuals            124    38.883 0.31357         0.95561       
+Total                131    40.689                 1.00000
+
+# Pact
+Call:
+adonis(formula = PA.mat ~ TREATMENT * TIME.POINT, data = PA.info,      permutations = 999, method = "bray") 
+
+Permutation: free
+Number of permutations: 999
+
+Terms added sequentially (first to last)
+
+                      Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)
+TREATMENT              3    1.1257 0.37524 1.67411 0.04156  0.137
+TIME.POINT             1    0.4131 0.41314 1.84317 0.01525  0.152
+TREATMENT:TIME.POINT   3    0.6673 0.22245 0.99242 0.02464  0.432
+Residuals            111   24.8802 0.22415         0.91855       
+Total                118   27.0865                 1.00000  
 
 ```
 
