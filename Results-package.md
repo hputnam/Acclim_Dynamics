@@ -314,6 +314,25 @@ Coral fragments sent to Rutgers for sample processing and updates to come soon.
 
 RNASeq analysis done by Rutgers team. Gene counts table available.
 
+Expression of proteins (DNMTs, TETs) that are involved in DNA methylation processes.  
+
+![mcap-epi](https://github.com/hputnam/Acclim_Dynamics/blob/master/Protein-Expression/Mcap.Epi.Expression.png?raw=true)
+
+![mcap-dnmt1](https://github.com/hputnam/Acclim_Dynamics/blob/master/Protein-Expression/Mcap_DNMT1_expression.png?raw=true)
+
+![mcap-dmnt3a](https://github.com/hputnam/Acclim_Dynamics/blob/master/Protein-Expression/Mcap_DNMT3A_expression.png?raw=true)
+
+![mcap-tet](https://github.com/hputnam/Acclim_Dynamics/blob/master/Protein-Expression/Mcap_TET1_expression.png?raw=true)
+
+![pact-epi](https://github.com/hputnam/Acclim_Dynamics/blob/master/Protein-Expression/Pact.Epi.Expression.png?raw=true)
+
+![pact-dnmt1](https://github.com/hputnam/Acclim_Dynamics/blob/master/Protein-Expression/Pact_DNMT1_expression.png?raw=true)
+
+![pact-dmnt3a](https://github.com/hputnam/Acclim_Dynamics/blob/master/Protein-Expression/Pact_DNMT3A_expression.png?raw=true)
+
+![pact-tet](https://github.com/hputnam/Acclim_Dynamics/blob/master/Protein-Expression/Pact_TET1_expression.png?raw=true)
+
+
 
 ### DNA Methylation
 
