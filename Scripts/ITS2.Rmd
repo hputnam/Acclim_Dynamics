@@ -128,8 +128,8 @@ ggplot(data = df, mapping = aes(x = group, y = rel.abun, fill = Profile)) +
     theme(legend.title = element_text(size = 6), 
                legend.text = element_text(size = 4))
 
-ggsave("Output/rel.abund.its2.pdf")
-ggsave("Output/rel.abund.its2.png")
+ggsave("Output/Final_Figures/rel.abund.its2.pdf")
+ggsave("Output/Final_Figures/rel.abund.its2.png")
 
 ```
 

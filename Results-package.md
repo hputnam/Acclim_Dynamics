@@ -47,82 +47,82 @@ The following have been lost in transit from HIMB to URI or misplaced in a freez
 | Pacuta    	| 2981    	| ATHC      	| 20180929    	|
 | Pacuta    	| 2984    	| ATHC      	| 20180929    	|
 
-## Sample Sizes
+## Physiology Sample Sizes
 
-| Species     	| Timepoint 	| Treatment 	| Sample Size 	| Notes                        	|
-|-------------	|-----------	|-----------	|-------------	|------------------------------	|
-| M. capitata 	| Day 1     	| ATAC      	| 4           	| Not enough time in the field 	|
-| M. capitata 	| Day 1     	| ATHC      	| 2           	| Not enough time in the field 	|
-| M. capitata 	| Day 1     	| HTAC      	| 4           	| Not enough time in the field 	|
-| M. capitata 	| Day 1     	| HTHC      	| 2           	| Not enough time in the field 	|
-| P. acuta    	| Day 1     	| ATAC      	| 4           	| Not enough time in the field 	|
-| P. acuta    	| Day 1     	| ATHC      	| 2           	| Not enough time in the field 	|
-| P. acuta    	| Day 1     	| HTAC      	| 4           	| Not enough time in the field 	|
-| P. acuta    	| Day 1     	| HTHC      	| 2           	| Not enough time in the field 	|
-| M. capitata 	| Day 2     	| ATAC      	| 6           	|                              	|
-| M. capitata 	| Day 2     	| ATHC      	| 4           	| Corals missing in transit    	|
-| M. capitata 	| Day 2     	| HTAC      	| 6           	|                              	|
-| M. capitata 	| Day 2     	| HTHC      	| 4           	| Corals missing in transit    	|
-| P. acuta    	| Day 2     	| ATAC      	| 6           	|                              	|
-| P. acuta    	| Day 2     	| ATHC      	| 4           	| Corals missing in transit    	|
-| P. acuta    	| Day 2     	| HTAC      	| 6           	|                              	|
-| P. acuta    	| Day 2     	| HTHC      	| 4           	| Corals missing in transit    	|
-| M. capitata 	| 1 week    	| ATAC      	| 6           	|                              	|
-| M. capitata 	| 1 week    	| ATHC      	| 4           	| Corals missing in transit    	|
-| M. capitata 	| 1 week    	| HTAC      	| 6           	|                              	|
-| M. capitata 	| 1 week    	| HTHC      	| 4           	| Corals missing in transit    	|
-| P. acuta    	| 1 week    	| ATAC      	| 6           	|                              	|
-| P. acuta    	| 1 week    	| ATHC      	| 4           	| Corals missing in transit    	|
-| P. acuta    	| 1 week    	| HTAC      	| 6           	|                              	|
-| P. acuta    	| 1 week    	| HTHC      	| 4           	| Corals missing in transit    	|
-| M. capitata 	| 2 week    	| ATAC      	| 6           	|                              	|
-| M. capitata 	| 2 week    	| ATHC      	| 6           	|                              	|
-| M. capitata 	| 2 week    	| HTAC      	| 6           	|                              	|
-| M. capitata 	| 2 week    	| HTHC      	| 6           	|                              	|
-| P. acuta    	| 2 week    	| ATAC      	| 6           	|                              	|
-| P. acuta    	| 2 week    	| ATHC      	| 6           	|                              	|
-| P. acuta    	| 2 week    	| HTAC      	| 6           	|                              	|
-| P. acuta    	| 2 week    	| HTHC      	| 6           	|                              	|
-| M. capitata 	| 4 week    	| ATAC      	| 6           	|                              	|
-| M. capitata 	| 4 week    	| ATHC      	| 6           	|                              	|
-| M. capitata 	| 4 week    	| HTAC      	| 6           	|                              	|
-| M. capitata 	| 4 week    	| HTHC      	| 6           	|                              	|
-| P. acuta    	| 4 week    	| ATAC      	| 6           	|                              	|
-| P. acuta    	| 4 week    	| ATHC      	| 6           	|                              	|
-| P. acuta    	| 4 week    	| HTAC      	| 6           	|                              	|
-| P. acuta    	| 4 week    	| HTHC      	| 6           	|                              	|
-| M. capitata 	| 6 week    	| ATAC      	| 6           	|                              	|
-| M. capitata 	| 6 week    	| ATHC      	| 6           	|                              	|
-| M. capitata 	| 6 week    	| HTAC      	| 6           	|                              	|
-| M. capitata 	| 6 week    	| HTHC      	| 6           	|                              	|
-| P. acuta    	| 6 week    	| ATAC      	| 6           	|                              	|
-| P. acuta    	| 6 week    	| ATHC      	| 6           	|                              	|
-| P. acuta    	| 6 week    	| HTAC      	| 6           	|                              	|
-| P. acuta    	| 6 week    	| HTHC      	| 6           	|                              	|
-| M. capitata 	| 8 week    	| ATAC      	| 6           	|                              	|
-| M. capitata 	| 8 week    	| ATHC      	| 6           	|                              	|
-| M. capitata 	| 8 week    	| HTAC      	| 6           	|                              	|
-| M. capitata 	| 8 week    	| HTHC      	| 6           	|                              	|
-| P. acuta    	| 8 week    	| ATAC      	| 6           	|                              	|
-| P. acuta    	| 8 week    	| ATHC      	| 6           	|                              	|
-| P. acuta    	| 8 week    	| HTAC      	| 6           	|                              	|
-| P. acuta    	| 8 week    	| HTHC      	| 6           	|                              	|
-| M. capitata 	| 12 week   	| ATAC      	| 5           	| only 5 available to sample   	|
-| M. capitata 	| 12 week   	| ATHC      	| 6           	|                              	|
-| M. capitata 	| 12 week   	| HTAC      	| 6           	|                              	|
-| M. capitata 	| 12 week   	| HTHC      	| 5           	| only 5 available to sample   	|
-| P. acuta    	| 12 week   	| ATAC      	| 6           	|                              	|
-| P. acuta    	| 12 week   	| ATHC      	| 6           	|                              	|
-| P. acuta    	| 12 week   	| HTAC      	| 2           	| only 2 available to sample   	|
-| P. acuta    	| 12 week   	| HTHC      	| 0           	|                              	|
-| M. capitata 	| 16 week   	| ATAC      	| 6           	|                              	|
-| M. capitata 	| 16 week   	| ATHC      	| 5           	| only 5 available to sample   	|
-| M. capitata 	| 16 week   	| HTAC      	| 4           	| only 4 available to sample   	|
-| M. capitata 	| 16 week   	| HTHC      	| 5           	| only 5 available to sample   	|
-| P. acuta    	| 16 week   	| ATAC      	| 6           	|                              	|
-| P. acuta    	| 16 week   	| ATHC      	| 6           	|                              	|
-| P. acuta    	| 16 week   	| HTAC      	| 0           	|                              	|
-| P. acuta    	| 16 week   	| HTHC      	| 0           	|                              	|
+| Species     	| Timepoint 	| Treatment 	| Sample Size 	| Notes                         	|
+|-------------	|-----------	|-----------	|-------------	|-------------------------------	|
+| M. capitata 	| Day 1     	| ATAC      	| 4           	| Not enough time in the field  	|
+| M. capitata 	| Day 1     	| ATHC      	| 2           	| Not enough time in the field  	|
+| M. capitata 	| Day 1     	| HTAC      	| 4           	| Not enough time in the field  	|
+| M. capitata 	| Day 1     	| HTHC      	| 2           	| Not enough time in the field  	|
+| P. acuta    	| Day 1     	| ATAC      	| 4           	| Not enough time in the field  	|
+| P. acuta    	| Day 1     	| ATHC      	| 2           	| Not enough time in the field  	|
+| P. acuta    	| Day 1     	| HTAC      	| 4           	| Not enough time in the field  	|
+| P. acuta    	| Day 1     	| HTHC      	| 2           	| Not enough time in the field  	|
+| M. capitata 	| Day 2     	| ATAC      	| 6           	|                               	|
+| M. capitata 	| Day 2     	| ATHC      	| 4           	| Corals missing in transit     	|
+| M. capitata 	| Day 2     	| HTAC      	| 6           	|                               	|
+| M. capitata 	| Day 2     	| HTHC      	| 4           	| Corals missing in transit     	|
+| P. acuta    	| Day 2     	| ATAC      	| 6           	|                               	|
+| P. acuta    	| Day 2     	| ATHC      	| 4           	| Corals missing in transit     	|
+| P. acuta    	| Day 2     	| HTAC      	| 6           	|                               	|
+| P. acuta    	| Day 2     	| HTHC      	| 4           	| Corals missing in transit     	|
+| M. capitata 	| 1 week    	| ATAC      	| 6           	|                               	|
+| M. capitata 	| 1 week    	| ATHC      	| 4           	| Corals missing in transit     	|
+| M. capitata 	| 1 week    	| HTAC      	| 6           	|                               	|
+| M. capitata 	| 1 week    	| HTHC      	| 4           	| Corals missing in transit     	|
+| P. acuta    	| 1 week    	| ATAC      	| 6           	|                               	|
+| P. acuta    	| 1 week    	| ATHC      	| 4           	| Corals missing in transit     	|
+| P. acuta    	| 1 week    	| HTAC      	| 6           	|                               	|
+| P. acuta    	| 1 week    	| HTHC      	| 4           	| Corals missing in transit     	|
+| M. capitata 	| 2 week    	| ATAC      	| 6           	|                               	|
+| M. capitata 	| 2 week    	| ATHC      	| 6           	|                               	|
+| M. capitata 	| 2 week    	| HTAC      	| 6           	|                               	|
+| M. capitata 	| 2 week    	| HTHC      	| 6           	|                               	|
+| P. acuta    	| 2 week    	| ATAC      	| 6           	|                               	|
+| P. acuta    	| 2 week    	| ATHC      	| 6           	|                               	|
+| P. acuta    	| 2 week    	| HTAC      	| 6           	|                               	|
+| P. acuta    	| 2 week    	| HTHC      	| 6           	|                               	|
+| M. capitata 	| 4 week    	| ATAC      	| 6           	|                               	|
+| M. capitata 	| 4 week    	| ATHC      	| 6           	|                               	|
+| M. capitata 	| 4 week    	| HTAC      	| 6           	|                               	|
+| M. capitata 	| 4 week    	| HTHC      	| 6           	|                               	|
+| P. acuta    	| 4 week    	| ATAC      	| 6           	|                               	|
+| P. acuta    	| 4 week    	| ATHC      	| 6           	|                               	|
+| P. acuta    	| 4 week    	| HTAC      	| 6           	|                               	|
+| P. acuta    	| 4 week    	| HTHC      	| 6           	|                               	|
+| M. capitata 	| 6 week    	| ATAC      	| 6           	|                               	|
+| M. capitata 	| 6 week    	| ATHC      	| 6           	|                               	|
+| M. capitata 	| 6 week    	| HTAC      	| 6           	|                               	|
+| M. capitata 	| 6 week    	| HTHC      	| 6           	|                               	|
+| P. acuta    	| 6 week    	| ATAC      	| 6           	|                               	|
+| P. acuta    	| 6 week    	| ATHC      	| 6           	|                               	|
+| P. acuta    	| 6 week    	| HTAC      	| 6           	|                               	|
+| P. acuta    	| 6 week    	| HTHC      	| 6           	|                               	|
+| M. capitata 	| 8 week    	| ATAC      	| 6           	|                               	|
+| M. capitata 	| 8 week    	| ATHC      	| 6           	|                               	|
+| M. capitata 	| 8 week    	| HTAC      	| 6           	|                               	|
+| M. capitata 	| 8 week    	| HTHC      	| 6           	|                               	|
+| P. acuta    	| 8 week    	| ATAC      	| 6           	|                               	|
+| P. acuta    	| 8 week    	| ATHC      	| 6           	|                               	|
+| P. acuta    	| 8 week    	| HTAC      	| 6           	|                               	|
+| P. acuta    	| 8 week    	| HTHC      	| 6           	|                               	|
+| M. capitata 	| 12 week   	| ATAC      	| 5           	| only 5 available to sample    	|
+| M. capitata 	| 12 week   	| ATHC      	| 6           	|                               	|
+| M. capitata 	| 12 week   	| HTAC      	| 6           	|                               	|
+| M. capitata 	| 12 week   	| HTHC      	| 5           	| only 5 available to sample    	|
+| P. acuta    	| 12 week   	| ATAC      	| 6           	|                               	|
+| P. acuta    	| 12 week   	| ATHC      	| 6           	|                               	|
+| P. acuta    	| 12 week   	| HTAC      	| 2           	| only 2 available to sample    	|
+| P. acuta    	| 12 week   	| HTHC      	| 0           	| no corals available to sample 	|
+| M. capitata 	| 16 week   	| ATAC      	| 6           	|                               	|
+| M. capitata 	| 16 week   	| ATHC      	| 5           	| only 5 available to sample    	|
+| M. capitata 	| 16 week   	| HTAC      	| 4           	| only 4 available to sample    	|
+| M. capitata 	| 16 week   	| HTHC      	| 5           	| only 5 available to sample    	|
+| P. acuta    	| 16 week   	| ATAC      	| 6           	|                               	|
+| P. acuta    	| 16 week   	| ATHC      	| 6           	|                               	|
+| P. acuta    	| 16 week   	| HTAC      	| 0           	| no corals available to sample 	|
+| P. acuta    	| 16 week   	| HTHC      	| 0           	| no corals available to sample 	|
 
 Not enough time in the field: We were not able to complete all of Day 1 sampling in the field because we originally included instantaneous calcification in our response variables. After Day 1 we cut out this variable, but this means we have decreased sample sizes for Day 1.
 
@@ -131,6 +131,11 @@ Corals missing in transit: Due to the list of missing corals, several groups on 
 Only X number available to sample: Due to lower survivorship in recovery periods, there was limited availability for sampling, resulting a smaller sample size for some groups.  
 
 Some univariate physiology variables will also have decreased sample size groups, see each section for additional notes.
+
+## Experimental Treatments
+
+
+
 
 ## Univariate Physiology Results   
 
@@ -196,9 +201,10 @@ Need to re-do #2863. "Host" written down twice in notebook.
 
 | Species  	| Timepoint 	| Treatment 	| Sample Size 	| Notes                                       	|
 |----------	|-----------	|-----------	|-------------	|---------------------------------------------	|
-| P. acuta 	| 8 week    	| HTAC      	| 5           	| 2156 missing data; need to look at notebook 	|
+| P. acuta 	| 8 week    	| HTAC      	| 5           	| 2156 missing data	|
 
-P-2156 missing data; need to look at notebook photos to find this.  
+P-2156 missing data. Label rubbed off, will need to re-do.  
+Decide about 1488 sample.  
 
 This dataset has been QC'd by Emma; final figure as of 20210118.
 
@@ -208,14 +214,16 @@ This dataset has been QC'd by Emma; final figure as of 20210118.
 
 Week 4 P. acuta ATHC big drop, but samples are not in outlier tests. This still looks weird to me?
 
-No additional groups with a decreased sample size.    
+No additional groups with a decreased sample size.  
+Decide about 1488 sample.      
 This dataset has been QC'd by Emma; final figure as of 20210118.
 
 ### Total Antioxidant Capacity
 
 ![TAC](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Total-Antioxidant-Capacity.png?raw=true)
 
-No additional groups with a decreased sample size.
+No additional groups with a decreased sample size.  
+Decide about 1488 sample.
 
 Week 4 ATHC P acuta points look wonky like the protein values. Day 2 and Week 1 have very small sample sizes likely leading to large variation above?
 
@@ -239,6 +247,38 @@ TAC <- left_join(TAC.values, metadata) %>%
 This is still producing very small values (0.04840641-1.60261156 CRE umol.mg prot). The above calculation is what was recommended by Hollie and Ross. So we have to divide by liters to get uM.mg prot to compare to the literature?
 
 
-## ITS2 Sequencing
+## Molecular Response Variables
 
-## Statistics
+Sample sizes: n=3 per treatment per timepoint.
+
+### ITS2 Sequencing
+
+Notebook post coming soon.
+
+![relab](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/rel.abund.its2.png?raw=true)
+
+PERMANOVA results:  
+
+### mtORF Sequencing
+
+[Notebook post](https://emmastrand.github.io/EmmaStrand_Notebook/mtORF-Amplification-Pocillopora/) for sample processing.
+
+*P. acuta* is all one species and data visualization to come soon.
+
+### 16s Sequencing
+
+This is in progress in the lab at URI. Notebook post coming soon.
+
+### Metabolomics
+
+Coral fragments sent to Rutgers for sample processing and updates to come soon.
+
+### Gene Expression
+
+RNASeq analysis done by Rutgers team. Gene counts table available.
+
+
+### DNA Methylation
+
+WGBS protocol
+[Notebook post]() for sample processing.
