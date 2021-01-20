@@ -2,7 +2,7 @@
 
 ![expt-sch](https://github.com/hputnam/Acclim_Dynamics/blob/master/Environmental_data/HoloInt-schematic.png?raw=true)
 
-900 corals, 450 *M. capitata* and 450 *P. acuta*, were collected from 6 sites in Kaneohe Bay, Hawai'i. These corals were randomly assigned to one of 12 treatment tanks.  
+900 corals, 450 *M. capitata* and 450 *P. acuta*, were collected from 6 sites in Kaneohe Bay, Hawai'i. These corals were randomly assigned to one of 4 treatments. 3 tanks per treatment, 12 tanks total. 2 months of treatment and 2 months of recovery in ambient conditions.   
 
 ATAC = Ambient Temperature (27C) Ambient pCO2 (~480 uatm)  
 ATHC = Ambient Temperature (27C) High pCO2 (~1,200 uatm)    
