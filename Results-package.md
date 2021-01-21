@@ -35,9 +35,9 @@ The sharp drops ~1-2 weeks are from removing the hobo loggers from the tanks to 
 
 Discrete Temperature and pH Measurements
 
-![discretetemp]()
+![discretetemp](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Discrete-Temperature.png?raw=true)
 
-![discreteph]()
+![discreteph](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Discrete-pH.png?raw=true)
 
 ## Physiology Sample Sizes
 
