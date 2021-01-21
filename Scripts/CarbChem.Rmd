@@ -115,14 +115,12 @@ Disc.Temp.means <- subset(Discrete.means, Measurement=="Temperature")
 Disc.pH.means <- subset(Discrete.means, Measurement=="pH.Total")
 ```
 
-
-
 Plot Temp and pH for all daily measures.
 ```{r}
 colors <- c("lightblue", "blue", "salmon", "red3")
 
 # temp
-Disc.Temp.Plot <- ggplot(data = Disc.Temp.means, aes(x = Date, y = value, colour = Treatment)) +
+ggplot(data = Disc.Temp.means, aes(x = Date, y = value, colour = Treatment)) +
   #geom_point(size=0.2) +
   scale_color_manual(values = colors) +
   labs(x = "Date",
@@ -134,13 +132,12 @@ Disc.Temp.Plot <- ggplot(data = Disc.Temp.means, aes(x = Date, y = value, colour
   geom_vline(xintercept = c("20181118"), colour="black", linetype="dotted") +
   scale_x_discrete(breaks = c("20180922", "20180929", "20181006", "20181020", "20181103", "20181117", "20181214", "20190110"), labels = c("Day1", "1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week")) +
   theme(legend.position=c(0.9, 0.8), legend.background = element_blank()) 
-Disc.Temp.Plot
 
 ggsave(filename = "Output/Discrete-Temperature.pdf", device = "pdf", width = 11, height = 8)
 ggsave(filename = "Output/Discrete-Temperature.png", device = "png", width = 11, height = 8)
 
 # pH total
-Disc.pH.Plot <- ggplot(data = Disc.pH.means, aes(x = Date, y = value, colour = Treatment)) +
+ggplot(data = Disc.pH.means, aes(x = Date, y = value, colour = Treatment)) +
   #geom_point(size=0.2) +
   scale_color_manual(values = colors) +
   labs(x = "Date",
@@ -152,19 +149,19 @@ Disc.pH.Plot <- ggplot(data = Disc.pH.means, aes(x = Date, y = value, colour = T
   geom_vline(xintercept = c("20181118"), colour="black", linetype="dotted") +
   scale_x_discrete(breaks = c("20180922", "20180929", "20181006", "20181020", "20181103", "20181117", "20181214", "20190110"), labels = c("Day1", "1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week")) +
   theme(legend.position=c(0.9, 0.35), legend.background = element_blank()) 
-Disc.pH.Plot
 
 ggsave(filename = "Output/Discrete-pH.pdf", device = "pdf", width = 11, height = 8)
 ggsave(filename = "Output/Discrete-pH.png", device = "png", width = 11, height = 8)
 
-pdf("Output/Daily.Chem.pdf", width=10, height=4)
-Trt.SW.chem %>%
-  group_by(Date, Treatment) %>%
-  ggplot(aes(x=Treatment, y=value)) +
+
+Treatment.chem <- Trt.SW.chem %>% subset(Period1=="Treatment")
+ggplot(data=Treatment.chem, aes(x=Treatment, y=value, colour=Treatment)) + 
   geom_boxplot() +
-  facet_grid(name ~ ., scales="free_y")+
+  scale_color_manual(values = colors) +
+  facet_grid(Measurement ~ ., scales="free_y") +
+  xlab("Time Period") +
   theme_classic()
 
-Trt.SW.chem.means <- summarySE(Trt.SW.chem, measurevar="value", groupvars=c("Treatment", "name"))
-dev.off()
+ggsave(filename = "Output/Discrete-Temp-pH-Trt.pdf", device = "pdf", width = 11, height = 8)
+ggsave(filename = "Output/Discrete-Temp-pH-Trt.png", device = "png", width = 11, height = 8)
 ```

@@ -27,17 +27,19 @@ Metabolism: respiration and photosynthetic rates.
 
 ## Experimental Treatments
 
-Hobo Logger Data
+**Hobo Logger Data**
 
 ![hobo](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Hobo-loggers.png?raw=true)
 
 The sharp drops ~1-2 weeks are from removing the hobo loggers from the tanks to download the data. I need to go through and remove these time periods.
 
-Discrete Temperature and pH Measurements
+**Discrete Temperature and pH Measurements**
 
 ![discretetemp](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Discrete-Temperature.png?raw=true)
 
 ![discreteph](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Discrete-pH.png?raw=true)
+
+
 
 ## Physiology Sample Sizes
 
