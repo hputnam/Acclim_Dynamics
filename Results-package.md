@@ -29,8 +29,9 @@ Metabolism: respiration and photosynthetic rates.
 
 Hobo Logger Data
 
-![hobo]()
+![hobo](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Hobo-loggers.png?raw=true)
 
+The sharp drops ~1-2 weeks are from removing the hobo loggers from the tanks to download the data. I need to go through and remove these time periods.
 
 ## Physiology Sample Sizes
 
