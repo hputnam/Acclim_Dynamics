@@ -221,6 +221,24 @@ ggplot(Apex_pH_means, aes(x=Date.Time, y = pH, group = Treatment, color = Treatm
 ### HOBO LOGGER TEMPERATURE DATA ###  
 
 Reading in and transforming hobo logger data. 
+```{r}
+Hobo_path = "Environmental_data/Temp_Hobo_Loggers/"
+hobo_files <- list.files(path = Hobo_path, pattern = "*.csv") 
+
+df <- tibble(file = hobo_files) %>%
+  separate(file, into = c("Date", "Tank"), remove = FALSE)
+
+
+
+
+filenames <- list.files("Environmental_data/Temp_Hobo_Loggers", pattern="*.csv", full.names=TRUE)
+tbl <- sapply(filenames, read_csv, simplify=FALSE) %>% bind_rows(.id = "id")
+
+```
+
+
+
+
 Improvements to be made: 
 1.) Creating a loop for the "[ ,2:3] %>% rename(TankX = V3)" function so it is not repetitive. 
 2.) Creating a for loop for the Tank1 <- Tank8[1:nrow(Tank6),] function so it is not repetitive.

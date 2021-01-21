@@ -254,19 +254,20 @@ This is still producing very small values (0.04840641-1.60261156 CRE umol.mg pro
 
 Sample sizes: n=3 per treatment per timepoint.
 
-| Species               	| Timepoint 	| Treatment 	| Sample Size 	| Notes 	|
-|-----------------------	|-----------	|-----------	|-------------	|-------	|
-| M. capitata; P. acuta 	| 0 hour 	| All       	| 3           	|       	|
-| M. capitata; P. acuta 	| 6 hour    	| All       	| 3           	|       	|
-| M. capitata; P. acuta 	| 12 hour   	| All       	| 3           	|       	|
-| M. capitata; P. acuta 	| 24 hour   	| All       	| 3           	|       	|
-| M. capitata; P. acuta 	| 1 week    	| All       	| 3           	|       	|
-| M. capitata; P. acuta 	| 2 week    	| All       	| 3           	|       	|
-| M. capitata; P. acuta 	| 4 week    	| All       	| 3           	|       	|
-| M. capitata; P. acuta 	| 6 week    	| All       	| 3           	|       	|
-| M. capitata; P. acuta 	| 8 week    	| All       	| 3           	|       	|
-| M. capitata; P. acuta 	| 12 week   	| All       	| 3           	|       	|
-| M. capitata; P. acuta 	| 16 week   	| All       	| 3           	|       	|
+| Species               	| Timepoint 	| Treatment 	| Sample Size 	| Notes            	|
+|-----------------------	|-----------	|-----------	|-------------	|------------------	|
+| M. capitata; P. acuta 	| 0 hour    	| All       	| 3           	|                  	|
+| M. capitata; P. acuta 	| 6 hour    	| All       	| 3           	|                  	|
+| M. capitata; P. acuta 	| 12 hour   	| All       	| 3           	|                  	|
+| M. capitata; P. acuta 	| 24 hour   	| All       	| 3           	|                  	|
+| M. capitata; P. acuta 	| 1 week    	| All       	| 3           	|                  	|
+| M. capitata; P. acuta 	| 2 week    	| All       	| 3           	|                  	|
+| M. capitata; P. acuta 	| 4 week    	| All       	| 3           	|                  	|
+| M. capitata; P. acuta 	| 6 week    	| All       	| 3           	|                  	|
+| M. capitata; P. acuta 	| 8 week    	| All       	| 3           	|                  	|
+| M. capitata; P. acuta 	| 12 week   	| All       	| 3           	|                  	|
+| M. capitata           	| 16 week   	| All       	| 3           	|                  	|
+| P. acuta              	| 16 week   	| All       	| 2           	| Only 2 available 	|
 
 ### ITS2 Sequencing
 
@@ -311,7 +312,7 @@ Total                131    40.689                 1.00000
 
 # Pact
 Call:
-adonis(formula = PA.mat ~ TREATMENT * TIME.POINT, data = PA.info,      permutations = 999, method = "bray") 
+adonis(formula = PA.mat ~ TREATMENT * TIME.POINT, data = PA.info,      permutations = 999, method = "bray")
 
 Permutation: free
 Number of permutations: 999

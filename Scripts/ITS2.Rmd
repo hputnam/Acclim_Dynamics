@@ -145,7 +145,8 @@ Mcap <- all.data %>%
   filter(Species == "Mcapitata")
 
 MC.mat <- Mcap[,1:12]
-MC.info <- Mcap[,13:19]
+MC.info <- Mcap[,13:19] 
+MC.info %>% group_by(TREATMENT, TIME.POINT) %>% count("Rep") # checking sample sizes; should all be 3
 
 MC.permanova <- adonis(MC.mat ~ TREATMENT*TIME.POINT, data=MC.info, method = "bray", permutations=999)
 MC.permanova
@@ -156,6 +157,7 @@ Pact <- all.data %>%
 
 PA.mat <- Pact[,1:12]
 PA.info <- Pact[,13:19]
+PA.info %>% group_by(TREATMENT, TIME.POINT) %>% count("Rep") # checking sample sizes; should all be 3 except for TP11 HTHC
 
 PA.permanova <- adonis(PA.mat ~ TREATMENT*TIME.POINT, data=PA.info, method = "bray", permutations=999)
 PA.permanova
