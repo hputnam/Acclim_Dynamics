@@ -33,6 +33,12 @@ Hobo Logger Data
 
 The sharp drops ~1-2 weeks are from removing the hobo loggers from the tanks to download the data. I need to go through and remove these time periods.
 
+Discrete Temperature and pH Measurements
+
+![discretetemp]()
+
+![discreteph]()
+
 ## Physiology Sample Sizes
 
 **List of missing corals**:  
@@ -392,5 +398,4 @@ Antioxidant response:
 
 ### DNA Methylation
 
-WGBS protocol
-[Notebook post]() for sample processing.
+WGBS protocol notebook post coming soon. Goal: Finish sample processing by the end of the Spring semester.

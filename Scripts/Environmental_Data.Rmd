@@ -17,13 +17,6 @@ Select Knit > Project Directory
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Contents:
-1. [NOAA Buoy Data](#buoy_data) 
-2. [Continuous Data: pH (Apex), Temperature (Hobo)](#apex)
-3. [Light (Apex and Licor) Data](#light)
-4. [Flow Rates](#flow)
-## add within markdown file links for each section
-
 Clear workspace. 
 ```{r}
 rm(list=ls()) 
@@ -52,7 +45,8 @@ library(xts)
 library(graphics)
 ```
 
-####### <a name= ="buoy_data"></a> NOAA BUOY DATA ####### 
+### NOAA BUOY DATA ###
+
 Viewing the temperature and pH data from local NOAA Hawaii Buoys (XX) to guide decisions in experimental design.
 
 Reading in temperature and pH data files.
@@ -109,8 +103,6 @@ ggplot(NOAA_temp, aes(x=Date, y=Temperature)) +
 
 ## Subset to show daily variation 
 ```
-
-####### <a name= ="apex"></a> Continuous Data: pH (Apex), temp (Apex), temp (Hobo) ####### 
 
 ### APEX TEMPERATURE AND pH DATA ### 
 
@@ -255,6 +247,7 @@ Hobo.data <- left_join(Hobo.data, tankIDs) %>% select(-Tank.Name) #adding treatm
 
 Hobo.means <- summarySE(Hobo.data, measurevar = "Temperature", groupvars=c("Date.Time", "Treatment")) #N, mean(Temperature), sd, se, ci
 ```
+
 Need to filter out times that hobo logger was out of the water. 
 
 Visualizing data. 
@@ -280,7 +273,7 @@ ggsave(filename = "Output/Hobo-loggers.png", device = "png", width = 11, height 
 ```
 
 
-####### <a name= ="light"></a> Light Data ####### 
+### LIGHT DATA ### 
 
 Decide if want to visualize/statistically analyze the positions the readings were taken in (6 points in each tank)
 
@@ -347,7 +340,7 @@ ggplot(Licor_Light, aes(x=Tank, y=PAR, fill=Tank)) +
 ```
 
 
-####### <a name= ="flow"></a> Flow Rates ####### 
+### FLOW RATES ### 
 
 Reading in flow rate and tank to treatment data files. 
 ```{r}
