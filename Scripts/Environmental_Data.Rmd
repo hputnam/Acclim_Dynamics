@@ -36,7 +36,6 @@ library(dplyr)
 library(tidyr)
 library(xml2)
 library(tidyverse)
-# library(tidyverse) - won't download; circle back to later
 library(ggplot2)
 library(scales)
 library(lubridate)
@@ -50,6 +49,7 @@ library(lattice)
 library(viridis)
 library(dygraphs)
 library(xts)
+library(graphics)
 ```
 
 ####### <a name= ="buoy_data"></a> NOAA BUOY DATA ####### 
@@ -222,88 +222,61 @@ ggplot(Apex_pH_means, aes(x=Date.Time, y = pH, group = Treatment, color = Treatm
 
 Reading in and transforming hobo logger data. 
 ```{r}
-Hobo_path = "Environmental_data/Temp_Hobo_Loggers/"
-hobo_files <- list.files(path = Hobo_path, pattern = "*.csv") 
+tankIDs <- read.csv('Environmental_data/Tank_to_Treatment.csv')
+tankIDs$Tank <- as.character(tankIDs$Tank)
+  
+#bind all hobo logger data sets together
+Hobo.data <-
+  list.files(path = 'Environmental_data/Temp_Hobo_Loggers', pattern = ".csv", full.names = TRUE) %>% # list files in directory following a particular pattern
+  set_names(.) %>% # get the column names
+  map_dfr(read.table, .id = "file.ID", header=FALSE, skip=1, sep=",") %>% # join all files together in one data frame by file ID
+  group_by(file.ID) %>% # for each file do the following
+  select(-V1) %>% dplyr::rename(Date.Time = V2, Temperature = V3)
 
-df <- tibble(file = hobo_files) %>%
-  separate(file, into = c("Date", "Tank"), remove = FALSE)
+Hobo.data$Date.Time <- mdy_hm(Hobo.data$Date.Time, quiet=FALSE, tz="UTC", truncated=0) #format date and time 
 
+file.name <- c("Environmental_data/Temp_Hobo_Loggers/20190117_Tank1.csv", 
+               "Environmental_data/Temp_Hobo_Loggers/20190117_Tank2.csv",
+               "Environmental_data/Temp_Hobo_Loggers/20190117_Tank3.csv",
+               "Environmental_data/Temp_Hobo_Loggers/20190117_Tank4.csv",
+               "Environmental_data/Temp_Hobo_Loggers/20190117_Tank5.csv",
+               "Environmental_data/Temp_Hobo_Loggers/20190117_Tank6.csv",
+               "Environmental_data/Temp_Hobo_Loggers/20190117_Tank7.csv",
+               "Environmental_data/Temp_Hobo_Loggers/20190117_Tank8.csv",
+               "Environmental_data/Temp_Hobo_Loggers/20190117_Tank9.csv",
+               "Environmental_data/Temp_Hobo_Loggers/20190117_Tank10.csv",
+               "Environmental_data/Temp_Hobo_Loggers/20190117_Tank11.csv",
+               "Environmental_data/Temp_Hobo_Loggers/20190117_Tank12.csv")
+tank.ID <- c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12")
+Hobo.data$Tank <- tank.ID[match(Hobo.data$file.ID, file.name)] #adding a tank number column based on the file.ID column 
+Hobo.data$Tank <- as.character(Hobo.data$Tank) 
 
+Hobo.data <- left_join(Hobo.data, tankIDs) %>% select(-Tank.Name) #adding treatment info to each tank
 
-
-filenames <- list.files("Environmental_data/Temp_Hobo_Loggers", pattern="*.csv", full.names=TRUE)
-tbl <- sapply(filenames, read_csv, simplify=FALSE) %>% bind_rows(.id = "id")
-
+Hobo.means <- summarySE(Hobo.data, measurevar = "Temperature", groupvars=c("Date.Time", "Treatment")) #N, mean(Temperature), sd, se, ci
 ```
+Need to filter out times that hobo logger was out of the water. 
 
-
-
-
-Improvements to be made: 
-1.) Creating a loop for the "[ ,2:3] %>% rename(TankX = V3)" function so it is not repetitive. 
-2.) Creating a for loop for the Tank1 <- Tank8[1:nrow(Tank6),] function so it is not repetitive.
+Visualizing data. 
 ```{r}
-Tank1 <- read.csv('Environmental_data/Temp_Hobo_Loggers/20190117_Tank1.csv', sep=",", skip=c(40), header=FALSE, na.strings = "NA")[ ,2:3]
-Tank2 <- read.csv('Environmental_data/Temp_Hobo_Loggers/20190117_Tank2.csv', sep=",", skip=c(40), header=FALSE, na.strings = "NA")[ ,2:3]
-  Tank2 <- Tank2[1:nrow(Tank1),]
-Tank3 <- read.csv('Environmental_data/Temp_Hobo_Loggers/20190117_Tank3.csv', sep=",", skip=c(40), header=FALSE, na.strings = "NA")[ ,2:3] 
-  Tank3 <- Tank3[1:nrow(Tank1),]
-Tank4 <- read.csv('Environmental_data/Temp_Hobo_Loggers/20190117_Tank4.csv', sep=",", skip=c(40), header=FALSE, na.strings = "NA")[ ,2:3] 
-  Tank4 <- Tank4[1:nrow(Tank1),]
-Tank5 <- read.csv('Environmental_data/Temp_Hobo_Loggers/20190117_Tank5.csv', sep=",", skip=c(40), header=FALSE, na.strings = "NA")[ ,2:3]
-  Tank5 <- Tank5[1:nrow(Tank1),] 
-Tank6 <- read.csv('Environmental_data/Temp_Hobo_Loggers/20190117_Tank6.csv', sep=",", skip=c(40), header=FALSE, na.strings = "NA")[ ,2:3]  
-  Tank6 <- Tank6[1:nrow(Tank1),] 
-Tank7 <- read.csv('Environmental_data/Temp_Hobo_Loggers/20190117_Tank7.csv', sep=",", skip=c(40), header=FALSE, na.strings = "NA")[ ,2:3] 
-  Tank7 <- Tank7[1:nrow(Tank1),] 
-Tank8 <- read.csv('Environmental_data/Temp_Hobo_Loggers/20190117_Tank8.csv', sep=",", skip=c(40), header=FALSE, na.strings = "NA")[ ,2:3] 
-  Tank8 <- Tank8[1:nrow(Tank1),]
-Tank9 <- read.csv('Environmental_data/Temp_Hobo_Loggers/20190117_Tank9.csv', sep=",", skip=c(40), header=FALSE, na.strings = "NA")[ ,2:3]
-  Tank9 <- Tank9[1:nrow(Tank1),]
-Tank10 <- read.csv('Environmental_data/Temp_Hobo_Loggers/20190117_Tank10.csv', sep=",", skip=c(40), header=FALSE, na.strings = "NA")[ ,2:3]
-  Tank10 <- Tank10[1:nrow(Tank1),]
-Tank11 <- read.csv('Environmental_data/Temp_Hobo_Loggers/20190117_Tank11.csv', sep=",", skip=c(40), header=FALSE, na.strings = "NA")[ ,2:3] 
-  Tank11 <- Tank11[1:nrow(Tank1),]
-Tank12 <- read.csv('Environmental_data/Temp_Hobo_Loggers/20190117_Tank12.csv', sep=",", skip=c(40), header=FALSE, na.strings = "NA")[ ,2:3] 
-  Tank12 <- Tank12[1:nrow(Tank1),]
+colors <- c("lightblue", "blue", "salmon", "red3")
 
-Hobos <- cbind(Tank2, Tank1$V3, Tank3$V3, Tank4$V3, Tank5$V3, Tank6$V3, Tank7$V3, Tank8$V3, Tank9$V3, Tank10$V3, Tank11$V3, Tank12$V3)
-colnames(Hobos) <- c("Date.Time", "Tank2", "Tank1", "Tank3", "Tank4", "Tank5", "Tank6", "Tank7", "Tank8", "Tank9", "Tank10", "Tank11", "Tank12")
-Hobos <- Hobos[1:(nrow(Hobos)-10),]
-Hobos$Date.Time <- parse_date_time(Hobos$Date.Time, "%m/%d/%y %I:%M:%S %p", tz="HST")
-```
+ggplot(data = Hobo.means, aes(x = Date.Time, y = Temperature, colour = Treatment)) +
+  #geom_point(size=0.2) +
+  scale_color_manual(values = colors) +
+  labs(x = "Date",
+       y = "Temperature (°C)") +
+  geom_line(aes(group=Treatment)) +
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+                     panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_x_datetime(date_breaks = "7 days", labels = date_format("%b %d")) +
+  geom_vline(aes(xintercept = as.integer(as.POSIXct("2018-09-22 07:00:00"))), col = "black", linetype="dotted") +
+  geom_vline(aes(xintercept = as.integer(as.POSIXct("2018-11-17 07:00:00"))), col = "black", linetype="dotted") +
+  theme(legend.position=c(0.9, 0.8), legend.background = element_blank()) 
 
-Transforming the dataframe to add treatments. 
-```{r}
-Hobos <- Hobos %>% 
-  gather("Tank_Number", "Temperature", 2:13)
-
-Hobo_Treatment_Tanks <- read.csv('Environmental_data/Tank_to_Treatment.csv') %>% rename(Tank_Number = Tank.Name)
-Hobo_Treatment_Tanks$Tank_Number <- as.character(Hobo_Treatment_Tanks$Tank_Number)
-
-Hobo_treatment <- full_join(Hobos, Hobo_Treatment_Tanks, by = "Tank_Number") %>% select(-Tank)
-```
-
-Summarizing statistics: mean, N, standard deviation, standard error, confidence interval 
-```{r}
-Hobo_means <- summarySE(Hobo_treatment, measurevar="Temperature", groupvars=c("Date.Time", "Treatment")) %>% na.omit(Temperature)
-```
-
-Graphing treatment temperatures over time. 
-To Do: decided if want to included error bars, and/or confidence intervals. Just plotting means currently. 
-```{r}
-colors <- c("blue", "lightblue", "salmon", "red3")
-
-ggplot(Hobo_means, aes(x=Date.Time, y = Temperature, group = Treatment, color = Treatment)) + 
-  geom_line() + theme_bw() +
-  scale_color_manual(values = colors) + 
-  scale_shape_manual(values=c(21,24), name = "Treatment") +
-  theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
-  xlab("Date") + theme(axis.text.x=element_text(angle=60, hjust=1)) + # x-axis label and rotating text on x axis
-  ylab("Temperature °C") + ylim(c(20,32)) + # y-axis label and y axis range
-  ggtitle("Hobo Logger Data") + theme(plot.title = element_text(hjust = 0.5)) + # title label and centering the title
-  theme(legend.position=c(0.9, 0.8), legend.background = element_blank())  
-  # geom_vline(xintercept = as.numeric(as.Date("2018-11-17 07:00:00")), colour="red", linetype="dotted")
+ggsave(filename = "Output/Hobo-loggers.pdf", device = "pdf", width = 11, height = 8)
+ggsave(filename = "Output/Hobo-loggers.png", device = "png", width = 11, height = 8)
 ```
 
 

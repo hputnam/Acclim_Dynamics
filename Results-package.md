@@ -25,6 +25,15 @@ Molecular: Symbiont community assemblage (ITS2 Seq), bacterial community assembl
 Holobiont physiology: protein content, total antioxidant capacity, chlorophyll concentration, tissue biomass, symbiont density.  
 Metabolism: respiration and photosynthetic rates.   
 
+## Experimental Treatments
+
+Hobo Logger Data
+
+![hobo]()
+
+
+## Physiology Sample Sizes
+
 **List of missing corals**:  
 The following have been lost in transit from HIMB to URI or misplaced in a freezer in either location. I've checked URI's freezers and neighboring lab's freezers multiple times. This will decrease the sample sizes of several groups down to 2 at the smallest in Day 2 and Week 1.
 
@@ -46,8 +55,6 @@ The following have been lost in transit from HIMB to URI or misplaced in a freez
 | Pacuta    	| 2859    	| HTHC      	| 20180929    	|
 | Pacuta    	| 2981    	| ATHC      	| 20180929    	|
 | Pacuta    	| 2984    	| ATHC      	| 20180929    	|
-
-## Physiology Sample Sizes
 
 This table applies to respiration rates, photosynthetic rates, chlorophyll, tissue biomass, protein, cell density, and TAC. No data in recovery period for respiration and photosynthetic rates. These are all individual corals (i.e. a week 1 coral will not be in any other timepoint).   
 Bleaching score, survivorship, and growth have different sample size values because corals were repetitively measured (i.e. a coral photographed in weeks 1-5 then physiologically sampled in week 6).   
@@ -134,11 +141,6 @@ Corals missing in transit: Due to the list of missing corals, several groups on 
 Only X number available to sample: Due to lower survivorship in recovery periods, there was limited availability for sampling, resulting a smaller sample size for some groups.  
 
 Some univariate physiology variables will also have decreased sample size groups, see each section for additional notes.
-
-## Experimental Treatments
-
-
-
 
 ## Univariate Physiology Results   
 
@@ -271,7 +273,7 @@ Sample sizes: n=3 per treatment per timepoint.
 
 ### ITS2 Sequencing
 
-Notebook post coming soon. Symbiont Type Profiles made from [SymPortal](). We had 17 profiles in our samples. Group label on the x-axis refers to sample. Each bar is one coral.   
+Notebook post coming soon. Symbiont Type Profiles made from [SymPortal](https://symportal.org/). We had 17 profiles in our samples. Group label on the x-axis refers to sample. Each bar is one coral.   
 
 Figure 20210120
 
