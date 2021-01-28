@@ -41,6 +41,10 @@ The sharp drops ~1-2 weeks are from removing the hobo loggers from the tanks to 
 
 ![box](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Discrete-Temp-pH-Trt.png?raw=true)
 
+**Discrete Carbonate Chemistry**
+
+![carbchem]()
+
 ## Physiology Sample Sizes
 
 **List of missing corals**:  
@@ -348,7 +352,7 @@ Total                118   27.0865                 1.00000
 ### 16s Sequencing
 
 We have tested two primers sets and are now planning to move forward with 515F and 806R for V4 region.
-This is in progress in the lab at URI. 
+This is in progress in the lab at URI.
 
 ### Metabolomics
 
@@ -365,5 +369,5 @@ Manuscript going out for review on 3 methods to examine methylation in Mcap and 
 https://github.com/hputnam/Meth_Compare
 
 Timeseries of Methylation
-All samples have DNA extracted. We are starting with WGBS from 60 P. acuta (smaller genome) at the same timepoints initially done for metabolomics. 
+All samples have DNA extracted. We are starting with WGBS from 60 P. acuta (smaller genome) at the same timepoints initially done for metabolomics.
 We expect to submit these in Feb and have data in March.
