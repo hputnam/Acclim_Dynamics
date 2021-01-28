@@ -43,7 +43,7 @@ The sharp drops ~1-2 weeks are from removing the hobo loggers from the tanks to 
 
 **Discrete Carbonate Chemistry**
 
-![carbchem]()
+![carbchem](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Carbonate-Chemistry.png?raw=true)
 
 ## Physiology Sample Sizes
 
