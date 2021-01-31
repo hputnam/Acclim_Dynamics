@@ -1,20 +1,20 @@
 {
-    "debugBreakpointsState" : {
-        "breakpoints" : [
+    "debugBreakpointsState": {
+        "breakpoints": [
             {
-                "editor_line_number" : 20,
-                "editor_state" : 1,
-                "function_name" : "toplevel",
-                "function_steps" : "",
-                "id" : 0,
-                "is_package_breakpoint" : false,
-                "is_pending_debug_completion" : false,
-                "line_number" : 20,
-                "needs_updated_steps" : false,
-                "package_name" : "",
-                "path" : "~/MyProjects/Holobiont_Integration/RAnalysis/Scripts/Surface_Area.R",
-                "state" : 1,
-                "type" : 1
+                "editor_line_number": 20,
+                "editor_state": 1,
+                "function_name": "toplevel",
+                "function_steps": "",
+                "id": 0,
+                "is_package_breakpoint": false,
+                "is_pending_debug_completion": false,
+                "line_number": 20,
+                "needs_updated_steps": false,
+                "package_name": "",
+                "path": "~/MyProjects/Holobiont_Integration/RAnalysis/Scripts/Surface_Area.R",
+                "state": 1,
+                "type": 1
             }
         ]
     }

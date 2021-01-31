@@ -1,9 +1,9 @@
 {
-    "path" : "~/MyProjects/Acclim_Dynamics",
-    "sortOrder" : [
+    "path": "~/MyProjects/Acclim_Dynamics/Environmental_data/Total_Alkalinity",
+    "sortOrder": [
         {
-            "ascending" : true,
-            "columnIndex" : 2
+            "columnIndex": 2,
+            "ascending": true
         }
     ]
 }
