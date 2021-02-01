@@ -203,8 +203,13 @@ AFDW_plot <- ggplot(AFDW_means, aes(x=Timepoint, y = Value, group = Treatment, c
   ggtitle("Tissue Biomass") +
   theme(legend.position = "left") +
   geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
-  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
-  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) #Set the text angle
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
+  # Change axis line
+  axis.line = element_line(colour = "black"))
 AFDW_plot
 
 ggsave(file="Output/Final_Figures/Tissue_Biomass.pdf", AFDW_plot, width = 11, height = 6, units = c("in"))
