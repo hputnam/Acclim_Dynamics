@@ -191,12 +191,18 @@ Blch_plot <- ggplot(All.Means, aes(x=Timepoint, y = mean, group = Treatment, col
   xlab("Timepoint") + 
   ylab("Bleaching Score") + # y-axis label and y axis range
   theme_bw() + 
-  ggtitle("Photographic Bleaching") +
+  ggtitle("Color Score") +
   theme(legend.position = "left") +
   geom_vline(xintercept = c(7.8), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
   scale_x_discrete(breaks = c("Week1", "Week2", "Week4", "Week6", "Week8", "Week12", "Week16"), labels = c("1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week")) +
-  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) #Set the text angle 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  # Change axis line
+  axis.line = element_line(colour = "black"))
+
 Blch_plot
 
 ggsave(file="Output/Final_Figures/Photographic_Bleaching.pdf", Blch_plot, width = 11, height = 6, units = c("in"))

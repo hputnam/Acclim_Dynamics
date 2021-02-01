@@ -49,7 +49,7 @@ for(i in 1:length(file.names)) { # for every file in list start at the first and
   model <-lm(mVTris ~ TTris, data=Calib.Data) #runs a linear regression of mV as a function of temperature
   coe <- coef(model) #extracts the coeffecients
   summary(model)$r.squared #extracts the r squared
-  plot(Calib.Data$mVTris, Calib.Data$TTris) #plots the regression data
+  #plot(Calib.Data$mVTris, Calib.Data$TTris) #plots the regression data
   pH.cals[i,2:3] <- coe #inserts coefficients in the dataframe
   pH.cals[i,1] <- substr(file.names[i],1,8) #stores the file name in the Date column
 }
@@ -79,6 +79,7 @@ SW.chem$pH.Total<-phTris+(mvTris/1000-SW.chem$pH.MV/1000)/(R*(SW.chem$Temperatur
 
 Quality check calculated tank conditions. This is helpful to run while the experiment is on-going to catch any typos in the datasheet or mis-typed equations.
 ```{r}
+par(mfrow=c(1,3))
 boxplot(SW.chem$Temperature)
 range(na.omit(SW.chem$Temperature))
 
@@ -90,80 +91,51 @@ boxplot(SW.chem$Salinity)
 range(na.omit(SW.chem$Salinity))
 ```
 
-Removing acclimation and testing periods. 
+Plotting Temperature
 ```{r}
-#remove CO2 and heat test tanks
-SW.chem <- SW.chem %>%
-  filter(Treatment != "Heat_Test") %>%
-  filter(Treatment != "CO2_Test")
+SW.chem$Timepoint <- as.Date(SW.chem$Timepoint, format = "%m/%d/%y")
 
-unique(as.character(SW.chem$Treatment))
+all.colors <- c("black", "lightblue", "blue", "salmon", "red3")
 
-#remove acclimation period
-Trt.SW.chem  <- SW.chem %>%
-  filter(Treatment != "Acclimation")
-```
+annotation <- data.frame(x = c(as.numeric(as.Date("2018-09-22")),as.numeric(as.Date("2018-09-29")),
+         as.numeric(as.Date("2018-10-06")),as.numeric(as.Date("2018-10-20")),
+         as.numeric(as.Date("2018-11-03")),as.numeric(as.Date("2018-11-17")),
+         as.numeric(as.Date("2018-12-14")),as.numeric(as.Date("2019-01-10"))),
+   y = c(22,22,22,22,22,22,22,22),
+   label = c("Day1", "1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week"))
 
-Transforming dataset. 
-```{r}
-#arrange to longer format
-Trt.SW.chem <- pivot_longer(Trt.SW.chem, c(Temperature, pH.Total)) %>% na.omit(Trt.SW.chem) %>% dplyr::rename(Measurement = name)
-Trt.SW.chem$Date <- as.character(Trt.SW.chem$Date)
+Discrete.Temp <- SW.chem %>%
+  filter(Period2 != "Empty") %>%
+  filter(Period2 != "Testing") %>%
+  ggplot(aes(x = Timepoint, y = Temperature, color = Treatment)) +
+  scale_color_manual(values = all.colors) +
+  labs(x = "", y = "Temperature °C") +
+  geom_jitter(width = 0.1) +
+  geom_vline(xintercept = as.numeric(as.Date("2018-11-18")), colour="black", linetype="dotted") +
+  theme_classic()+
+  scale_x_continuous(breaks = c(17796, 17803, 17810, 17824, 17838, 17852, 17879, 17906), labels = c("Day1", "1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week"))+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
 
-Discrete.means <- summarySE(Trt.SW.chem, measurevar = "value", groupvars=c("Date", "Measurement", "Treatment"))
-Disc.Temp.means <- subset(Discrete.means, Measurement=="Temperature")
-Disc.pH.means <- subset(Discrete.means, Measurement=="pH.Total")
-```
+ggsave(file="Output/Discrete.Temp.pdf", Discrete.Temp, width = 11, height = 10, units = c("in"))
+ggsave(file="Output/Discrete.Temp.png", Discrete.Temp, width = 11, height = 10, units = c("in"))
 
-Plot Temp and pH for all daily measures.
-```{r}
-colors <- c("lightblue", "blue", "salmon", "red3")
+Discrete.pH <- SW.chem %>%
+  filter(Period2 != "Empty") %>%
+  filter(Period2 != "Testing") %>%
+  ggplot(aes(x = Timepoint, y = pH.Total, color = Treatment)) +
+  scale_color_manual(values = all.colors) +
+  labs(x = "", y = "pH total scale") +
+  geom_jitter(width = 0.1) +
+  geom_vline(xintercept = as.numeric(as.Date("2018-11-18")), colour="black", linetype="dotted") +
+  theme_classic()+
+  scale_x_continuous(breaks = c(17796, 17803, 17810, 17824, 17838, 17852, 17879, 17906), labels = c("Day1", "1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week"))+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
 
-# temp
-ggplot(data = Disc.Temp.means, aes(x = Date, y = value, colour = Treatment)) +
-  #geom_point(size=0.2) +
-  scale_color_manual(values = colors) +
-  labs(x = "Date",
-       y = "Temperature (°C)") +
-  geom_line(aes(group=Treatment)) +
-  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
-                     panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  geom_vline(xintercept = c("20181118"), colour="black", linetype="dotted") +
-  scale_x_discrete(breaks = c("20180922", "20180929", "20181006", "20181020", "20181103", "20181117", "20181214", "20190110"), labels = c("Day1", "1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week")) +
-  theme(legend.position=c(0.9, 0.8), legend.background = element_blank()) 
+ggsave(file="Output/Discrete.pH.pdf", Discrete.pH, width = 11, height = 10, units = c("in"))
+ggsave(file="Output/Discrete.pH.png", Discrete.pH, width = 11, height = 10, units = c("in"))
 
-ggsave(filename = "Output/Discrete-Temperature.pdf", device = "pdf", width = 11, height = 8)
-ggsave(filename = "Output/Discrete-Temperature.png", device = "png", width = 11, height = 8)
-
-# pH total
-ggplot(data = Disc.pH.means, aes(x = Date, y = value, colour = Treatment)) +
-  #geom_point(size=0.2) +
-  scale_color_manual(values = colors) +
-  labs(x = "Date",
-       y = "pH Total") +
-  geom_line(aes(group=Treatment)) +
-  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
-                     panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  geom_vline(xintercept = c("20181118"), colour="black", linetype="dotted") +
-  scale_x_discrete(breaks = c("20180922", "20180929", "20181006", "20181020", "20181103", "20181117", "20181214", "20190110"), labels = c("Day1", "1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week")) +
-  theme(legend.position=c(0.9, 0.35), legend.background = element_blank()) 
-
-ggsave(filename = "Output/Discrete-pH.pdf", device = "pdf", width = 11, height = 8)
-ggsave(filename = "Output/Discrete-pH.png", device = "png", width = 11, height = 8)
-
-
-Treatment.chem <- Trt.SW.chem %>% subset(Period1=="Treatment")
-ggplot(data=Treatment.chem, aes(x=Treatment, y=value, colour=Treatment)) + 
-  geom_boxplot() +
-  scale_color_manual(values = colors) +
-  facet_grid(Measurement ~ ., scales="free_y") +
-  xlab("Treatment") +
-  theme_classic()
-
-ggsave(filename = "Output/Discrete-Temp-pH-Trt.pdf", device = "pdf", width = 11, height = 8)
-ggsave(filename = "Output/Discrete-Temp-pH-Trt.png", device = "png", width = 11, height = 8)
+Discrete.Temp
+Discrete.pH
 ```
 
 ### DISCRETE TA CALCULATIONS ### 
@@ -188,8 +160,8 @@ carb.output$HCO3 <- carb.output$HCO3*1000000 #convert to µmol kg-1
 carb.output$CO3 <- carb.output$CO3*1000000 #convert to µmol kg-1
 carb.output$DIC <- carb.output$DIC*1000000 #convert to µmol kg-1
 carb.output <- carb.output[,-c(1,4,5,8,10:13,19)] #subset variables of interest
-carb.output <- cbind(SW.chem$Date,  SW.chem$Sample.ID,  SW.chem$Treatment, SW.chem$Period1, SW.chem$Type.x, carb.output) #combine the sample information with the seacarb output
-colnames(carb.output) <- c("Date",  "Sample.ID",  "Treatment", "Period1","Type",	"Salinity", "Temperature", "pH",	"CO2",	"pCO2","HCO3",	"CO3",	"DIC", "TA",	"Aragonite.Sat") #Rename columns to describe contents
+carb.output <- cbind(SW.chem$Date,  SW.chem$Sample.ID,  SW.chem$Treatment,SW.chem$Timepoint, SW.chem$Period1, SW.chem$Period2, SW.chem$Type.x, carb.output) #combine the sample information with the seacarb output
+colnames(carb.output) <- c("Date",  "Sample.ID",  "Treatment", "Timepoint","Period1", "Period2", "Type",	"Salinity", "Temperature", "pH",	"CO2",	"pCO2","HCO3",	"CO3",	"DIC", "TA",	"AragSat") #Rename columns to describe contents
 carb.output$Tank <- substring(carb.output$Sample.ID, 10)
 carb.output$Tank <- factor(carb.output$Tank)
 
@@ -198,53 +170,108 @@ write.table(carb.output, "Environmental_data/Seawater_chemistry_table_Output_All
 
 Subsetting to groups we want to visualize. 
 ```{r}
-carb.output1 <- subset(carb.output, Period1 == "Acclimation")
-carb.output1 <- subset(carb.output1, Treatment == "Acclimation")
-carb.output1$Tank <- factor(carb.output1$Tank)
+carb.output.long <- pivot_longer(carb.output, cols = Temperature:AragSat) %>%
+  dplyr::rename(Measurement = name)
 
-carb.output2 <- subset(carb.output, Period1 == "Treatment")
-carb.output2$Tank <- factor(carb.output2$Tank)
-carb.output2$Treatment <- factor(carb.output2$Treatment)
-```
+carb.output.long %>%
+  filter(Treatment == "Acclimation" & Period2 == "Acclimation") %>%
+  ggplot(aes(x = Timepoint, y = value, color = Treatment)) +
+  scale_color_manual(values = all.colors) +
+  facet_wrap(Measurement ~ ., scales="free_y") +
+  labs(x = "", y = "Temperature °C") +
+  geom_jitter(width = 0.1) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+  panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  panel.background = element_blank(),
+  axis.line = element_line(colour = "black"))
 
-Visualizing carb chem values 
-```{r}
-CO2 <- ggplot(data=carb.output2, aes(x=Treatment, y=CO2, colour=Treatment)) + 
-  geom_boxplot() + scale_color_manual(values = colors) + theme_classic() + theme(legend.position = "none") +
-  xlab("Treatment") + ylab("CO2")
+trt.colors <- c("lightblue", "blue", "salmon", "red3")
 
-pCO2 <- ggplot(data=carb.output2, aes(x=Treatment, y=pCO2, colour=Treatment)) + 
-  geom_boxplot() + scale_color_manual(values = colors) + theme_classic() + theme(legend.position = "none") +
-  xlab("Treatment") + ylab("pCO2")
+#Acute Period
+carb.output.long %>%
+  filter(Period2 == "Acute") %>%
+  ggplot(aes(x = Timepoint, y = value, color = Treatment)) +
+  scale_color_manual(values = trt.colors) +
+  facet_wrap(Measurement ~ ., scales="free_y") +
+  labs(x = "", y = "Temperature °C") +
+  geom_jitter(width = 0.1) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+  panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  panel.background = element_blank(),
+  axis.line = element_line(colour = "black")) 
 
-HCO3 <- ggplot(data=carb.output2, aes(x=Treatment, y=HCO3, colour=Treatment)) + 
-  geom_boxplot() + scale_color_manual(values = colors) + theme_classic() + theme(legend.position = "none") +
-  xlab("Treatment") + ylab("Bicarbonate (HCO3)")
+#Chronic Period
+carb.output.long %>%
+  filter(Period2 == "Chronic") %>%
+  ggplot(aes(x = Timepoint, y = value, color = Treatment)) +
+  scale_color_manual(values = trt.colors) +
+  facet_wrap(Measurement ~ ., scales="free_y") +
+  labs(x = "", y = "Temperature °C") +
+  geom_jitter(width = 0.1) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+  panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  panel.background = element_blank(),
+  axis.line = element_line(colour = "black")) 
 
-CO3 <- ggplot(data=carb.output2, aes(x=Treatment, y=CO3, colour=Treatment)) + 
-  geom_boxplot() + scale_color_manual(values = colors) + theme_classic() + theme(legend.position = "none") +
-  xlab("Treatment") + ylab("Carbonate (CO3)")
+#Recovery Period
+carb.output.long %>%
+  filter(Period2 == "Recovery") %>%
+  ggplot(aes(x = Timepoint, y = value, color = Treatment)) +
+  scale_color_manual(values = trt.colors) +
+  facet_wrap(Measurement ~ ., scales="free_y") +
+  labs(x = "", y = "Temperature °C") +
+  geom_jitter(width = 0.1) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+  panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  panel.background = element_blank(),
+  axis.line = element_line(colour = "black")) 
 
-DIC <- ggplot(data=carb.output2, aes(x=Treatment, y=DIC, colour=Treatment)) + 
-  geom_boxplot() + scale_color_manual(values = colors) + theme_classic() + theme(legend.position = "none") +
-  xlab("Treatment") + ylab("Dissolved Inorganic Carbon")
-
-TA <- ggplot(data=carb.output2, aes(x=Treatment, y=TA, colour=Treatment)) + 
-geom_boxplot() + scale_color_manual(values = colors) + theme_classic() + theme(legend.position = "none") +
-  xlab("Treatment") + ylab("Total alkalinity umol kg-1")
-
-Arag.Sat <- ggplot(data=carb.output2, aes(x=Treatment, y=Aragonite.Sat, colour=Treatment)) + 
-  geom_boxplot() + scale_color_manual(values = colors) + theme_classic() + theme(legend.position = "none") +
-  xlab("Treatment") + ylab("Aragonite Saturation State") 
-
-Sal <- ggplot(data=carb.output2, aes(x=Treatment, y=Salinity, colour=Treatment)) + 
-  geom_boxplot() + scale_color_manual(values = colors) + theme_classic() + theme(legend.position = "none") +
-  xlab("Treatment") + ylab("Salinity (psu)")
-
-Carb.Chem.Figs <- arrangeGrob(CO2, pCO2, HCO3, CO3, DIC, TA, Arag.Sat, Sal, ncol=2)
+#All Treatment
+Carb.Chem.Figs <- carb.output.long %>%
+  ggplot(aes(x = Timepoint, y = value, color = Treatment)) +
+  scale_color_manual(values = all.colors) +
+  facet_wrap(Measurement ~ ., scales="free_y") +
+  labs(x = "", y = "Temperature °C") +
+  geom_jitter(width = 0.1) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+  panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  panel.background = element_blank(),
+  axis.line = element_line(colour = "black")) +
+  geom_vline(xintercept = as.numeric(as.Date("2018-11-18")), colour="black", linetype="dotted")+
+  scale_x_continuous(breaks = c(17796, 17803, 17810, 17824, 17838, 17852, 17879, 17906), labels = c("Day1", "1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week"))+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
 
 ggsave(file="Output/Carbonate-Chemistry.pdf", Carb.Chem.Figs, width = 11, height = 10, units = c("in"))
 ggsave(file="Output/Carbonate-Chemistry.png", Carb.Chem.Figs, width = 11, height = 10, units = c("in"))
+
 ```
+Generating Carb Chem Tables
+```{r}
 
+carb.output.long <- carb.output.long %>%
+  filter(Period2 != "Empty") %>%
+  filter(Period2 != "Testing")
 
+carb.chem.DS <-  carb.output.long %>%
+                group_by(Measurement, Period2, Treatment) %>%
+                dplyr::summarize(mean=mean(value),
+                          sem=(sd(value)/sqrt(n())),
+                          .groups = "keep")
+
+carb.chem.DS <- na.omit(carb.chem.DS)
+
+carb.chem.DS <- data.frame(carb.chem.DS)
+  
+write.csv(carb.chem.DS, file="Output/Carbonate-Chemistry.csv")
+          
+```
