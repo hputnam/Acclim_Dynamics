@@ -1,0 +1,146 @@
+---
+title: "Statistics.Rmd"
+author: "EL Strand"
+date: "2/11/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Clears workspace. 
+```{r}
+rm(list=ls())
+```
+
+Loading libraries. 
+```{r}
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+library(car) # qqplot function
+library(mgcv) # GAM function
+library(ggfortify)
+library(devtools)
+install_github("vqv/ggbiplot")
+```
+
+### Read in data files to analyze. 
+
+```{r}
+Master <- read.csv("Environmental_data/Master_Fragment.csv") %>% select(Plug_ID, Species, ANALYSIS, Timepoint, Treatment, Temperature, CO2) %>%
+  filter(ANALYSIS == "Physiology" | ANALYSIS == "Physiology/Molecular")
+  
+Photo.Resp <- read.csv("Physiology_variables/Respirometry/Output/Resp_AllRates.csv") %>% select(Fragment.ID.x, Pnet_umol.cm2.hr, Rdark_umol.cm2.hr, Pgross_umol.cm2.hr) %>%
+  dplyr::rename(Plug_ID = Fragment.ID.x)
+  Photo.Resp$Plug_ID <- gsub("P-", "", Photo.Resp$Plug_ID)
+  Photo.Resp$Plug_ID <- gsub("M-", "", Photo.Resp$Plug_ID)
+  Photo.Resp <- Photo.Resp %>% separate(Plug_ID, c("Plug_ID", "Date")) %>% select(-Date)
+
+Chlorophyll <-  read.csv("Output/chlorophyll.csv") %>% select(Plug_ID, chla.ug.cm2, chlc2.ug.cm2)
+
+Biomass <- read.csv("Output/Tissue_Biomass.csv") %>% select(Plug_ID, partner, AFDW.mg.cm2)
+
+Protein <- read.csv("Output/soluble_protein.csv") %>% select(Plug_ID, prot_mg.cm2)
+
+Antioxidant <- read.csv("Output/antioxidant_capacity.csv") %>% select(Plug_ID, cre.umol.mgprot)
+
+Color.Score <- read.csv("Physiology_variables/Bleaching_Score_Output.csv") %>% select(PLUG.ID, Bleaching.Score, Timepoint) %>% rename(Plug_ID=PLUG.ID) %>% 
+  rename(Blch.Time = Timepoint)
+Color.Score$Blch.Time <- gsub("^.{0,4}", "", Color.Score$Blch.Time) # taking out the "Week" in every row
+Color.Score$Blch.Time <- paste(Color.Score$Blch.Time, "week") # adding "week" after each number in every row 
+
+Growth <- read.csv("Physiology_variables/Growth_Buoyant_Weight/Growth_Rates.csv") %>% select(PLUG.ID, T0.g.d.cm2, T1.g.d.cm2, T2.g.d.cm2, T3.g.d.cm2, T4.g.d.cm2, T5.g.d.cm2,
+                                                                                             T6.g.d.cm2, T7.g.d.cm2, T8.g.d.cm2) %>% 
+  gather("Growth.Time", "Growth.Rate", 2:10) %>% na.omit(Growth.Rate) %>% rename(Plug_ID=PLUG.ID) %>%
+  mutate(Growth.Time = case_when(
+    Growth.Time == "T0.g.d.cm2" ~ "1 week",
+    Growth.Time == "T1.g.d.cm2" ~ "2 week", 
+    Growth.Time == "T2.g.d.cm2" ~ "4 week",
+    Growth.Time == "T3.g.d.cm2" ~ "6 week",
+    Growth.Time == "T4.g.d.cm2" ~ "8 week",
+    Growth.Time == "T5.g.d.cm2" ~ "10 week",
+    Growth.Time == "T6.g.d.cm2" ~ "12 week",
+    Growth.Time == "T7.g.d.cm2" ~ "14 week",
+    Growth.Time == "T8.g.d.cm2" ~ "16 week")
+  )
+
+
+# Cell.density
+
+# come back to adding Color.Score and Growth back in and subsetting for where all three timepoint columns match 
+# joining all datasets together, reshaping the AFDW partner into columns, renaming those columns, removing an NA column, and calculating S:H AFDW ratio
+data <- join_all(list(Master, Photo.Resp, Chlorophyll, Biomass, Protein, Antioxidant), by='Plug_ID', type='left') %>%
+  spread(partner, AFDW.mg.cm2) %>% rename(Host_AFDW.mg.cm2 = Host) %>% rename(Sym_AFDW.mg.cm2 = Sym) %>% select(-"<NA>") %>%
+  mutate(Ratio_AFDW.mg.cm2=Sym_AFDW.mg.cm2/Host_AFDW.mg.cm2) 
+data$Timepoint <- factor(data$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week"))
+
+```
+
+# Univariate analysis
+
+## Statistical Modeling
+Fixed factors: Temperature, CO2, Species, Timepoint. 
+Come back to this: Should I be doing this separately for species? I think so.. 
+
+### Photosynthetic Rates and Respiration 
+
+Linear mixed effect model
+```{r}
+Pnet_LMER <- lmer(Pnet_umol.cm2.hr ~ Timepoint*Species*Temperature*CO2 + (1|Plug_ID), na.action=na.omit, data=data)
+summary(Pnet_LMER)
+
+qqPlot(residuals(Pnet_LMER))
+hist(residuals(Pnet_LMER))
+```
+
+Generalized Additive model 
+```{r}
+Pnet_GAM <- gam(Pnet_umol.cm2.hr ~ s(Timepoint) + s(Species) + s(Temperature) + s(CO2), data=data)
+summary(Pnet_GAM)
+
+
+```
+
+Comparing these two models. 
+```{r}
+anova(mod_lm2, mod_gam2, test="Chisq")
+```
+
+
+
+# Multivariate analysis 
+
+## PCA 
+
+Plot PCA with prcomp to center and scale. 
+
+```{r}
+pca_data <- data[complete.cases(data), ] # only taking rows where all samples have data
+
+scaled_data <- prcomp(pca_data[c(8:17)], scale=TRUE, center=TRUE) # columns 8-17 are the data values
+```
+
+Group by species, timepoint, treatment. 
+```{r}
+cols <- c("lightblue", "blue", "salmon", "red3")
+
+Species.PCA <- autoplot(scaled_data, data = pca_data, colour = 'Species',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  xlim(-0.25,0.5); Species.PCA
+
+Treatment.PCA <- autoplot(scaled_data, data = pca_data, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  xlim(-0.25,0.5) + scale_color_manual(values = cols) + scale_fill_manual(values = cols); Treatment.PCA
+
+Timepoint.PCA <- autoplot(scaled_data, data = pca_data, colour = 'Timepoint',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  xlim(-0.25,0.5) + scale_colour_brewer(); Timepoint.PCA
+```
+
+
+
