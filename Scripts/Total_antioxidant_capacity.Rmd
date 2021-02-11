@@ -440,8 +440,12 @@ TAC <- left_join(TAC.values, metadata) %>%
 range(TAC$cre.umol.mgprot)
 ```
 
-Writing TAC output file. 
+Writing TAC output file. Taking out P1488 (See notes in results package markdown).
 ```{r}
+# taking out sample 1488 
+TAC <- TAC %>% filter(!Plug_ID == "1488")
+filter(TAC, Plug_ID == "1488") # checking to see that worked; output should be 0
+
 TAC %>% select(Plug_ID, uae.mM, Species, Timepoint, Treatment, prot_ug, cre.umol.L, cre.umol, cre.umol.mgprot) %>%
   write_csv(., path = "Output/antioxidant_capacity.csv")
 ```

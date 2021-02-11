@@ -126,7 +126,7 @@ df.chl <- df.chl %>%
 df.chl <- filter(df.chl, !Plug_ID %in% c("NA", "BK"))
 ```
 
-Reading in master fragment information. 
+Reading in master fragment information. Taking out P-1488 (See notes in results markdown). 
 ```{r}
 Master_fragment <- read.csv("Environmental_data/Master_Fragment.csv", header=T, sep=",", na.string="NA") %>% 
   subset(ANALYSIS=="Physiology" | ANALYSIS=="Physiology/Molecular") %>% # need to keep "Physiology" and "Physiology/Molecular"
@@ -136,6 +136,10 @@ str(df.chl)
 
 Chl_final <- left_join(df.chl, Master_fragment, by="Plug_ID") %>% na.omit(Species)
 Chl_final$Timepoint <- factor(Chl_final$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
+
+# taking out sample 1488 
+Chl_final <- Chl_final %>% filter(!Plug_ID == "1488")
+filter(Chl_final, Plug_ID == "1488") # checking to see that worked; output should be 0
 
 Chl_final %>%
   select(Plug_ID, Species, Timepoint, Temperature, Treatment, CO2, chla.ug.cm2, chlc2.ug.cm2) %>%

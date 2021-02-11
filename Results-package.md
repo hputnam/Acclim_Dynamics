@@ -170,7 +170,7 @@ Survivorship was measured every day and each coral was noted as dead or alive fo
 
 This dataset has been QC'd by Emma; final figure as of 20210108. Corals photographed and red blue green color square quantified in ImageJ.
 
-Week 5 data excluded because we didn't trust that set of values for any treatment. Come back to this?
+Week 5 data excluded because we didn't trust that set of values for any treatment.
 
 ### Growth
 
@@ -180,7 +180,7 @@ Buoywant weight technique
 
 Do we like the figure format for Growth, Resp/photo rates, or AFDW/Chl?  
 
-*P.acuta* Week 10 and 14 have the same value? This doesn't seem likely?
+*P.acuta* Week 10 and 14 have the same value? This is real data, they just have almost identical values for those timepoints. Nothing to change here.
 
 Figure as of 20210108.
 
@@ -200,9 +200,9 @@ This dataset has been QC'd by Emma; final figure as of 20210108.
 In addition to the missing list above, we won't have data for:  
 - 1174: there was no homogenate tissue in this falcon tube. Aliquots were made so this coral will have Chl, Prot, TAC, cell density.    
 - 1327: gained mass in AFDW protocol (not possible); not enough homogenate to do again.  
-- 1488: homogenate tube broke (froze and cracked) and we lost half of tissue homogenate. There was not enough left to do AFDW. There will be data for Chl, Prot, TAC, cell density.
+- 1488: homogenate tube broke (froze and cracked) and we lost half of tissue homogenate. There was not enough left to do AFDW.
 
-Need to re-do #2863. "Host" written down twice in notebook.
+Scheduled to re-do AFDW #2863 Monday Feb 15th - Wednesday Feb 17th.
 
 **AFDW sample size differences in addition to the 3 above sample size tables.**
 
@@ -219,10 +219,11 @@ Need to re-do #2863. "Host" written down twice in notebook.
 
 | Species  	| Timepoint 	| Treatment 	| Sample Size 	| Notes                                       	|
 |----------	|-----------	|-----------	|-------------	|---------------------------------------------	|
-| P. acuta 	| 8 week    	| HTAC      	| 5           	| 2156 missing data	|
+| P. acuta 	| 8 week    	| HTAC      	| 5           	| 2156 missing data	|  
+| P. acuta    	| Day 1     	| HTAC      	| 3           	| 1488 no data; Time limited 1st day in the field 	|
 
-P-2156 missing data. Label rubbed off, will need to re-do.  
-Decide about 1488 sample.  
+P-2156 missing data. Label rubbed off, will need to re-do. This has been scheduled to re-do on Feb 15th - Feb 16th.   
+P-1488: I don't trust the aliquots for this sample, no data here. See note from AFDW.   
 
 This dataset has been QC'd by Emma; final figure as of 20210118.
 
@@ -230,22 +231,25 @@ This dataset has been QC'd by Emma; final figure as of 20210118.
 
 ![prot](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Host-Soluble-Protein.png?raw=true)
 
-Week 4 P. acuta ATHC big drop, but samples are not in outlier tests. This still looks weird to me?
+Week 4 P. acuta ATHC big drop, but samples are not in outlier tests. This still looks weird to me? All sample IDs are correct in this group.. 1217, 2530, and 2858 done on Oct7 (each sample run in duplicate like normal). 1194, 1908, and 2882 done on Oct14 (each sample run in duplicate like normal).. Come back to this - what else to check?
 
-No additional groups with a decreased sample size.  
-Decide about 1488 sample.      
+| Species     	| Timepoint 	| Treatment 	| Sample Size 	| Notes                                           	|
+|-------------	|-----------	|-----------	|-------------	|-------------------------------------------------	|
+| P. acuta    	| Day 1     	| HTAC      	| 3           	| 1488 no data (see notes on Chl and AFDW); Time limited 1st day in the field 	|
+
 This dataset has been QC'd by Emma; final figure as of 20210118.
 
 ### Total Antioxidant Capacity
 
 ![TAC](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Total-Antioxidant-Capacity.png?raw=true)
 
-No additional groups with a decreased sample size.  
-Decide about 1488 sample.
+| Species     	| Timepoint 	| Treatment 	| Sample Size 	| Notes                                           	|
+|-------------	|-----------	|-----------	|-------------	|-------------------------------------------------	|
+| P. acuta    	| Day 1     	| HTAC      	| 3           	| 1488 no data (see notes on Chl and AFDW); Time limited 1st day in the field 	|
 
 Week 4 ATHC P acuta points look wonky like the protein values. Day 2 and Week 1 have very small sample sizes likely leading to large variation above?
 
-October 7th (3 plates) were done with an incorrectly diluted stop solution. Decide if need to be re-done.  
+October 7th (3 plates) are scheduled to be re-done on Feb 15th.   
 
 Still having an issue with the standard curve variation. According to the [assay kit protocol](https://www.cellbiolabs.com/sites/default/files/STA-360-total-antioxidant-capacity-assay-kit.pdf), 1 mM concentration should be around 1.35 Abs490. The closest st. curve was from Nov 10th plate. All points have been projected onto the st. curve from Nov 10th and TAC calculated from this st. curve. We still need to address this.
 
@@ -262,8 +266,24 @@ TAC <- left_join(TAC.values, metadata) %>%
           cre.umol.mgprot = cre.umol / (prot_ug / 1000))  # Convert to CRE per mg protein by dividing by total protein
 ```
 
-This is still producing very small values (0.04840641-1.60261156 CRE umol.mg prot). The above calculation is what was recommended by Hollie and Ross. So we have to divide by liters to get uM.mg prot to compare to the literature?
+### Generalized additive models
+Ross said this might be helpful.  
 
+Generalized linear model can capture non-Gaussian distribution models compared to standard linear models.
+
+GAMs are essentially GLMs but can capture non-linear relationships by working with "splines". The unique part of GAM is that is is composed of a sum of functions of covariates instead of or in addition to the standard linear covariates effects. Basically y does not have to be a linear function of x.
+
+You choose a "basis" which is a choice of "splines" (i.e. cubic spline vs polynomial spline). There is also penalized estimation that essentially keeps us from overfitting our data. GAM can be thought of like a modified GLM.  
+Information on GAM here(https://m-clark.github.io/generalized-additive-models/building_gam.html)
+
+
+These models are more general with less assumptions. Less stat power?
+
+Github code example [m-clark](https://m-clark.github.io/docs/mixedModels/mixedModelML.html#additive_model_as_a_mixed_model)
+Common examples:  
+- large datasets with complicated interaction effects  
+- Models with many parameters but not a lot of data per parameter  
+- Fitting a smooth trend line that allows the trend to vary by year
 
 ## Molecular Response Variables
 

@@ -219,14 +219,12 @@ std_curve_plotNov17 <- Nov17.standards %>%
 std_curve_plotNov17
 ```
 
-The standard curve for the bleaching test sample has a high R squared value but the absorbance values look off. 
-
 Calculating protein concentrations based on standard curve. 
 ```{r}
 ## 20201007 3 Plates
 Oct7protein <- Oct7 %>% 
   filter(!is.na(Plug_ID)) %>%
-  group_by(Plug_ID) %>%
+  dplyr::group_by(Plug_ID) %>%
   summarise(Abs480 = mean(Abs480)) %>% 
   mutate(Abs480.adj = Abs480 - Oct7.standards$Abs480[Oct7.standards$Standard == "StandardI"],  # Subtract blank standard (Standard I) from mean absorbance values
          prot_ug.mL = map_dbl(Abs480.adj, ~ predict(SP_mod_lin_Oct7, newdata = data.frame(Abs480.adj = .)))) # Use standard curve to convert absorbance to protein
@@ -291,7 +289,8 @@ Dilute.samples.list <- union(Oct7dilute, Oct14dilute) %>% union(Oct25dilute) %>%
 Dilute.samples.list
 ```
 
-2 samples diluted 1:1 so protein value is doubled below. 
+2 samples diluted 1:1 so protein value is doubled below. Taking out sample 1488 (see notes on Results markdown). 
+If adding more protein plates, double check that the two samples are doubled for the dilution done. 
 ```{r}
 ## Join all plates together
 protein <- union(Oct7protein, Oct14protein) %>% union(Oct25protein) %>% union(Nov17protein)
@@ -305,6 +304,10 @@ protein["367", "prot_ug.mL"] <- 2577.27
 # double checking this worked 
 filter(protein, Plug_ID == "1211") ## row 364; 1283.441 x 2 = 2566.882
 filter(protein, Plug_ID == "1298") ## row 367; 1288.635 x 2 = 2577.27
+
+# taking out sample 1488 
+protein <- protein %>% filter(!Plug_ID == "1488")
+filter(protein, Plug_ID == "1488") # checking to see that worked; output should be 0
 ```
 
 
@@ -362,6 +365,8 @@ prot.means$Timepoint <- factor(prot.means$Timepoint, levels=c("Day 1","Day 2","1
 # Looking at sample sizes 
 dplyr::filter(prot.means, N > 6) # this output should be zero b/c the biggest sample size is 6
 dplyr::filter(prot.means, N < 6) # this output should just be the Day 1, Day 2, Week 1, 12 week, and 16 week decreased sample sizes
+
+filter(protein, Timepoint == "4 week" & Species == "Pacuta" & Treatment == "ATHC") # this group looks like an outlier but all samples IDs are correct 
 ```
 
 Checking to see if there is an effect of plate.  

@@ -297,7 +297,7 @@ data.long$mg.d.cm2 <- data.long$value*1000
 Calculating means.
 ```{r}
 All.Means <- ddply(data.long, c('TimePoint','Species', 'Treatment'), summarize,
-                   mean= mean(mg.d.cm2, na.rm=T), #mean pnet
+                   mean= mean(mg.d.cm2, na.rm=T), #mean BW
                    N = sum(!is.na(mg.d.cm2)), # sample size
                    se = sd(mg.d.cm2, na.rm=T)/sqrt(N)) #SE
 All.Means
@@ -307,7 +307,21 @@ All.Means$SpGroup <- paste(All.Means$Treatment, All.Means$Species)
 
 Mcap.Means <- subset(All.Means, Species =="Mcapitata")
 Pact.Means <- subset(All.Means, Species =="Pacuta")
+
+filter(Pact.Means, TimePoint=="T5.g.d.cm2" | TimePoint=="T7.g.d.cm2") #these points look almost identical
 ```
+
+
+Timepoints:  
+T0.g.d.cm2 = 1 week  
+T1.g.d.cm2 = 2 week   
+T2.g.d.cm2 = 4 week  
+T3.g.d.cm2 = 6 week  
+T4.g.d.cm2 = 8 week  
+T5.g.d.cm2 = 10 week  
+T6.g.d.cm2 = 12 week  
+T7.g.d.cm2 = 14 week  
+T8.g.d.cm2 = 16 week  
 
 Set time info for plotting.
 ```{r}
