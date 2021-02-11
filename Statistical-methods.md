@@ -45,8 +45,15 @@ Do:
 
 **Pocillopora acuta**
 
+![timepoint](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Pacuta-Timepoint-PCA.png?raw=true)
+
+![trt](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Pacuta-Treatment-PCA.png?raw=true)
+
 **Montipora capitata**
 
+![time](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Mcap-Timepoint-PCA.png?raw=true)
+
+![trt](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Mcap-Treatment-PCA.png?raw=true)
 
 
 ### Entire timeseries (without photo and resp)
