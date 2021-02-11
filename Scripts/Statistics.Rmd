@@ -140,6 +140,19 @@ Timepoint.PCA <- autoplot(scaled_data, data = pca_data, colour = 'Timepoint',
          loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
          loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
   xlim(-0.25,0.5) + scale_colour_brewer(); Timepoint.PCA
+
+ggsave(file="Output/Final_Figures/General-Species-PCA.pdf", Species.PCA, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/General-Species-PCA.png", Species.PCA, width = 11, height = 6, units = c("in"))
+
+ggsave(file="Output/Final_Figures/General-Treatment-PCA.pdf", Treatment.PCA, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/General-Treatment-PCA.png", Treatment.PCA, width = 11, height = 6, units = c("in"))
+
+ggsave(file="Output/Final_Figures/General-Timepoint-PCA.pdf", Timepoint.PCA, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/General-Timepoint-PCA.png", Timepoint.PCA, width = 11, height = 6, units = c("in"))
+
+General.PCAs <- arrangeGrob(Species.PCA, Treatment.PCA, Timepoint.PCA, ncol=3)
+ggsave(file="Output/Final_Figures/General-PCAs.pdf", General.PCAs, width = 20, height = 4, units = c("in"))
+ggsave(file="Output/Final_Figures/General-PCAs.png", General.PCAs, width = 20, height = 4, units = c("in"))
 ```
 
 
