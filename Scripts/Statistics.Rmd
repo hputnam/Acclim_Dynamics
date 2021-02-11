@@ -74,8 +74,9 @@ Growth <- read.csv("Physiology_variables/Growth_Buoyant_Weight/Growth_Rates.csv"
 data <- join_all(list(Master, Photo.Resp, Chlorophyll, Biomass, Protein, Antioxidant), by='Plug_ID', type='left') %>%
   spread(partner, AFDW.mg.cm2) %>% rename(Host_AFDW.mg.cm2 = Host) %>% rename(Sym_AFDW.mg.cm2 = Sym) %>% select(-"<NA>") %>%
   mutate(Ratio_AFDW.mg.cm2=Sym_AFDW.mg.cm2/Host_AFDW.mg.cm2) 
-data$Timepoint <- factor(data$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week"))
+data$Timepoint <- factor(data$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week", "12 week", "16 week"))
 
+timeseries.data <- data %>% select(-Pnet_umol.cm2.hr, -Rdark_umol.cm2.hr, -Pgross_umol.cm2.hr)
 ```
 
 # Univariate analysis
@@ -198,4 +199,35 @@ ggsave(file="Output/Final_Figures/Mcap-Treatment-PCA.png", Mcap_treatment, width
 ggsave(file="Output/Final_Figures/Mcap-Timepoint-PCA.pdf", Mcap_timepoint, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Final_Figures/Mcap-Timepoint-PCA.png", Mcap_timepoint, width = 11, height = 6, units = c("in"))
 ```
+
+Entire timeseries (without resp/photo and with recovery timepoints).
+```{r}
+pca_timeseriesdata <- timeseries.data[complete.cases(timeseries.data), ] # only taking rows where all samples have data
+timeseries_scaled_data <- prcomp(pca_timeseriesdata[c(8:14)], scale=TRUE, center=TRUE) # columns 8-17 are the data values
+
+Timeseries.Species.PCA <- autoplot(timeseries_scaled_data, data = pca_timeseriesdata, colour = 'Species',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  xlim(-0.25,0.15); Timeseries.Species.PCA
+
+Timeseries.Treatment.PCA <- autoplot(timeseries_scaled_data, data = pca_timeseriesdata, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  xlim(-0.25,0.15) + scale_color_manual(values = cols) + scale_fill_manual(values = cols); Timeseries.Treatment.PCA
+
+Timeseries.Timepoint.PCA <- autoplot(timeseries_scaled_data, data = pca_timeseriesdata, colour = 'Timepoint',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  xlim(-0.25,0.15) + scale_colour_brewer(); Timeseries.Timepoint.PCA
+
+ggsave(file="Output/Final_Figures/Timeseries-Species-PCA.pdf", Timeseries.Species.PCA, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Timeseries-Species-PCA.png", Timeseries.Species.PCA, width = 11, height = 6, units = c("in"))
+
+ggsave(file="Output/Final_Figures/Timeseries-Treatment-PCA.pdf", Timeseries.Treatment.PCA, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Timeseries-Treatment-PCA.png", Timeseries.Treatment.PCA, width = 11, height = 6, units = c("in"))
+
+ggsave(file="Output/Final_Figures/Timeseries-Timepoint-PCA.pdf", Timeseries.Timepoint.PCA, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Timeseries-Timepoint-PCA.png", Timeseries.Timepoint.PCA, width = 11, height = 6, units = c("in"))
+```
+
 
