@@ -43,6 +43,10 @@ Do:
 
 ![timepoint](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/General-Timepoint-PCA.png?raw=true)
 
-**Pocillopora spp.**
+**Pocillopora acuta**
+
+**Montipora capitata**
+
+
 
 ### Entire timeseries (without photo and resp)

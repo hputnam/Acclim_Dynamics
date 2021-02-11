@@ -155,5 +155,47 @@ ggsave(file="Output/Final_Figures/General-PCAs.pdf", General.PCAs, width = 20, h
 ggsave(file="Output/Final_Figures/General-PCAs.png", General.PCAs, width = 20, height = 4, units = c("in"))
 ```
 
+Subsetted to only P. acuta
+```{r}
+Pacuta_data <- subset(pca_data, Species=="Pacuta")
+Pacuta_scaled_data <- prcomp(Pacuta_data[c(8:17)], scale=TRUE, center=TRUE) # columns 8-17 are the data values
 
+Pacuta_treatment <- autoplot(Pacuta_scaled_data, data = Pacuta_data, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  xlim(-0.25,0.25) + scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("P. acuta"); Pacuta_treatment
+
+Pacuta_timepoint <- autoplot(Pacuta_scaled_data, data = Pacuta_data, colour = 'Timepoint',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  xlim(-0.25,0.25) + scale_colour_brewer() + ggtitle("P. acuta"); Pacuta_timepoint
+
+ggsave(file="Output/Final_Figures/Pacuta-Treatment-PCA.pdf", Pacuta_treatment, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Pacuta-Treatment-PCA.png", Pacuta_treatment, width = 11, height = 6, units = c("in"))
+
+ggsave(file="Output/Final_Figures/Pacuta-Timepoint-PCA.pdf", Pacuta_timepoint, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Pacuta-Timepoint-PCA.png", Pacuta_timepoint, width = 11, height = 6, units = c("in"))
+```
+
+Subsetted to M. capitata
+```{r}
+Mcap_data <- subset(pca_data, Species=="Mcapitata")
+Mcap_scaled_data <- prcomp(Mcap_data[c(8:17)], scale=TRUE, center=TRUE) # columns 8-17 are the data values
+
+Mcap_treatment <- autoplot(Mcap_scaled_data, data = Mcap_data, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  xlim(-0.25,0.5) + scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("M. capitata"); Mcap_treatment
+
+Mcap_timepoint <- autoplot(Mcap_scaled_data, data = Mcap_data, colour = 'Timepoint',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  xlim(-0.25,0.25) + scale_colour_brewer() + ggtitle("M. capitata"); Mcap_timepoint
+
+ggsave(file="Output/Final_Figures/Mcap-Treatment-PCA.pdf", Mcap_treatment, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Mcap-Treatment-PCA.png", Mcap_treatment, width = 11, height = 6, units = c("in"))
+
+ggsave(file="Output/Final_Figures/Mcap-Timepoint-PCA.pdf", Mcap_timepoint, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Mcap-Timepoint-PCA.png", Mcap_timepoint, width = 11, height = 6, units = c("in"))
+```
 
