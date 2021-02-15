@@ -24,6 +24,8 @@ library(mgcv) # GAM function
 library(ggfortify)
 library(devtools)
 install_github("vqv/ggbiplot")
+library(lme4)
+library(gridExtra)
 ```
 
 ### Read in data files to analyze. 
@@ -46,14 +48,14 @@ Protein <- read.csv("Output/soluble_protein.csv") %>% select(Plug_ID, prot_mg.cm
 
 Antioxidant <- read.csv("Output/antioxidant_capacity.csv") %>% select(Plug_ID, cre.umol.mgprot)
 
-Color.Score <- read.csv("Physiology_variables/Bleaching_Score_Output.csv") %>% select(PLUG.ID, Bleaching.Score, Timepoint) %>% rename(Plug_ID=PLUG.ID) %>% 
-  rename(Blch.Time = Timepoint)
+Color.Score <- read.csv("Physiology_variables/Bleaching_Score_Output.csv") %>% select(PLUG.ID, Bleaching.Score, Timepoint) %>% dplyr::rename(Plug_ID = PLUG.ID) %>% 
+  dplyr::rename(Blch.Time = Timepoint)
 Color.Score$Blch.Time <- gsub("^.{0,4}", "", Color.Score$Blch.Time) # taking out the "Week" in every row
 Color.Score$Blch.Time <- paste(Color.Score$Blch.Time, "week") # adding "week" after each number in every row 
 
 Growth <- read.csv("Physiology_variables/Growth_Buoyant_Weight/Growth_Rates.csv") %>% select(PLUG.ID, T0.g.d.cm2, T1.g.d.cm2, T2.g.d.cm2, T3.g.d.cm2, T4.g.d.cm2, T5.g.d.cm2,
                                                                                              T6.g.d.cm2, T7.g.d.cm2, T8.g.d.cm2) %>% 
-  gather("Growth.Time", "Growth.Rate", 2:10) %>% na.omit(Growth.Rate) %>% rename(Plug_ID=PLUG.ID) %>%
+  gather("Growth.Time", "Growth.Rate", 2:10) %>% na.omit(Growth.Rate) %>% dplyr::rename(Plug_ID=PLUG.ID) %>%
   mutate(Growth.Time = case_when(
     Growth.Time == "T0.g.d.cm2" ~ "1 week",
     Growth.Time == "T1.g.d.cm2" ~ "2 week", 
@@ -72,7 +74,7 @@ Growth <- read.csv("Physiology_variables/Growth_Buoyant_Weight/Growth_Rates.csv"
 # come back to adding Color.Score and Growth back in and subsetting for where all three timepoint columns match 
 # joining all datasets together, reshaping the AFDW partner into columns, renaming those columns, removing an NA column, and calculating S:H AFDW ratio
 data <- join_all(list(Master, Photo.Resp, Chlorophyll, Biomass, Protein, Antioxidant), by='Plug_ID', type='left') %>%
-  spread(partner, AFDW.mg.cm2) %>% rename(Host_AFDW.mg.cm2 = Host) %>% rename(Sym_AFDW.mg.cm2 = Sym) %>% select(-"<NA>") %>%
+  spread(partner, AFDW.mg.cm2) %>% dplyr::rename(Host_AFDW.mg.cm2 = Host) %>% dplyr::rename(Sym_AFDW.mg.cm2 = Sym) %>% select(-"<NA>") %>%
   mutate(Ratio_AFDW.mg.cm2=Sym_AFDW.mg.cm2/Host_AFDW.mg.cm2) 
 data$Timepoint <- factor(data$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week", "12 week", "16 week"))
 
