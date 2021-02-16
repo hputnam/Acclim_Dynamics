@@ -33,7 +33,9 @@ Do:
 
 ## Multivariate analysis
 
-### Stress treatment (with photo and resp)
+### Only acute and chronic stress Treatment
+
+We only have respiration and photosynthetic rates in stress timepoints so when I took only the complete sets of data, this took out the recovery timepoints. 
 
 **General PCAs**
 
