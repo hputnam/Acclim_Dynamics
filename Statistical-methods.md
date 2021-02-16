@@ -45,12 +45,56 @@ We only have respiration and photosynthetic rates in stress timepoints so when I
 
 ![timepoint](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Pacuta-stress-PCAs.png?raw=true)
 
+The arrows all overlapping are: Chla, Chlc, Sym AFDW, Pgross, and Pnet. Perhaps we could group these altogether as a symbiont fitness category?
+
+PERMANOVA using Euclidean distances
+
+```
+Call:
+adonis(formula = pacuta_vegan ~ Treatment * Timepoint, data = Pacuta_data, method = "eu")
+
+Permutation: free
+Number of permutations: 999
+
+Terms added sequentially (first to last)
+
+                     Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
+Treatment             3    134.24  44.746  6.0305 0.09453  0.001 ***
+Timepoint             6    240.48  40.080  5.4015 0.16935  0.001 ***
+Treatment:Timepoint  18    191.98  10.665  1.4374 0.13520  0.028 *  
+Residuals           115    853.30   7.420         0.60092           
+Total               142   1420.00                 1.00000           
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+```
+
 **Montipora capitata**
 
 ![time](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Mcap-stress-PCAs.png?raw=true)
 
+```
+Call:
+adonis(formula = mcap_vegan ~ Treatment * Timepoint, data = Mcap_data,      method = "eu")
 
-### Entire timeseries (without photo and resp)
+Permutation: free
+Number of permutations: 999
+
+Terms added sequentially (first to last)
+
+                     Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
+Treatment             3     35.56 11.8543  1.3666 0.02436  0.190    
+Timepoint             6    145.55 24.2585  2.7966 0.09969  0.001 ***
+Treatment:Timepoint  18    246.65 13.7029  1.5797 0.16894  0.017 *  
+Residuals           119   1032.23  8.6742         0.70701           
+Total               146   1460.00                 1.00000           
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+```
+
+
+### Entire timeseries
+
+This does not include photosynthetic and respiration rates because we don't have those measurements for the recovery periods. 
 
 **General PCAs**
 

@@ -27,6 +27,7 @@ library(devtools)
 install_github("vqv/ggbiplot")
 library(lme4)
 library(gridExtra)
+library(vegan)
 ```
 
 ### Read in data files to analyze. 
@@ -213,6 +214,22 @@ Mcap.stress.PCAs <- arrangeGrob(Mcap_treatment, Mcap_timepoint, ncol=2)
 ggsave(file="Output/Final_Figures/Mcap-stress-PCAs.pdf", Mcap.stress.PCAs, width = 10, height = 4, units = c("in"))
 ggsave(file="Output/Final_Figures/Mcap-stress-PCAs.png", Mcap.stress.PCAs, width = 10, height = 4, units = c("in"))
 ```
+PERMANOVA for P. acuta and M. cap. 
+Stress treatments (with resp and photo)
+```{r}
+## Pacuta - effect of treatment and timepoint
+# scale data
+pacuta_vegan <- scale(Pacuta_data[ ,8:17])
+# PerMANOVA - partitioning the euclidean distance matrix by species
+adonis(pacuta_vegan ~ Treatment*Timepoint, data = Pacuta_data, method='eu')
+
+## Mcap - effect of treatment and timepoint
+# scale data
+mcap_vegan <- scale(Mcap_data[ ,8:17])
+# PerMANOVA - partitioning the euclidean distance matrix by species
+adonis(mcap_vegan ~ Treatment*Timepoint, data = Mcap_data, method='eu')
+```
+
 
 Entire timeseries (without resp/photo and with recovery timepoints).
 ```{r}
@@ -221,18 +238,19 @@ timeseries_scaled_data <- prcomp(pca_timeseriesdata[c(8:14)], scale=TRUE, center
 
 Timeseries.Species.PCA <- autoplot(timeseries_scaled_data, data = pca_timeseriesdata, colour = 'Species',
          loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
-         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
-  xlim(-0.23,0.13); Timeseries.Species.PCA
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw(); Timeseries.Species.PCA
 
 Timeseries.Treatment.PCA <- autoplot(timeseries_scaled_data, data = pca_timeseriesdata, colour = 'Treatment',
          loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
          loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
-  xlim(-0.23,0.13) + scale_color_manual(values = cols) + scale_fill_manual(values = cols); Timeseries.Treatment.PCA
+  #xlim(-0.23,0.13) + 
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols); Timeseries.Treatment.PCA
 
 Timeseries.Timepoint.PCA <- autoplot(timeseries_scaled_data, data = pca_timeseriesdata, colour = 'Timepoint',
          loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
          loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
-  xlim(-0.23,0.13) + scale_colour_brewer(); Timeseries.Timepoint.PCA
+  #xlim(-0.23,0.13) + 
+  scale_colour_brewer(); Timeseries.Timepoint.PCA
 
 ggsave(file="Output/Final_Figures/Timeseries-Species-PCA.pdf", Timeseries.Species.PCA, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Final_Figures/Timeseries-Species-PCA.png", Timeseries.Species.PCA, width = 11, height = 6, units = c("in"))
@@ -242,6 +260,10 @@ ggsave(file="Output/Final_Figures/Timeseries-Treatment-PCA.png", Timeseries.Trea
 
 ggsave(file="Output/Final_Figures/Timeseries-Timepoint-PCA.pdf", Timeseries.Timepoint.PCA, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Final_Figures/Timeseries-Timepoint-PCA.png", Timeseries.Timepoint.PCA, width = 11, height = 6, units = c("in"))
+
+General.Timeseries.PCAs <- arrangeGrob(Timeseries.Species.PCA, Timeseries.Treatment.PCA, Timeseries.Timepoint.PCA, ncol=2)
+ggsave(file="Output/Final_Figures/General-timeseries-PCAs.pdf", General.Timeseries.PCAs, width = 10, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/General-timeseries-PCAs.png", General.Timeseries.PCAs, width = 10, height = 6, units = c("in"))
 ```
 
 Entire timeseries subsetted to only P. acuta
