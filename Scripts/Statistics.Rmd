@@ -193,18 +193,25 @@ Mcap_scaled_data <- prcomp(Mcap_data[c(8:17)], scale=TRUE, center=TRUE) # column
 Mcap_treatment <- autoplot(Mcap_scaled_data, data = Mcap_data, colour = 'Treatment',
          loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
          loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
-  xlim(-0.25,0.5) + scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("M. capitata"); Mcap_treatment
+  #xlim() + 
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("M. capitata"); Mcap_treatment
 
 Mcap_timepoint <- autoplot(Mcap_scaled_data, data = Mcap_data, colour = 'Timepoint',
          loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
          loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
-  xlim(-0.25,0.25) + scale_colour_brewer() + ggtitle("M. capitata"); Mcap_timepoint
+  
+  #xlim(-0.4,0.4) + 
+  scale_colour_brewer() + ggtitle("M. capitata"); Mcap_timepoint
 
 ggsave(file="Output/Final_Figures/Mcap-Treatment-PCA.pdf", Mcap_treatment, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Final_Figures/Mcap-Treatment-PCA.png", Mcap_treatment, width = 11, height = 6, units = c("in"))
 
 ggsave(file="Output/Final_Figures/Mcap-Timepoint-PCA.pdf", Mcap_timepoint, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Final_Figures/Mcap-Timepoint-PCA.png", Mcap_timepoint, width = 11, height = 6, units = c("in"))
+
+Mcap.stress.PCAs <- arrangeGrob(Mcap_treatment, Mcap_timepoint, ncol=2)
+ggsave(file="Output/Final_Figures/Mcap-stress-PCAs.pdf", Mcap.stress.PCAs, width = 10, height = 4, units = c("in"))
+ggsave(file="Output/Final_Figures/Mcap-stress-PCAs.png", Mcap.stress.PCAs, width = 10, height = 4, units = c("in"))
 ```
 
 Entire timeseries (without resp/photo and with recovery timepoints).
