@@ -181,8 +181,8 @@ ggsave(file="Output/Final_Figures/Pacuta-Timepoint-PCA.pdf", Pacuta_timepoint, w
 ggsave(file="Output/Final_Figures/Pacuta-Timepoint-PCA.png", Pacuta_timepoint, width = 11, height = 6, units = c("in"))
 
 Pacuta.stress.PCAs <- arrangeGrob(Pacuta_treatment, Pacuta_timepoint, ncol=2)
-ggsave(file="Output/Final_Figures/Poc-stress-PCAs.pdf", Pacuta.stress.PCAs, width = 10, height = 6, units = c("in"))
-ggsave(file="Output/Final_Figures/Poc-stress-PCAs.png", Pacuta.stress.PCAs, width = 10, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Pacuta-stress-PCAs.pdf", Pacuta.stress.PCAs, width = 10, height = 4, units = c("in"))
+ggsave(file="Output/Final_Figures/Pacuta-stress-PCAs.png", Pacuta.stress.PCAs, width = 10, height = 4, units = c("in"))
 ```
 
 Subsetted to M. capitata
