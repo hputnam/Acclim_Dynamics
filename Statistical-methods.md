@@ -47,9 +47,7 @@ We only have respiration and photosynthetic rates in stress timepoints so when I
 
 **Montipora capitata**
 
-![time](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Mcap-Timepoint-PCA.png?raw=true)
-
-![trt](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Mcap-Treatment-PCA.png?raw=true)
+![time](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Mcap-stress-PCAs.png?raw=true)
 
 
 ### Entire timeseries (without photo and resp)
