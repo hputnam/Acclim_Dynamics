@@ -35,7 +35,7 @@ Do:
 
 ### Only acute and chronic stress Treatment
 
-We only have respiration and photosynthetic rates in stress timepoints so when I took only the complete sets of data, this took out the recovery timepoints. 
+We only have respiration and photosynthetic rates in stress timepoints so when I took only the complete sets of data, this took out the recovery timepoints.
 
 **General PCAs**
 
@@ -43,9 +43,7 @@ We only have respiration and photosynthetic rates in stress timepoints so when I
 
 **Pocillopora acuta**
 
-![timepoint](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Pacuta-Timepoint-PCA.png?raw=true)
-
-![trt](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Pacuta-Treatment-PCA.png?raw=true)
+![timepoint](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Pacuta-stress-PCAs.png?raw=true)
 
 **Montipora capitata**
 
