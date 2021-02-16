@@ -18,6 +18,7 @@ Loading libraries.
 ```{r}
 library(ggplot2)
 library(tidyverse)
+library(plyr)
 library(dplyr)
 library(car) # qqplot function
 library(mgcv) # GAM function

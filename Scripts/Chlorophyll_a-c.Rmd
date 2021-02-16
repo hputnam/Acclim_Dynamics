@@ -179,9 +179,7 @@ Chl2_mismatched2 <- setdiff(Master_PlugID, Chl_IDs)
 Chl2_mismatched2
 
 # Missing list (16): "1603", "1739", "2008", "2200", "2512", "2522", "2523", "2528", "2740", "2752", "2859", "2880", "2976", "2981", "2984", "3003"
-# Corals we won't have Chl_IDs for: Zero 
-# output excluding those is 2156
-# need to re-do 2156
+# Corals we won't have Chl_IDs for: 1488
 ```
 
 
