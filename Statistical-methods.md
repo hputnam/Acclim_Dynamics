@@ -94,15 +94,11 @@ Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’
 
 ### Entire timeseries
 
-This does not include photosynthetic and respiration rates because we don't have those measurements for the recovery periods. 
+This does not include photosynthetic and respiration rates because we don't have those measurements for the recovery periods.
 
 **General PCAs**
 
-![species](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Timeseries-Species-PCA.png?raw=true)
-
-![treatment](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Timeseries-Treatment-PCA.png?raw=true)
-
-![timepoint](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Timeseries-Timepoint-PCA.png?raw=true)
+![species](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/General-timeseries-PCAs.png?raw=true)
 
 **Pocillopora acuta**
 
