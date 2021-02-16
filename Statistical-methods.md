@@ -37,11 +37,7 @@ Do:
 
 **General PCAs**
 
-![species](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/General-Species-PCA.png?raw=true)
-
-![treatment](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/General-Treatment-PCA.png?raw=true)
-
-![timepoint](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/General-Timepoint-PCA.png?raw=true)
+![species](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/General-PCAs.png?raw=true)
 
 **Pocillopora acuta**
 

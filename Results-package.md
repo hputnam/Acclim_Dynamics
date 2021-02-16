@@ -219,13 +219,11 @@ Scheduled to re-do AFDW #2863 Monday Feb 15th - Wednesday Feb 17th.
 
 | Species  	| Timepoint 	| Treatment 	| Sample Size 	| Notes                                       	|
 |----------	|-----------	|-----------	|-------------	|---------------------------------------------	|
-| P. acuta 	| 8 week    	| HTAC      	| 5           	| 2156 missing data	|  
 | P. acuta    	| Day 1     	| HTAC      	| 3           	| 1488 no data; Time limited 1st day in the field 	|
 
-P-2156 missing data. Label rubbed off, will need to re-do. This has been scheduled to re-do on Feb 15th - Feb 16th.   
 P-1488: I don't trust the aliquots for this sample, no data here. See note from AFDW.   
 
-This dataset has been QC'd by Emma; final figure as of 20210118.
+This dataset has been QC'd by Emma; final figure as of 20210216.
 
 ### Soluble Protein
 
@@ -247,11 +245,9 @@ This dataset has been QC'd by Emma; final figure as of 20210118.
 |-------------	|-----------	|-----------	|-------------	|-------------------------------------------------	|
 | P. acuta    	| Day 1     	| HTAC      	| 3           	| 1488 no data (see notes on Chl and AFDW); Time limited 1st day in the field 	|
 
-Week 4 ATHC P acuta points look wonky like the protein values. Day 2 and Week 1 have very small sample sizes likely leading to large variation above?
+Week 4 ATHC P acuta points look wonky like the protein values. Day 2 and Week 1 have very small sample sizes likely leading to large variation above?  
 
-October 7th (3 plates) are scheduled to be re-done on Feb 15th.   
-
-Still having an issue with the standard curve variation. According to the [assay kit protocol](https://www.cellbiolabs.com/sites/default/files/STA-360-total-antioxidant-capacity-assay-kit.pdf), 1 mM concentration should be around 1.35 Abs490. The closest st. curve was from Nov 10th plate. All points have been projected onto the st. curve from Nov 10th and TAC calculated from this st. curve. We still need to address this.
+Still having an issue with the standard curve variation. According to the [assay kit protocol](https://www.cellbiolabs.com/sites/default/files/STA-360-total-antioxidant-capacity-assay-kit.pdf), 1 mM concentration should be around 1.35 Abs490. The closest st. curve was from Nov 10th plate. All points have been projected onto the st. curve from Nov 10th and TAC calculated from this st. curve. **We still need to address this**.
 
 TAC calculation done by:  
 
