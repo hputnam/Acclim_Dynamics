@@ -20,7 +20,7 @@ library(ggplot2)
 library(tidyverse)
 library(plyr)
 library(dplyr)
-library(car) # qqplot function
+library(car) # qqplot and ANOVA function
 library(mgcv) # GAM function
 library(ggfortify)
 library(devtools)
@@ -28,12 +28,13 @@ install_github("vqv/ggbiplot")
 library(lme4)
 library(gridExtra)
 library(vegan)
+library(effects)
 ```
 
 ### Read in data files to analyze. 
 
 ```{r}
-Master <- read.csv("Environmental_data/Master_Fragment.csv") %>% select(Plug_ID, Species, ANALYSIS, Timepoint, Treatment, Temperature, CO2) %>%
+Master <- read.csv("Environmental_data/Master_Fragment.csv") %>% select(Plug_ID, Species, ANALYSIS, Timepoint, Treatment, Tank, Temperature, CO2) %>%
   filter(ANALYSIS == "Physiology" | ANALYSIS == "Physiology/Molecular")
   
 Photo.Resp <- read.csv("Physiology_variables/Respirometry/Output/Resp_AllRates.csv") %>% select(Fragment.ID.x, Pnet_umol.cm2.hr, Rdark_umol.cm2.hr, Pgross_umol.cm2.hr) %>%
@@ -81,38 +82,80 @@ data <- join_all(list(Master, Photo.Resp, Chlorophyll, Biomass, Protein, Antioxi
 data$Timepoint <- factor(data$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week", "12 week", "16 week"))
 
 timeseries.data <- data %>% select(-Pnet_umol.cm2.hr, -Rdark_umol.cm2.hr, -Pgross_umol.cm2.hr)
+
+pacuta_full_data <- data %>% subset(Species == "Pacuta")
+mcap_full_data <- data %>% subset(Species == "Mcapitata")
 ```
 
 # Univariate analysis
 
 ## Statistical Modeling
 Fixed factors: Temperature, CO2, Species, Timepoint. 
+Random factors: Tank
 Come back to this: Should I be doing this separately for species? I think so.. 
 
 ### Photosynthetic Rates and Respiration 
 
-Linear mixed effect model
+Raw data distribution view.
 ```{r}
-Pnet_LMER <- lmer(Pnet_umol.cm2.hr ~ Timepoint*Species*Temperature*CO2 + (1|Plug_ID), na.action=na.omit, data=data)
-summary(Pnet_LMER)
+hist(pacuta_full_data$Pgross_umol.cm2.hr)
+hist(pacuta_full_data$Pnet_umol.cm2.hr)
+hist(pacuta_full_data$Rdark_umol.cm2.hr)
 
-qqPlot(residuals(Pnet_LMER))
-hist(residuals(Pnet_LMER))
+hist(mcap_full_data$Pgross_umol.cm2.hr)
+hist(mcap_full_data$Pnet_umol.cm2.hr)
+hist(mcap_full_data$Rdark_umol.cm2.hr)
+# mcap doesn't look normal, the models should account for this but might need to transform post models 
+```
+
+P.acuta linear mixed effect models
+```{r}
+## Pnet
+Pacuta_Pnet_LMER_tank <- lmer(Pnet_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
+Pacuta_Pnet_GLM <- glm(Pnet_umol.cm2.hr ~ Timepoint*Temperature*CO2, na.action=na.omit, data=pacuta_full_data) # GLM
+anova(Pacuta_Pnet_LMER_tank, Pacuta_Pnet_GLM) # AIC with tank = 151.40; without tank = 146.81. GLMM (5 points lower) with tank wins, move on to residuals
+
+summary(Pacuta_Pnet_LMER_tank)
+qqPlot(residuals(Pacuta_Pnet_LMER_tank))
+hist(residuals(Pacuta_Pnet_LMER_tank)) 
+# the above looks normal; no need to transform 
+
+Anova(Pacuta_Pnet_LMER_tank, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
+plot(allEffects(Pacuta_Pnet_LMER_tank))
+
+## Pgross 
+Pacuta_Pgross_LMER_tank <- lmer(Pgross_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
+Pacuta_Pgross_GLM <- glm(Pgross_umol.cm2.hr ~ Timepoint*Temperature*CO2, na.action=na.omit, data=pacuta_full_data) # GLM
+anova(Pacuta_Pgross_LMER_tank, Pacuta_Pgross_GLM) # AIC with tank = 196.04; without tank = 199.33. GLMM (3 points lower) with tank wins, move on to residuals. 
+
+summary(Pacuta_Pgross_LMER_tank)
+qqPlot(residuals(Pacuta_Pgross_LMER_tank))
+hist(residuals(Pacuta_Pgross_LMER_tank)) 
+# the above looks normal; no need to transform 
+
+Anova(Pacuta_Pgross_LMER_tank, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
+plot(allEffects(Pacuta_Pgross_LMER_tank))
+
+## Dark Resp
+Pacuta_Resp_LMER_tank <- lmer(Rdark_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
+Pacuta_Resp_GLM <- glm(Rdark_umol.cm2.hr ~ Timepoint*Temperature*CO2, na.action=na.omit, data=pacuta_full_data) # GLM
+anova(Pacuta_Resp_LMER_tank, Pacuta_Resp_GLM) # AIC with tank = -293.73; without tank = -295.44. The difference is <2 points, so there is no real difference between models so the less complex model will be better = the GLM 
+
+summary(Pacuta_Resp_GLM)
+qqPlot(residuals(Pacuta_Resp_GLM))
+hist(residuals(Pacuta_Resp_GLM)) 
+# This looks a bit skewed, but how skewed is too skewed? Come back to this 
 ```
 
 Generalized Additive model 
 ```{r}
-Pnet_GAM <- gam(Pnet_umol.cm2.hr ~ s(Timepoint) + s(Species) + s(Temperature) + s(CO2), data=data)
+Pnet_GAM <- gam(Pnet_umol.cm2.hr ~ s(Treatment) + s(Species) + s(Temperature) + s(CO2), data=data)
 summary(Pnet_GAM)
+## getting error with smoothing function (s(Timepoint)) b/c might be having trouble with distance of factors? come back to this
+## Error in names(dat) <- object$term : 'names' attribute [1] must be the same length as the vector [0]
 
-
+anova(Pnet_LMER_tank, Pnet_GAM)
 ```
-
-Comparing these two models. 
-```{r}
-anova(mod_lm2, mod_gam2, test="Chisq")
-```
-
 
 
 # Multivariate analysis 
@@ -124,7 +167,12 @@ Plot PCA with prcomp to center and scale.
 ```{r}
 pca_data <- data[complete.cases(data), ] # only taking rows where all samples have data
 
-scaled_data <- prcomp(pca_data[c(8:17)], scale=TRUE, center=TRUE) # columns 8-17 are the data values
+scaled_data <- prcomp(pca_data[c(9:18)], scale=TRUE, center=TRUE) # columns 8-17 are the data values
+
+## screeplot
+pca_data.cov <- cov(pca_data[,c(9:18)])
+pca_data.eigen <- eigen(pca_data.cov)
+plot(pca_data.eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') + lines(pca_data.eigen$values)
 ```
 
 Group by species, timepoint, treatment. 
@@ -163,7 +211,12 @@ ggsave(file="Output/Final_Figures/General-PCAs.png", General.PCAs, width = 10, h
 Subsetted to only P. acuta
 ```{r}
 Pacuta_data <- subset(pca_data, Species=="Pacuta")
-Pacuta_scaled_data <- prcomp(Pacuta_data[c(8:17)], scale=TRUE, center=TRUE) # columns 8-17 are the data values
+Pacuta_scaled_data <- prcomp(Pacuta_data[c(9:18)], scale=TRUE, center=TRUE) # columns 8-17 are the data values
+
+## screeplot
+Pacuta_data.cov <- cov(Pacuta_data[,c(9:18)])
+Pacuta_data.eigen <- eigen(Pacuta_data.cov)
+plot(Pacuta_data.eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') + lines(Pacuta_data.eigen$values)
 
 Pacuta_treatment <- autoplot(Pacuta_scaled_data, data = Pacuta_data, colour = 'Treatment',
          loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
@@ -189,7 +242,12 @@ ggsave(file="Output/Final_Figures/Pacuta-stress-PCAs.png", Pacuta.stress.PCAs, w
 Subsetted to M. capitata
 ```{r}
 Mcap_data <- subset(pca_data, Species=="Mcapitata")
-Mcap_scaled_data <- prcomp(Mcap_data[c(8:17)], scale=TRUE, center=TRUE) # columns 8-17 are the data values
+Mcap_scaled_data <- prcomp(Mcap_data[c(9:18)], scale=TRUE, center=TRUE) # columns 8-17 are the data values
+
+## screeplot
+Mcap_data.cov <- cov(Mcap_data[,c(9:18)])
+Mcap_data.eigen <- eigen(Mcap_data.cov)
+plot(Mcap_data.eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') + lines(Mcap_data.eigen$values)
 
 Mcap_treatment <- autoplot(Mcap_scaled_data, data = Mcap_data, colour = 'Treatment',
          loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
@@ -219,13 +277,13 @@ Stress treatments (with resp and photo)
 ```{r}
 ## Pacuta - effect of treatment and timepoint
 # scale data
-pacuta_vegan <- scale(Pacuta_data[ ,8:17])
+pacuta_vegan <- scale(Pacuta_data[ ,9:18])
 # PerMANOVA - partitioning the euclidean distance matrix by species
 adonis(pacuta_vegan ~ Treatment*Timepoint, data = Pacuta_data, method='eu')
 
 ## Mcap - effect of treatment and timepoint
 # scale data
-mcap_vegan <- scale(Mcap_data[ ,8:17])
+mcap_vegan <- scale(Mcap_data[ ,9:18])
 # PerMANOVA - partitioning the euclidean distance matrix by species
 adonis(mcap_vegan ~ Treatment*Timepoint, data = Mcap_data, method='eu')
 ```
@@ -234,7 +292,12 @@ adonis(mcap_vegan ~ Treatment*Timepoint, data = Mcap_data, method='eu')
 Entire timeseries (without resp/photo and with recovery timepoints).
 ```{r}
 pca_timeseriesdata <- timeseries.data[complete.cases(timeseries.data), ] # only taking rows where all samples have data
-timeseries_scaled_data <- prcomp(pca_timeseriesdata[c(8:14)], scale=TRUE, center=TRUE) # columns 8-17 are the data values
+timeseries_scaled_data <- prcomp(pca_timeseriesdata[c(9:15)], scale=TRUE, center=TRUE) # columns 8-14 are the data values
+
+## screeplot
+pca_timeseriesdata.cov <- cov(pca_timeseriesdata[,c(9:15)])
+pca_timeseriesdata.eigen <- eigen(pca_timeseriesdata.cov)
+plot(pca_timeseriesdata.eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') + lines(pca_timeseriesdata.eigen$values)
 
 Timeseries.Species.PCA <- autoplot(timeseries_scaled_data, data = pca_timeseriesdata, colour = 'Species',
          loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
@@ -269,7 +332,12 @@ ggsave(file="Output/Final_Figures/General-timeseries-PCAs.png", General.Timeseri
 Entire timeseries subsetted to only P. acuta
 ```{r}
 Pacuta_timeseriesdata <- subset(pca_timeseriesdata, Species=="Pacuta")
-Pacuta_scaled_timeseriesdata <- prcomp(Pacuta_timeseriesdata[c(8:14)], scale=TRUE, center=TRUE) # columns 8-17 are the data values
+Pacuta_scaled_timeseriesdata <- prcomp(Pacuta_timeseriesdata[c(9:15)], scale=TRUE, center=TRUE) # columns 8-14 are the data values
+
+## screeplot
+Pacuta_timeseriesdata.cov <- cov(Pacuta_timeseriesdata[,c(9:15)])
+Pacuta_timeseriesdata.eigen <- eigen(Pacuta_timeseriesdata.cov)
+plot(Pacuta_timeseriesdata.eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') + lines(Pacuta_timeseriesdata.eigen$values)
 
 Pacuta_timeseries_treatment <- autoplot(Pacuta_scaled_timeseriesdata, data = Pacuta_timeseriesdata, colour = 'Treatment',
          loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
@@ -296,7 +364,12 @@ ggsave(file="Output/Final_Figures/Pacuta-Timeseries-PCAs.png", Pacuta.timeseries
 Entire timeseries only subsetted to M. capitata
 ```{r}
 Mcap_timeseriesdata <- subset(pca_timeseriesdata, Species=="Mcapitata")
-Mcap_scaled_timeseriesdata <- prcomp(Mcap_timeseriesdata[c(8:14)], scale=TRUE, center=TRUE) # columns 8-17 are the data values
+Mcap_scaled_timeseriesdata <- prcomp(Mcap_timeseriesdata[c(9:15)], scale=TRUE, center=TRUE) # columns 8-14 are the data values
+
+## screeplot
+Mcap_timeseriesdata.cov <- cov(Mcap_timeseriesdata[,c(9:15)])
+Mcap_timeseriesdata.eigen <- eigen(Mcap_timeseriesdata.cov)
+plot(Mcap_timeseriesdata.eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') + lines(Mcap_timeseriesdata.eigen$values)
 
 Mcap_timeseries_treatment <- autoplot(Mcap_scaled_timeseriesdata, data = Mcap_timeseriesdata, colour = 'Treatment',
          loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
@@ -326,13 +399,13 @@ Timeseries (without resp and photo)
 ```{r}
 ## Pacuta - effect of treatment and timepoint
 # scale data
-pacuta_timeseries_vegan <- scale(Pacuta_timeseriesdata[ ,8:14])
+pacuta_timeseries_vegan <- scale(Pacuta_timeseriesdata[ ,9:15])
 # PerMANOVA - partitioning the euclidean distance matrix by species
 adonis(pacuta_timeseries_vegan ~ Treatment*Timepoint, data = Pacuta_timeseriesdata, method='eu')
 
 ## Mcap - effect of treatment and timepoint
 # scale data
-mcap_timeseries_vegan <- scale(Mcap_timeseriesdata[ ,8:14])
+mcap_timeseries_vegan <- scale(Mcap_timeseriesdata[ ,9:15])
 # PerMANOVA - partitioning the euclidean distance matrix by species
 adonis(mcap_timeseries_vegan ~ Treatment*Timepoint, data = Mcap_timeseriesdata, method='eu')
 ```
