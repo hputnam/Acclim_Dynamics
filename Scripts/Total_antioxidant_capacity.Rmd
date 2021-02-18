@@ -465,14 +465,18 @@ TAC.plot <- ggplot(TAC.means, aes(x=Timepoint, y = cre.umol.mgprot, group = Trea
   geom_errorbar(aes(ymin=cre.umol.mgprot-se, ymax=cre.umol.mgprot+se), width=.2) +
   scale_color_manual(values = cols) + 
   xlab("Timepoint") + 
-  theme_bw() + 
-  ylab(expression(CRE ~(umol ~mg^-1))) +
-  ggtitle("Total Antioxidant Capacity") +
-  theme(legend.position = "right") +
+  theme_classic() + 
+  ylab(expression("Copper Reducing Equivalents" ~(umol ~mg^-1))) +
+  #ggtitle("Total Antioxidant Capacity") +
+  theme(legend.position = "left") +
   geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
-  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) #Set the text angle
-TAC.plot
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  # Change axis line
+  axis.line = element_line(colour = "black")); TAC.plot
 
 ggsave(file="Output/Final_Figures/Total-Antioxidant-Capacity.pdf", TAC.plot, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Final_Figures/Total-Antioxidant-Capacity.png", TAC.plot, width = 11, height = 6, units = c("in"))
