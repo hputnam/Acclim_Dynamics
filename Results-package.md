@@ -20,6 +20,8 @@ CRIMP2 Temperature Data
 
 ![crimp2temp](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/CRIMP2-Temperature.png?raw=true)
 
+The red line is at 29.5, the average temperature for our data. Next steps would be to overlay our expt data on 2018-2019 portion. 
+
 CRIMP2 pCO2 Data
 
 ![crimp2pco2]()

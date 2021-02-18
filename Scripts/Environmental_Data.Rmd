@@ -43,6 +43,8 @@ library(viridis)
 library(dygraphs)
 library(xts)
 library(graphics)
+
+colors <- c("lightblue", "blue", "salmon", "red3")
 ```
 
 ### NOAA BUOY DATA ###
@@ -74,16 +76,24 @@ CRIMP2.data <-
 CRIMP2.data$Date.Time <- mdy_hm(CRIMP2.data$Date.Time, quiet=FALSE, tz="UTC", truncated=0) #format date and time 
 
 CRIMP2.temp <- CRIMP2.data %>% select(-pCO2) %>% filter(Temp>0)
+CRIMP2.temp$Data.Source <- "CRIMP2"
+## need to run HOBO logger section prior to overlaying experimental data on CRIMP2's data
+EXPT.temp <- Hobo.means %>% select(Date.Time, Treatment, Temperature) %>% dplyr::rename(Data.Source = Treatment, Temp = Temperature)
+EXPT.temp$file.ID <- "EXPT"
+CRIMP2.EXPT.temp <- bind_rows(CRIMP2.temp, EXPT.temp) #combining both dataframes 
 
-CRIMP.TEMP.PLOT <- ggplot(data = CRIMP2.temp, aes(x = Date.Time, y = Temp)) +
+crimp.colors <- c("lightblue", "blue", "black", "salmon", "red3")
+
+CRIMP.TEMP.PLOT <- ggplot(data = CRIMP2.EXPT.temp, aes(x = Date.Time, y = Temp, color = Data.Source)) +
   labs(x = "Date (Month-Year)", y = "Sea Surface Temperature (°C)") + ggtitle("CRIMP2 NOAA Buoy") +
-  geom_line() +
+  geom_line(size=0.15) +
+  scale_color_manual(values = crimp.colors) + 
   theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
                      panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_x_datetime(date_breaks = "60 days", labels = date_format("%b %y")) +
   geom_hline(aes(yintercept = 29.5), col = "red", linetype="dotted") +
-  theme(legend.position=c(0.9, 0.8), legend.background = element_blank()); CRIMP.TEMP.PLOT 
+  theme(legend.position="right", legend.background = element_blank()); CRIMP.TEMP.PLOT 
 
 ggsave(file="Output/CRIMP2-Temperature.png", CRIMP.TEMP.PLOT, width = 11, height = 6, units = c("in"))
 
