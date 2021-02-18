@@ -96,7 +96,7 @@ Plot AFDW Ratio.
 cols <- c("lightblue", "blue", "salmon", "red3")
 
 Ratio.means <- data %>% select(Plug_ID, Species, Timepoint, Treatment, Temperature, CO2, Ratio_AFDW.mg.cm2) %>% na.omit() %>% 
-  summarySE(measurevar="Ratio_AFDW.mg.cm2", groupvars=c("Species", "Timepoint", "Treatment", "Temperature", "CO2"))
+  summarySE(measurevar="Ratio_AFDW.mg.cm2", groupvars=c("Species", "Timepoint", "Treatment", "Temperature", "CO2")) %>% filter(N>2)
   
 AFDW_Ratio_plot <- ggplot(Ratio.means, aes(x=Timepoint, y = Ratio_AFDW.mg.cm2, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
@@ -104,13 +104,18 @@ AFDW_Ratio_plot <- ggplot(Ratio.means, aes(x=Timepoint, y = Ratio_AFDW.mg.cm2, g
   geom_errorbar(aes(ymin=Ratio_AFDW.mg.cm2-se, ymax=Ratio_AFDW.mg.cm2+se), width=.2) +
   scale_color_manual(values = cols) + 
   xlab("Timepoint") + 
-  theme_bw() + 
+  theme_classic() + 
   #ylab("expression(AFDW ~(mg ~cm^-2))") +
-  ylab("Tissue Biomass S:H Ratio") +
+  ylab("Ash Free Dry Weight S:H Ratio") +
   theme(legend.position = "left") +
   geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
-  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)); AFDW_Ratio_plot #Set the text angle
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) +
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  # Change axis line
+  axis.line = element_line(colour = "black")); AFDW_Ratio_plot
 
 ggsave(file="Output/Final_Figures/Tissue_Biomass-Ratio.pdf", AFDW_Ratio_plot, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Final_Figures/Tissue_Biomass-Ratio.png", AFDW_Ratio_plot, width = 11, height = 6, units = c("in"))
