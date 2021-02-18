@@ -102,8 +102,7 @@ AFDW <- AFDW %>%
          dry.bioimass.g = dry.pan.mass.g.ml * vol_mL,
          burnt.bioimass.g = burnt.pan.mass.g.ml * vol_mL,
          DW.mg.cm2 = ((dry.bioimass.g)*1000) / surface.area.cm2,
-         AFDW.mg.cm2 = ((dry.bioimass.g-burnt.bioimass.g)*1000) / surface.area.cm2)
-AFDW
+         AFDW.mg.cm2 = ((dry.bioimass.g-burnt.bioimass.g)*1000) / surface.area.cm2); AFDW
 
 # Transforming the dataframe to be easily analyzed and visualized by type of measurement
 AFDW_long <- AFDW %>% select(Plug_ID, partner, Species, Treatment, Temperature, CO2, Timepoint, DW.mg.cm2, AFDW.mg.cm2) %>%
@@ -126,7 +125,7 @@ AFDW.duplicates # Output should be zero
 ```
 
 ```{r}
-# Calculating means per treatment and timepoint. 
+# Calculating means per treatment, partner, and timepoint. 
 AFDW_means <- summarySE(AFDW_long, measurevar="Value", groupvars=c("partner", "Timepoint", "Treatment", "Temperature", "CO2", "Species", "Measurement")) %>%
   subset(Measurement=="AFDW.mg.cm2")
 AFDW_means
