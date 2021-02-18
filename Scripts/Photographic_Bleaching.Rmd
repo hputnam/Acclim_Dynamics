@@ -33,6 +33,7 @@ library("plyr")
 library("emmeans")
 library("multcompView")
 library("rstatix")
+library("Rmisc")
 ```
 
 Reading in quality controlled version of ImageJ data.
@@ -115,17 +116,21 @@ phlett
 
 Calculating means, sample size, and standard error for timepoint, species, and treatment groups. 
 ```{r}
-All.Means <- ddply(Color.Score, c('Timepoint','Species','Treatment'), summarize,
-                    mean= mean(Bleaching.Score, na.rm=T), #mean pnet
-                    N = sum(!is.na(Bleaching.Score)), # sample size
-                    se = sd(Bleaching.Score, na.rm=T)/sqrt(N)) #SE
-All.Means
-All.Means$se[is.na(All.Means$se)] <- 0
-All.Means$Group <- paste(All.Means$Timepoint, All.Means$Treatment, All.Means$Species)
-All.Means$SpGroup <- paste(All.Means$Treatment, All.Means$Species)
-All.Means <- All.Means[-c(87:94),]
+All.Means <- summarySE(Color.Score, measurevar="Bleaching.Score", groupvars=c("Species", "Timepoint", "Treatment", "Temperature", "CO2")) %>% 
+  filter(N>2) %>% na.omit()
 
-All.Means$Timepoint <- factor(All.Means$Timepoint, levels = c("Week1", "Week2", "Week3", "Week4", "Week6", "Week7", "Week8", "Week9", "Week10", "Week11", "Week12", "Week13", "Week14", "Week15", "Week16"))
+#All.Means <- ddply(Color.Score, c('Timepoint','Species','Treatment'), summarize,
+                  #  mean= mean(Bleaching.Score, na.rm=T), #mean pnet
+                 #   N = sum(!is.na(Bleaching.Score)), # sample size
+                  #  se = sd(Bleaching.Score, na.rm=T)/sqrt(N)) #SE
+
+#All.Means$se[is.na(All.Means$se)] <- 0
+#All.Means$Group <- paste(All.Means$Timepoint, All.Means$Treatment, All.Means$Species)
+#All.Means$SpGroup <- paste(All.Means$Treatment, All.Means$Species)
+#All.Means <- All.Means[-c(87:94),]
+
+All.Means$Timepoint <- factor(All.Means$Timepoint, levels = c("Week1", "Week2", "Week3", "Week4", "Week5", "Week6", "Week7", "Week8", "Week9", "Week10", "Week11", "Week12", "Week13", "Week14", "Week15", "Week16")) 
+All.Means <- All.Means %>% subset(Timepoint!="Week5")
 ```
 
 Plotting bleaching intensity for both species, and for all timepoints and treatments. 
@@ -183,14 +188,14 @@ species.names <- list(
 species_labeller <- function(variable,value){
   return(species.names[value])}
 
-Blch_plot <- ggplot(All.Means, aes(x=Timepoint, y = mean, group = Treatment, color = Treatment)) +
+Blch_plot <- ggplot(All.Means, aes(x=Timepoint, y = Bleaching.Score, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
   facet_grid(~Species, scales = "free", labeller = species_labeller) +
-  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.2) +
+  geom_errorbar(aes(ymin=Bleaching.Score-se, ymax=Bleaching.Score+se), width=.2) +
   scale_color_manual(values = cols) + 
   xlab("Timepoint") + 
   ylab("Bleaching Score") + # y-axis label and y axis range
-  theme_bw() + 
+  theme_classic() + 
   ggtitle("Color Score") +
   theme(legend.position = "left") +
   geom_vline(xintercept = c(7.8), colour="black", linetype="dotted") +
@@ -201,9 +206,7 @@ Blch_plot <- ggplot(All.Means, aes(x=Timepoint, y = mean, group = Treatment, col
   panel.grid.major = element_blank(),
   panel.grid.minor = element_blank(),
   # Change axis line
-  axis.line = element_line(colour = "black"))
-
-Blch_plot
+  axis.line = element_line(colour = "black")); Blch_plot
 
 ggsave(file="Output/Final_Figures/Photographic_Bleaching.pdf", Blch_plot, width = 11, height = 6, units = c("in"))
 ```

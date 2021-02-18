@@ -435,7 +435,7 @@ The model with both Plug ID and Tank was the best model to use. I used a transfo
 
 The three GLMM models are exactly the same (just plug ID, just tank, and tank and plug ID together) but we want a less complex model so we want to pick just plug ID or just tank but not sure which of the two.. Might come back to this choice..
 
-The residuals are completely skewed by a few outliers.. come back to this. 
+The residuals are completely skewed by a few outliers.. come back to this.
 
 ```
 ```
@@ -604,8 +604,10 @@ I could also do the PERMANOVA with treatment separated into temperature and pCO2
 - Look at Chris Wall's physiotype paper to see if that would be best to represent timepoints?  
 - Troubleshoot Bleaching score transformations  
 - Troubleshoot BW transformations  
-- Get HP and Ariana's thoughts on models and what I did  
-- Check S:H AFDW literature and plot as univariate plot  
 - Revisit/double check outliers for all univariate measurements  
 - Think about what else we could normalize to?  
-- Troubleshoot GAM models
+- Troubleshoot GAM models  
+- Check literature for all variable values  
+- Physiological variability
+
+Meeting with Ariana on Monday the 22nd 12 pm EST. 
