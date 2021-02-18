@@ -224,7 +224,15 @@ Calculating mean values for each timepoint and treatment group.
 ## use the following 
 Chl_long <- Chl_final %>% select(Plug_ID, surface.area.cm2, vol_mL, chla.ug.cm2, chlc2.ug.cm2, Species, Treatment, Temperature, CO2, Timepoint) %>%
   gather("Measurement", "Value", 4:5)
-Chl_means <- summarySE(Chl_long, measurevar="Value", groupvars=c("Timepoint", "Treatment", "Temperature", "CO2", "Species", "Measurement"))
+Chl_means <- summarySE(Chl_long, measurevar="Value", groupvars=c("Timepoint", "Treatment", "Temperature", "CO2", "Species", "Measurement")) %>% filter(N>2) %>%
+  mutate(Species = case_when(
+    Species == "Mcapitata" ~ "Montipora capitata",
+    Species == "Pacuta" ~ "Pocillopora acuta"
+  )) %>%
+  mutate(Measurement = case_when(
+    Measurement == "chla.ug.cm2" ~ "Chlorophyll-a",
+    Measurement == "chlc2.ug.cm2" ~ "Chlorophyll-c2"
+  )) 
 
 Chlc2_means <- summarySE(Chl_final, measurevar="chlc2.ug.cm2", groupvars=c("Timepoint", "Treatment", "Temperature", "CO2", "Species"))
 Chlc2_means
@@ -334,29 +342,25 @@ Plotting timeseries with corrected means table.
 
 ```{r}
 cols <- c("lightblue", "blue", "pink", "red")
-species.names <- list(
-  'Mcapitata'="Montipora capitata",
-  'Pacuta'="Pocillopora acuta",
-  'chla.ug.cm2'="Chl-a (ug/cm^-2)",
-  'chlc2.ug.cm2'="Chl-c2 (ug/cm^-2)")
-
-species_labeller <- function(variable,value){
-  return(species.names[value])}
 
 CHL <- ggplot(Chl_means, aes(x=Timepoint, y = Value, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
-  facet_grid(Measurement ~ Species, scales = "free", labeller = species_labeller) +
+  facet_grid(Measurement ~ Species, scales = "free") +
   geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2) +
   scale_color_manual(values = cols) + 
   xlab("Timepoint") + 
-  theme_bw() + 
-  ylab("") +
-  ggtitle("Chlorophyll a and c2 concentration") +
+  theme_classic() + 
+  ylab(expression("Concentration" ~(ug ~cm^-2))) +
+  #ggtitle("Chlorophyll a and c2 concentration") +
   theme(legend.position = "left") +
   geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
-  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) #Set the text angle
-CHL
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  # Change axis line
+  axis.line = element_line(colour = "black")); CHL
 
 ggsave(file="Output/Final_Figures/Chlorophyll.pdf", CHL, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Final_Figures/Chlorophyll.png", CHL, width = 11, height = 6, units = c("in"))

@@ -202,8 +202,6 @@ In addition to the missing list above, we won't have data for:
 - 1327: gained mass in AFDW protocol (not possible); not enough homogenate to do again.  
 - 1488: homogenate tube broke (froze and cracked) and we lost half of tissue homogenate. There was not enough left to do AFDW.
 
-Scheduled to re-do AFDW #2863 Monday Feb 15th - Wednesday Feb 17th.
-
 **AFDW sample size differences in addition to the 3 above sample size tables.**
 
 | Species     	| Timepoint 	| Treatment 	| Sample Size 	| Notes                                           	|
