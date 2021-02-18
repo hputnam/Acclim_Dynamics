@@ -178,11 +178,9 @@ Week 5 data excluded because we didn't trust that set of values for any treatmen
 
 Buoywant weight technique
 
-Do we like the figure format for Growth, Resp/photo rates, or AFDW/Chl?  
-
 *P.acuta* Week 10 and 14 have the same value? This is real data, they just have almost identical values for those timepoints. Nothing to change here.
 
-Figure as of 20210108.
+Figure as of 20210218.
 
 ### Respiration and photosynthetic rates
 

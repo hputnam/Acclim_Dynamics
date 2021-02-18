@@ -461,7 +461,7 @@ Growth_facetplot <- ggplot(All.Means, aes(x=TimePoint, y = mg.d.cm2, group = Tre
   xlab("Timepoint") + 
   ylab(expression(Growth  ~(mg ~CaCO[3] ~cm^-2 ~d^-1))) +
   theme_classic() + 
-  ggtitle("Growth Rates") +
+  #ggtitle("Growth Rates") +
   theme(legend.position = "left") +
   geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
