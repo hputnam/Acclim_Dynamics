@@ -12,13 +12,17 @@ HTHC = High Temperature (29.5C) High pCO2 (~1,200 uatm)
 
 **Environmental History and Degree Heating Weeks in Kaneohe Bay**
 
-NOAA [CRIMP2: Buoy Position: 21.46°N, 157.80°W](https://www.pmel.noaa.gov/co2/story/CRIMP2) and buoy [info](http://www.soest.hawaii.edu/oceanography/edecarlo/Eric_Decarlo_homepage/CRIMP.html); seems to be closest to our sites. Ask Hollie or Ariana for suggestions of other buoys. Data ranges from 2008-2019. Variables in dataset: SST, SSS, Atm. press, xCO2 water, xCO2 air, fCO2 water, fCO2 air, pH on total scale.
+NOAA [CRIMP2: Buoy Position: 21.46°N, 157.80°W](https://www.pmel.noaa.gov/co2/story/CRIMP2) and buoy [info](http://www.soest.hawaii.edu/oceanography/edecarlo/Eric_Decarlo_homepage/CRIMP.html); seems to be closest to our sites. Ask Hollie or Ariana for suggestions of other buoys. Data ranges from 2008-2019. Variables in dataset: SST, SSS, Atm. press, xCO2 water, xCO2 air, fCO2 water, fCO2 air, pH on total scale. Data files found [here](https://www.ncei.noaa.gov/data/oceans/ncei/ocads/data/0157415/).
 
 ![CRIMP2 location](http://www.soest.hawaii.edu/oceanography/edecarlo/Eric_Decarlo_homepage/CRIMP_files/image001.jpg)
 
 CRIMP2 Temperature Data
 
-![crimp2temp]()
+![crimp2temp](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/CRIMP2-Temperature.png?raw=true)
+
+CRIMP2 pCO2 Data
+
+![crimp2pco2]()
 
 
 ## Sampling Timeline
