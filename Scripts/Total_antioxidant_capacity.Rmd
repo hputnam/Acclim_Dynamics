@@ -447,7 +447,11 @@ TAC %>% select(Plug_ID, uae.mM, Species, Timepoint, Treatment, prot_ug, cre.umol
 Calculating mean values per treatment per timepoint. Checking sample sizes. 
 ```{r}
 TAC <- TAC %>% na.omit()
-TAC.means <- summarySE(TAC, measurevar="cre.umol.mgprot", groupvars=c("Timepoint", "Treatment", "Temperature", "CO2", "Species"))
+TAC.means <- summarySE(TAC, measurevar="cre.umol.mgprot", groupvars=c("Timepoint", "Treatment", "Temperature", "CO2", "Species")) %>% filter(N>2) %>%
+  mutate(Species = case_when(
+    Species == "Mcapitata" ~ "Montipora capitata",
+    Species == "Pacuta" ~ "Pocillopora acuta"
+  ))
 TAC.means$Timepoint <- factor(TAC.means$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
 
 # Looking at sample sizes 
