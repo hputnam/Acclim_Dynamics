@@ -39,6 +39,7 @@ library(reshape2)
 library(nlme) #mixed model, repeated measures ANOVA
 library(lsmeans) #mixed model posthoc  statistical comparisons
 library(gridExtra)
+library(Rmisc)
 ```
 
 ### Buoyant Weight Standard Curve 
@@ -296,19 +297,21 @@ data.long$mg.d.cm2 <- data.long$value*1000
 
 Calculating means.
 ```{r}
-All.Means <- ddply(data.long, c('TimePoint','Species', 'Treatment'), summarize,
-                   mean= mean(mg.d.cm2, na.rm=T), #mean BW
-                   N = sum(!is.na(mg.d.cm2)), # sample size
-                   se = sd(mg.d.cm2, na.rm=T)/sqrt(N)) #SE
-All.Means
+All.Means <- summarySE(data.long, measurevar="mg.d.cm2", groupvars=c("Species", "TimePoint", "Treatment", "Temperature", "CO2")) %>% 
+  filter(N>2) %>% na.omit(); All.Means
 
-All.Means$Group <- paste(All.Means$TimePoint, All.Means$Treatment, All.Means$Species)
-All.Means$SpGroup <- paste(All.Means$Treatment, All.Means$Species)
+#All.Means <- ddply(data.long, c('TimePoint','Species', 'Treatment'), summarize,
+                #   mean= mean(mg.d.cm2, na.rm=T), #mean BW
+                #   N = sum(!is.na(mg.d.cm2)), # sample size
+                #   se = sd(mg.d.cm2, na.rm=T)/sqrt(N)) #SE
+
+#All.Means$Group <- paste(All.Means$TimePoint, All.Means$Treatment, All.Means$Species)
+#All.Means$SpGroup <- paste(All.Means$Treatment, All.Means$Species)
 
 Mcap.Means <- subset(All.Means, Species =="Mcapitata")
 Pact.Means <- subset(All.Means, Species =="Pacuta")
 
-filter(Pact.Means, TimePoint=="T5.g.d.cm2" | TimePoint=="T7.g.d.cm2") #these points look almost identical
+filter(Pact.Means, TimePoint=="T5.g.d.cm2" | TimePoint=="T7.g.d.cm2") #these points look almost identical; just double checking values 
 ```
 
 
@@ -436,9 +439,43 @@ Pacuta.BW <- ggplot(Pact.Means, aes(x=week, y = mean, group = Treatment, color =
 Pacuta.BW
 
 BW.Figs <- arrangeGrob(Mcap.BW, Pacuta.BW, ncol=2)
-ggsave(file="Output/Final_Figures/Growth.pdf", BW.Figs, width = 11, height = 6, units = c("in"))
+#ggsave(file="Output/Final_Figures/Growth.pdf", BW.Figs, width = 11, height = 6, units = c("in"))
 ```
 
+Facet wrap figure. 
+```{r}
+cols <- c("lightblue", "blue", "salmon", "red3")
+
+species.names <- list(
+  'Mcapitata'="Montipora capitata",
+  'Pacuta'="Pocillopora acuta")
+
+species_labeller <- function(variable,value){
+  return(species.names[value])}
+
+Growth_facetplot <- ggplot(All.Means, aes(x=TimePoint, y = mg.d.cm2, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(~Species, scales = "free", labeller = species_labeller) +
+  geom_errorbar(aes(ymin=mg.d.cm2-se, ymax=mg.d.cm2+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + 
+  ylab(expression(Growth  ~(mg ~CaCO[3] ~cm^-2 ~d^-1))) +
+  theme_classic() + 
+  ggtitle("Growth Rates") +
+  theme(legend.position = "left") +
+  geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  scale_x_discrete(breaks = c("T0.g.d.cm2", "T1.g.d.cm2", "T2.g.d.cm2", "T3.g.d.cm2", "T4.g.d.cm2", "T6.g.d.cm2", "T8.g.d.cm2"), labels = c("1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week")) +
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  # Change axis line
+  axis.line = element_line(colour = "black")); Growth_facetplot
+
+ggsave(file="Output/Final_Figures/Growth.pdf", Growth_facetplot, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Growth.png", Growth_facetplot, width = 11, height = 6, units = c("in"))
+```
 
 
 

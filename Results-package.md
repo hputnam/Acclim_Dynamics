@@ -164,11 +164,11 @@ Some univariate physiology variables will also have decreased sample size groups
 This dataset has been QC'd by Emma; final figure as of 20210108.  
 Survivorship was measured every day and each coral was noted as dead or alive for that day. This plot was made with [survfit() function](https://www.rdocumentation.org/packages/survival/versions/2.9-6/topics/survfit).
 
-### Bleaching Score
+### Color Score
 
 ![blch](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Photographic_Bleaching.png?raw=true)
 
-This dataset has been QC'd by Emma; final figure as of 20210108. Corals photographed and red blue green color square quantified in ImageJ.
+This dataset has been QC'd by Emma; final figure as of 20210218. Corals photographed and red blue green color square quantified in ImageJ.
 
 Week 5 data excluded because we didn't trust that set of values for any treatment.
 

@@ -209,10 +209,8 @@ Blch_plot <- ggplot(All.Means, aes(x=Timepoint, y = Bleaching.Score, group = Tre
   axis.line = element_line(colour = "black")); Blch_plot
 
 ggsave(file="Output/Final_Figures/Photographic_Bleaching.pdf", Blch_plot, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Photographic_Bleaching.png", Blch_plot, width = 11, height = 6, units = c("in"))
 ```
-
-
-
 
 
 Calculating M.cap means and plotting bleaching score
