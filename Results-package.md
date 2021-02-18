@@ -195,6 +195,8 @@ This dataset has been QC'd by Emma; final figure as of 20210118.
 
 ![AFDW](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Tissue_Biomass.png?raw=true)
 
+![Ratio](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Tissue_Biomass-Ratio.png?raw=true)
+
 This dataset has been QC'd by Emma; final figure as of 20210108.
 
 In addition to the missing list above, we won't have data for:  
