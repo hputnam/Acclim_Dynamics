@@ -70,7 +70,7 @@ Growth <- read.csv("Physiology_variables/Growth_Buoyant_Weight/Growth_Rates.csv"
     Growth.Time == "T7.g.d.cm2" ~ "14 week",
     Growth.Time == "T8.g.d.cm2" ~ "16 week")
   )
-
+Growth$Plug_ID <- as.integer(Growth$Plug_ID)
 
 # Cell.density
 
@@ -85,6 +85,9 @@ timeseries.data <- data %>% select(-Pnet_umol.cm2.hr, -Rdark_umol.cm2.hr, -Pgros
 
 pacuta_full_data <- data %>% subset(Species == "Pacuta")
 mcap_full_data <- data %>% subset(Species == "Mcapitata")
+
+color.data <- full_join(Master, Color.Score, by = "Plug_ID") %>% na.omit()
+Growth.data <- full_join(Master, Growth, by = "Plug_ID") %>% na.omit()
 ```
 
 # Univariate analysis
@@ -145,7 +148,55 @@ summary(Pacuta_Resp_GLM)
 qqPlot(residuals(Pacuta_Resp_GLM))
 hist(residuals(Pacuta_Resp_GLM)) 
 # This looks a bit skewed, but how skewed is too skewed? Come back to this 
+
+Anova(Pacuta_Resp_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
+plot(allEffects(Pacuta_Resp_GLM))
 ```
+
+M.cap linear mixed effect models 
+```{r}
+## Pnet
+Mcap_Pnet_LMER_tank <- lmer(Pnet_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+Mcap_Pnet_GLM <- glm(log(Pnet_umol.cm2.hr) ~ Timepoint*Temperature*CO2, na.action=na.omit, data=mcap_full_data) # GLM
+anova(Mcap_Pnet_LMER_tank, Mcap_Pnet_GLM) # AIC LMER = 218.26, GLM = 218.06; there is no difference between models so the less complex model is chosen (GLM)
+
+summary(Mcap_Pnet_GLM)
+qqPlot(residuals(Mcap_Pnet_GLM))
+hist(residuals(Mcap_Pnet_GLM)) 
+# residuals are not normal; transformed with log and the residuals look much better
+
+Anova(Mcap_Pnet_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
+plot(allEffects(Mcap_Pnet_GLM))
+
+## Pgross
+Mcap_Pgross_LMER_tank <- lmer(Pgross_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+Mcap_Pgross_GLM <- glm(log(Pgross_umol.cm2.hr) ~ Timepoint*Temperature*CO2, na.action=na.omit, data=mcap_full_data) # GLM
+anova(Mcap_Pgross_LMER_tank, Mcap_Pgross_GLM) # AIC LMER = 292.86, GLM = 293.03; there is no difference between models so the less complex model is chosen (GLM)
+
+summary(Mcap_Pgross_GLM)
+qqPlot(residuals(Mcap_Pgross_GLM))
+hist(residuals(Mcap_Pgross_GLM)) 
+# residuals are not normal; transformed with log and the residuals look much better
+
+Anova(Mcap_Pgross_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
+plot(allEffects(Mcap_Pgross_GLM))
+
+## Dark Resp 
+mcap_full_data$Rdarkplus1 <- mcap_full_data$Rdark_umol.cm2.hr+1
+  
+Mcap_Resp_LMER_tank <- lmer(Rdark_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+Mcap_Resp_GLM <- glm(log(Rdarkplus1) ~ Timepoint*Temperature*CO2, na.action=na.omit, data=mcap_full_data) # GLM
+anova(Mcap_Resp_LMER_tank, Mcap_Resp_GLM) # AIC LMER = -120.09, GLM = -117.72; GLM presents with lower AIC and is chosen
+
+summary(Mcap_Resp_GLM)
+qqPlot(residuals(Mcap_Resp_GLM))
+hist(residuals(Mcap_Resp_GLM)) 
+# residuals are not normal; adding 1 to all data points and using log transform but this didn't fix much so come back this
+
+Anova(Mcap_Resp_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
+plot(allEffects(Mcap_Resp_GLM))
+```
+
 
 Generalized Additive model 
 ```{r}
@@ -156,6 +207,337 @@ summary(Pnet_GAM)
 
 anova(Pnet_LMER_tank, Pnet_GAM)
 ```
+
+### Chlorophyll Concentration
+
+Raw data distribution view.
+```{r}
+hist(pacuta_full_data$chla.ug.cm2)
+hist(mcap_full_data$chla.ug.cm2)
+# mcap doesn't look normal, the models should account for this but might need to transform post models 
+```
+
+Linear mixed effect models. 
+```{r}
+## Pacuta 
+## Subset out 12 and 16 week timepoints 
+Pacuta_stress_data <- pacuta_full_data %>% filter(Timepoint !="12 week" & Timepoint !="16 week")
+  
+Pacuta_Chl_LMER_tank <- lmer(chla.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_stress_data) #GLMM
+Pacuta_Chl_GLM <- glm(chla.ug.cm2 ~ Timepoint*Temperature*CO2, na.action=na.omit, data=Pacuta_stress_data) # GLM
+anova(Pacuta_Chl_LMER_tank, Pacuta_Chl_GLM) # AIC LMER = 281.74, GLM = 280.14; no difference in models so the GLM is chosen 
+
+summary(Pacuta_Chl_GLM)
+qqPlot(residuals(Pacuta_Chl_GLM))
+hist(residuals(Pacuta_Chl_GLM)) 
+# this looks normal, no need to transform
+
+Anova(Pacuta_Chl_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
+plot(allEffects(Pacuta_Chl_GLM))
+
+## Mcap
+Mcap_Chl_LMER_tank <- lmer(chla.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+Mcap_Chl_GLM <- glm(chla.ug.cm2 ~ Timepoint*Temperature*CO2, na.action=na.omit, data=mcap_full_data) # GLM
+anova(Mcap_Chl_LMER_tank, Mcap_Chl_GLM) # AIC LMER = 479.65, GLM = 477.65; no difference in models so the GLM is chosen 
+
+summary(Mcap_Chl_GLM)
+qqPlot(residuals(Mcap_Chl_GLM))
+hist(residuals(Mcap_Chl_GLM)) 
+# this looks normal, no need to transform
+
+Anova(Mcap_Chl_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
+plot(allEffects(Mcap_Chl_GLM))
+```
+
+### Tissue Biomass 
+Raw data distribution view.
+```{r}
+hist(pacuta_full_data$Host_AFDW.mg.cm2) # normal
+hist(pacuta_full_data$Sym_AFDW.mg.cm2) # right/positively skewed 
+hist(pacuta_full_data$Ratio_AFDW.mg.cm2) # extremely right/positively skewed
+
+hist(mcap_full_data$Host_AFDW.mg.cm2) # right/positively skewed
+hist(mcap_full_data$Sym_AFDW.mg.cm2) # right/positively skewed
+hist(mcap_full_data$Ratio_AFDW.mg.cm2) # normal 
+```
+P.acuta mixed effect models 
+```{r}
+#### P acuta -- this needs to be done with Pacuta_stress_data b/c recovery timepoints are small or not existent.
+## Host 
+Pacuta_Host_LMER_tank <- lmer(Host_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_stress_data) #GLMM
+Pacuta_Host_GLM <- glm(Host_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2, na.action=na.omit, data=Pacuta_stress_data) # GLM
+anova(Pacuta_Host_LMER_tank, Pacuta_Host_GLM) # AIC LMER = 292.11, GLM = 290.11; no difference in models so the GLM is chosen 
+
+isSingular(Pacuta_Host_LMER_tank, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
+
+summary(Pacuta_Host_GLM)
+qqPlot(residuals(Pacuta_Host_GLM))
+hist(residuals(Pacuta_Host_GLM)) 
+# this looks normal, no need to transform
+
+Anova(Pacuta_Host_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
+plot(allEffects(Pacuta_Host_GLM))
+
+## Sym
+Pacuta_Sym_LMER_tank <- lmer(Sym_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_stress_data) #GLMM
+Pacuta_Sym_GLM <- glm(log(Sym_AFDW.mg.cm2) ~ Timepoint*Temperature*CO2, na.action=na.omit, data=Pacuta_stress_data) # GLM
+anova(Pacuta_Sym_LMER_tank, Pacuta_Sym_GLM) # AIC LMER = 171.87, GLM = 171.00; no difference in models so the GLM is chosen 
+
+summary(Pacuta_Sym_GLM)
+qqPlot(residuals(Pacuta_Sym_GLM))
+hist(residuals(Pacuta_Sym_GLM)) 
+# this looks normal, no need to transform
+
+Anova(Pacuta_Sym_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
+plot(allEffects(Pacuta_Sym_GLM))
+
+## S:H Ratio 
+Pacuta_SHRatio_LMER_tank <- lmer(Ratio_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_stress_data) #GLMM
+Pacuta_SHRatio_GLM <- glm(log(Ratio_AFDW.mg.cm2) ~ Timepoint*Temperature*CO2, na.action=na.omit, data=Pacuta_stress_data) # GLM
+anova(Pacuta_SHRatio_LMER_tank, Pacuta_SHRatio_GLM) # AIC LMER = 220.95, GLM = 218.95; no difference in models so the GLM is chosen 
+
+isSingular(Pacuta_SHRatio_LMER_tank, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
+
+summary(Pacuta_SHRatio_GLM)
+qqPlot(residuals(Pacuta_SHRatio_GLM))
+hist(residuals(Pacuta_SHRatio_GLM)) 
+# this looks skewed, log transformed but still looks a bit non-normal 
+
+Anova(Pacuta_SHRatio_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
+plot(allEffects(Pacuta_SHRatio_GLM))
+```
+
+M. capitata linear mixed models. 
+```{r}
+## Host 
+Mcap_Host_LMER_tank <- lmer(Host_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+Mcap_Host_GLM <- glm(log(Host_AFDW.mg.cm2) ~ Timepoint*Temperature*CO2, na.action=na.omit, data=mcap_full_data) # GLM
+anova(Mcap_Host_LMER_tank, Mcap_Host_GLM) # AIC LMER = 567.19, GLM = 565.19; no difference in models so the GLM is chosen 
+
+isSingular(Mcap_Host_LMER_tank, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
+
+summary(Mcap_Host_GLM)
+qqPlot(residuals(Mcap_Host_GLM))
+hist(residuals(Mcap_Host_GLM)) 
+# this looks slightly skewed , log transformed made this a lot better
+
+Anova(Mcap_Host_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
+plot(allEffects(Mcap_Host_GLM))
+
+## Sym
+Mcap_Sym_LMER_tank <- lmer(Sym_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+Mcap_Sym_GLM <- glm(Sym_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2, na.action=na.omit, data=mcap_full_data) # GLM
+anova(Mcap_Sym_LMER_tank, Mcap_Sym_GLM) # AIC LMER = 512.31, GLM = 510.31; no difference in models so the GLM is chosen 
+
+summary(Mcap_Sym_GLM)
+qqPlot(residuals(Mcap_Sym_GLM))
+hist(residuals(Mcap_Sym_GLM)) 
+# this looks normal; no need to transform 
+
+Anova(Mcap_Sym_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
+plot(allEffects(Mcap_Sym_GLM))
+
+## S:H Ratio 
+Mcap_SHRatio_LMER_tank <- lmer(Ratio_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+Mcap_SHRatio_GLM <- glm(Ratio_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2, na.action=na.omit, data=mcap_full_data) # GLM
+anova(Mcap_SHRatio_LMER_tank, Mcap_SHRatio_GLM) # AIC LMER = 154.23, GLM = 152.23; no difference in models so the GLM is chosen 
+
+isSingular(Mcap_SHRatio_LMER_tank, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
+
+summary(Mcap_SHRatio_GLM)
+qqPlot(residuals(Mcap_SHRatio_GLM))
+hist(residuals(Mcap_SHRatio_GLM)) 
+# slightly right skewed positively but log made it way worse; keep it normal 
+
+Anova(Mcap_SHRatio_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
+plot(allEffects(Mcap_SHRatio_GLM))
+```
+
+### Soluble Protein
+
+Raw distribution view. 
+```{r}
+hist(pacuta_full_data$prot_mg.cm2) 
+hist(mcap_full_data$prot_mg.cm2) 
+# both slightly right skewed positively 
+```
+
+Linear mixed models 
+```{r}
+## Pacuta 
+Pacuta_prot_LMER_tank <- lmer(prot_mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_stress_data) #GLMM
+Pacuta_prot_GLM <- glm(prot_mg.cm2 ~ Timepoint*Temperature*CO2, na.action=na.omit, data=Pacuta_stress_data) # GLM
+anova(Pacuta_prot_LMER_tank, Pacuta_prot_GLM) # AIC LMER = 52.464, GLM = 50.464; no difference in models so the GLM is chosen 
+
+summary(Pacuta_prot_GLM)
+qqPlot(residuals(Pacuta_prot_GLM))
+hist(residuals(Pacuta_prot_GLM)) # this looks normal; no transformation 
+
+Anova(Pacuta_prot_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
+plot(allEffects(Pacuta_prot_GLM))
+
+## Mcap
+Mcap_prot_LMER_tank <- lmer(prot_mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+Mcap_prot_GLM <- glm(prot_mg.cm2 ~ Timepoint*Temperature*CO2, na.action=na.omit, data=mcap_full_data) # GLM
+anova(Mcap_prot_LMER_tank, Mcap_prot_GLM) # AIC LMER = -1.5982, GLM = -3.5982; no difference in models so the GLM is chosen 
+
+summary(Mcap_prot_GLM)
+qqPlot(residuals(Mcap_prot_GLM))
+hist(residuals(Mcap_prot_GLM)) # this looks normal; no transformation 
+
+Anova(Mcap_prot_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
+plot(allEffects(Mcap_prot_GLM))
+```
+
+### Host Total Antioxidant Capacity
+
+Raw distribution view. 
+```{r}
+hist(pacuta_full_data$cre.umol.mgprot) 
+hist(mcap_full_data$cre.umol.mgprot) 
+# both very right skewed positively 
+```
+
+Linear mixed models. 
+```{r}
+## Pacuta 
+Pacuta_TAC_LMER_tank <- lmer(cre.umol.mgprot ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_stress_data) #GLMM
+Pacuta_TAC_GLM <- glm(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2, na.action=na.omit, data=Pacuta_stress_data) # GLM
+anova(Pacuta_TAC_LMER_tank, Pacuta_TAC_GLM) # AIC LMER = -24.707, GLM = -26.707; no difference in models so the GLM is chosen 
+
+summary(Pacuta_TAC_GLM)
+qqPlot(residuals(Pacuta_TAC_GLM))
+hist(residuals(Pacuta_TAC_GLM)) # even with log transformation this is skewed  
+
+Anova(Pacuta_TAC_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
+plot(allEffects(Pacuta_TAC_GLM))
+
+## Mcapitata
+Mcap_TAC_LMER_tank <- lmer(cre.umol.mgprot ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+Mcap_TAC_GLM <- glm(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2, na.action=na.omit, data=mcap_full_data) # GLM
+anova(Mcap_TAC_LMER_tank, Mcap_TAC_GLM) # AIC LMER = -266.24, GLM = -268.24; no difference in models so the GLM is chosen 
+
+summary(Mcap_TAC_GLM)
+qqPlot(residuals(Mcap_TAC_GLM))
+hist(residuals(Mcap_TAC_GLM))
+# much better after log transform
+
+Anova(Mcap_TAC_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
+plot(allEffects(Mcap_TAC_GLM))
+```
+
+### Bleaching Score 
+
+Raw distribution score.
+```{r}
+color.data$Plug_ID <- as.character(color.data$Plug_ID)
+color.data$Blch.Time <- as.factor(color.data$Blch.Time)
+mcap.color <- color.data %>% subset(Species == "Mcapitata")
+pacuta.color <- color.data %>% subset(Species == "Pacuta")
+
+hist(pacuta.color$Bleaching.Score) 
+hist(mcap.color$Bleaching.Score) 
+# both very left/negatively skewed 
+```
+
+Linear mixed models. Adding Plug ID as random factor because this was repeated measures. 
+```{r}
+## Mcap 
+mcap.color$Color.Transformed <- mcap.color$Bleaching.Score+100
+range(mcap.color$Color.Transformed)
+hist(mcap.color$Color.Transformed)
+
+Mcap_Color_LMER_tank_plug <- lmer(Bleaching.Score ~ Blch.Time*Temperature*CO2 + (1|Tank) + (1|Plug_ID), na.action=na.omit, data=mcap.color) #GLMM
+Mcap_Color_LMER_tank <- lmer(Bleaching.Score ~ Blch.Time*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.color) #GLMM
+Mcap_Color_LMER_plug <- lmer(Bleaching.Score ~ Blch.Time*Temperature*CO2 + (1|Plug_ID), na.action=na.omit, data=mcap.color) #GLMM
+Mcap_Color_GLM <- glm(Bleaching.Score ~ Blch.Time*Temperature*CO2, na.action=na.omit, data=mcap.color) # GLM
+anova(Mcap_Color_LMER_tank, Mcap_Color_LMER_tank_plug, Mcap_Color_LMER_plug, Mcap_Color_GLM) 
+# AIC LMER just tank = 7245.1, LMER just plug ID = 7139.3, LMER both tank and plug ID = 7141.3, GLM = 7247.8
+# the model with just plug ID as random factor had the smallest AIC value and will be used. 
+
+Mcap_Color_LMER_plug_transformed <- lmer(log(Color.Transformed) ~ Blch.Time*Temperature*CO2 + (1|Plug_ID), na.action=na.omit, data=mcap.color) #GLMM
+
+summary(Mcap_Color_LMER_plug)
+qqPlot(residuals(Mcap_Color_LMER_plug))
+hist(residuals(Mcap_Color_LMER_plug))
+
+qqPlot(residuals(Mcap_Color_LMER_plug_transformed))
+hist(residuals(Mcap_Color_LMER_plug_transformed))
+# residuals super wonky so transformed by adding 100 to each value to get positive values and using log transformation
+
+## insert anova 
+
+## Pacuta 
+pacuta.color$Color.Transformed <- pacuta.color$Bleaching.Score+120
+range(pacuta.color$Color.Transformed)
+hist(pacuta.color$Color.Transformed)
+
+Pacuta_Color_LMER_tank_plug <- lmer(Bleaching.Score ~ Blch.Time*Temperature*CO2 + (1|Tank) + (1|Plug_ID), na.action=na.omit, data=pacuta.color) #GLMM
+Pacuta_Color_LMER_tank <- lmer(Bleaching.Score ~ Blch.Time*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta.color) #GLMM
+Pacuta_Color_LMER_plug <- lmer(Bleaching.Score ~ Blch.Time*Temperature*CO2 + (1|Plug_ID), na.action=na.omit, data=pacuta.color) #GLMM
+Pacuta_Color_GLM <- glm(Bleaching.Score ~ Blch.Time*Temperature*CO2, na.action=na.omit, data=pacuta.color) # GLM
+anova(Pacuta_Color_LMER_tank_plug, Pacuta_Color_LMER_tank, Pacuta_Color_LMER_plug, Pacuta_Color_GLM) 
+# AIC LMER just tank = 6431.8, LMER just plug ID = 6304.1, both plug ID and tank = 6301.3, GLM = 6501.7
+# the model with both plug ID and tank as random factors has the smallest AIC and will be used. 
+
+Pacuta_Color_LMER_tank_plug_transformed <- lmer(log(Color.Transformed) ~ Blch.Time*Temperature*CO2 + (1|Tank) + (1|Plug_ID), na.action=na.omit, data=pacuta.color) #GLMM
+
+alias(Pacuta_Color_GLM) # to see which groups are issues and being dropped as columns / coefficients 
+
+summary(Pacuta_Color_LMER_tank_plug)
+qqPlot(residuals(Pacuta_Color_LMER_tank_plug))
+hist(residuals(Pacuta_Color_LMER_tank_plug))
+
+qqPlot(residuals(Pacuta_Color_LMER_tank_plug_transformed))
+hist(residuals(Pacuta_Color_LMER_tank_plug_transformed)) # residuals are not as clean, add 100 to each value and log transform 
+# still isn't great - there are some outliers to take out?
+
+## insert anova 
+```
+
+### Buoyant Weight 
+
+Raw distribution score.
+```{r}
+Growth.data$Plug_ID <- as.character(Growth.data$Plug_ID)
+Growth.data$Growth.Time <- as.factor(Growth.data$Growth.Time)
+mcap.Growth <- Growth.data %>% subset(Species == "Mcapitata")
+pacuta.Growth <- Growth.data %>% subset(Species == "Pacuta")
+
+hist(pacuta.Growth$Growth.Rate) 
+hist(mcap.Growth$Growth.Rate) 
+# both very heavy tailed distribution
+
+mcap.Growth$Rate.Transformed <- mcap.Growth$Growth.Rate+1
+
+Mcap_Growth_LMER_tank_plug <- lmer(Growth.Rate ~ Growth.Time*Temperature*CO2 + (1|Tank) + (1|Plug_ID), na.action=na.omit, data=mcap.Growth) #GLMM
+Mcap_Growth_LMER_tank <- lmer(Growth.Rate ~ Growth.Time*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.Growth) #GLMM
+Mcap_Growth_LMER_plug <- lmer(Growth.Rate ~ Growth.Time*Temperature*CO2 + (1|Plug_ID), na.action=na.omit, data=mcap.Growth) #GLMM
+Mcap_Growth_GLM <- glm(Growth.Rate ~ Growth.Time*Temperature*CO2, na.action=na.omit, data=mcap.Growth) # GLM
+anova(Mcap_Growth_LMER_tank_plug, Mcap_Growth_LMER_tank, Mcap_Growth_LMER_plug, Mcap_Growth_GLM) 
+# AIC LMER with plug = -6382.7, with tank = -6382.7, with both tank and plug = -6380.7, GLM = -6384.7
+# There is no difference between the GLMMs.. which to take? Might have to come back to this. Want a less complex model but there is no difference between just tank and just plug ID
+
+anova(Mcap_Growth_LMER_tank, Mcap_Growth_LMER_plug) # these are exactly the same but continued with tank for now 
+
+Mcap_Growth_LMER_tank_transformed <- lmer(log(Rate.Transformed) ~ Growth.Time*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.Growth) #GLMM
+# this didn't do anything? come back to transformations for heavy and light tailed data 
+
+summary(Mcap_Growth_LMER_tank)
+qqPlot(residuals(Mcap_Growth_LMER_tank))
+hist(residuals(Mcap_Growth_LMER_tank))
+
+qqPlot(residuals(Mcap_Growth_LMER_tank_transformed))
+hist(residuals(Mcap_Growth_LMER_tank_transformed))
+
+# Two big outliers - 199 and 200? are those row numbers?
+```
+
+Linear mixed models. 
+```{r}
+
+```
+
 
 
 # Multivariate analysis 
