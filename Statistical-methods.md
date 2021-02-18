@@ -601,13 +601,15 @@ I could also do the PERMANOVA with treatment separated into temperature and pCO2
 
 ## Next Steps
 
-- Look at Chris Wall's physiotype paper to see if that would be best to represent timepoints?  
-- Troubleshoot Bleaching score transformations  
-- Troubleshoot BW transformations  
-- Revisit/double check outliers for all univariate measurements  
-- Think about what else we could normalize to?  
-- Troubleshoot GAM models  
+- Look at Chris Wall's physiotype paper to see if that would be best to represent timepoints?    
 - Check literature for all variable values  
-- Physiological variability
+- Physiological variability  
+- Parse hobo logger times  
+- Apex continuous data  
+- Plot thermal history of Hawaii buoy, Degree Heating Weeks 
 
-Meeting with Ariana on Monday the 22nd 12 pm EST. 
+Meeting with Ariana on Monday the 22nd 12 pm EST.  
+- GAM vs GLMM models  
+- How to pick outliers  
+- Bleaching or BW transformations  
+- Other things to normalize to

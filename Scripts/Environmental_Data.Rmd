@@ -47,6 +47,53 @@ library(graphics)
 
 ### NOAA BUOY DATA ###
 
+**CRIMP2 NOAA Buoy Data files**: 
+Nov 2012 - June 2013
+June 2013 - Nov 2013
+Nov 2013 - June 2014 
+June 2014 - May 2015
+Aug 2015 - Sept 2016  
+Nov 2016 - Dec 2017  (missing Oct 2016)
+Dec 2017 - May 2018  
+May 2018 - Feb 2019 
+
+```{r}
+#bind all CRIMP logger data sets together
+CRIMP2.data <-
+  list.files(path = 'Environmental_data/CRIMP2-buoy', pattern = ".csv", full.names = TRUE) %>% # list files in directory following a particular pattern
+  set_names(.) %>% # get the column names
+  map_dfr(read.table, .id = "file.ID", header=FALSE, skip=5, sep=",") %>% # join all files together in one data frame by file ID
+  group_by(file.ID) %>% # for each file do the following
+  select(V4, V5, V15, V22) %>% # I ran lines 58-62 first to view the column names and decide which ones I wanted to keep and then changed skip=4 to skip=5
+  dplyr::rename(Date=`V4`, # Date
+                Time=`V5`, # Time
+                Temp=`V15`, # SST C
+                pCO2=`V22`) %>% #pCO2 SW (sat) uatm chosen
+  unite(Date.Time, Date, Time, sep=" ")
+
+CRIMP2.data$Date.Time <- mdy_hm(CRIMP2.data$Date.Time, quiet=FALSE, tz="UTC", truncated=0) #format date and time 
+
+CRIMP2.temp <- CRIMP2.data %>% select(-pCO2) %>% filter(Temp>0)
+
+CRIMP.TEMP.PLOT <- ggplot(data = CRIMP2.temp, aes(x = Date.Time, y = Temp)) +
+  labs(x = "Date (Month-Year)", y = "Sea Surface Temperature (°C)") + ggtitle("CRIMP2 NOAA Buoy") +
+  geom_line() +
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+                     panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_x_datetime(date_breaks = "60 days", labels = date_format("%b %y")) +
+  geom_hline(aes(yintercept = 29.5), col = "red", linetype="dotted") +
+  theme(legend.position=c(0.9, 0.8), legend.background = element_blank()); CRIMP.TEMP.PLOT 
+
+ggsave(file="Output/CRIMP2-Temperature.png", CRIMP.TEMP.PLOT, width = 11, height = 6, units = c("in"))
+
+```
+
+
+
+
+
+
 Viewing the temperature and pH data from local NOAA Hawaii Buoys (XX) to guide decisions in experimental design.
 
 Reading in temperature and pH data files.

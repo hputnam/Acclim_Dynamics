@@ -9,6 +9,18 @@ ATHC = Ambient Temperature (27C) High pCO2 (~1,200 uatm)
 HTAC = High Temperature (29.5C) Ambient pCO2 (~480 uatm)  
 HTHC = High Temperature (29.5C) High pCO2 (~1,200 uatm)
 
+
+**Environmental History and Degree Heating Weeks in Kaneohe Bay**
+
+NOAA [CRIMP2: Buoy Position: 21.46°N, 157.80°W](https://www.pmel.noaa.gov/co2/story/CRIMP2) and buoy [info](http://www.soest.hawaii.edu/oceanography/edecarlo/Eric_Decarlo_homepage/CRIMP.html); seems to be closest to our sites. Ask Hollie or Ariana for suggestions of other buoys. Data ranges from 2008-2019. Variables in dataset: SST, SSS, Atm. press, xCO2 water, xCO2 air, fCO2 water, fCO2 air, pH on total scale.
+
+![CRIMP2 location](http://www.soest.hawaii.edu/oceanography/edecarlo/Eric_Decarlo_homepage/CRIMP_files/image001.jpg)
+
+CRIMP2 Temperature Data
+
+![crimp2temp]()
+
+
 ## Sampling Timeline
 |                      	| Acute Stress 	|       	| Chronic Stress 	|      	|      	|      	|      	|      	|      	|      	| Recovery 	|       	|       	|       	|       	|       	|       	|       	|
 |----------------------	|--------------	|-------	|----------------	|------	|------	|------	|------	|------	|------	|------	|----------	|-------	|-------	|-------	|-------	|-------	|-------	|-------	|
@@ -290,19 +302,6 @@ Notebook post coming soon. Symbiont Type Profiles made from [SymPortal](https://
 Figure 20210120
 
 ![relab](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/rel.abund.its2.png?raw=true)
-
-Edits to ITS2 script confirm with Hollie, I changed:  
-
-```
-# Line 44 originally said 3:14, but that was cutting off a profile at the beginning
-Pact <- as.matrix(Pact[,2:14])
-
-# Line 76 originally said 3:14, but that was cutting off a profile at the beginning
-Mcap <- as.matrix(Mcap[,2:14])
-
-# Line 107 was [2:12], but that was cutting off a profile at the end
-Rel.data <- data/rowSums(data[,2:13])
-```
 
 
 PERMANOVA results:  
