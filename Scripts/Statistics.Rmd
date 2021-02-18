@@ -96,7 +96,11 @@ Plot AFDW Ratio.
 cols <- c("lightblue", "blue", "salmon", "red3")
 
 Ratio.means <- data %>% select(Plug_ID, Species, Timepoint, Treatment, Temperature, CO2, Ratio_AFDW.mg.cm2) %>% na.omit() %>% 
-  summarySE(measurevar="Ratio_AFDW.mg.cm2", groupvars=c("Species", "Timepoint", "Treatment", "Temperature", "CO2")) %>% filter(N>2)
+  summarySE(measurevar="Ratio_AFDW.mg.cm2", groupvars=c("Species", "Timepoint", "Treatment", "Temperature", "CO2")) %>% filter(N>2) %>%
+  mutate(Species = case_when(
+    Species == "Mcapitata" ~ "Montipora capitata",
+    Species == "Pacuta" ~ "Pocillopora acuta"
+  ))
   
 AFDW_Ratio_plot <- ggplot(Ratio.means, aes(x=Timepoint, y = Ratio_AFDW.mg.cm2, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
