@@ -74,16 +74,16 @@ CRIMP2.data <-
   unite(Date.Time, Date, Time, sep=" ")
 
 CRIMP2.data$Date.Time <- mdy_hm(CRIMP2.data$Date.Time, quiet=FALSE, tz="UTC", truncated=0) #format date and time 
+CRIMP2.data$Data.Source <- "CRIMP2"
+
+crimp.colors <- c("lightblue", "blue", "black", "salmon", "red3")
 
 #### Temperature
 CRIMP2.temp <- CRIMP2.data %>% select(-pCO2) %>% filter(Temp>0)
-CRIMP2.temp$Data.Source <- "CRIMP2"
 ## need to run HOBO logger section prior to overlaying experimental data on CRIMP2's data
 EXPT.temp <- Hobo.means %>% select(Date.Time, Treatment, Temperature) %>% dplyr::rename(Data.Source = Treatment, Temp = Temperature)
 EXPT.temp$file.ID <- "EXPT"
 CRIMP2.EXPT.temp <- bind_rows(CRIMP2.temp, EXPT.temp) #combining both dataframes 
-
-crimp.colors <- c("lightblue", "blue", "black", "salmon", "red3")
 
 CRIMP.TEMP.PLOT <- ggplot(data = CRIMP2.EXPT.temp, aes(x = Date.Time, y = Temp, color = Data.Source)) +
   labs(x = "Date (Month-Year)", y = "Sea Surface Temperature (°C)") + ggtitle("CRIMP2 NOAA Buoy") +
@@ -99,69 +99,31 @@ CRIMP.TEMP.PLOT <- ggplot(data = CRIMP2.EXPT.temp, aes(x = Date.Time, y = Temp, 
 ggsave(file="Output/CRIMP2-Temperature.png", CRIMP.TEMP.PLOT, width = 11, height = 6, units = c("in"))
 
 #### pCO2
-```
+CRIMP2.pCO2 <- CRIMP2.data %>% select(-Temp) %>% filter(pCO2>0)
+## need to run Carb Chem script to get output to overlay experimental data on CRIMP'S data 
+EXPT.pCO2 <- read.csv("Environmental_data/Seawater_chemistry_table_Output_All.csv") %>% select(Timepoint, Treatment, pCO2) %>% 
+  dplyr::rename(Data.Source = Treatment, Date = Timepoint) %>% filter(Data.Source != "Acclimation")
+EXPT.pCO2$file.ID <- "EXPT"
+EXPT.pCO2$Time <- "11:00"
+EXPT.pCO2 <- EXPT.pCO2 %>% unite(Date.Time, Date, Time, sep=" ")
+EXPT.pCO2$Date.Time <- ymd_hm(EXPT.pCO2$Date.Time, quiet=FALSE, tz="UTC", truncated=0) #format date and time the order of ymd_hm will depend on original format
 
+CRIMP2.EXPT.pCO2 <- bind_rows(CRIMP2.pCO2, EXPT.pCO2) #combining both dataframes 
 
+CRIMP.pCO2.PLOT <- ggplot(data = CRIMP2.EXPT.pCO2, aes(x = Date.Time, y = pCO2, color = Data.Source)) +
+  labs(x = "Date (Month-Year)", y = "pCO2 (uatm)") + ggtitle("CRIMP2 NOAA Buoy") +
+  geom_line(size=0.15) +
+  scale_color_manual(values = crimp.colors) + 
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+                     panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_x_datetime(date_breaks = "60 days", labels = date_format("%b %y")) +
+  theme(legend.position="right", legend.background = element_blank()); CRIMP.pCO2.PLOT 
 
-
-
-
-Viewing the temperature and pH data from local NOAA Hawaii Buoys (XX) to guide decisions in experimental design.
-
-Reading in temperature and pH data files.
-```{r}
-NOAA_temp <- read.csv('Environmental_data/NOAA_Temp_Buoy_CO-OPS_1612480_from_20180901_to_20180923.csv')
-
-# renaming columns and deleting the empty conductivity column
-NOAA_temp <- NOAA_temp %>% dplyr::rename(Date = DATE.TIME) %>% dplyr::rename(Temperature = WATERTEMP) %>% select(-CONDUCTIVITY) %>% na.omit(NOAA_temp)
-
-# separating date and time into two columns
-NOAA_temp <- NOAA_temp %>% tidyr::separate(Date, c("month", "day", "year", "hour", "seconds"))
-
-# calculating hourly temperature averages by day 
-NOAA_means_hd <- summarySE(NOAA_temp, measurevar="Temperature", groupvars=c("day", "hour"))
-NOAA_means_hd
-
-NOAA_means_h <- summarySE(NOAA_temp, measurevar="Temperature", groupvars=c("hour"))
-NOAA_means_h
-
-ggplot(NOAA_means_hd, aes(x=hour, y=Temperature)) + 
-  geom_point(aes(colour=day)) + 
-  theme_classic() + 
-  ggtitle("Moku o Loe NOAA Buoy (September 2018)") + 
-  xlab("Hour") + ylab("Temperature (°C)")
-
-ggplot(NOAA_means_h, aes(x=hour, y=Temperature)) + 
-  geom_point()+ 
-  theme_classic() + 
-  ggtitle("Moku o Loe NOAA Buoy (September 2018)") + 
-  xlab("Hour") + ylab("Temperature (°C)")
-
-# calculating daily temperature ranges
-NOAA_daily <- NOAA_temp %>% dplyr::group_by(day) %>%
-  dplyr::summarise(min = min(Temperature),
-                   max = max(Temperature)) %>%
-  dplyr::mutate(range = max-min,
-                daily.mean = mean(range),
-                daily.se = std.error(range))
-
-
+ggsave(file="Output/CRIMP2-pCO2.png", CRIMP.pCO2.PLOT, width = 11, height = 6, units = c("in"))
 
 ```
 
-Graphing above dataframes. 
-```{r}
-## Total September 1 2018 - September 23 2018
-ggplot(NOAA_temp, aes(x=Date, y=Temperature)) +
-  geom_line() +
-  xlab("") +
-  theme_classic() +
-  theme(axis.text.x=element_text(angle=60, hjust=1)) +
-  # scale_x_date(limit=c(as.Date("2019-08-31"),as.Date("2019-09-24"))) +
-  ylim(25,30)
-
-## Subset to show daily variation 
-```
 
 ### APEX TEMPERATURE AND pH DATA ### 
 

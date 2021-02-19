@@ -179,7 +179,6 @@ Bleached2 <- ggplot(TAC_testing, aes(x=bleaching_score, y=CRE.umol.mgprot)) + ge
   facet_wrap(~Species) +
   theme(legend.position = "")
 Bleached2
-```
 
 ## 20201007 
 # Plate 1
@@ -257,3 +256,67 @@ std_curve_plotNov10 + #plot the standard curve to check this against the protoco
     ## October 7 plates
 dplyr::filter(Oct7, Plug_ID == "Standard1") # uae.mM is 0.9964323
 Oct7dilute.tac <- Oct7 %>% filter(uae.mM > 0.9964323) # output is 0 samples
+```
+
+Unused from environmental data script 
+
+
+
+
+
+Viewing the temperature and pH data from local NOAA Hawaii Buoys (XX) to guide decisions in experimental design.
+
+Reading in temperature and pH data files.
+```{r}
+NOAA_temp <- read.csv('Environmental_data/NOAA_Temp_Buoy_CO-OPS_1612480_from_20180901_to_20180923.csv')
+
+# renaming columns and deleting the empty conductivity column
+NOAA_temp <- NOAA_temp %>% dplyr::rename(Date = DATE.TIME) %>% dplyr::rename(Temperature = WATERTEMP) %>% select(-CONDUCTIVITY) %>% na.omit(NOAA_temp)
+
+# separating date and time into two columns
+NOAA_temp <- NOAA_temp %>% tidyr::separate(Date, c("month", "day", "year", "hour", "seconds"))
+
+# calculating hourly temperature averages by day 
+NOAA_means_hd <- summarySE(NOAA_temp, measurevar="Temperature", groupvars=c("day", "hour"))
+NOAA_means_hd
+
+NOAA_means_h <- summarySE(NOAA_temp, measurevar="Temperature", groupvars=c("hour"))
+NOAA_means_h
+
+ggplot(NOAA_means_hd, aes(x=hour, y=Temperature)) + 
+  geom_point(aes(colour=day)) + 
+  theme_classic() + 
+  ggtitle("Moku o Loe NOAA Buoy (September 2018)") + 
+  xlab("Hour") + ylab("Temperature (°C)")
+
+ggplot(NOAA_means_h, aes(x=hour, y=Temperature)) + 
+  geom_point()+ 
+  theme_classic() + 
+  ggtitle("Moku o Loe NOAA Buoy (September 2018)") + 
+  xlab("Hour") + ylab("Temperature (°C)")
+
+# calculating daily temperature ranges
+NOAA_daily <- NOAA_temp %>% dplyr::group_by(day) %>%
+  dplyr::summarise(min = min(Temperature),
+                   max = max(Temperature)) %>%
+  dplyr::mutate(range = max-min,
+                daily.mean = mean(range),
+                daily.se = std.error(range))
+
+
+Graphing above dataframes. 
+```{r}
+## Total September 1 2018 - September 23 2018
+ggplot(NOAA_temp, aes(x=Date, y=Temperature)) +
+  geom_line() +
+  xlab("") +
+  theme_classic() +
+  theme(axis.text.x=element_text(angle=60, hjust=1)) +
+  # scale_x_date(limit=c(as.Date("2019-08-31"),as.Date("2019-09-24"))) +
+  ylim(25,30)
+
+## Subset to show daily variation 
+```
+
+
+```
