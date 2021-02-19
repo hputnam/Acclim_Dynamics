@@ -22,11 +22,11 @@ CRIMP2 Temperature Data
 
 The red line is at 29.5, the average temperature for our data. The warm season of 2016 doesn't have data, maybe we can get this from a different buoy?
 
-Next steps are to do the pH data. 
-
 CRIMP2 pCO2 Data
 
-![crimp2pco2]()
+pCO2 is projected to increase over next 100 years so this probably isn't as relevant to put environmental data into perspective in publication.
+
+![crimp2pco2](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/CRIMP2-pCO2.png?raw=true)
 
 
 ## Sampling Timeline
