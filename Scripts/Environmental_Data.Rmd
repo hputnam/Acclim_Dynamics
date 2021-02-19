@@ -43,6 +43,7 @@ library(viridis)
 library(dygraphs)
 library(xts)
 library(graphics)
+library(janitor)
 
 colors <- c("lightblue", "blue", "salmon", "red3")
 ```
@@ -85,6 +86,18 @@ EXPT.temp <- Hobo.means %>% select(Date.Time, Treatment, Temperature) %>% dplyr:
 EXPT.temp$file.ID <- "EXPT"
 CRIMP2.EXPT.temp <- bind_rows(CRIMP2.temp, EXPT.temp) #combining both dataframes 
 
+# generate all combinations of year/group
+d <- expand.grid(min(CRIMP2.EXPT.temp$Date):max(CRIMP2.EXPT.temp$Date), unique(CRIMP2.EXPT.temp$Date.Source))
+# fill NA if combination is missing
+d$val <- apply(d, 1,
+               function(x) if (nrow(subset(CRIMP2.EXPT.temp, Date.Time == x[1] & Data.Source == x[2]))) 0 else NA)
+# modify the original dataset
+names(d) <- c("year", "group", "value")
+data <- rbind(data, d[is.na(d$val), ])
+ggplot(data, aes(x=year, y=value,
+                 group=as.factor(group), colour=as.factor(group))) + geom_line()
+
+
 CRIMP.TEMP.PLOT <- ggplot(data = CRIMP2.EXPT.temp, aes(x = Date.Time, y = Temp, color = Data.Source)) +
   labs(x = "Date (Month-Year)", y = "Sea Surface Temperature (°C)") + ggtitle("CRIMP2 NOAA Buoy") +
   geom_line(size=0.15) +
@@ -121,11 +134,84 @@ CRIMP.pCO2.PLOT <- ggplot(data = CRIMP2.EXPT.pCO2, aes(x = Date.Time, y = pCO2, 
   theme(legend.position="right", legend.background = element_blank()); CRIMP.pCO2.PLOT 
 
 ggsave(file="Output/CRIMP2-pCO2.png", CRIMP.pCO2.PLOT, width = 11, height = 6, units = c("in"))
-
 ```
 
 
 ### APEX TEMPERATURE AND pH DATA ### 
+
+Apex files were downloaded every 2 days and kept in seperate files. 
+The Sept 18-21 acclimation data file formatting is different - this was probably downloaded differently. Taken out for now. 
+
+Sept 22-24 columns match, Sept 26-Nov 19 columns match. Need to do this separately. 
+
+The PAR sensor was in Tank 1 for the entire experiment. There are other discrete light measurements. 
+
+Reading in data files. 
+```{r}
+colors <- c("lightblue", "blue", "salmon", "red3")
+
+# read in tank to treatment values to bind dataframes together later on 
+Trt.Tanks <- read.csv('Environmental_data/Tank_to_Treatment.csv') %>% select(-Tank.Name)
+Trt.Tanks$Tank <- as.character(Trt.Tanks$Tank)
+
+# binding all apex data files together. see above note about some need to be loaded differently
+APEX.data1 <- list.files(path = 'Environmental_data/Apex_continuous_data/Download1', pattern = ".csv", full.names = TRUE) %>% # list files in directory following a particular pattern
+  set_names(.) %>% # get the column names
+  map_dfr(read.table, .id = "file.ID", header=FALSE, sep=",") %>% # join all files together in one data frame by file ID
+  group_by(file.ID) %>% # for each file do the following
+  select(-V1) %>% 
+  row_to_names(row_number=1) %>% rename(file.ID = "Environmental_data/Apex_continuous_data/Download1/Experimental_0922.csv") %>%
+  filter(Date.Time != "Date.Time")
+
+APEX.data2 <- list.files(path = 'Environmental_data/Apex_continuous_data/Download2', pattern = ".csv", full.names = TRUE) %>% # list files in directory following a particular pattern
+  set_names(.) %>% # get the column names
+  map_dfr(read.table, .id = "file.ID", header=FALSE, sep=",") %>% # join all files together in one data frame by file ID
+  group_by(file.ID) %>% # for each file do the following
+  select(-V1) %>%
+  row_to_names(row_number=1) %>% rename(file.ID = "Environmental_data/Apex_continuous_data/Download2/Experimental_0925_0926.csv") %>%
+  filter(Date.Time != "Date.Time")
+
+APEX.data1$Date.Time <- ymd_hms(APEX.data1$Date.Time, quiet=FALSE, tz="UTC", truncated=0)
+APEX.data2$Date.Time <- ymd_hms(APEX.data2$Date.Time, quiet=FALSE, tz="UTC", truncated=0)
+
+Apex.Temp1 <- APEX.data1 %>% select(-contains("pH"), -PAR, -file.ID) %>%
+  gather("Tank", "Temp", 3:14) 
+Apex.Temp2 <- APEX.data2 %>% select(-contains("pH"), -PAR, -file.ID) %>%
+  gather("Tank", "Temp", 2:13) 
+Apex.Temp <- bind_rows(Apex.Temp1, Apex.Temp2)
+Apex.Temp$Tank <- gsub("^.{0,4}", "", Apex.Temp$Tank)
+Apex.Temp <- full_join(Apex.Temp, Trt.Tanks, by="Tank") %>% filter(Temp>20)
+
+#### stuck on filtering temperature to below 20 -- could because the column is a character?
+Apex.Temp <- Apex.Temp %>% filter(Apex.Temp, Temp > 20)
+
+Apex.pH <- APEX.data %>% select(-contains("Tmp"), -PAR, -file.ID) %>%
+  gather("Tank", "pH", 3:14) 
+Apex.pH$Tank <- gsub("^.{0,3}", "", Apex.pH$Tank)
+Apex.pH <- full_join(Apex.pH, Trt.Tanks, by="Tank")
+
+
+Apex.PAR <- APEX.data %>% select(-contains("Tmp"), -contains("pH"))
+```
+
+```{r}
+APEX.TEMP.PLOT <- ggplot(data = Apex.Temp, aes(x = Date.Time, y = Temp, color = Treatment)) +
+  labs(x = "Date", y = "Temperature") + ggtitle("Apex Sensor") +
+  geom_point(size=0.2) +
+  scale_color_manual(values = colors) + 
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+                     panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  #scale_x_datetime(date_breaks = "2 days", labels = date_format("%b %y")) +
+  theme(legend.position="right", legend.background = element_blank()); APEX.TEMP.PLOT 
+
+
+
+```
+
+
+
+
 
 Read in raw Apex download files with light, temperature, and pH. 
 Improvements:
