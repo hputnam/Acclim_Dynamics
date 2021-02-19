@@ -75,6 +75,7 @@ CRIMP2.data <-
 
 CRIMP2.data$Date.Time <- mdy_hm(CRIMP2.data$Date.Time, quiet=FALSE, tz="UTC", truncated=0) #format date and time 
 
+#### Temperature
 CRIMP2.temp <- CRIMP2.data %>% select(-pCO2) %>% filter(Temp>0)
 CRIMP2.temp$Data.Source <- "CRIMP2"
 ## need to run HOBO logger section prior to overlaying experimental data on CRIMP2's data
@@ -97,6 +98,7 @@ CRIMP.TEMP.PLOT <- ggplot(data = CRIMP2.EXPT.temp, aes(x = Date.Time, y = Temp, 
 
 ggsave(file="Output/CRIMP2-Temperature.png", CRIMP.TEMP.PLOT, width = 11, height = 6, units = c("in"))
 
+#### pCO2
 ```
 
 
