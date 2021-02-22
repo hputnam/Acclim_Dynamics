@@ -3,6 +3,8 @@ title: "Statistics.Rmd"
 author: "EL Strand"
 date: "2/11/2021"
 output: html_document
+editor_options: 
+  chunk_output_type: inline
 ---
 
 ```{r setup, include=FALSE}
@@ -20,7 +22,6 @@ library(ggplot2)
 library(tidyverse)
 library(plyr)
 library(dplyr)
-library(car) # qqplot and ANOVA function
 library(mgcv) # GAM function
 library(ggfortify)
 library(devtools)
@@ -30,6 +31,8 @@ library(gridExtra)
 library(vegan)
 library(effects)
 library(Rmisc)
+library(lmerTest)
+library(lessR)
 ```
 
 ### Read in data files to analyze. 
@@ -126,125 +129,165 @@ ggsave(file="Output/Final_Figures/Tissue_Biomass-Ratio.png", AFDW_Ratio_plot, wi
 ```
 
 
-
-
 # Univariate analysis
 
 ## Statistical Modeling
 Fixed factors: Temperature, CO2, Species, Timepoint. 
-Random factors: Tank
-Come back to this: Should I be doing this separately for species? I think so.. 
+Random factors: Tank and Plug ID
+
+When adding GAM, use model.sel()  
+MuMIn package
 
 ### Photosynthetic Rates and Respiration 
 
 Raw data distribution view.
 ```{r}
-hist(pacuta_full_data$Pgross_umol.cm2.hr)
 hist(pacuta_full_data$Pnet_umol.cm2.hr)
+hist(pacuta_full_data$Pgross_umol.cm2.hr)
 hist(pacuta_full_data$Rdark_umol.cm2.hr)
 
-hist(mcap_full_data$Pgross_umol.cm2.hr)
 hist(mcap_full_data$Pnet_umol.cm2.hr)
+hist(mcap_full_data$Pgross_umol.cm2.hr)
 hist(mcap_full_data$Rdark_umol.cm2.hr)
 # mcap doesn't look normal, the models should account for this but might need to transform post models 
 ```
 
-P.acuta linear mixed effect models
+*P. acuta* linear mixed effect models.  
+Net photosynthetic rates. 
 ```{r}
 ## Pnet
-Pacuta_Pnet_LMER_tank <- lmer(Pnet_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
-Pacuta_Pnet_GLM <- glm(Pnet_umol.cm2.hr ~ Timepoint*Temperature*CO2, na.action=na.omit, data=pacuta_full_data) # GLM
-anova(Pacuta_Pnet_LMER_tank, Pacuta_Pnet_GLM) # AIC with tank = 151.40; without tank = 146.81. GLMM (5 points lower) with tank wins, move on to residuals
+Pacuta_Pnet_LMER <- lmer(Pnet_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values 
 
-summary(Pacuta_Pnet_LMER_tank)
-qqPlot(residuals(Pacuta_Pnet_LMER_tank))
-hist(residuals(Pacuta_Pnet_LMER_tank)) 
-# the above looks normal; no need to transform 
+## summary of the model chosen from above
+## plot(Pacuta_Pnet_LMER) in console to view diagnostic plots
+summary(Pacuta_Pnet_LMER)
+qqPlot(residuals(Pacuta_Pnet_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_Pnet_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+#leveneTest(residuals(Pacuta_Pnet_LMER))
+leveneTest(pacuta_full_data$Pnet_umol.cm2.hr ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
+#bartlett.test(Pacuta_Pnet_LMER)
 
-Anova(Pacuta_Pnet_LMER_tank, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
-plot(allEffects(Pacuta_Pnet_LMER_tank))
+## significance of model
+anova(Pacuta_Pnet_LMER, ddf="lme4", type='III')
+Anova(Pacuta_Pnet_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
 
-## Pgross 
-Pacuta_Pgross_LMER_tank <- lmer(Pgross_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
-Pacuta_Pgross_GLM <- glm(Pgross_umol.cm2.hr ~ Timepoint*Temperature*CO2, na.action=na.omit, data=pacuta_full_data) # GLM
-anova(Pacuta_Pgross_LMER_tank, Pacuta_Pgross_GLM) # AIC with tank = 196.04; without tank = 199.33. GLMM (3 points lower) with tank wins, move on to residuals. 
-
-summary(Pacuta_Pgross_LMER_tank)
-qqPlot(residuals(Pacuta_Pgross_LMER_tank))
-hist(residuals(Pacuta_Pgross_LMER_tank)) 
-# the above looks normal; no need to transform 
-
-Anova(Pacuta_Pgross_LMER_tank, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
-plot(allEffects(Pacuta_Pgross_LMER_tank))
-
-## Dark Resp
-Pacuta_Resp_LMER_tank <- lmer(Rdark_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
-Pacuta_Resp_GLM <- glm(Rdark_umol.cm2.hr ~ Timepoint*Temperature*CO2, na.action=na.omit, data=pacuta_full_data) # GLM
-anova(Pacuta_Resp_LMER_tank, Pacuta_Resp_GLM) # AIC with tank = -293.73; without tank = -295.44. The difference is <2 points, so there is no real difference between models so the less complex model will be better = the GLM 
-
-summary(Pacuta_Resp_GLM)
-qqPlot(residuals(Pacuta_Resp_GLM))
-hist(residuals(Pacuta_Resp_GLM)) 
-# This looks a bit skewed, but how skewed is too skewed? Come back to this 
-
-Anova(Pacuta_Resp_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
-plot(allEffects(Pacuta_Resp_GLM))
+anova(Pacuta_Pnet_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
 ```
 
-M.cap linear mixed effect models 
+Gross photosynthetic rates. 
+```{r}
+## Pgross 
+Pacuta_Pgross_LMER <- lmer(Pgross_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
+
+## summary of the model chosen from above
+## plot(Pacuta_Pgross_LMER) in console to view diagnostic plots
+summary(Pacuta_Pgross_LMER)
+qqPlot(residuals(Pacuta_Pgross_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_Pgross_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(pacuta_full_data$Pgross_umol.cm2.hr ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
+
+## significance of model
+anova(Pacuta_Pgross_LMER, ddf="lme4", type='III')
+Anova(Pacuta_Pgross_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Pacuta_Pgross_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+```{r}
+## Dark Resp
+Pacuta_Resp_LMER <- lmer(Rdark_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values 
+
+## summary of the model chosen from above
+## plot(Pacuta_Resp_LMER) in console to view diagnostic plots
+summary(Pacuta_Resp_LMER)
+qqPlot(residuals(Pacuta_Resp_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_Resp_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(pacuta_full_data$Rdark_umol.cm2.hr ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
+
+## significance of model
+anova(Pacuta_Resp_LMER, ddf="lme4", type='III')
+Anova(Pacuta_Resp_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Pacuta_Resp_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+*M.capitata* linear mixed effect models 
+
+Net photosynthetic rates. 
 ```{r}
 ## Pnet
-Mcap_Pnet_LMER_tank <- lmer(Pnet_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
-Mcap_Pnet_GLM <- glm(log(Pnet_umol.cm2.hr) ~ Timepoint*Temperature*CO2, na.action=na.omit, data=mcap_full_data) # GLM
-anova(Mcap_Pnet_LMER_tank, Mcap_Pnet_GLM) # AIC LMER = 218.26, GLM = 218.06; there is no difference between models so the less complex model is chosen (GLM)
+Mcap_Pnet_LMER <- lmer(log(Pnet_umol.cm2.hr) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values 
 
-summary(Mcap_Pnet_GLM)
-qqPlot(residuals(Mcap_Pnet_GLM))
-hist(residuals(Mcap_Pnet_GLM)) 
-# residuals are not normal; transformed with log and the residuals look much better
+## summary of the model chosen from above
+## plot(Mcap_Pnet_LMER) in console to view diagnostic plots
+summary(Mcap_Pnet_LMER)
+qqPlot(residuals(Mcap_Pnet_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_Pnet_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap_full_data$Pnet_umol.cm2.hr ~ mcap_full_data$Timepoint*mcap_full_data$Temperature*mcap_full_data$CO2)
 
-Anova(Mcap_Pnet_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
-plot(allEffects(Mcap_Pnet_GLM))
+## significance of model
+anova(Mcap_Pnet_LMER, ddf="lme4", type='III')
+Anova(Mcap_Pnet_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
 
+anova(Mcap_Pnet_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+```{r}
 ## Pgross
-Mcap_Pgross_LMER_tank <- lmer(Pgross_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
-Mcap_Pgross_GLM <- glm(log(Pgross_umol.cm2.hr) ~ Timepoint*Temperature*CO2, na.action=na.omit, data=mcap_full_data) # GLM
-anova(Mcap_Pgross_LMER_tank, Mcap_Pgross_GLM) # AIC LMER = 292.86, GLM = 293.03; there is no difference between models so the less complex model is chosen (GLM)
+Mcap_Pgross_LMER <- lmer(log(Pgross_umol.cm2.hr) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values 
 
-summary(Mcap_Pgross_GLM)
-qqPlot(residuals(Mcap_Pgross_GLM))
-hist(residuals(Mcap_Pgross_GLM)) 
-# residuals are not normal; transformed with log and the residuals look much better
+## summary of the model chosen from above
+## plot(Mcap_Pnet_LMER) in console to view diagnostic plots
+summary(Mcap_Pgross_LMER)
+qqPlot(residuals(Mcap_Pgross_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_Pgross_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap_full_data$Pgross_umol.cm2.hr ~ mcap_full_data$Timepoint*mcap_full_data$Temperature*mcap_full_data$CO2)
 
-Anova(Mcap_Pgross_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
-plot(allEffects(Mcap_Pgross_GLM))
+## significance of model
+anova(Mcap_Pgross_LMER, ddf="lme4", type='III')
+Anova(Mcap_Pgross_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
 
+anova(Mcap_Pgross_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+```{r}
 ## Dark Resp 
 mcap_full_data$Rdarkplus1 <- mcap_full_data$Rdark_umol.cm2.hr+1
   
-Mcap_Resp_LMER_tank <- lmer(Rdark_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
-Mcap_Resp_GLM <- glm(log(Rdarkplus1) ~ Timepoint*Temperature*CO2, na.action=na.omit, data=mcap_full_data) # GLM
-anova(Mcap_Resp_LMER_tank, Mcap_Resp_GLM) # AIC LMER = -120.09, GLM = -117.72; GLM presents with lower AIC and is chosen
+Mcap_Resp_LMER <- lmer(log(Rdarkplus1) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values 
 
-summary(Mcap_Resp_GLM)
-qqPlot(residuals(Mcap_Resp_GLM))
-hist(residuals(Mcap_Resp_GLM)) 
-# residuals are not normal; adding 1 to all data points and using log transform but this didn't fix much so come back this
+## summary of the model chosen from above
+## plot(Mcap_Resp_LMER) in console to view diagnostic plots
+summary(Mcap_Resp_LMER)
+qqPlot(residuals(Mcap_Resp_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_Resp_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap_full_data$Rdark_umol.cm2.hr ~ mcap_full_data$Timepoint*mcap_full_data$Temperature*mcap_full_data$CO2)
 
-Anova(Mcap_Resp_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
-plot(allEffects(Mcap_Resp_GLM))
+## significance of model
+anova(Mcap_Resp_LMER, ddf="lme4", type='III')
+Anova(Mcap_Resp_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Mcap_Resp_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
 ```
 
-
-Generalized Additive model 
-```{r}
-Pnet_GAM <- gam(Pnet_umol.cm2.hr ~ s(Treatment) + s(Species) + s(Temperature) + s(CO2), data=data)
-summary(Pnet_GAM)
-## getting error with smoothing function (s(Timepoint)) b/c might be having trouble with distance of factors? come back to this
-## Error in names(dat) <- object$term : 'names' attribute [1] must be the same length as the vector [0]
-
-anova(Pnet_LMER_tank, Pnet_GAM)
-```
 
 ### Chlorophyll Concentration
 
@@ -255,36 +298,50 @@ hist(mcap_full_data$chla.ug.cm2)
 # mcap doesn't look normal, the models should account for this but might need to transform post models 
 ```
 
-Linear mixed effect models. 
+Model comparisons. 
+*P. acuta* 
 ```{r}
-## Pacuta 
 ## Subset out 12 and 16 week timepoints 
 Pacuta_stress_data <- pacuta_full_data %>% filter(Timepoint !="12 week" & Timepoint !="16 week")
   
-Pacuta_Chl_LMER_tank <- lmer(chla.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_stress_data) #GLMM
-Pacuta_Chl_GLM <- glm(chla.ug.cm2 ~ Timepoint*Temperature*CO2, na.action=na.omit, data=Pacuta_stress_data) # GLM
-anova(Pacuta_Chl_LMER_tank, Pacuta_Chl_GLM) # AIC LMER = 281.74, GLM = 280.14; no difference in models so the GLM is chosen 
+Pacuta_Chl_LMER <- lmer(chla.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_stress_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values 
 
-summary(Pacuta_Chl_GLM)
-qqPlot(residuals(Pacuta_Chl_GLM))
-hist(residuals(Pacuta_Chl_GLM)) 
-# this looks normal, no need to transform
+## summary of the model chosen from above
+## plot(Pacuta_Chl_LMER) in console to view diagnostic plots
+summary(Pacuta_Chl_LMER)
+qqPlot(residuals(Pacuta_Chl_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_Chl_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(Pacuta_stress_data$chla.ug.cm2 ~ Pacuta_stress_data$Timepoint*Pacuta_stress_data$Temperature*Pacuta_stress_data$CO2)
 
-Anova(Pacuta_Chl_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
-plot(allEffects(Pacuta_Chl_GLM))
+## significance of model
+anova(Pacuta_Chl_LMER, ddf="lme4", type='III')
+Anova(Pacuta_Chl_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
 
-## Mcap
-Mcap_Chl_LMER_tank <- lmer(chla.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
-Mcap_Chl_GLM <- glm(chla.ug.cm2 ~ Timepoint*Temperature*CO2, na.action=na.omit, data=mcap_full_data) # GLM
-anova(Mcap_Chl_LMER_tank, Mcap_Chl_GLM) # AIC LMER = 479.65, GLM = 477.65; no difference in models so the GLM is chosen 
+anova(Pacuta_Chl_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
 
-summary(Mcap_Chl_GLM)
-qqPlot(residuals(Mcap_Chl_GLM))
-hist(residuals(Mcap_Chl_GLM)) 
-# this looks normal, no need to transform
+*M. capitata* 
+```{r}
+Mcap_Chl_LMER <- lmer(chla.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values 
 
-Anova(Mcap_Chl_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
-plot(allEffects(Mcap_Chl_GLM))
+## summary of the model chosen from above
+## plot(Mcap_Chl_LMER) in console to view diagnostic plots
+summary(Mcap_Chl_LMER)
+qqPlot(residuals(Mcap_Chl_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_Chl_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap_full_data$chla.ug.cm2 ~ mcap_full_data$Timepoint*mcap_full_data$Temperature*mcap_full_data$CO2)
+
+## significance of model
+anova(Mcap_Chl_LMER, ddf="lme4", type='III')
+Anova(Mcap_Chl_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Mcap_Chl_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
 ```
 
 ### Tissue Biomass 
@@ -298,15 +355,18 @@ hist(mcap_full_data$Host_AFDW.mg.cm2) # right/positively skewed
 hist(mcap_full_data$Sym_AFDW.mg.cm2) # right/positively skewed
 hist(mcap_full_data$Ratio_AFDW.mg.cm2) # normal 
 ```
-P.acuta mixed effect models 
+
+*P.acuta* mixed effect models 
+
+Host AFDW.
 ```{r}
 #### P acuta -- this needs to be done with Pacuta_stress_data b/c recovery timepoints are small or not existent.
 ## Host 
-Pacuta_Host_LMER_tank <- lmer(Host_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_stress_data) #GLMM
-Pacuta_Host_GLM <- glm(Host_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2, na.action=na.omit, data=Pacuta_stress_data) # GLM
-anova(Pacuta_Host_LMER_tank, Pacuta_Host_GLM) # AIC LMER = 292.11, GLM = 290.11; no difference in models so the GLM is chosen 
+Pacuta_Host_LMER <- lmer(Host_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_stress_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
 
-isSingular(Pacuta_Host_LMER_tank, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
+isSingular(Pacuta_Host_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
 
 summary(Pacuta_Host_GLM)
 qqPlot(residuals(Pacuta_Host_GLM))
@@ -315,7 +375,10 @@ hist(residuals(Pacuta_Host_GLM))
 
 Anova(Pacuta_Host_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
 plot(allEffects(Pacuta_Host_GLM))
+```
 
+Sym AFDW. 
+```{r}
 ## Sym
 Pacuta_Sym_LMER_tank <- lmer(Sym_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_stress_data) #GLMM
 Pacuta_Sym_GLM <- glm(log(Sym_AFDW.mg.cm2) ~ Timepoint*Temperature*CO2, na.action=na.omit, data=Pacuta_stress_data) # GLM
@@ -328,7 +391,10 @@ hist(residuals(Pacuta_Sym_GLM))
 
 Anova(Pacuta_Sym_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
 plot(allEffects(Pacuta_Sym_GLM))
+```
 
+S:H Ratio AFDW 
+```{r}
 ## S:H Ratio 
 Pacuta_SHRatio_LMER_tank <- lmer(Ratio_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_stress_data) #GLMM
 Pacuta_SHRatio_GLM <- glm(log(Ratio_AFDW.mg.cm2) ~ Timepoint*Temperature*CO2, na.action=na.omit, data=Pacuta_stress_data) # GLM
@@ -478,6 +544,7 @@ hist(mcap.color$Bleaching.Score)
 # both very left/negatively skewed 
 ```
 
+
 Linear mixed models. Adding Plug ID as random factor because this was repeated measures. 
 ```{r}
 ## Mcap 
@@ -485,7 +552,7 @@ mcap.color$Color.Transformed <- mcap.color$Bleaching.Score+100
 range(mcap.color$Color.Transformed)
 hist(mcap.color$Color.Transformed)
 
-Mcap_Color_LMER_tank_plug <- lmer(Bleaching.Score ~ Blch.Time*Temperature*CO2 + (1|Tank) + (1|Plug_ID), na.action=na.omit, data=mcap.color) #GLMM
+Mcap_Color_LMER_tank_plug <- lmer((Bleaching.Score)^(1/4) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.color) #GLMM; nesting Plug ID in tank because the Plug IDs never moved tanks 
 Mcap_Color_LMER_tank <- lmer(Bleaching.Score ~ Blch.Time*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.color) #GLMM
 Mcap_Color_LMER_plug <- lmer(Bleaching.Score ~ Blch.Time*Temperature*CO2 + (1|Plug_ID), na.action=na.omit, data=mcap.color) #GLMM
 Mcap_Color_GLM <- glm(Bleaching.Score ~ Blch.Time*Temperature*CO2, na.action=na.omit, data=mcap.color) # GLM
@@ -493,11 +560,13 @@ anova(Mcap_Color_LMER_tank, Mcap_Color_LMER_tank_plug, Mcap_Color_LMER_plug, Mca
 # AIC LMER just tank = 7245.1, LMER just plug ID = 7139.3, LMER both tank and plug ID = 7141.3, GLM = 7247.8
 # the model with just plug ID as random factor had the smallest AIC value and will be used. 
 
+## subset model by phase; if each individual model looks better, reporting this may be better or incorporate phase as random effect 
+
 Mcap_Color_LMER_plug_transformed <- lmer(log(Color.Transformed) ~ Blch.Time*Temperature*CO2 + (1|Plug_ID), na.action=na.omit, data=mcap.color) #GLMM
 
 summary(Mcap_Color_LMER_plug)
-qqPlot(residuals(Mcap_Color_LMER_plug))
-hist(residuals(Mcap_Color_LMER_plug))
+qqPlot(residuals(Mcap_Color_LMER_tank_plug))
+hist(residuals(Mcap_Color_LMER_tank_plug))
 
 qqPlot(residuals(Mcap_Color_LMER_plug_transformed))
 hist(residuals(Mcap_Color_LMER_plug_transformed))
@@ -548,7 +617,8 @@ hist(mcap.Growth$Growth.Rate)
 
 mcap.Growth$Rate.Transformed <- mcap.Growth$Growth.Rate+1
 
-Mcap_Growth_LMER_tank_plug <- lmer(Growth.Rate ~ Growth.Time*Temperature*CO2 + (1|Tank) + (1|Plug_ID), na.action=na.omit, data=mcap.Growth) #GLMM
+Mcap_Growth_LMER_tank_plug <- lmer(Growth.Rate ~ Growth.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.Growth) #GLMM
+### revisit row 200 and 199 and see if those are outliers or to take out; remove rows as pipe function in model
 Mcap_Growth_LMER_tank <- lmer(Growth.Rate ~ Growth.Time*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.Growth) #GLMM
 Mcap_Growth_LMER_plug <- lmer(Growth.Rate ~ Growth.Time*Temperature*CO2 + (1|Plug_ID), na.action=na.omit, data=mcap.Growth) #GLMM
 Mcap_Growth_GLM <- glm(Growth.Rate ~ Growth.Time*Temperature*CO2, na.action=na.omit, data=mcap.Growth) # GLM
@@ -562,7 +632,7 @@ Mcap_Growth_LMER_tank_transformed <- lmer(log(Rate.Transformed) ~ Growth.Time*Te
 # this didn't do anything? come back to transformations for heavy and light tailed data 
 
 summary(Mcap_Growth_LMER_tank)
-qqPlot(residuals(Mcap_Growth_LMER_tank))
+qqPlot(residuals(Mcap_Growth_LMER_tank_plug))
 hist(residuals(Mcap_Growth_LMER_tank))
 
 qqPlot(residuals(Mcap_Growth_LMER_tank_transformed))
@@ -600,7 +670,7 @@ Group by species, timepoint, treatment.
 cols <- c("lightblue", "blue", "salmon", "red3")
 
 Species.PCA <- autoplot(scaled_data, data = pca_data, colour = 'Species',
-         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         frame=TRUE, size=0.5, frame.type = 'convex', loadings = TRUE, loadings.colour = 'black',
          loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
   xlim(-0.25,0.5); Species.PCA
 

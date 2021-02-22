@@ -4,193 +4,316 @@ Results markdown sheet link [here](https://github.com/hputnam/Acclim_Dynamics/bl
 
 ## Univariate analysis
 
-I used a generalized linear mixed model (GLMM) using Tank as a random factor and compared this to a general linear model (GLM). Based on an AIC comparison, the GLMM was a better model.
-
-I am having trouble with the Generalized additive model (GAM; see below notes on this) and will need to come back to this.
-
-Type I ANOVA tests the factors in which they are ordered in the code and Type II ANOVA is for when there is no interaction term. We have temperature and pH stress which is an interaction, so I think Type III ANOVA will be better. Type III also accounts for unbalanced sample sizes.
+I used a generalized linear mixed model (GLMM) using Tank as a random factor (and Plug ID for repeated measures in Color Score and Growth) and compared this to a generalized additive model (GAM) using model comparisons like AIC scores. I chose Type III ANOVA because we have unbalanced sample sizes, and I wanted the ANOVA to test the significance of the interactive terms before the main effects.
 
 Example code below for creating the two models, comparing them, and checking the residuals of that model before completing an ANOVA test.
 
 ```
-Pacuta_Pnet_LMER_tank <- lmer(Pnet_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
-Pacuta_Pnet_LMER <- glm(Pnet_umol.cm2.hr ~ Timepoint*Temperature*CO2, na.action=na.omit, data=pacuta_full_data) # GLM
-anova(Pacuta_Pnet_LMER_tank, Pacuta_Pnet_LMER) # AIC with tank = 151.40; without tank = 146.81. GLMM (5 points lower) with tank wins, move on to residuals
+## Generalized Linear Mixed Model.
+Pacuta_Pnet_LMER <- lmer(Pnet_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data)
 
-summary(Pacuta_Pnet_LMER_tank)
-qqPlot(residuals(Pacuta_Pnet_LMER_tank))
-hist(residuals(Pacuta_Pnet_LMER_tank))
-# the above looks normal; no need to transform
+## Generalized Additive Model.
 
-Anova(Pacuta_Pnet_LMER_tank, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs
-plot(allEffects(Pacuta_Pnet_LMER_tank))
+
+## Diagnositics of the more appropriate model from above
+## plot(Pacuta_Pnet_LMER) in console to view diagnostic plots
+summary(Pacuta_Pnet_LMER)
+qqPlot(residuals(Pacuta_Pnet_LMER)) # qqplot and histogram
+hist(residuals(Pacuta_Pnet_LMER))
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(residuals(Pacuta_Pnet_LMER))
+leveneTest(pacuta_full_data$Pnet_umol.cm2.hr ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
+bartlett.test(Pacuta_Pnet_LMER)
+
+## Checking significance of that model
+anova(Pacuta_Pnet_LMER, type='III')
+Anova(Pacuta_Pnet_LMER, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs
+#plot(allEffects(Pacuta_Pnet_LMER))
+```
+
+But the `anova` vs. `Anova` function are returning very different p-values with the package `lmertest`. Example below. Which method to choose?
+
+```
+$ anova(Pacuta_Pnet_LMER, ddf="lme4", type='III')
+
+Analysis of Variance Table
+                          npar  Sum Sq Mean Sq F value
+Timepoint                    6 11.2023 1.86705 16.4831
+Temperature                  1  2.5805 2.58048 22.7815
+CO2                          1  0.1425 0.14250  1.2581
+Timepoint:Temperature        6  6.9150 1.15250 10.1747
+Timepoint:CO2                6  0.7311 0.12184  1.0757
+Temperature:CO2              1  0.0055 0.00546  0.0482
+Timepoint:Temperature:CO2    6  1.3710 0.22850  2.0173
+Analysis of Deviance Table (Type III Wald chisquare tests)
+
+$ Anova(Pacuta_Pnet_LMER, ddf="lme4", type='III')
+
+Response: Pnet_umol.cm2.hr
+                            Chisq Df           Pr(>Chisq)
+(Intercept)               78.0734  1 < 0.0000000000000002
+Timepoint                 13.6698  6              0.03355
+Temperature                6.2095  1              0.01271
+CO2                        0.6040  1              0.43706
+Timepoint:Temperature     14.6975  6              0.02274
+Timepoint:CO2              5.2191  6              0.51603
+Temperature:CO2            0.6397  1              0.42382
+Timepoint:Temperature:CO2 12.1038  6              0.05969
+
+$ anova(Pacuta_Pnet_LMER, ddf="Satterthwaite", type='III')
+
+Type III Analysis of Variance Table with Satterthwaite's method
+                           Sum Sq Mean Sq NumDF   DenDF F value              Pr(>F)
+Timepoint                 11.3832 1.89720     6 120.633 16.7492 0.00000000000005485
+Temperature                2.4616 2.46162     1   8.109 21.7321            0.001562
+CO2                        0.2117 0.21170     1   8.109  1.8690            0.208285
+Timepoint:Temperature      6.8962 1.14937     6 120.633 10.1471 0.00000000454251390
+Timepoint:CO2              0.7311 0.12184     6 120.633  1.0757            0.380893
+Temperature:CO2            0.0003 0.00028     1   8.109  0.0025            0.961603
+Timepoint:Temperature:CO2  1.3710 0.22850     6 120.633  2.0173            0.068440
 ```
 
 ### Respiration and photosynthetic rates
 
 **P. acuta**
 
-20210217   
-The residuals of P acuta R Dark GLM look a bit skewed, but come back to how skewed is too skewed? Might need to transform this.
+Net and gross photosynethic rates have equal variances, normal residuals and normal histogram. Respiration rates have normal residuals but unequal variances.
 
-AIC comparisons resulted in GLMM better for Pnet and Pgross, and GLM better for Rdark. The GLMM includes a random tank effect, maybe some tanks had a more variable light gradient than others? This would make sense to me as a source of variation for tanks that wouldn't exist for respiration.
+Come back to:  
+- Unequal variances for dark respiration  
+- Wald chisquare test vs. Satterthwaite's method
 
 ```
+## Net photosynthetic rates
+
 Analysis of Deviance Table (Type III Wald chisquare tests)
 
 Response: Pnet_umol.cm2.hr
-                            Chisq Df Pr(>Chisq)    
-(Intercept)               78.0734  1    < 2e-16 ***
-Timepoint                 13.6698  6    0.03355 *  
-Temperature                6.2095  1    0.01271 *  
-CO2                        0.6040  1    0.43706    
-Timepoint:Temperature     14.6975  6    0.02274 *  
-Timepoint:CO2              5.2191  6    0.51603    
-Temperature:CO2            0.6397  1    0.42382    
-Timepoint:Temperature:CO2 12.1038  6    0.05969 .  
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+                            Chisq Df           Pr(>Chisq)
+(Intercept)               78.0734  1 < 0.0000000000000002
+Timepoint                 13.6698  6              0.03355
+Temperature                6.2095  1              0.01271
+CO2                        0.6040  1              0.43706
+Timepoint:Temperature     14.6975  6              0.02274
+Timepoint:CO2              5.2191  6              0.51603
+Temperature:CO2            0.6397  1              0.42382
+Timepoint:Temperature:CO2 12.1038  6              0.05969
+
+Type III Analysis of Variance Table with Satterthwaite's method
+                           Sum Sq Mean Sq NumDF   DenDF F value              Pr(>F)
+Timepoint                 11.3832 1.89720     6 120.633 16.7492 0.00000000000005485
+Temperature                2.4616 2.46162     1   8.109 21.7321            0.001562
+CO2                        0.2117 0.21170     1   8.109  1.8690            0.208285
+Timepoint:Temperature      6.8962 1.14937     6 120.633 10.1471 0.00000000454251390
+Timepoint:CO2              0.7311 0.12184     6 120.633  1.0757            0.380893
+Temperature:CO2            0.0003 0.00028     1   8.109  0.0025            0.961603
+Timepoint:Temperature:CO2  1.3710 0.22850     6 120.633  2.0173            0.068440
 
 -------
+
+## Gross photosynethic rates
 
 Analysis of Deviance Table (Type III Wald chisquare tests)
 
 Response: Pgross_umol.cm2.hr
-                            Chisq Df Pr(>Chisq)    
-(Intercept)               91.5956  1    < 2e-16 ***
-Timepoint                 14.6865  6    0.02284 *  
-Temperature                5.7251  1    0.01672 *  
-CO2                        0.9741  1    0.32366    
-Timepoint:Temperature     14.2763  6    0.02670 *  
-Timepoint:CO2              5.2522  6    0.51190    
-Temperature:CO2            0.6780  1    0.41028    
-Timepoint:Temperature:CO2 11.9308  6    0.06353 .  
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+                            Chisq Df           Pr(>Chisq)
+(Intercept)               91.5956  1 < 0.0000000000000002
+Timepoint                 14.6865  6              0.02284
+Temperature                5.7251  1              0.01672
+CO2                        0.9741  1              0.32366
+Timepoint:Temperature     14.2763  6              0.02670
+Timepoint:CO2              5.2522  6              0.51190
+Temperature:CO2            0.6780  1              0.41028
+Timepoint:Temperature:CO2 11.9308  6              0.06353
+
+Type III Analysis of Variance Table with Satterthwaite's method
+                           Sum Sq Mean Sq NumDF   DenDF F value               Pr(>F)
+Timepoint                 18.0070  3.0012     6 120.665 19.1942 0.000000000000001305
+Temperature                3.4803  3.4803     1   8.104 22.2583             0.001454
+CO2                        0.3039  0.3039     1   8.104  1.9435             0.200327
+Timepoint:Temperature      9.3211  1.5535     6 120.665  9.9357 0.000000006745129489
+Timepoint:CO2              1.2734  0.2122     6 120.665  1.3574             0.237334
+Temperature:CO2            0.0000  0.0000     1   8.104  0.0002             0.988896
+Timepoint:Temperature:CO2  1.8655  0.3109     6 120.665  1.9885             0.072453
 
 -------
 
-Analysis of Deviance Table (Type III tests)
+## Dark Respiration Rates
+
+Analysis of Deviance Table (Type III Wald chisquare tests)
 
 Response: Rdark_umol.cm2.hr
-                          LR Chisq Df Pr(>Chisq)   
-Timepoint                  20.1363  6   0.002619 **
-Temperature                 1.4195  1   0.233479   
-CO2                         2.1878  1   0.139103   
-Timepoint:Temperature       9.2327  6   0.160907   
-Timepoint:CO2               7.8911  6   0.246193   
-Temperature:CO2             0.5200  1   0.470862   
-Timepoint:Temperature:CO2  10.9229  6   0.090788 .
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+                            Chisq Df            Pr(>Chisq)
+(Intercept)               96.4494  1 < 0.00000000000000022
+Timepoint                 20.9826  6              0.001848
+Temperature                1.4338  1              0.231148
+CO2                        2.2751  1              0.131471
+Timepoint:Temperature      9.6079  6              0.142167
+Timepoint:CO2              8.3071  6              0.216458
+Temperature:CO2            0.4490  1              0.502787
+Timepoint:Temperature:CO2 11.2909  6              0.079791
+
+Type III Analysis of Variance Table with Satterthwaite's method
+                           Sum Sq  Mean Sq NumDF   DenDF F value                Pr(>F)
+Timepoint                 0.83405 0.139009     6 120.915 19.5271 0.0000000000000007814
+Temperature               0.09652 0.096523     1   8.085 13.5589              0.006087
+CO2                       0.00867 0.008667     1   8.085  1.2175              0.301614
+Timepoint:Temperature     0.27674 0.046124     6 120.915  6.4792 0.0000060204901797361
+Timepoint:CO2             0.08540 0.014234     6 120.915  1.9994              0.070881
+Temperature:CO2           0.00025 0.000250     1   8.085  0.0352              0.855897
+Timepoint:Temperature:CO2 0.08038 0.013396     6 120.915  1.8818              0.089287
 
 ```
 
 **M. capitata**
 
-20210217  
+All rates were log transformed and 1 was added to each respiration rate prior to transformation.
 
-AIC comparisons resulted in GLM as a better model for Pnet, Pgross, Rdark.
-
-Pnet and Pgross residuals were not normal so I did a log transformation because the distribution was right-skewed (positively skewed). Rdark residuals were not normal so I added 1 every value to create positive values and did a log transformation on that but this still didn't look normal.. come back to this.
+Come back to:  
+- Respiration rates row 288. Post transformation qqplot residuals aren't completely normal.  
 
 ```
-Analysis of Deviance Table (Type III tests)
+## Net photosynthetic rates
+
+Analysis of Deviance Table (Type III Wald chisquare tests)
 
 Response: log(Pnet_umol.cm2.hr)
-                          LR Chisq Df Pr(>Chisq)  
-Timepoint                   4.7262  6    0.57938  
-Temperature                 0.0130  1    0.90939  
-CO2                         0.0259  1    0.87215  
-Timepoint:Temperature       5.7465  6    0.45218  
-Timepoint:CO2               5.7833  6    0.44790  
-Temperature:CO2             0.1860  1    0.66623  
-Timepoint:Temperature:CO2  13.6166  6    0.03423 *
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+                            Chisq Df Pr(>Chisq)
+(Intercept)                3.4393  1    0.06366
+Timepoint                  5.0898  6    0.53235
+Temperature                0.0250  1    0.87435
+CO2                        0.0181  1    0.89311
+Timepoint:Temperature      6.0774  6    0.41457
+Timepoint:CO2              6.1825  6    0.40306
+Temperature:CO2            0.3990  1    0.52762
+Timepoint:Temperature:CO2 14.6458  6    0.02320
+
+Type III Analysis of Variance Table with Satterthwaite's method
+                           Sum Sq Mean Sq NumDF   DenDF F value    Pr(>F)
+Timepoint                 1.74760 0.29127     6 121.228  3.1362 0.0068176
+Temperature               0.64331 0.64331     1   8.551  6.9268 0.0284472
+CO2                       0.06058 0.06058     1   8.551  0.6523 0.4411673
+Timepoint:Temperature     2.70671 0.45112     6 121.228  4.8574 0.0001767
+Timepoint:CO2             1.35289 0.22548     6 121.228  2.4279 0.0298615
+Temperature:CO2           0.06497 0.06497     1   8.551  0.6996 0.4256731
+Timepoint:Temperature:CO2 1.36020 0.22670     6 121.228  2.4410 0.0290693
 
 -------
 
-Analysis of Deviance Table (Type III tests)
+## Gross photosynethic rates
+
+Analysis of Deviance Table (Type III Wald chisquare tests)
 
 Response: log(Pgross_umol.cm2.hr)
-                          LR Chisq Df Pr(>Chisq)  
-Timepoint                   5.0883  6    0.53254  
-Temperature                 0.6680  1    0.41376  
-CO2                         0.0167  1    0.89729  
-Timepoint:Temperature       6.8796  6    0.33212  
-Timepoint:CO2               6.4987  6    0.36970  
-Temperature:CO2             0.6415  1    0.42316  
-Timepoint:Temperature:CO2  14.0352  6    0.02925 *
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+                            Chisq Df Pr(>Chisq)
+(Intercept)               11.8631  1  0.0005726
+Timepoint                  5.6169  6  0.4674429
+Temperature                0.5195  1  0.4710432
+CO2                        0.0164  1  0.8981030
+Timepoint:Temperature      7.2880  6  0.2950292
+Timepoint:CO2              7.1089  6  0.3108924
+Temperature:CO2            0.9982  1  0.3177373
+Timepoint:Temperature:CO2 15.6484  6  0.0157711
+
+Type III Analysis of Variance Table with Satterthwaite's method
+                           Sum Sq Mean Sq NumDF   DenDF F value    Pr(>F)
+Timepoint                 2.01179 0.33530     6 121.113  4.1065 0.0008698
+Temperature               0.38317 0.38317     1   8.507  4.6928 0.0601830
+CO2                       0.01223 0.01223     1   8.507  0.1498 0.7082298
+Timepoint:Temperature     2.32851 0.38808     6 121.113  4.7529 0.0002206
+Timepoint:CO2             1.27482 0.21247     6 121.113  2.6022 0.0208543
+Temperature:CO2           0.05973 0.05973     1   8.507  0.7315 0.4158232
+Timepoint:Temperature:CO2 1.27771 0.21295     6 121.113  2.6081 0.0206007
 
 -------
 
-Analysis of Deviance Table (Type III tests)
+## Dark Respiration Rates
+
+Analysis of Deviance Table (Type III Wald chisquare tests)
 
 Response: log(Rdarkplus1)
-                          LR Chisq Df Pr(>Chisq)
-Timepoint                   4.8964  6     0.5572
-Temperature                 2.6473  1     0.1037
-CO2                         0.0063  1     0.9365
-Timepoint:Temperature       4.6221  6     0.5931
-Timepoint:CO2               2.0398  6     0.9160
-Temperature:CO2             0.7135  1     0.3983
-Timepoint:Temperature:CO2   7.9334  6     0.2430
+                           Chisq Df Pr(>Chisq)
+(Intercept)               4.6656  1    0.03077
+Timepoint                 5.4260  6    0.49044
+Temperature               2.4397  1    0.11830
+CO2                       0.0012  1    0.97191
+Timepoint:Temperature     5.0547  6    0.53681
+Timepoint:CO2             2.2913  6    0.89106
+Temperature:CO2           0.4575  1    0.49880
+Timepoint:Temperature:CO2 8.4240  6    0.20865
+
+Type III Analysis of Variance Table with Satterthwaite's method
+                           Sum Sq Mean Sq NumDF   DenDF F value  Pr(>F)
+Timepoint                 2.56295 0.42716     6 118.792  2.7259 0.01622
+Temperature               0.01229 0.01229     1   8.191  0.0785 0.78635
+CO2                       0.00003 0.00003     1   8.191  0.0002 0.99002
+Timepoint:Temperature     1.06656 0.17776     6 118.792  1.1344 0.34668
+Timepoint:CO2             0.47324 0.07887     6 118.792  0.5033 0.80482
+Temperature:CO2           0.02347 0.02347     1   8.191  0.1498 0.70861
+Timepoint:Temperature:CO2 1.32010 0.22002     6 118.792  1.4040 0.21869
 
 ```
 
 ### Chlorophyll concentration
 
-20210217
+*M. capitata*  
+- Homogeneity of variance didn't pass but normal qqplot
 
-I subsetted this analysis to be only Chlorophyll-a because that is the pigment we care most about because it is the primary pigment of photosynthesis.
-
-AIC comparisons resulted in GLM for M.cap and P. acuta
-
-M. capitata
 ```
-Analysis of Deviance Table (Type III tests)
+Analysis of Deviance Table (Type III Wald chisquare tests)
 
 Response: chla.ug.cm2
-                          LR Chisq Df Pr(>Chisq)
-Timepoint                  11.0559  8     0.1985
-Temperature                 0.1737  1     0.6768
-CO2                         0.6150  1     0.4329
-Timepoint:Temperature      11.8834  8     0.1565
-Timepoint:CO2               2.2901  8     0.9708
-Temperature:CO2             2.1937  1     0.1386
-Timepoint:Temperature:CO2  10.4346  8     0.2358
-```
-This is surprising because there looks like a clear difference in treatments for Chl concentration for Mcap in our final figure?
+                            Chisq Df    Pr(>Chisq)
+(Intercept)               29.3910  1 0.00000005915
+Timepoint                 11.5139  8        0.1742
+Temperature                0.2091  1        0.6475
+CO2                        0.5798  1        0.4464
+Timepoint:Temperature     12.3230  8        0.1374
+Timepoint:CO2              2.2926  8        0.9707
+Temperature:CO2            2.3520  1        0.1251
+Timepoint:Temperature:CO2 10.6638  8        0.2215
 
-P. acuta
-
-Week 12 and Week 16 had 0 or small sample sizes, these are subsetted out of this dataset, which fixed the below errors.
+Type III Analysis of Variance Table with Satterthwaite's method
+                           Sum Sq Mean Sq NumDF   DenDF F value    Pr(>F)
+Timepoint                 12.8855  1.6107     8 148.031  2.7138 0.0081001
+Temperature                8.0703  8.0703     1   7.919 13.5975 0.0062624
+CO2                        0.4631  0.4631     1   7.919  0.7803 0.4030610
+Timepoint:Temperature     17.4511  2.1814     8 148.031  3.6754 0.0006144
+Timepoint:CO2              4.3391  0.5424     8 148.031  0.9139 0.5068160
+Temperature:CO2            0.0637  0.0637     1   7.919  0.1072 0.7517930
+Timepoint:Temperature:CO2  6.3291  0.7911     8 148.031  1.3330 0.2314470
 
 ```
-fixed-effect model matrix is rank deficient so dropping 3 columns / coefficients
-# Error in Anova.III.LR.glm(mod, singular.ok = singular.ok) : there are aliased coefficients in the model error comes up so I did the below
-alias(Pacuta_Chl_GLM) # which returned 0s for 12 and 16 wk timepoints. So these need to subsetted out above
-```
+
+
+*P. acuta*  
+- 12 and 16 week timepoints were taken out of the analysis.  
 
 ```
-Analysis of Deviance Table (Type III tests)
+Analysis of Deviance Table (Type III Wald chisquare tests)
 
 Response: chla.ug.cm2
-                          LR Chisq Df Pr(>Chisq)  
-Timepoint                   3.6259  6    0.72715  
-Temperature                 3.7447  1    0.05297 .
-CO2                         4.4693  1    0.03451 *
-Timepoint:Temperature       6.6609  6    0.35335  
-Timepoint:CO2               7.0885  6    0.31274  
-Temperature:CO2             2.5106  1    0.11308  
-Timepoint:Temperature:CO2   6.2545  6    0.39530  
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+                            Chisq Df       Pr(>Chisq)
+(Intercept)               43.8602  1 0.00000000003527
+Timepoint                  3.9314  6          0.68596
+Temperature                3.1931  1          0.07395
+CO2                        5.3494  1          0.02073
+Timepoint:Temperature      6.9056  6          0.32966
+Timepoint:CO2              7.9963  6          0.23837
+Temperature:CO2            2.4597  1          0.11680
+Timepoint:Temperature:CO2  6.9391  6          0.32652
+
+Type III Analysis of Variance Table with Satterthwaite's method
+                           Sum Sq Mean Sq NumDF   DenDF F value     Pr(>F)
+Timepoint                 11.6220 1.93701     6 111.575  6.2889 0.00001017
+Temperature                2.3060 2.30598     1   6.586  7.4868   0.030873
+CO2                        0.2177 0.21765     1   6.586  0.7066   0.430016
+Timepoint:Temperature      7.5067 1.25112     6 111.575  4.0620   0.001012
+Timepoint:CO2              1.7954 0.29924     6 111.575  0.9715   0.447954
+Temperature:CO2            0.1550 0.15496     1   6.586  0.5031   0.502468
+Timepoint:Temperature:CO2  2.1373 0.35621     6 111.575  1.1565   0.334829
+
 ```
-Come back to this interpretation?? This doesn't seem to match the figure we produced.. brain is confused.
 
 ### Tissue Biomass
 
@@ -606,7 +729,7 @@ I could also do the PERMANOVA with treatment separated into temperature and pCO2
 - Physiological variability  
 - Parse hobo logger times  
 - Apex continuous data  
-- Plot thermal history of Hawaii buoy, Degree Heating Weeks 
+- Plot thermal history of Hawaii buoy, Degree Heating Weeks
 
 Meeting with Ariana on Monday the 22nd 12 pm EST.  
 - GAM vs GLMM models  

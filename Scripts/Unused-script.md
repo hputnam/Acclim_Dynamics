@@ -318,5 +318,19 @@ ggplot(NOAA_temp, aes(x=Date, y=Temperature)) +
 ## Subset to show daily variation 
 ```
 
+Unused script from statistics Rmd
 
 ```
+Pacuta_Pnet_LMER_tank <- lmer(Pnet_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
+Pacuta_Pnet_LMER <- glm(Pnet_umol.cm2.hr ~ Timepoint*Temperature*CO2, na.action=na.omit, data=pacuta_full_data) # GLM
+anova(Pacuta_Pnet_LMER_tank, Pacuta_Pnet_LMER) # AIC with tank = 151.40; without tank = 146.81. GLMM (5 points lower) with tank wins, move on to residuals
+
+summary(Pacuta_Pnet_LMER_tank)
+qqPlot(residuals(Pacuta_Pnet_LMER_tank))
+hist(residuals(Pacuta_Pnet_LMER_tank))
+# the above looks normal; no need to transform
+
+Anova(Pacuta_Pnet_LMER_tank, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs
+plot(allEffects(Pacuta_Pnet_LMER_tank))
+```
+
