@@ -16,13 +16,8 @@ rm(list=ls())
 
 Load in required libraries. 
 ```{r}
-## install packages if you dont already have them
-if (!require("dplyr")) install.packages("dplyr")
-if (!require("ggplot2")) install.packages("ggplot2")
-if (!require("tidyverse")) install.packages("tidyverse")
-if (!require("broom")) install.packages("broom")
-
 # load packages
+library(plyr)
 library(dplyr)
 library(ggplot2)
 library(tidyverse)
@@ -287,31 +282,6 @@ std_curve_plotFeb15 <- Feb15_st %>%
 std_curve_plotFeb15
 ```
 
-Only Oct 7 and Nov 10 curves look close enough to the protocol. 
-IF PROJECTING ALL POINTS ONTO THIS AVERAGE STANDARD CURVE.
-```{r}
-## AVERAGE STANDARD CURVE
-Average_standard_curve <- union(Oct7_st, Nov10_st) %>% group_by(Standard) %>%
-  summarise(Abs_net.adj = mean(Abs_net.adj),
-            Abs_net = mean(Abs_net))
-
-Average_standard_curve$conc_mM <- concentration[match(Average_standard_curve$Standard, st.name)]
-  Average_standard_curve$conc_mM <- as.numeric(Average_standard_curve$conc_mM)
-
-AVG.STC.model <- lm(conc_mM ~ Abs_net.adj, data = Average_standard_curve)
-summary(AVG.STC.model)
-
-avg_st_curve <- Average_standard_curve %>%
-  ggplot(aes(x = Abs_net.adj, y = conc_mM)) +
-  geom_point(color = "blue", size = 1.5) + 
-  theme_bw() + 
-  xlim(0,1.5) +
-  labs(title = paste("Adj R2 = ", signif(summary(AVG.STC.model)$adj.r.squared, 5),
-                     "; Average of Oct7 and Nov10 standard curve")) + 
-  geom_smooth(method = "lm")
-avg_st_curve
-```
-
 
 ```{r}
 ## All points projected on Nov 10 standard curve plot (std_curve_plotNov18) ; standard curve 5 (Nov10_st) ; linear model 5 (TAC_mod_linNov10)
@@ -440,13 +410,16 @@ Writing TAC output file. Taking out P1488 (See notes in results package markdown
 TAC <- TAC %>% filter(!Plug_ID == "1488")
 filter(TAC, Plug_ID == "1488") # checking to see that worked; output should be 0
 
-TAC %>% select(Plug_ID, uae.mM, Species, Timepoint, Treatment, prot_ug, cre.umol.L, cre.umol, cre.umol.mgprot) %>%
+TAC %>% select(Plug_ID, uae.mM, Species, Timepoint, Treatment, Temperature, CO2, prot_ug, cre.umol.L, cre.umol, cre.umol.mgprot) %>%
   write_csv(., file = "Output/antioxidant_capacity.csv")
 ```
 
-Calculating mean values per treatment per timepoint. Checking sample sizes. 
+Calculating mean values per treatment per time point. Checking sample sizes. Reading file back in to avoid having to run the above code multiple times. 
 ```{r}
-TAC <- TAC %>% na.omit()
+TAC <- read.csv("Output/antioxidant_capacity.csv") %>% na.omit()
+
+ggplot(TAC, aes(x=Treatment, y=cre.umol.mgprot, color = Species)) + geom_boxplot() + theme_classic()
+
 TAC.means <- summarySE(TAC, measurevar="cre.umol.mgprot", groupvars=c("Timepoint", "Treatment", "Temperature", "CO2", "Species")) %>% filter(N>2) %>%
   mutate(Species = case_when(
     Species == "Mcapitata" ~ "Montipora capitata",

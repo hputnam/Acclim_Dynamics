@@ -917,12 +917,37 @@ Total                     189   1323.00                 1.00000
 ## Next Steps
 
 - Add GAM and compare to GLMM  
+- Decide chisquare vs. Satterthwaite for ANOVA method  
 - Color score model fit  
 - Sym function vs. host function PCAs  
-- Normalize to variables other than surface area (SA, sym density, AFDW, protein)  
-- Look at Chris Wall's physiotype paper to see if that would be best to represent timepoints?    
-- Double check literature for all variable values  
+- Normalize to variables other than surface area (SA, sym density, AFDW, protein)    
+- Look at Chris Wall's physiotype paper to see if that would be best to represent timepoints?     
 - Physiological variability (MAD scores)   
 - Parse hobo logger times  
 - Apex continuous data  
-- Calculate Degree Heating Weeks
+- Calculate Degree Heating Weeks  
+- Clean up .Rmd scripts
+
+### Normalizing options:  
+
+Host soluble protein:   
+- per cm2 (SA) OR per Host AFDW  
+
+Host TAC:  
+- per host soluble protein
+
+Chl-a:  
+- per cm2 (SA) or cell density   
+- I think cell density is most appropriate  
+
+Photosynthetic rates:  
+- per cm2 (SA) or chl-a or cell density  
+- Gross photosynethic: units need to match resp to get this calc?
+
+Respiration rates:  
+- per cm2 (SA) or host protein
+
+AFDW:  
+- Host: per cm2 (SA)  
+- Sym: per cm2 (SA) or cell density  
+- Ratio: Host and Sym units have to match to be unitless

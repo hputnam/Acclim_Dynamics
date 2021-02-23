@@ -243,7 +243,7 @@ P-1488: I don't trust the aliquots for this sample, no data here. See note from 
 
 This dataset has been QC'd by Emma; final figure as of 20210216.
 
-### Soluble Protein
+### Host Soluble Protein
 
 ![prot](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Host-Soluble-Protein.png?raw=true)
 
@@ -255,7 +255,7 @@ Week 4 P. acuta ATHC big drop, but samples are not in outlier tests. This still 
 
 This dataset has been QC'd by Emma; final figure as of 20210118.
 
-### Total Antioxidant Capacity
+### Host Total Antioxidant Capacity
 
 ![TAC](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Total-Antioxidant-Capacity.png?raw=true)
 
