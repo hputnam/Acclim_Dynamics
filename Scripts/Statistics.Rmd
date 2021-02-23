@@ -969,15 +969,21 @@ Pacuta_timeseries_timepoint <- autoplot(Pacuta_scaled_timeseriesdata, data = Pac
   #xlim(-0.225,0.2) + 
   scale_colour_brewer() + ggtitle("P. acuta"); Pacuta_timeseries_timepoint
 
+Pacuta_timeseries_phase <- autoplot(Pacuta_scaled_timeseriesdata, data = Pacuta_timeseriesdata, colour = 'Phase',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  #xlim(-0.225,0.2) + 
+  scale_colour_brewer() + ggtitle("P. acuta"); Pacuta_timeseries_phase
+
 ggsave(file="Output/Final_Figures/Pacuta-Timeseries-Treatment-PCA.pdf", Pacuta_timeseries_treatment, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Final_Figures/Pacuta-Timeseries-Treatment-PCA.png", Pacuta_timeseries_treatment, width = 11, height = 6, units = c("in"))
 
 ggsave(file="Output/Final_Figures/Pacuta-Timeseries-Timepoint-PCA.pdf", Pacuta_timeseries_timepoint, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Final_Figures/Pacuta-Timeseries-Timepoint-PCA.png", Pacuta_timeseries_timepoint, width = 11, height = 6, units = c("in"))
 
-Pacuta.timeseries.PCAs <- arrangeGrob(Pacuta_timeseries_treatment, Pacuta_timeseries_timepoint, ncol=2)
-ggsave(file="Output/Final_Figures/Pacuta-Timeseries-PCAs.pdf", Pacuta.timeseries.PCAs, width = 10, height = 4, units = c("in"))
-ggsave(file="Output/Final_Figures/Pacuta-Timeseries-PCAs.png", Pacuta.timeseries.PCAs, width = 10, height = 4, units = c("in"))
+Pacuta.timeseries.PCAs <- arrangeGrob(Pacuta_timeseries_treatment, Pacuta_timeseries_timepoint, Pacuta_timeseries_phase, ncol=2)
+ggsave(file="Output/Final_Figures/Pacuta-Timeseries-PCAs.pdf", Pacuta.timeseries.PCAs, width = 10, height = 8, units = c("in"))
+ggsave(file="Output/Final_Figures/Pacuta-Timeseries-PCAs.png", Pacuta.timeseries.PCAs, width = 10, height = 8, units = c("in"))
 ```
 
 Entire timeseries only subsetted to M. capitata
@@ -1002,15 +1008,21 @@ Mcap_timeseries_timepoint <- autoplot(Mcap_scaled_timeseriesdata, data = Mcap_ti
   #xlim(-0.225,0.13) + 
   scale_colour_brewer() + ggtitle("M. capitata"); Mcap_timeseries_timepoint
 
+Mcap_timeseries_phase <- autoplot(Mcap_scaled_timeseriesdata, data = Mcap_timeseriesdata, colour = 'Phase',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  #xlim(-0.225,0.13) + 
+  scale_colour_brewer() + ggtitle("M. capitata"); Mcap_timeseries_phase
+
 ggsave(file="Output/Final_Figures/Mcap-Timeseries-Treatment-PCA.pdf", Mcap_timeseries_treatment, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Final_Figures/Mcap-Timeseries-Treatment-PCA.png", Mcap_timeseries_treatment, width = 11, height = 6, units = c("in"))
 
 ggsave(file="Output/Final_Figures/Mcap-Timeseries-Timepoint-PCA.pdf", Mcap_timeseries_timepoint, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Final_Figures/Mcap-Timeseries-Timepoint-PCA.png", Mcap_timeseries_timepoint, width = 11, height = 6, units = c("in"))
 
-Mcap.timeseries.PCAs <- arrangeGrob(Mcap_timeseries_treatment, Mcap_timeseries_timepoint, ncol=2)
-ggsave(file="Output/Final_Figures/Mcap-Timeseries-PCAs.pdf", Mcap.timeseries.PCAs, width = 10, height = 4, units = c("in"))
-ggsave(file="Output/Final_Figures/Mcap-Timeseries-PCAs.png", Mcap.timeseries.PCAs, width = 10, height = 4, units = c("in"))
+Mcap.timeseries.PCAs <- arrangeGrob(Mcap_timeseries_treatment, Mcap_timeseries_timepoint, Mcap_timeseries_phase, ncol=2)
+ggsave(file="Output/Final_Figures/Mcap-Timeseries-PCAs.pdf", Mcap.timeseries.PCAs, width = 10, height = 8, units = c("in"))
+ggsave(file="Output/Final_Figures/Mcap-Timeseries-PCAs.png", Mcap.timeseries.PCAs, width = 10, height = 8, units = c("in"))
 ```
 
 PERMANOVA for P. acuta and M. cap. 
