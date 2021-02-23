@@ -112,9 +112,7 @@ AFDW_long <- AFDW %>% select(Plug_ID, partner, Species, Treatment, Temperature, 
 
 Quality control.
 ```{r}
-## temporarily taking out samples that will need to be re-done
-#AFDW_long <- AFDW_long %>% filter(Value > 0)
-#AFDW_long
+ggplot(AFDW, aes(x=partner, y=AFDW.mg.cm2)) + geom_boxplot()
 
 dplyr::filter(AFDW, AFDW.mg.cm2 > 5) # unusually high values for AFDW; think about re-doing?
 dplyr::filter(AFDW, AFDW.mg.cm2 < 0) # output should be zero since negative values are not possible. 
