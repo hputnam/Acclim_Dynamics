@@ -306,7 +306,7 @@ The full P.acuta dataset received the error `fixed-effect model matrix is rank d
 
 ```{r}
 ## Subset out 12 and 16 week timepoints 
-Pacuta_stress_data <- pacuta_full_data %>% filter(Timepoint !="12 week" & Timepoint !="16 week")
+#Pacuta_stress_data <- pacuta_full_data %>% filter(Timepoint !="12 week" & Timepoint !="16 week")
   
 Pacuta_Chl_LMER <- lmer(chla.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
 # GAM 
@@ -318,7 +318,7 @@ summary(Pacuta_Chl_LMER)
 qqPlot(residuals(Pacuta_Chl_LMER)) # qqplot and histogram 
 hist(residuals(Pacuta_Chl_LMER)) 
 ## checking homogeneity of variance using levene test (can also use Bartlett's test function)
-leveneTest(Pacuta_stress_data$chla.ug.cm2 ~ Pacuta_stress_data$Timepoint*Pacuta_stress_data$Temperature*Pacuta_stress_data$CO2)
+leveneTest(pacuta_full_data$chla.ug.cm2 ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
 
 ## significance of model
 anova(Pacuta_Chl_LMER, ddf="lme4", type='III')
@@ -366,7 +366,7 @@ Host AFDW.
 ```{r}
 #### P acuta -- this needs to be done with Pacuta_stress_data b/c recovery timepoints are small or not existent.
 ## Host 
-Pacuta_Host_LMER <- lmer(Host_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_stress_data) #GLMM
+Pacuta_Host_LMER <- lmer(Host_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
 # GAM 
 # anova(GLMM, GAM) # report AIC values
 
@@ -378,7 +378,7 @@ summary(Pacuta_Host_LMER)
 qqPlot(residuals(Pacuta_Host_LMER)) # qqplot and histogram 
 hist(residuals(Pacuta_Host_LMER)) 
 ## checking homogeneity of variance using levene test (can also use Bartlett's test function)
-leveneTest(Pacuta_stress_data$Host_AFDW.mg.cm2 ~ Pacuta_stress_data$Timepoint*Pacuta_stress_data$Temperature*Pacuta_stress_data$CO2)
+leveneTest(pacuta_full_data$Host_AFDW.mg.cm2 ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
 
 ## significance of model
 anova(Pacuta_Host_LMER, ddf="lme4", type='III')
@@ -390,7 +390,7 @@ anova(Pacuta_Host_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of 
 Sym AFDW. 
 ```{r}
 ## Sym
-Pacuta_Sym_LMER <- lmer(Sym_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_stress_data) #GLMM
+Pacuta_Sym_LMER <- lmer(Sym_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
 # GAM 
 # anova(GLMM, GAM) # report AIC values
 
@@ -400,7 +400,7 @@ summary(Pacuta_Sym_LMER)
 qqPlot(residuals(Pacuta_Sym_LMER)) # qqplot and histogram 
 hist(residuals(Pacuta_Sym_LMER)) 
 ## checking homogeneity of variance using levene test (can also use Bartlett's test function)
-leveneTest(Pacuta_stress_data$Sym_AFDW.mg.cm2 ~ Pacuta_stress_data$Timepoint*Pacuta_stress_data$Temperature*Pacuta_stress_data$CO2)
+leveneTest(pacuta_full_data$Sym_AFDW.mg.cm2 ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
 
 ## significance of model
 anova(Pacuta_Sym_LMER, ddf="lme4", type='III')
@@ -412,7 +412,7 @@ anova(Pacuta_Sym_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of V
 S:H Ratio AFDW 
 ```{r}
 ## S:H Ratio 
-Pacuta_SHRatio_LMER <- lmer(log(Ratio_AFDW.mg.cm2) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_stress_data) #GLMM
+Pacuta_SHRatio_LMER <- lmer(log(Ratio_AFDW.mg.cm2) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
 # GAM 
 # anova(GLMM, GAM) # report AIC values
 
@@ -424,7 +424,7 @@ summary(Pacuta_SHRatio_LMER)
 qqPlot(residuals(Pacuta_SHRatio_LMER)) # qqplot and histogram 
 hist(residuals(Pacuta_SHRatio_LMER)) 
 ## checking homogeneity of variance using levene test (can also use Bartlett's test function)
-leveneTest(Pacuta_stress_data$Ratio_AFDW.mg.cm2 ~ Pacuta_stress_data$Timepoint*Pacuta_stress_data$Temperature*Pacuta_stress_data$CO2)
+leveneTest(pacuta_full_data$Ratio_AFDW.mg.cm2 ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
 
 ## significance of model
 anova(Pacuta_SHRatio_LMER, ddf="lme4", type='III')
@@ -519,7 +519,7 @@ Mixed effect modeling.
 *P. acuta*
 ```{r}
 ## Pacuta 
-Pacuta_prot_LMER <- lmer(prot_mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_stress_data) #GLMM
+Pacuta_prot_LMER <- lmer(prot_mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
 # GAM 
 # anova(GLMM, GAM) # report AIC values
 
@@ -529,7 +529,7 @@ summary(Pacuta_prot_LMER)
 qqPlot(residuals(Pacuta_prot_LMER)) # qqplot and histogram 
 hist(residuals(Pacuta_prot_LMER)) 
 ## checking homogeneity of variance using levene test (can also use Bartlett's test function)
-leveneTest(Pacuta_stress_data$prot_mg.cm2 ~ Pacuta_stress_data$Timepoint*Pacuta_stress_data$Temperature*Pacuta_stress_data$CO2)
+leveneTest(pacuta_full_data$prot_mg.cm2 ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
 
 ## significance of model
 anova(Pacuta_prot_LMER, ddf="lme4", type='III')
@@ -576,7 +576,7 @@ Mixed effect modeling
 *P. acuta*
 ```{r}
 ## Pacuta 
-Pacuta_TAC_LMER <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_stress_data) #GLMM
+Pacuta_TAC_LMER <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
 # GAM 
 # anova(GLMM, GAM) # report AIC values
 
@@ -588,7 +588,7 @@ summary(Pacuta_TAC_LMER)
 qqPlot(residuals(Pacuta_TAC_LMER)) # qqplot and histogram 
 hist(residuals(Pacuta_TAC_LMER)) 
 ## checking homogeneity of variance using levene test (can also use Bartlett's test function)
-leveneTest(Pacuta_stress_data$cre.umol.mgprot ~ Pacuta_stress_data$Timepoint*Pacuta_stress_data$Temperature*Pacuta_stress_data$CO2) 
+leveneTest(pacuta_full_data$cre.umol.mgprot ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2) 
 
 ## significance of model
 anova(Pacuta_TAC_LMER, ddf="lme4", type='III')
@@ -636,61 +636,58 @@ hist(mcap.color$Bleaching.Score)
 ```
 
 
-Linear mixed models. Adding Plug ID as random factor because this was repeated measures. 
+Mixed effect modeling. Adding Plug ID as random factor because this was repeated measures. 
 ```{r}
 ## Mcap 
 mcap.color$Color.Transformed <- mcap.color$Bleaching.Score+100
 range(mcap.color$Color.Transformed)
 hist(mcap.color$Color.Transformed)
 
-Mcap_Color_LMER_tank_plug <- lmer((Bleaching.Score)^(1/4) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.color) #GLMM; nesting Plug ID in tank because the Plug IDs never moved tanks 
-Mcap_Color_LMER_tank <- lmer(Bleaching.Score ~ Blch.Time*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.color) #GLMM
-Mcap_Color_LMER_plug <- lmer(Bleaching.Score ~ Blch.Time*Temperature*CO2 + (1|Plug_ID), na.action=na.omit, data=mcap.color) #GLMM
-Mcap_Color_GLM <- glm(Bleaching.Score ~ Blch.Time*Temperature*CO2, na.action=na.omit, data=mcap.color) # GLM
-anova(Mcap_Color_LMER_tank, Mcap_Color_LMER_tank_plug, Mcap_Color_LMER_plug, Mcap_Color_GLM) 
-# AIC LMER just tank = 7245.1, LMER just plug ID = 7139.3, LMER both tank and plug ID = 7141.3, GLM = 7247.8
-# the model with just plug ID as random factor had the smallest AIC value and will be used. 
+Mcap_Color_LMER_tank_plug <- lmer((Bleaching.Score^(1/4)) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.color) #GLMM; nesting Plug ID in tank because the Plug IDs never moved tanks 
+# GAM 
+# anova(GLMM, GAM) # report AIC values
 
-## subset model by phase; if each individual model looks better, reporting this may be better or incorporate phase as random effect 
+## summary of the model chosen from above
+## plot(Mcap_TAC_LMER) in console to view diagnostic plots
+summary(Mcap_Color_LMER_tank_plug)
+qqPlot(residuals(Mcap_Color_LMER_tank_plug)) # qqplot and histogram 
+hist(residuals(Mcap_Color_LMER_tank_plug)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap.color$Bleaching.Score ~ mcap.color$Timepoint*mcap.color$Temperature*mcap.color$CO2)
 
-Mcap_Color_LMER_plug_transformed <- lmer(log(Color.Transformed) ~ Blch.Time*Temperature*CO2 + (1|Plug_ID), na.action=na.omit, data=mcap.color) #GLMM
+## significance of model
+anova(Mcap_Color_LMER_tank_plug, ddf="lme4", type='III')
+Anova(Mcap_Color_LMER_tank_plug, ddf="lme4", type='III') # Type III Wald chisquare tests
 
-summary(Mcap_Color_LMER_plug)
-qqPlot(residuals(Mcap_Color_LMER_tank_plug))
-hist(residuals(Mcap_Color_LMER_tank_plug))
+anova(Mcap_Color_LMER_tank_plug, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
 
-qqPlot(residuals(Mcap_Color_LMER_plug_transformed))
-hist(residuals(Mcap_Color_LMER_plug_transformed))
-# residuals super wonky so transformed by adding 100 to each value to get positive values and using log transformation
-
-## insert anova 
-
+```{r}
 ## Pacuta 
 pacuta.color$Color.Transformed <- pacuta.color$Bleaching.Score+120
 range(pacuta.color$Color.Transformed)
 hist(pacuta.color$Color.Transformed)
 
-Pacuta_Color_LMER_tank_plug <- lmer(Bleaching.Score ~ Blch.Time*Temperature*CO2 + (1|Tank) + (1|Plug_ID), na.action=na.omit, data=pacuta.color) #GLMM
-Pacuta_Color_LMER_tank <- lmer(Bleaching.Score ~ Blch.Time*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta.color) #GLMM
-Pacuta_Color_LMER_plug <- lmer(Bleaching.Score ~ Blch.Time*Temperature*CO2 + (1|Plug_ID), na.action=na.omit, data=pacuta.color) #GLMM
-Pacuta_Color_GLM <- glm(Bleaching.Score ~ Blch.Time*Temperature*CO2, na.action=na.omit, data=pacuta.color) # GLM
-anova(Pacuta_Color_LMER_tank_plug, Pacuta_Color_LMER_tank, Pacuta_Color_LMER_plug, Pacuta_Color_GLM) 
-# AIC LMER just tank = 6431.8, LMER just plug ID = 6304.1, both plug ID and tank = 6301.3, GLM = 6501.7
-# the model with both plug ID and tank as random factors has the smallest AIC and will be used. 
-
-Pacuta_Color_LMER_tank_plug_transformed <- lmer(log(Color.Transformed) ~ Blch.Time*Temperature*CO2 + (1|Tank) + (1|Plug_ID), na.action=na.omit, data=pacuta.color) #GLMM
+Pacuta_Color_LMER_tank_plug <- lmer(log(Color.Transformed) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=pacuta.color) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
+ 
 
 alias(Pacuta_Color_GLM) # to see which groups are issues and being dropped as columns / coefficients 
 
+## summary of the model chosen from above
+## plot(Mcap_TAC_LMER) in console to view diagnostic plots
 summary(Pacuta_Color_LMER_tank_plug)
-qqPlot(residuals(Pacuta_Color_LMER_tank_plug))
-hist(residuals(Pacuta_Color_LMER_tank_plug))
+qqPlot(residuals(Pacuta_Color_LMER_tank_plug)) # qqplot and histogram 
+hist(residuals(Pacuta_Color_LMER_tank_plug)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(pacuta.color$Color.Transformed ~ pacuta.color$Timepoint*pacuta.color$Temperature*pacuta.color$CO2)
 
-qqPlot(residuals(Pacuta_Color_LMER_tank_plug_transformed))
-hist(residuals(Pacuta_Color_LMER_tank_plug_transformed)) # residuals are not as clean, add 100 to each value and log transform 
-# still isn't great - there are some outliers to take out?
+## significance of model
+anova(Pacuta_Color_LMER_tank_plug, ddf="lme4", type='III')
+Anova(Pacuta_Color_LMER_tank_plug, ddf="lme4", type='III') # Type III Wald chisquare tests
 
-## insert anova 
+anova(Pacuta_Color_LMER_tank_plug, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
 ```
 
 ### Buoyant Weight 
@@ -705,36 +702,50 @@ pacuta.Growth <- Growth.data %>% subset(Species == "Pacuta")
 hist(pacuta.Growth$Growth.Rate) 
 hist(mcap.Growth$Growth.Rate) 
 # both very heavy tailed distribution
-
-mcap.Growth$Rate.Transformed <- mcap.Growth$Growth.Rate+1
-
-Mcap_Growth_LMER_tank_plug <- lmer(Growth.Rate ~ Growth.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.Growth) #GLMM
-### revisit row 200 and 199 and see if those are outliers or to take out; remove rows as pipe function in model
-Mcap_Growth_LMER_tank <- lmer(Growth.Rate ~ Growth.Time*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.Growth) #GLMM
-Mcap_Growth_LMER_plug <- lmer(Growth.Rate ~ Growth.Time*Temperature*CO2 + (1|Plug_ID), na.action=na.omit, data=mcap.Growth) #GLMM
-Mcap_Growth_GLM <- glm(Growth.Rate ~ Growth.Time*Temperature*CO2, na.action=na.omit, data=mcap.Growth) # GLM
-anova(Mcap_Growth_LMER_tank_plug, Mcap_Growth_LMER_tank, Mcap_Growth_LMER_plug, Mcap_Growth_GLM) 
-# AIC LMER with plug = -6382.7, with tank = -6382.7, with both tank and plug = -6380.7, GLM = -6384.7
-# There is no difference between the GLMMs.. which to take? Might have to come back to this. Want a less complex model but there is no difference between just tank and just plug ID
-
-anova(Mcap_Growth_LMER_tank, Mcap_Growth_LMER_plug) # these are exactly the same but continued with tank for now 
-
-Mcap_Growth_LMER_tank_transformed <- lmer(log(Rate.Transformed) ~ Growth.Time*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.Growth) #GLMM
-# this didn't do anything? come back to transformations for heavy and light tailed data 
-
-summary(Mcap_Growth_LMER_tank)
-qqPlot(residuals(Mcap_Growth_LMER_tank_plug))
-hist(residuals(Mcap_Growth_LMER_tank))
-
-qqPlot(residuals(Mcap_Growth_LMER_tank_transformed))
-hist(residuals(Mcap_Growth_LMER_tank_transformed))
-
-# Two big outliers - 199 and 200? are those row numbers?
 ```
 
-Linear mixed models. 
+*M. capitata* mixed effect modeling.
 ```{r}
+#  excluded in BW script (6 and 8 week 1210 Mcapitata - ATAC Tank 1)
 
+Mcap_Growth_LMER_tank_plug <- lmer(Growth.Rate ~ Growth.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.Growth) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
+
+## summary of the model chosen from above
+## plot(Mcap_TAC_LMER) in console to view diagnostic plots
+summary(Mcap_Growth_LMER_tank_plug)
+qqPlot(residuals(Mcap_Growth_LMER_tank_plug)) # qqplot and histogram 
+hist(residuals(Mcap_Growth_LMER_tank_plug)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap.Growth$Growth.Rate ~ mcap.Growth$Timepoint*mcap.Growth$Temperature*mcap.Growth$CO2)
+
+## significance of model
+anova(Mcap_Growth_LMER_tank_plug, ddf="lme4", type='III')
+Anova(Mcap_Growth_LMER_tank_plug, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Mcap_Growth_LMER_tank_plug, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+*P. acuta* mixed effect modeling.
+```{r}
+Pacuta_Growth_LMER_tank_plug <- lmer(log(Growth.Rate) ~ Growth.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=pacuta.Growth) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
+
+## summary of the model chosen from above
+## plot(Mcap_TAC_LMER) in console to view diagnostic plots
+summary(Pacuta_Growth_LMER_tank_plug)
+qqPlot(residuals(Pacuta_Growth_LMER_tank_plug)) # qqplot and histogram 
+hist(residuals(Pacuta_Growth_LMER_tank_plug)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(pacuta.Growth$Growth.Rate ~ pacuta.Growth$Timepoint*pacuta.Growth$Temperature*pacuta.Growth$CO2)
+
+## significance of model
+anova(Pacuta_Growth_LMER_tank_plug, ddf="lme4", type='III')
+Anova(Pacuta_Growth_LMER_tank_plug, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Pacuta_Growth_LMER_tank_plug, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
 ```
 
 
@@ -746,6 +757,18 @@ Linear mixed models.
 Plot PCA with prcomp to center and scale. 
 
 ```{r}
+data <- data %>% 
+  mutate(Phase = case_when(
+    Timepoint == "Day 1" ~ "Acute",
+    Timepoint == "Day 2" ~ "Acute",
+    Timepoint == "1 week" ~ "Acute",
+    Timepoint == "2 week" ~ "Chronic",
+    Timepoint == "4 week" ~ "Chronic",
+    Timepoint == "6 week" ~ "Chronic",
+    Timepoint == "8 week" ~ "Chronic",
+    Timepoint == "12 week" ~ "Recovery",
+    Timepoint == "16 week" ~ "Recovery"))
+
 pca_data <- data[complete.cases(data), ] # only taking rows where all samples have data
 
 scaled_data <- prcomp(pca_data[c(9:18)], scale=TRUE, center=TRUE) # columns 8-17 are the data values
@@ -853,6 +876,7 @@ Mcap.stress.PCAs <- arrangeGrob(Mcap_treatment, Mcap_timepoint, ncol=2)
 ggsave(file="Output/Final_Figures/Mcap-stress-PCAs.pdf", Mcap.stress.PCAs, width = 10, height = 4, units = c("in"))
 ggsave(file="Output/Final_Figures/Mcap-stress-PCAs.png", Mcap.stress.PCAs, width = 10, height = 4, units = c("in"))
 ```
+
 PERMANOVA for P. acuta and M. cap. 
 Stress treatments (with resp and photo)
 ```{r}
@@ -860,13 +884,13 @@ Stress treatments (with resp and photo)
 # scale data
 pacuta_vegan <- scale(Pacuta_data[ ,9:18])
 # PerMANOVA - partitioning the euclidean distance matrix by species
-adonis(pacuta_vegan ~ Treatment*Timepoint, data = Pacuta_data, method='eu')
+adonis(pacuta_vegan ~ Timepoint*Temperature*CO2, data = Pacuta_data, method='eu')
 
 ## Mcap - effect of treatment and timepoint
 # scale data
 mcap_vegan <- scale(Mcap_data[ ,9:18])
 # PerMANOVA - partitioning the euclidean distance matrix by species
-adonis(mcap_vegan ~ Treatment*Timepoint, data = Mcap_data, method='eu')
+adonis(mcap_vegan ~ Timepoint*Temperature*CO2, data = Mcap_data, method='eu')
 ```
 
 
@@ -982,11 +1006,98 @@ Timeseries (without resp and photo)
 # scale data
 pacuta_timeseries_vegan <- scale(Pacuta_timeseriesdata[ ,9:15])
 # PerMANOVA - partitioning the euclidean distance matrix by species
-adonis(pacuta_timeseries_vegan ~ Treatment*Timepoint, data = Pacuta_timeseriesdata, method='eu')
+adonis(pacuta_timeseries_vegan ~ Timepoint*Temperature*CO2, data = Pacuta_timeseriesdata, method='eu')
 
 ## Mcap - effect of treatment and timepoint
 # scale data
 mcap_timeseries_vegan <- scale(Mcap_timeseriesdata[ ,9:15])
 # PerMANOVA - partitioning the euclidean distance matrix by species
-adonis(mcap_timeseries_vegan ~ Treatment*Timepoint, data = Mcap_timeseriesdata, method='eu')
+adonis(mcap_timeseries_vegan ~ Timepoint*Temperature*CO2, data = Mcap_timeseriesdata, method='eu')
 ```
+
+### 3 phases 
+Start with pca_data subsetted to each species 
+
+```{r}
+recovery_data <- data %>% subset(Phase == "Recovery") %>% select(-Pnet_umol.cm2.hr, -Rdark_umol.cm2.hr, -Pgross_umol.cm2.hr) 
+recovery_pca_data <- recovery_data[complete.cases(recovery_data), ] # only taking rows where all samples have data
+
+## Mcap
+M_acute_data <- subset(Mcap_data, Phase == "Acute")
+M_chronic_data <- subset(Mcap_data, Phase == "Chronic")
+M_recovery_data <- subset(recovery_pca_data, Species == "Mcapitata")
+
+## Pacuta
+P_acute_data <- subset(Pacuta_data, Phase == "Acute")
+P_chronic_data <- subset(Pacuta_data, Phase == "Chronic")
+P_recovery_data <- subset(recovery_pca_data, Species == "Pacuta") %>% filter(Treatment != "HTAC")
+```
+
+Acute timepoints. 
+```{r}
+Mcap_acute_PCA <- prcomp(M_acute_data[c(9:18)], scale=TRUE, center=TRUE)
+Pacuta_acute_PCA <- prcomp(P_acute_data[c(9:18)], scale=TRUE, center=TRUE)
+
+Pacuta_acute_phase <- autoplot(Pacuta_acute_PCA, data = P_acute_data, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  theme(legend.position = "none") +
+  xlim(-0.225,0.5) + scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("P. acuta; Acute Stress"); Pacuta_acute_phase
+
+Mcap_acute_phase <- autoplot(Mcap_acute_PCA, data = M_acute_data, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  theme(legend.position = "none") + 
+  #xlim(-0.225,0.5) + 
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("M. capitata; Acute Stress"); Mcap_acute_phase
+```
+
+Chronic timepoints.  
+```{r}
+Mcap_chronic_PCA <- prcomp(M_chronic_data[c(9:18)], scale=TRUE, center=TRUE)
+Pacuta_chronic_PCA <- prcomp(P_chronic_data[c(9:18)], scale=TRUE, center=TRUE)
+
+Pacuta_chronic_phase <- autoplot(Pacuta_chronic_PCA, data = P_chronic_data, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  theme(legend.position = "none") + 
+  #xlim(-0.225,0.5) + 
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("P. acuta; Chronic Stress"); Pacuta_chronic_phase
+
+Mcap_chronic_phase <- autoplot(Mcap_chronic_PCA, data = M_chronic_data, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  theme(legend.position = "none") +
+  #xlim(-0.225,0.5) + 
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("M. capitata; Chronic Stress"); Mcap_chronic_phase
+```
+
+Recovery timepoints.
+```{r}
+Mcap_recovery_PCA <- prcomp(M_recovery_data[c(9:15)], scale=TRUE, center=TRUE)
+Pacuta_recovery_PCA <- prcomp(P_recovery_data[c(9:15)], scale=TRUE, center=TRUE)
+
+Pacuta_recovery_phase <- autoplot(Pacuta_recovery_PCA, data = P_recovery_data, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  theme(legend.position = "none") + 
+  #xlim(-0.225,0.5) + 
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("P. acuta; Recovery"); Pacuta_recovery_phase
+
+Mcap_recovery_phase <- autoplot(Mcap_recovery_PCA, data = M_recovery_data, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  theme(legend.position = "none") + 
+  #xlim(-0.225,0.5) + 
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("M. capitata; Recovery"); Mcap_recovery_phase
+
+```
+
+
+
+```{r}
+Three.phases.PCA <- arrangeGrob(Pacuta_acute_phase, Pacuta_chronic_phase, Pacuta_recovery_phase, Mcap_acute_phase, Mcap_chronic_phase, Mcap_recovery_phase, ncol=3) 
+ggsave(file="Output/Final_Figures/Three-Phases-PCAs.pdf", Three.phases.PCA, width = 12, height = 9, units = c("in"))
+ggsave(file="Output/Final_Figures/Three-Phases-PCAs.png", Three.phases.PCA, width = 12, height = 9, units = c("in"))
+```
+

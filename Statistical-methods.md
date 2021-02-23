@@ -287,33 +287,31 @@ Timepoint:Temperature:CO2  6.3291  0.7911     8 148.031  1.3330 0.2314470
 
 
 *P. acuta*  
-- The model is dropping the 3 columns (HTHC 16 week, HTAC 16 week, HTHC 12 week) that have 0 corals for that time point. Should I keep the ATAC and ATHC recovery time periods or just constrain this to stress periods?
-
-Just stress periods results below.  
+- Warning: `fixed-effect model matrix is rank deficient so dropping 3 columns / coefficients`. This is dropping the treatment/timepoints for P.acuta that are 0 (week 12, 16 heated treatments).
 
 ```
 Analysis of Deviance Table (Type III Wald chisquare tests)
 
 Response: chla.ug.cm2
                             Chisq Df       Pr(>Chisq)
-(Intercept)               43.8602  1 0.00000000003527
-Timepoint                  3.9314  6          0.68596
-Temperature                3.1931  1          0.07395
-CO2                        5.3494  1          0.02073
-Timepoint:Temperature      6.9056  6          0.32966
-Timepoint:CO2              7.9963  6          0.23837
-Temperature:CO2            2.4597  1          0.11680
-Timepoint:Temperature:CO2  6.9391  6          0.32652
+(Intercept)               42.2551  1 0.00000000008011
+Timepoint                  4.4807  8          0.81136
+Temperature                3.0746  1          0.07952
+CO2                        5.8220  1          0.01583
+Timepoint:Temperature     14.4630  7          0.04353
+Timepoint:CO2              9.2609  8          0.32077
+Temperature:CO2            2.6284  1          0.10497
+Timepoint:Temperature:CO2  7.0653  6          0.31485
 
 Type III Analysis of Variance Table with Satterthwaite's method
                            Sum Sq Mean Sq NumDF   DenDF F value     Pr(>F)
-Timepoint                 11.6220 1.93701     6 111.575  6.2889 0.00001017
-Temperature                2.3060 2.30598     1   6.586  7.4868   0.030873
-CO2                        0.2177 0.21765     1   6.586  0.7066   0.430016
-Timepoint:Temperature      7.5067 1.25112     6 111.575  4.0620   0.001012
-Timepoint:CO2              1.7954 0.29924     6 111.575  0.9715   0.447954
-Temperature:CO2            0.1550 0.15496     1   6.586  0.5031   0.502468
-Timepoint:Temperature:CO2  2.1373 0.35621     6 111.575  1.1565   0.334829
+Timepoint                 13.1226  1.6403     8 133.652  5.1920 0.00001172
+Temperature                3.5396  3.5396     1   9.668 11.2035  0.0077506
+CO2                        0.2237  0.2237     1   8.282  0.7082  0.4236871
+Timepoint:Temperature      9.8908  1.4130     7 133.849  4.4724  0.0001679
+Timepoint:CO2              2.1329  0.2666     8 133.611  0.8439  0.5657408
+Temperature:CO2            0.1579  0.1579     1   9.319  0.4998  0.4968851
+Timepoint:Temperature:CO2  2.2322  0.3720     6 133.773  1.1776  0.3220477
 
 ```
 
@@ -321,12 +319,12 @@ Timepoint:Temperature:CO2  2.1373 0.35621     6 111.575  1.1565   0.334829
 
 **P. acuta**
 
-S:H Ratio was log transformed.
+S:H Ratio was log transformed.  
+Warning: `fixed-effect model matrix is rank deficient so dropping 3 columns / coefficients`; see above note.  
 
 Come back to:  
 - The Pacuta Host AFDW GLMM and Pacuta S:H AFDW GLMM produced the following warning `boundary (singular) fit: see ?isSingular`. This means that some "dimensions" of the variance-covariance matrix have been estimated as exactly zero. The function `isSingular(Pacuta_Host_LMER_tank, tol = 1e-4)` produced TRUE for singularity. What does this mean?  
-- Point above about stress period vs. full timeseries with 3 columns dropped
-
+- Row 67 is potentially an outlier?
 
 ```
 ## Host Tissue Biomass
@@ -334,25 +332,25 @@ Come back to:
 Analysis of Deviance Table (Type III Wald chisquare tests)
 
 Response: Host_AFDW.mg.cm2
-                            Chisq Df       Pr(>Chisq)
-(Intercept)               42.2027  1 0.00000000008228
-Timepoint                  6.6205  6           0.3574
-Temperature                0.0180  1           0.8934
-CO2                        0.3191  1           0.5721
-Timepoint:Temperature      3.5019  6           0.7437
-Timepoint:CO2              1.8295  6           0.9347
-Temperature:CO2            0.0193  1           0.8895
-Timepoint:Temperature:CO2  2.4107  6           0.8783
+                            Chisq Df     Pr(>Chisq)
+(Intercept)               34.5279  1 0.000000004202
+Timepoint                  5.8125  8         0.6682
+Temperature                0.0165  1         0.8977
+CO2                        0.2748  1         0.6001
+Timepoint:Temperature      5.0460  7         0.6543
+Timepoint:CO2              3.9416  8         0.8624
+Temperature:CO2            0.0109  1         0.9170
+Timepoint:Temperature:CO2  1.9728  6         0.9222
 
 Type III Analysis of Variance Table with Satterthwaite's method
-                          Sum Sq Mean Sq NumDF DenDF F value  Pr(>F)
-Timepoint                 4.1336 0.68894     6   117  1.9155 0.08391
-Temperature               0.6341 0.63407     1   117  1.7630 0.18684
-CO2                       0.1909 0.19090     1   117  0.5308 0.46773
-Timepoint:Temperature     1.0052 0.16754     6   117  0.4658 0.83242
-Timepoint:CO2             0.7818 0.13030     6   117  0.3623 0.90138
-Temperature:CO2           0.5017 0.50166     1   117  1.3948 0.23999
-Timepoint:Temperature:CO2 0.8670 0.14451     6   117  0.4018 0.87658
+                          Sum Sq Mean Sq NumDF   DenDF F value Pr(>F)
+Timepoint                 5.2899 0.66124     8 133.174  1.5061 0.1608
+Temperature               1.3511 1.35112     1  12.113  3.0775 0.1046
+CO2                       0.1035 0.10348     1   9.274  0.2357 0.6386
+Timepoint:Temperature     1.9844 0.28348     7 133.482  0.6457 0.7174
+Timepoint:CO2             1.8747 0.23434     8 133.085  0.5338 0.8294
+Temperature:CO2           0.4391 0.43907     1  11.408  1.0001 0.3380
+Timepoint:Temperature:CO2 0.8661 0.14435     6 133.182  0.3288 0.9208
 
 -------
 
@@ -362,24 +360,24 @@ Analysis of Deviance Table (Type III Wald chisquare tests)
 
 Response: Sym_AFDW.mg.cm2
                             Chisq Df     Pr(>Chisq)
-(Intercept)               34.1223  1 0.000000005175
-Timepoint                 22.0833  6        0.00117
-Temperature                1.8919  1        0.16899
-CO2                        0.0000  1        0.99868
-Timepoint:Temperature      7.6973  6        0.26113
-Timepoint:CO2              8.2968  6        0.21715
-Temperature:CO2            0.1167  1        0.73267
-Timepoint:Temperature:CO2  5.8315  6        0.44233
+(Intercept)               34.9091  1 0.000000003455
+Timepoint                 30.5267  8      0.0001705
+Temperature                1.9474  1      0.1628669
+CO2                        0.0025  1      0.9600183
+Timepoint:Temperature     10.6634  7      0.1539916
+Timepoint:CO2             14.3146  8      0.0739254
+Temperature:CO2            0.0880  1      0.7667012
+Timepoint:Temperature:CO2  5.3439  6      0.5005229
 
 Type III Analysis of Variance Table with Satterthwaite's method
-                          Sum Sq Mean Sq NumDF   DenDF F value    Pr(>F)
-Timepoint                 4.5300 0.75501     6 108.444  5.0692 0.0001277
-Temperature               0.6469 0.64693     1   7.063  4.3436 0.0752685
-CO2                       0.0046 0.00464     1   7.063  0.0312 0.8648329
-Timepoint:Temperature     1.6390 0.27317     6 108.444  1.8341 0.0990593
-Timepoint:CO2             0.5306 0.08844     6 108.444  0.5938 0.7346821
-Temperature:CO2           0.1238 0.12379     1   7.063  0.8312 0.3919885
-Timepoint:Temperature:CO2 0.8685 0.14476     6 108.444  0.9719 0.4478458
+                          Sum Sq Mean Sq NumDF   DenDF F value      Pr(>F)
+Timepoint                 7.5445 0.94307     8 130.593  6.1394 0.000001037
+Temperature               1.3900 1.38999     1  10.511  9.0488     0.01248
+CO2                       0.0027 0.00275     1   8.650  0.0179     0.89666
+Timepoint:Temperature     2.0571 0.29387     7 130.892  1.9131     0.07235
+Timepoint:CO2             1.5441 0.19301     8 130.521  1.2565     0.27185
+Temperature:CO2           0.1342 0.13416     1  10.071  0.8734     0.37188
+Timepoint:Temperature:CO2 0.8209 0.13681     6 130.807  0.8906     0.50384
 
 -------
 
@@ -389,24 +387,24 @@ Analysis of Deviance Table (Type III Wald chisquare tests)
 
 Response: log(Ratio_AFDW.mg.cm2)
                             Chisq Df Pr(>Chisq)
-(Intercept)                1.3327  1    0.24833
-Timepoint                 14.3299  6    0.02616
-Temperature                4.2277  1    0.03977
-CO2                        0.1161  1    0.73328
-Timepoint:Temperature      7.1007  6    0.31163
-Timepoint:CO2              7.1615  6    0.30617
-Temperature:CO2            0.7583  1    0.38387
-Timepoint:Temperature:CO2  4.6635  6    0.58764
+(Intercept)                0.9565  1    0.32807
+Timepoint                 17.8570  8    0.02232
+Temperature                3.0343  1    0.08152
+CO2                        0.0833  1    0.77282
+Timepoint:Temperature     11.2005  7    0.13011
+Timepoint:CO2             15.0237  8    0.05869
+Temperature:CO2            0.5442  1    0.46069
+Timepoint:Temperature:CO2  3.3470  6    0.76420
 
 Type III Analysis of Variance Table with Satterthwaite's method
-                          Sum Sq Mean Sq NumDF DenDF F value  Pr(>F)
-Timepoint                 3.3834 0.56391     6   115  2.8559 0.01249
-Temperature               1.2842 1.28423     1   115  6.5038 0.01208
-CO2                       0.0235 0.02354     1   115  0.1192 0.73054
-Timepoint:Temperature     1.0294 0.17157     6   115  0.8689 0.52011
-Timepoint:CO2             1.3074 0.21790     6   115  1.1035 0.36465
-Temperature:CO2           0.0070 0.00702     1   115  0.0355 0.85080
-Timepoint:Temperature:CO2 0.9208 0.15347     6   115  0.7772 0.58939
+                           Sum Sq Mean Sq NumDF DenDF F value     Pr(>F)
+Timepoint                 11.2338 1.40422     8   136  5.1040 0.00001439
+Temperature                2.8000 2.79996     1   136 10.1771   0.001766
+CO2                        0.0208 0.02080     1   136  0.0756   0.783742
+Timepoint:Temperature      2.6596 0.37994     7   136  1.3810   0.218175
+Timepoint:CO2              3.9580 0.49475     8   136  1.7983   0.082483
+Temperature:CO2            0.0070 0.00702     1   136  0.0255   0.873348
+Timepoint:Temperature:CO2  0.9208 0.15347     6   136  0.5578   0.763180
 
 ```
 
@@ -530,38 +528,40 @@ Timepoint:Temperature:CO2 0.96709 0.120886     8   154  2.5176    0.01338
 
 *P. acuta*
 
-Come back to:  
-- Point above about stress period vs. full timeseries with 3 columns dropped
+Warning: `fixed-effect model matrix is rank deficient so dropping 3 columns / coefficients`.  
 
 ```
 Analysis of Deviance Table (Type III Wald chisquare tests)
 
 Response: prot_mg.cm2
-                            Chisq Df          Pr(>Chisq)
-(Intercept)               56.7445  1 0.00000000000004963
-Timepoint                  5.9520  6             0.42859
-Temperature                2.0534  1             0.15187
-CO2                        3.5342  1             0.06012
-Timepoint:Temperature      3.8838  6             0.69239
-Timepoint:CO2             13.1369  6             0.04091
-Temperature:CO2            3.6091  1             0.05746
-Timepoint:Temperature:CO2 15.0912  6             0.01956
+                            Chisq Df        Pr(>Chisq)
+(Intercept)               52.3140  1 0.000000000000473
+Timepoint                  8.5075  8           0.38553
+Temperature                2.0146  1           0.15580
+CO2                        3.9665  1           0.04641
+Timepoint:Temperature     10.7667  7           0.14912
+Timepoint:CO2             16.0142  8           0.04218
+Temperature:CO2            3.9134  1           0.04790
+Timepoint:Temperature:CO2 14.5897  6           0.02370
 
 Type III Analysis of Variance Table with Satterthwaite's method
                            Sum Sq Mean Sq NumDF   DenDF F value  Pr(>F)
-Timepoint                 0.71542 0.11924     6 112.324  1.7733 0.11089
-Temperature               0.34570 0.34570     1   6.633  5.1412 0.05975
-CO2                       0.00622 0.00622     1   6.633  0.0925 0.77035
-Timepoint:Temperature     0.53817 0.08970     6 112.324  1.3340 0.24797
-Timepoint:CO2             0.23896 0.03983     6 112.324  0.5923 0.73590
-Temperature:CO2           0.03443 0.03443     1   6.633  0.5120 0.49867
-Timepoint:Temperature:CO2 1.01473 0.16912     6 112.324  2.5152 0.02540
+Timepoint                 1.03592 0.12949     8 134.117  1.7968 0.08292
+Temperature               0.52581 0.52581     1  10.330  7.2960 0.02168
+CO2                       0.02307 0.02307     1   8.523  0.3201 0.58611
+Timepoint:Temperature     1.01594 0.14513     7 134.349  2.0138 0.05774
+Timepoint:CO2             0.44954 0.05619     8 134.069  0.7797 0.62127
+Temperature:CO2           0.03756 0.03756     1   9.872  0.5212 0.48709
+Timepoint:Temperature:CO2 1.05146 0.17524     6 134.219  2.4316 0.02904
 
 ```
 
 ### Host Total Antioxidant Capacity
 
 *P. acuta*  
+
+Warning: `fixed-effect model matrix is rank deficient so dropping 3 columns / coefficients`.
+
 - had a singularity warning like above.  
 - log transformed but still skewed but better than normal. Come back to this.
 
@@ -570,24 +570,24 @@ Analysis of Deviance Table (Type III Wald chisquare tests)
 
 Response: log(cre.umol.mgprot)
                             Chisq Df           Pr(>Chisq)
-(Intercept)               74.4362  1 < 0.0000000000000002
-Timepoint                 12.4537  6              0.05258
-Temperature                0.1680  1              0.68187
-CO2                        0.0585  1              0.80881
-Timepoint:Temperature      0.4424  6              0.99847
-Timepoint:CO2              8.5138  6              0.20283
-Temperature:CO2            0.0056  1              0.94048
-Timepoint:Temperature:CO2  4.5359  6              0.60455
+(Intercept)               82.2609  1 < 0.0000000000000002
+Timepoint                 13.8204  8              0.08657
+Temperature                0.1857  1              0.66652
+CO2                        0.0647  1              0.79922
+Timepoint:Temperature      0.8136  7              0.99730
+Timepoint:CO2             10.1130  8              0.25718
+Temperature:CO2            0.0062  1              0.93744
+Timepoint:Temperature:CO2  5.0128  6              0.54218
 
 Type III Analysis of Variance Table with Satterthwaite's method
-                          Sum Sq Mean Sq NumDF DenDF F value    Pr(>F)
-Timepoint                 8.6565 1.44274     6   119  4.0553 0.0009812
-Temperature               0.4224 0.42242     1   119  1.1874 0.2780656
-CO2                       0.0796 0.07960     1   119  0.2237 0.6370756
-Timepoint:Temperature     2.0944 0.34907     6   119  0.9812 0.4411427
-Timepoint:CO2             2.1765 0.36275     6   119  1.0196 0.4159499
-Temperature:CO2           0.1949 0.19489     1   119  0.5478 0.4606752
-Timepoint:Temperature:CO2 1.6137 0.26896     6   119  0.7560 0.6058993
+                          Sum Sq Mean Sq NumDF DenDF F value   Pr(>F)
+Timepoint                 8.8058 1.10073     8   139  3.4192 0.001279
+Temperature               0.1675 0.16749     1   139  0.5203 0.471932
+CO2                       0.0046 0.00456     1   139  0.0142 0.905405
+Timepoint:Temperature     2.2029 0.31469     7   139  0.9775 0.450136
+Timepoint:CO2             2.4117 0.30147     8   139  0.9365 0.488679
+Temperature:CO2           0.1949 0.19489     1   139  0.6054 0.437853
+Timepoint:Temperature:CO2 1.6137 0.26896     6   139  0.8355 0.544479
 
 ```
 
@@ -623,53 +623,134 @@ Timepoint:Temperature:CO2 1.97128 0.246410     8   154  1.0982 0.3675
 
 ### Color Score
 
-This has repeated measures and tank effects so another random factor is added for repeated measures (Plug ID).
+This has repeated measures and tank effects so another random factor is added for repeated measures (Plug ID) using a nested format `(1|Tank/Plug_ID)`. "Blch_Time" refers to timepoint for color score analysis (photos taken every week, 1 week - 16 week).  
 
 **M. capitata**
 
-The model with just Plug ID as a random factor was the best model to use. I had to transform by adding 100 to each value to get positive values and then log transforming. But this didn't change the qqplot or hist.. hm... this needs to be fixed before running ANOVA.
+Come back to:  
+- Bleaching.Score^(1/4) transformation  
+- qqplot not normal, heavy tail  
 
 ```
+Analysis of Deviance Table (Type III Wald chisquare tests)
+
+Response: (Bleaching.Score^(1/4))
+                              Chisq Df            Pr(>Chisq)
+(Intercept)               2310.0070  1 < 0.00000000000000022
+Blch.Time                   12.7680 15             0.6202083
+Temperature                  0.0300  1             0.8624716
+CO2                          0.4212  1             0.5163412
+Blch.Time:Temperature       42.9534 15             0.0001601
+Blch.Time:CO2               28.2156 15             0.0202580
+Temperature:CO2              0.0043  1             0.9476321
+Blch.Time:Temperature:CO2   42.7693 15             0.0001710
+
+Type III Analysis of Variance Table with Satterthwaite's method
+                           Sum Sq Mean Sq NumDF  DenDF F value             Pr(>F)
+Blch.Time                 2.65884 0.17726    15 769.05  5.5068 0.0000000001012917
+Temperature               1.90774 1.90774     1 178.91 59.2674 0.0000000000008992
+CO2                       0.11074 0.11074     1 178.91  3.4404           0.065264
+Blch.Time:Temperature     2.58645 0.17243    15 769.05  5.3569 0.0000000002392475
+Blch.Time:CO2             1.04268 0.06951    15 769.05  2.1595           0.006447
+Temperature:CO2           0.11264 0.11264     1 178.91  3.4993           0.063028
+Blch.Time:Temperature:CO2 1.37669 0.09178    15 769.05  2.8513           0.000227
 ```
 
 **P. acuta**
 
-The warning message `fixed-effect model matrix is rank deficient so dropping 12 columns / coefficients` appeared. Using `alias(Pacuta_Color_GLM)` I found the below groups are issues in the GLMM model. come back to this.... the GLMMs are cutting out these groups for now.
+The warning message `fixed-effect model matrix is rank deficient so dropping 12 columns / coefficients` appeared. Used `alias(model)` to find groups with small sample size. The model is excluding these anyway, no need to subset.
+
+Come back to:  
+- With log (+120) transformation, the qqplot looks much better with the exception of a couple points.   
+- homogeneity of variance failed too
 
 ```
-Complete :
-                                         (Intercept) Blch.Time10 week Blch.Time11 week Blch.Time12 week Blch.Time13 week Blch.Time14 week Blch.Time15 week Blch.Time16 week
-Blch.Time13 week:TemperatureHigh         0           0                0                0                0                0                0                0               
-Blch.Time14 week:TemperatureHigh         0           0                0                0                0                0                0                0               
-Blch.Time15 week:TemperatureHigh         0           0                0                0                0                0                0                0               
-Blch.Time16 week:TemperatureHigh         0           0                0                0                0                0                0                0               
-Blch.Time10 week:TemperatureHigh:CO2High 0           0                0                0                0                0                0                0               
-Blch.Time11 week:TemperatureHigh:CO2High 0           0                0                0                0                0                0                0               
-Blch.Time12 week:TemperatureHigh:CO2High 0           0                0                0                0                0                0                0               
-Blch.Time13 week:TemperatureHigh:CO2High 0           0                0                0                0                0                0                0               
-Blch.Time14 week:TemperatureHigh:CO2High 0           0                0                0                0                0                0                0               
-Blch.Time15 week:TemperatureHigh:CO2High 0           0                0                0                0                0                0                0               
-Blch.Time16 week:TemperatureHigh:CO2High 0           0                0                0                0                0                0                0               
-Blch.Time9 week:TemperatureHigh:CO2High  0           0                0                0                0                0                0                0   
-```
+Analysis of Deviance Table (Type III Wald chisquare tests)
+
+Response: log(Color.Transformed)
+                              Chisq Df            Pr(>Chisq)
+(Intercept)               7936.2626  1 < 0.00000000000000022
+Blch.Time                   12.1565 15              0.667149
+Temperature                  0.0124  1              0.911168
+CO2                          0.0566  1              0.811995
+Blch.Time:Temperature       98.1694 11 0.0000000000000004112
+Blch.Time:CO2               48.0160 15 0.0000252801966014658
+Temperature:CO2              0.0287  1              0.865426
+Blch.Time:Temperature:CO2   24.2542  7              0.001028
+
+Type III Analysis of Variance Table with Satterthwaite's method
+                          Sum Sq Mean Sq NumDF  DenDF F value                Pr(>F)
+Blch.Time                 8.4669 0.56446    15 639.21 13.2303 < 0.00000000000000022
+Temperature               1.9544 1.95437     1  14.33 45.8084           0.000008007
+CO2                       0.0622 0.06219     1  11.22  1.4576              0.252160
+Blch.Time:Temperature     7.0552 0.64138    11 640.27 15.0333 < 0.00000000000000022
+Blch.Time:CO2             1.6336 0.10891    15 637.60  2.5527              0.001047
+Temperature:CO2           0.0047 0.00473     1   9.70  0.1109              0.746183
+Blch.Time:Temperature:CO2 1.0348 0.14783     7 640.22  3.4649              0.001187
 
 ```
-```
-
-
-The model with both Plug ID and Tank was the best model to use. I used a transformation of +120 and log transformation. This still has some outliers so need to come back to this before running an ANOVA..
 
 ### Buoyant Weight
 
-**M. capitata**
+Growth.Time refers to the buoyant weight timepoint (every 2 weeks for the entire 4 months).
 
-The three GLMM models are exactly the same (just plug ID, just tank, and tank and plug ID together) but we want a less complex model so we want to pick just plug ID or just tank but not sure which of the two.. Might come back to this choice..
+*M. capitata*
 
-The residuals are completely skewed by a few outliers.. come back to this.
+I took out 1210 week 6 and 8 because its values were 2 orders of magnitude greater than the others, I think this is error/outlier not biological. There is another outlier (rows 659 and 660) that could be taken out, but the difference is not as stark.
 
 ```
+Analysis of Deviance Table (Type III Wald chisquare tests)
+
+Response: Growth.Rate
+                              Chisq Df      Pr(>Chisq)
+(Intercept)                 27.3523  1 0.0000001695589
+Growth.Time                 19.6155  8       0.0118931
+Temperature                  0.0373  1       0.8468290
+CO2                          0.0865  1       0.7687307
+Growth.Time:Temperature     61.6345  8 0.0000000002225
+Growth.Time:CO2             25.1594  8       0.0014607
+Temperature:CO2              0.0123  1       0.9118175
+Growth.Time:Temperature:CO2 26.4946  8       0.0008639
+
+Type III Analysis of Variance Table with Satterthwaite's method
+                                  Sum Sq       Mean Sq NumDF  DenDF F value        Pr(>F)
+Growth.Time                 0.0000055564 0.00000069455     8 513.96  5.2253 0.00000267301
+Temperature                 0.0000024157 0.00000241575     1  11.33 18.1743      0.001252
+CO2                         0.0000000050 0.00000000499     1  11.33  0.0375      0.849818
+Growth.Time:Temperature     0.0000069768 0.00000087210     8 513.96  6.5611 0.00000003632
+Growth.Time:CO2             0.0000019099 0.00000023874     8 513.96  1.7961      0.075383
+Temperature:CO2             0.0000005319 0.00000053186     1  11.33  4.0013      0.070024
+Growth.Time:Temperature:CO2 0.0000035217 0.00000044021     8 513.96  3.3118      0.001057
 ```
 
+*P. acuta*  
+- Warning: `fixed-effect model matrix is rank deficient so dropping 6 columns / coefficients`  
+- Log transformed
+
+```
+Analysis of Deviance Table (Type III Wald chisquare tests)
+
+Response: log(Growth.Rate)
+                                Chisq Df            Pr(>Chisq)
+(Intercept)                 2271.8530  1 < 0.00000000000000022
+Growth.Time                   75.4042  8    0.0000000000004094
+Temperature                    2.2562  1              0.133078
+CO2                            5.8913  1              0.015216
+Growth.Time:Temperature       11.7755  5              0.037996
+Growth.Time:CO2               23.8732  8              0.002407
+Temperature:CO2                1.5673  1              0.210596
+Growth.Time:Temperature:CO2    3.6997  4              0.448169
+
+Type III Analysis of Variance Table with Satterthwaite's method
+                            Sum Sq Mean Sq NumDF   DenDF F value                Pr(>F)
+Growth.Time                 73.456  9.1819     8 310.764 17.9852 < 0.00000000000000022
+Temperature                  3.600  3.6003     1  30.003  7.0521               0.01255
+CO2                          1.318  1.3181     1  19.567  2.5819               0.12411
+Growth.Time:Temperature     13.754  2.7507     5 310.994  5.3881            0.00009083
+Growth.Time:CO2              8.183  1.0229     8 311.503  2.0036               0.04565
+Temperature:CO2              0.046  0.0464     1  15.882  0.0908               0.76706
+Growth.Time:Temperature:CO2  1.889  0.4722     4 308.800  0.9249               0.44964
+```
 
 
 
@@ -719,50 +800,56 @@ We only have respiration and photosynthetic rates in stress timepoints so when I
 
 The arrows all overlapping are: Chla, Chlc, Sym AFDW, Pgross, and Pnet. Perhaps we could group these altogether as a symbiont fitness category?
 
-PERMANOVA using Euclidean distances - 20210217
+PERMANOVA using Euclidean distances
 
 ```
 Call:
-adonis(formula = pacuta_vegan ~ Treatment * Timepoint, data = Pacuta_data,      method = "eu")
+adonis(formula = pacuta_vegan ~ Timepoint * Temperature * CO2,      data = Pacuta_data, method = "eu")
 
 Permutation: free
 Number of permutations: 999
 
 Terms added sequentially (first to last)
 
-                     Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
-Treatment             3    134.24  44.746  6.0305 0.09453  0.001 ***
-Timepoint             6    240.48  40.080  5.4015 0.16935  0.001 ***
-Treatment:Timepoint  18    191.98  10.665  1.4374 0.13520  0.030 *  
-Residuals           115    853.30   7.420         0.60092           
-Total               142   1420.00                 1.00000           
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+                           Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)
+Timepoint                   6    237.59  39.598  5.3367 0.16732  0.001
+Temperature                 1    127.39 127.387 17.1680 0.08971  0.001
+CO2                         1      4.60   4.602  0.6203 0.00324  0.648
+Timepoint:Temperature       6    105.68  17.613  2.3737 0.07442  0.002
+Timepoint:CO2               6     37.05   6.175  0.8322 0.02609  0.639
+Temperature:CO2             1      4.52   4.518  0.6089 0.00318  0.654
+Timepoint:Temperature:CO2   6     49.87   8.311  1.1201 0.03512  0.299
+Residuals                 115    853.30   7.420         0.60092       
+Total                     142   1420.00                 1.00000
+
 ```
 
 **Montipora capitata**
 
 ![time](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Mcap-stress-PCAs.png?raw=true)
 
-PERMANOVA using Euclidean distances - 20210217
+PERMANOVA using Euclidean distances
 
 ```
 Call:
-adonis(formula = mcap_vegan ~ Treatment * Timepoint, data = Mcap_data,      method = "eu")
+adonis(formula = mcap_vegan ~ Timepoint * Temperature * CO2,      data = Mcap_data, method = "eu")
 
 Permutation: free
 Number of permutations: 999
 
 Terms added sequentially (first to last)
 
-                     Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
-Treatment             3     37.59 12.5315  1.4504 0.02557  0.172    
-Timepoint             6    149.08 24.8465  2.8756 0.10141  0.001 ***
-Treatment:Timepoint  18    246.49 13.6940  1.5849 0.16768  0.015 *  
-Residuals           120   1036.84  8.6403         0.70533           
-Total               147   1470.00                 1.00000           
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+                           Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)
+Timepoint                   6    147.64 24.6075  2.8480 0.10044  0.001
+Temperature                 1     18.85 18.8478  2.1814 0.01282  0.064
+CO2                         1     16.97 16.9691  1.9640 0.01154  0.104
+Timepoint:Temperature       6     94.57 15.7623  1.8243 0.06434  0.027
+Timepoint:CO2               6     72.88 12.1473  1.4059 0.04958  0.110
+Temperature:CO2             1      2.98  2.9766  0.3445 0.00202  0.875
+Timepoint:Temperature:CO2   6     79.27 13.2114  1.5291 0.05392  0.064
+Residuals                 120   1036.84  8.6403         0.70533       
+Total                     147   1470.00                 1.00000
+
 ```
 
 
@@ -778,55 +865,58 @@ This does not include photosynthetic and respiration rates because we don't have
 
 ![timepoint](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Pacuta-Timeseries-PCAs.png?raw=true)
 
-PERMANOVA using Euclidean distances - 20210217
+PERMANOVA using Euclidean distances
 
 ```
 Call:
-adonis(formula = pacuta_timeseries_vegan ~ Treatment * Timepoint,      data = Pacuta_timeseriesdata, method = "eu")
+adonis(formula = pacuta_timeseries_vegan ~ Timepoint * Temperature *      CO2, data = Pacuta_timeseriesdata, method = "eu")
 
 Permutation: free
 Number of permutations: 999
 
 Terms added sequentially (first to last)
 
-                     Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
-Treatment             3     64.67 21.5565  3.5506 0.05499  0.001 ***
-Timepoint             8    137.34 17.1672  2.8276 0.11678  0.001 ***
-Treatment:Timepoint  21    148.30  7.0619  1.1632 0.12611  0.191    
-Residuals           136    825.69  6.0713         0.70212           
-Total               168   1176.00                 1.00000           
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+                           Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)
+Timepoint                   8    130.41  16.302  2.6850 0.11090  0.001
+Temperature                 1     65.70  65.701 10.8216 0.05587  0.001
+CO2                         1      1.35   1.348  0.2220 0.00115  0.961
+Timepoint:Temperature       7     72.72  10.388  1.7110 0.06183  0.033
+Timepoint:CO2               8     42.68   5.334  0.8786 0.03629  0.646
+Temperature:CO2             1      3.11   3.108  0.5119 0.00264  0.718
+Timepoint:Temperature:CO2   6     34.35   5.725  0.9429 0.02921  0.545
+Residuals                 136    825.69   6.071         0.70212       
+Total                     168   1176.00                 1.00000
+
 ```
 
 **Montipora capitata**
 
 ![time](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Mcap-Timeseries-PCAs.png?raw=true)
 
-PERMANOVA using Euclidean distances - 20210217
+PERMANOVA using Euclidean distances 
 
 ```
 Call:
-adonis(formula = mcap_timeseries_vegan ~ Treatment * Timepoint,      data = Mcap_timeseriesdata, method = "eu")
+adonis(formula = mcap_timeseries_vegan ~ Timepoint * Temperature *      CO2, data = Mcap_timeseriesdata, method = "eu")
 
 Permutation: free
 Number of permutations: 999
 
 Terms added sequentially (first to last)
 
-                     Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
-Treatment             3     39.18 13.0595  2.0866 0.02961  0.025 *  
-Timepoint             8    134.96 16.8696  2.6953 0.10201  0.001 ***
-Treatment:Timepoint  24    185.01  7.7088  1.2317 0.13984  0.113    
-Residuals           154    963.85  6.2588         0.72854           
-Total               189   1323.00                 1.00000           
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+                           Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)
+Timepoint                   8    134.39 16.7987  2.6840 0.10158  0.001
+Temperature                 1     29.82 29.8161  4.7639 0.02254  0.004
+CO2                         1      6.82  6.8232  1.0902 0.00516  0.326
+Timepoint:Temperature       8     69.64  8.7049  1.3908 0.05264  0.092
+Timepoint:CO2               8     50.80  6.3502  1.0146 0.03840  0.434
+Temperature:CO2             1      2.89  2.8944  0.4625 0.00219  0.778
+Timepoint:Temperature:CO2   8     64.78  8.0978  1.2938 0.04897  0.119
+Residuals                 154    963.85  6.2588         0.72854       
+Total                     189   1323.00                 1.00000
+
 ```
 
-Both P.acuta and M.cap became not significant after taking out respiration and photosynthetic rates when comparing treatment*timepoint. Respiration and photosynthetic rates might be the more compelling story, rather than the recovery timepoints?
-
-I could also do the PERMANOVA with treatment separated into temperature and pCO2? I suspect temperature will be driver, not pCO2.
 
 
 ## Next Steps
@@ -836,10 +926,4 @@ I could also do the PERMANOVA with treatment separated into temperature and pCO2
 - Physiological variability  
 - Parse hobo logger times  
 - Apex continuous data  
-- Plot thermal history of Hawaii buoy, Degree Heating Weeks
-
-Meeting with Ariana on Monday the 22nd 12 pm EST.  
-- GAM vs GLMM models  
-- How to pick outliers  
-- Bleaching or BW transformations  
-- Other things to normalize to
+- Degree Heating Weeks
