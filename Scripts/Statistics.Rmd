@@ -927,7 +927,7 @@ Timeseries.Treatment.PCA <- autoplot(timeseries_scaled_data, data = pca_timeseri
   #xlim(-0.23,0.13) + 
   scale_color_manual(values = cols) + scale_fill_manual(values = cols); Timeseries.Treatment.PCA
 
-Timeseries.Timepoint.PCA <- autoplot(timeseries_scaled_data, data = pca_timeseriesdata, colour = 'Phase',
+Timeseries.Timepoint.PCA <- autoplot(timeseries_scaled_data, data = pca_timeseriesdata, colour = 'Timepoint',
          loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
          loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
   #xlim(-0.23,0.13) + 
