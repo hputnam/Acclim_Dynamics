@@ -786,6 +786,11 @@ Do:
 
 ## Multivariate analysis
 
+**3 phases**
+
+![3-phases](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Three-Phases-PCAs.png?raw=true)
+
+
 ### Only acute and chronic stress Treatment
 
 We only have respiration and photosynthetic rates in stress timepoints so when I took only the complete sets of data, this took out the recovery timepoints.
@@ -893,7 +898,7 @@ Total                     168   1176.00                 1.00000
 
 ![time](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Mcap-Timeseries-PCAs.png?raw=true)
 
-PERMANOVA using Euclidean distances 
+PERMANOVA using Euclidean distances
 
 ```
 Call:
