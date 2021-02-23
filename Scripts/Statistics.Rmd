@@ -33,6 +33,7 @@ library(effects)
 library(Rmisc)
 library(lmerTest)
 library(lessR)
+library(car)
 ```
 
 ### Read in data files to analyze. 
@@ -300,11 +301,14 @@ hist(mcap_full_data$chla.ug.cm2)
 
 Model comparisons. 
 *P. acuta* 
+
+The full P.acuta dataset received the error `fixed-effect model matrix is rank deficient so dropping 3 columns / coefficients`. 
+
 ```{r}
 ## Subset out 12 and 16 week timepoints 
 Pacuta_stress_data <- pacuta_full_data %>% filter(Timepoint !="12 week" & Timepoint !="16 week")
   
-Pacuta_Chl_LMER <- lmer(chla.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_stress_data) #GLMM
+Pacuta_Chl_LMER <- lmer(chla.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
 # GAM 
 # anova(GLMM, GAM) # report AIC values 
 
@@ -368,93 +372,137 @@ Pacuta_Host_LMER <- lmer(Host_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank)
 
 isSingular(Pacuta_Host_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
 
-summary(Pacuta_Host_GLM)
-qqPlot(residuals(Pacuta_Host_GLM))
-hist(residuals(Pacuta_Host_GLM)) 
-# this looks normal, no need to transform
+## summary of the model chosen from above
+## plot(Mcap_Chl_LMER) in console to view diagnostic plots
+summary(Pacuta_Host_LMER)
+qqPlot(residuals(Pacuta_Host_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_Host_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(Pacuta_stress_data$Host_AFDW.mg.cm2 ~ Pacuta_stress_data$Timepoint*Pacuta_stress_data$Temperature*Pacuta_stress_data$CO2)
 
-Anova(Pacuta_Host_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
-plot(allEffects(Pacuta_Host_GLM))
+## significance of model
+anova(Pacuta_Host_LMER, ddf="lme4", type='III')
+Anova(Pacuta_Host_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Pacuta_Host_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
 ```
 
 Sym AFDW. 
 ```{r}
 ## Sym
-Pacuta_Sym_LMER_tank <- lmer(Sym_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_stress_data) #GLMM
-Pacuta_Sym_GLM <- glm(log(Sym_AFDW.mg.cm2) ~ Timepoint*Temperature*CO2, na.action=na.omit, data=Pacuta_stress_data) # GLM
-anova(Pacuta_Sym_LMER_tank, Pacuta_Sym_GLM) # AIC LMER = 171.87, GLM = 171.00; no difference in models so the GLM is chosen 
+Pacuta_Sym_LMER <- lmer(Sym_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_stress_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
 
-summary(Pacuta_Sym_GLM)
-qqPlot(residuals(Pacuta_Sym_GLM))
-hist(residuals(Pacuta_Sym_GLM)) 
-# this looks normal, no need to transform
+## summary of the model chosen from above
+## plot(Mcap_Chl_LMER) in console to view diagnostic plots
+summary(Pacuta_Sym_LMER)
+qqPlot(residuals(Pacuta_Sym_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_Sym_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(Pacuta_stress_data$Sym_AFDW.mg.cm2 ~ Pacuta_stress_data$Timepoint*Pacuta_stress_data$Temperature*Pacuta_stress_data$CO2)
 
-Anova(Pacuta_Sym_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
-plot(allEffects(Pacuta_Sym_GLM))
+## significance of model
+anova(Pacuta_Sym_LMER, ddf="lme4", type='III')
+Anova(Pacuta_Sym_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Pacuta_Sym_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
 ```
 
 S:H Ratio AFDW 
 ```{r}
 ## S:H Ratio 
-Pacuta_SHRatio_LMER_tank <- lmer(Ratio_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_stress_data) #GLMM
-Pacuta_SHRatio_GLM <- glm(log(Ratio_AFDW.mg.cm2) ~ Timepoint*Temperature*CO2, na.action=na.omit, data=Pacuta_stress_data) # GLM
-anova(Pacuta_SHRatio_LMER_tank, Pacuta_SHRatio_GLM) # AIC LMER = 220.95, GLM = 218.95; no difference in models so the GLM is chosen 
+Pacuta_SHRatio_LMER <- lmer(log(Ratio_AFDW.mg.cm2) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_stress_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
 
-isSingular(Pacuta_SHRatio_LMER_tank, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
+isSingular(Pacuta_SHRatio_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
 
-summary(Pacuta_SHRatio_GLM)
-qqPlot(residuals(Pacuta_SHRatio_GLM))
-hist(residuals(Pacuta_SHRatio_GLM)) 
-# this looks skewed, log transformed but still looks a bit non-normal 
+## summary of the model chosen from above
+## plot(Mcap_Chl_LMER) in console to view diagnostic plots
+summary(Pacuta_SHRatio_LMER)
+qqPlot(residuals(Pacuta_SHRatio_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_SHRatio_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(Pacuta_stress_data$Ratio_AFDW.mg.cm2 ~ Pacuta_stress_data$Timepoint*Pacuta_stress_data$Temperature*Pacuta_stress_data$CO2)
 
-Anova(Pacuta_SHRatio_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
-plot(allEffects(Pacuta_SHRatio_GLM))
+## significance of model
+anova(Pacuta_SHRatio_LMER, ddf="lme4", type='III')
+Anova(Pacuta_SHRatio_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Pacuta_SHRatio_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
 ```
 
-M. capitata linear mixed models. 
+*M. capitata* mixed effect models. 
+
+Host AFDW. 
 ```{r}
 ## Host 
-Mcap_Host_LMER_tank <- lmer(Host_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
-Mcap_Host_GLM <- glm(log(Host_AFDW.mg.cm2) ~ Timepoint*Temperature*CO2, na.action=na.omit, data=mcap_full_data) # GLM
-anova(Mcap_Host_LMER_tank, Mcap_Host_GLM) # AIC LMER = 567.19, GLM = 565.19; no difference in models so the GLM is chosen 
+Mcap_Host_LMER <- lmer(Host_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
 
-isSingular(Mcap_Host_LMER_tank, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
+isSingular(Mcap_Host_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
 
-summary(Mcap_Host_GLM)
-qqPlot(residuals(Mcap_Host_GLM))
-hist(residuals(Mcap_Host_GLM)) 
-# this looks slightly skewed , log transformed made this a lot better
+## summary of the model chosen from above
+## plot(Mcap_Chl_LMER) in console to view diagnostic plots
+summary(Mcap_Host_LMER)
+qqPlot(residuals(Mcap_Host_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_Host_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap_full_data$Host_AFDW.mg.cm2 ~ mcap_full_data$Timepoint*mcap_full_data$Temperature*mcap_full_data$CO2)
 
-Anova(Mcap_Host_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
-plot(allEffects(Mcap_Host_GLM))
+## significance of model
+anova(Mcap_Host_LMER, ddf="lme4", type='III')
+Anova(Mcap_Host_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
 
+anova(Mcap_Host_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+Sym AFDW. 
+```{r}
 ## Sym
-Mcap_Sym_LMER_tank <- lmer(Sym_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
-Mcap_Sym_GLM <- glm(Sym_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2, na.action=na.omit, data=mcap_full_data) # GLM
-anova(Mcap_Sym_LMER_tank, Mcap_Sym_GLM) # AIC LMER = 512.31, GLM = 510.31; no difference in models so the GLM is chosen 
+Mcap_Sym_LMER <- lmer(Sym_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
 
-summary(Mcap_Sym_GLM)
-qqPlot(residuals(Mcap_Sym_GLM))
-hist(residuals(Mcap_Sym_GLM)) 
-# this looks normal; no need to transform 
+## summary of the model chosen from above
+## plot(Mcap_Chl_LMER) in console to view diagnostic plots
+summary(Mcap_Sym_LMER)
+qqPlot(residuals(Mcap_Sym_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_Sym_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap_full_data$Sym_AFDW.mg.cm2 ~ mcap_full_data$Timepoint*mcap_full_data$Temperature*mcap_full_data$CO2)
 
-Anova(Mcap_Sym_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
-plot(allEffects(Mcap_Sym_GLM))
+## significance of model
+anova(Mcap_Sym_LMER, ddf="lme4", type='III')
+Anova(Mcap_Sym_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
 
+anova(Mcap_Sym_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+S:H Ratio AFDW. 
+```{r}
 ## S:H Ratio 
-Mcap_SHRatio_LMER_tank <- lmer(Ratio_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
-Mcap_SHRatio_GLM <- glm(Ratio_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2, na.action=na.omit, data=mcap_full_data) # GLM
-anova(Mcap_SHRatio_LMER_tank, Mcap_SHRatio_GLM) # AIC LMER = 154.23, GLM = 152.23; no difference in models so the GLM is chosen 
+Mcap_SHRatio_LMER <- lmer(Ratio_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
 
-isSingular(Mcap_SHRatio_LMER_tank, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
+isSingular(Mcap_SHRatio_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
 
-summary(Mcap_SHRatio_GLM)
-qqPlot(residuals(Mcap_SHRatio_GLM))
-hist(residuals(Mcap_SHRatio_GLM)) 
-# slightly right skewed positively but log made it way worse; keep it normal 
+## summary of the model chosen from above
+## plot(Mcap_Chl_LMER) in console to view diagnostic plots
+summary(Mcap_SHRatio_LMER)
+qqPlot(residuals(Mcap_SHRatio_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_SHRatio_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap_full_data$Ratio_AFDW.mg.cm2 ~ mcap_full_data$Timepoint*mcap_full_data$Temperature*mcap_full_data$CO2)
 
-Anova(Mcap_SHRatio_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
-plot(allEffects(Mcap_SHRatio_GLM))
+## significance of model
+anova(Mcap_SHRatio_LMER, ddf="lme4", type='III')
+Anova(Mcap_SHRatio_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Mcap_SHRatio_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
 ```
 
 ### Soluble Protein
@@ -466,31 +514,52 @@ hist(mcap_full_data$prot_mg.cm2)
 # both slightly right skewed positively 
 ```
 
-Linear mixed models 
+Mixed effect modeling. 
+
+*P. acuta*
 ```{r}
 ## Pacuta 
-Pacuta_prot_LMER_tank <- lmer(prot_mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_stress_data) #GLMM
-Pacuta_prot_GLM <- glm(prot_mg.cm2 ~ Timepoint*Temperature*CO2, na.action=na.omit, data=Pacuta_stress_data) # GLM
-anova(Pacuta_prot_LMER_tank, Pacuta_prot_GLM) # AIC LMER = 52.464, GLM = 50.464; no difference in models so the GLM is chosen 
+Pacuta_prot_LMER <- lmer(prot_mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_stress_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
 
-summary(Pacuta_prot_GLM)
-qqPlot(residuals(Pacuta_prot_GLM))
-hist(residuals(Pacuta_prot_GLM)) # this looks normal; no transformation 
+## summary of the model chosen from above
+## plot(Mcap_Chl_LMER) in console to view diagnostic plots
+summary(Pacuta_prot_LMER)
+qqPlot(residuals(Pacuta_prot_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_prot_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(Pacuta_stress_data$prot_mg.cm2 ~ Pacuta_stress_data$Timepoint*Pacuta_stress_data$Temperature*Pacuta_stress_data$CO2)
 
-Anova(Pacuta_prot_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
-plot(allEffects(Pacuta_prot_GLM))
+## significance of model
+anova(Pacuta_prot_LMER, ddf="lme4", type='III')
+Anova(Pacuta_prot_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
 
+anova(Pacuta_prot_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+*M. capitata* 
+```{r}
 ## Mcap
-Mcap_prot_LMER_tank <- lmer(prot_mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
-Mcap_prot_GLM <- glm(prot_mg.cm2 ~ Timepoint*Temperature*CO2, na.action=na.omit, data=mcap_full_data) # GLM
-anova(Mcap_prot_LMER_tank, Mcap_prot_GLM) # AIC LMER = -1.5982, GLM = -3.5982; no difference in models so the GLM is chosen 
+Mcap_prot_LMER <- lmer(prot_mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
 
-summary(Mcap_prot_GLM)
-qqPlot(residuals(Mcap_prot_GLM))
-hist(residuals(Mcap_prot_GLM)) # this looks normal; no transformation 
+isSingular(Mcap_prot_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
 
-Anova(Mcap_prot_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
-plot(allEffects(Mcap_prot_GLM))
+## summary of the model chosen from above
+## plot(Mcap_prot_LMER) in console to view diagnostic plots
+summary(Mcap_prot_LMER)
+qqPlot(residuals(Mcap_prot_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_prot_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap_full_data$prot_mg.cm2 ~ mcap_full_data$Timepoint*mcap_full_data$Temperature*mcap_full_data$CO2)
+
+## significance of model
+anova(Mcap_prot_LMER, ddf="lme4", type='III')
+Anova(Mcap_prot_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Mcap_prot_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
 ```
 
 ### Host Total Antioxidant Capacity
@@ -502,32 +571,54 @@ hist(mcap_full_data$cre.umol.mgprot)
 # both very right skewed positively 
 ```
 
-Linear mixed models. 
+Mixed effect modeling  
+
+*P. acuta*
 ```{r}
 ## Pacuta 
-Pacuta_TAC_LMER_tank <- lmer(cre.umol.mgprot ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_stress_data) #GLMM
-Pacuta_TAC_GLM <- glm(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2, na.action=na.omit, data=Pacuta_stress_data) # GLM
-anova(Pacuta_TAC_LMER_tank, Pacuta_TAC_GLM) # AIC LMER = -24.707, GLM = -26.707; no difference in models so the GLM is chosen 
+Pacuta_TAC_LMER <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_stress_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
 
-summary(Pacuta_TAC_GLM)
-qqPlot(residuals(Pacuta_TAC_GLM))
-hist(residuals(Pacuta_TAC_GLM)) # even with log transformation this is skewed  
+isSingular(Pacuta_TAC_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
 
-Anova(Pacuta_TAC_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
-plot(allEffects(Pacuta_TAC_GLM))
+## summary of the model chosen from above
+## plot(Mcap_prot_LMER) in console to view diagnostic plots
+summary(Pacuta_TAC_LMER)
+qqPlot(residuals(Pacuta_TAC_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_TAC_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(Pacuta_stress_data$cre.umol.mgprot ~ Pacuta_stress_data$Timepoint*Pacuta_stress_data$Temperature*Pacuta_stress_data$CO2) 
 
+## significance of model
+anova(Pacuta_TAC_LMER, ddf="lme4", type='III')
+Anova(Pacuta_TAC_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Pacuta_TAC_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+*M. capitata*
+```{r}
 ## Mcapitata
-Mcap_TAC_LMER_tank <- lmer(cre.umol.mgprot ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
-Mcap_TAC_GLM <- glm(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2, na.action=na.omit, data=mcap_full_data) # GLM
-anova(Mcap_TAC_LMER_tank, Mcap_TAC_GLM) # AIC LMER = -266.24, GLM = -268.24; no difference in models so the GLM is chosen 
+Mcap_TAC_LMER <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
 
-summary(Mcap_TAC_GLM)
-qqPlot(residuals(Mcap_TAC_GLM))
-hist(residuals(Mcap_TAC_GLM))
-# much better after log transform
+isSingular(Mcap_TAC_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
 
-Anova(Mcap_TAC_GLM, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs 
-plot(allEffects(Mcap_TAC_GLM))
+## summary of the model chosen from above
+## plot(Mcap_TAC_LMER) in console to view diagnostic plots
+summary(Mcap_TAC_LMER)
+qqPlot(residuals(Mcap_TAC_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_TAC_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap_full_data$cre.umol.mgprot ~ mcap_full_data$Timepoint*mcap_full_data$Temperature*mcap_full_data$CO2) 
+
+## significance of model
+anova(Mcap_TAC_LMER, ddf="lme4", type='III')
+Anova(Mcap_TAC_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Mcap_TAC_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
 ```
 
 ### Bleaching Score 
