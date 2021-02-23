@@ -866,6 +866,13 @@ Mcap_timepoint <- autoplot(Mcap_scaled_data, data = Mcap_data, colour = 'Timepoi
   #xlim(-0.4,0.4) + 
   scale_colour_brewer() + ggtitle("M. capitata"); Mcap_timepoint
 
+Mcap_phase <- autoplot(Mcap_scaled_data, data = Mcap_data, colour = 'Phase',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  
+  #xlim(-0.4,0.4) + 
+  scale_colour_brewer() + ggtitle("M. capitata"); Mcap_phase
+
 ggsave(file="Output/Final_Figures/Mcap-Treatment-PCA.pdf", Mcap_treatment, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Final_Figures/Mcap-Treatment-PCA.png", Mcap_treatment, width = 11, height = 6, units = c("in"))
 
@@ -914,7 +921,7 @@ Timeseries.Treatment.PCA <- autoplot(timeseries_scaled_data, data = pca_timeseri
   #xlim(-0.23,0.13) + 
   scale_color_manual(values = cols) + scale_fill_manual(values = cols); Timeseries.Treatment.PCA
 
-Timeseries.Timepoint.PCA <- autoplot(timeseries_scaled_data, data = pca_timeseriesdata, colour = 'Timepoint',
+Timeseries.Timepoint.PCA <- autoplot(timeseries_scaled_data, data = pca_timeseriesdata, colour = 'Phase',
          loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
          loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
   #xlim(-0.23,0.13) + 
@@ -966,6 +973,7 @@ Pacuta.timeseries.PCAs <- arrangeGrob(Pacuta_timeseries_treatment, Pacuta_timese
 ggsave(file="Output/Final_Figures/Pacuta-Timeseries-PCAs.pdf", Pacuta.timeseries.PCAs, width = 10, height = 4, units = c("in"))
 ggsave(file="Output/Final_Figures/Pacuta-Timeseries-PCAs.png", Pacuta.timeseries.PCAs, width = 10, height = 4, units = c("in"))
 ```
+
 Entire timeseries only subsetted to M. capitata
 ```{r}
 Mcap_timeseriesdata <- subset(pca_timeseriesdata, Species=="Mcapitata")
@@ -1042,14 +1050,14 @@ Pacuta_acute_phase <- autoplot(Pacuta_acute_PCA, data = P_acute_data, colour = '
          loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
          loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
   theme(legend.position = "none") +
-  xlim(-0.225,0.5) + scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("P. acuta; Acute Stress"); Pacuta_acute_phase
+  xlim(-0.225,0.5) + scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("P. acuta; Acute Stress (Day 1 - 1 wk)"); Pacuta_acute_phase
 
 Mcap_acute_phase <- autoplot(Mcap_acute_PCA, data = M_acute_data, colour = 'Treatment',
          loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
          loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
   theme(legend.position = "none") + 
   #xlim(-0.225,0.5) + 
-  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("M. capitata; Acute Stress"); Mcap_acute_phase
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("M. capitata; Acute Stress (Day 1 - 1 wk)"); Mcap_acute_phase
 ```
 
 Chronic timepoints.  
@@ -1062,14 +1070,14 @@ Pacuta_chronic_phase <- autoplot(Pacuta_chronic_PCA, data = P_chronic_data, colo
          loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
   theme(legend.position = "none") + 
   #xlim(-0.225,0.5) + 
-  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("P. acuta; Chronic Stress"); Pacuta_chronic_phase
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("P. acuta; Chronic Stress (2-8 wk)"); Pacuta_chronic_phase
 
 Mcap_chronic_phase <- autoplot(Mcap_chronic_PCA, data = M_chronic_data, colour = 'Treatment',
          loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
          loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
   theme(legend.position = "none") +
   #xlim(-0.225,0.5) + 
-  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("M. capitata; Chronic Stress"); Mcap_chronic_phase
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("M. capitata; Chronic Stress (2-8 wk)"); Mcap_chronic_phase
 ```
 
 Recovery timepoints.
@@ -1082,14 +1090,14 @@ Pacuta_recovery_phase <- autoplot(Pacuta_recovery_PCA, data = P_recovery_data, c
          loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
   theme(legend.position = "none") + 
   #xlim(-0.225,0.5) + 
-  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("P. acuta; Recovery"); Pacuta_recovery_phase
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("P. acuta; Recovery (12,16 wk)"); Pacuta_recovery_phase
 
 Mcap_recovery_phase <- autoplot(Mcap_recovery_PCA, data = M_recovery_data, colour = 'Treatment',
          loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
          loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
   theme(legend.position = "none") + 
   #xlim(-0.225,0.5) + 
-  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("M. capitata; Recovery"); Mcap_recovery_phase
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("M. capitata; Recovery (12,16 wk)"); Mcap_recovery_phase
 
 ```
 

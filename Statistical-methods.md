@@ -774,16 +774,6 @@ Common examples:
 
 GAMs seem like they could be a good fit.
 
-Do:  
-- Model with lmer (ref Ariana - linear mixed models) and GAM  
-- AIC model test  
-- ANOVA on that model  
-- PCAs  
-- PERMANOVA on that matrix
-
-
-
-
 ## Multivariate analysis
 
 **3 phases**
@@ -926,9 +916,13 @@ Total                     189   1323.00                 1.00000
 
 ## Next Steps
 
+- Add GAM and compare to GLMM  
+- Color score model fit  
+- Sym function vs. host function PCAs  
+- Normalize to variables other than surface area (SA, sym density, AFDW, protein)  
 - Look at Chris Wall's physiotype paper to see if that would be best to represent timepoints?    
-- Check literature for all variable values  
-- Physiological variability  
+- Double check literature for all variable values  
+- Physiological variability (MAD scores)   
 - Parse hobo logger times  
 - Apex continuous data  
-- Degree Heating Weeks
+- Calculate Degree Heating Weeks
