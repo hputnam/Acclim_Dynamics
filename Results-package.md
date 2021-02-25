@@ -286,7 +286,7 @@ Markdown sheet found [here](https://github.com/hputnam/Acclim_Dynamics/blob/mast
 
 ## Molecular Response Variables
 
-Sample sizes: n=3 per treatment per timepoint.
+Sample sizes: n=3 per treatment per timepoint. 251 total. 
 
 | Species               	| Timepoint 	| Treatment 	| Sample Size 	| Notes            	|
 |-----------------------	|-----------	|-----------	|-------------	|------------------	|
