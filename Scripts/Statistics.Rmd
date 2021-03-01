@@ -802,6 +802,7 @@ plot(Mcap_data.eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size
 pca_timeseriesdata <- timeseries.data[complete.cases(timeseries.data), ] # only taking rows where all samples have data
 Pacuta_timeseriesdata <- subset(pca_timeseriesdata, Species=="Pacuta") %>% subset(Group != "Recovery HTAC") # subset to P. acuta
 Mcap_timeseriesdata <- subset(pca_timeseriesdata, Species=="Mcapitata") # subset to M. capitata
+  Mcap_acute_data <- subset(Mcap_timeseriesdata, Phase=="Acute")
 
 Mcap_scaled_timeseriesdata <- prcomp(Mcap_timeseriesdata[c(10:16)], scale=TRUE, center=TRUE) # columns 8-14 are the data values
 Pacuta_scaled_timeseriesdata <- prcomp(Pacuta_timeseriesdata[c(10:16)], scale=TRUE, center=TRUE) # columns 10-16 are the data values
