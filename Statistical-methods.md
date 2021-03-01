@@ -781,7 +781,7 @@ GAMs seem like they could be a good fit.
 ![3-phases](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Three-Phases-PCAs.png?raw=true)
 
 
-### Only acute and chronic stress Treatment
+### Stress Treatment
 
 We only have respiration and photosynthetic rates in stress timepoints so when I took only the complete sets of data, this took out the recovery timepoints.
 
@@ -817,8 +817,6 @@ Total                     142   1420.00                 1.00000
 
 **Montipora capitata**
 
-![time](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Mcap-stress-PCAs.png?raw=true)
-
 PERMANOVA using Euclidean distances
 
 ```
@@ -847,6 +845,8 @@ Total                     147   1470.00                 1.00000
 ### Entire timeseries
 
 This does not include photosynthetic and respiration rates because we don't have those measurements for the recovery periods.
+
+![time](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/PCA-timeseries.png?raw=true)
 
 **Pocillopora acuta**
 PERMANOVA using Euclidean distances
