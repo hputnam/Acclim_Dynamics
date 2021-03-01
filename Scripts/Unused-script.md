@@ -402,6 +402,112 @@ ggsave(file="Output/Final_Figures/Mcap-Timepoint-PCA.png", Mcap_timepoint, width
 Mcap.stress.PCAs <- arrangeGrob(Mcap_treatment, Mcap_timepoint, ncol=2)
 ggsave(file="Output/Final_Figures/Mcap-stress-PCAs.pdf", Mcap.stress.PCAs, width = 10, height = 4, units = c("in"))
 ggsave(file="Output/Final_Figures/Mcap-stress-PCAs.png", Mcap.stress.PCAs, width = 10, height = 4, units = c("in"))
+
+## Contribution of variables to PCs. 
+```{r}
+## http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/112-pca-principal-component-analysis-essentials/
+
+## Stress timepoints 
+mcap.var <- get_pca_var(Mcap_scaled_data)
+pacuta.var <- get_pca_var(Pacuta_scaled_data)
+
+pdf("Output/Final_Figures/Corr-fviz.pdf")
+par(mfrow=c(2,2))
+  corrplot(mcap.var$contrib, is.corr=FALSE) 
+  fviz_cos2(Mcap_scaled_data, choice = "var", axes = 1:3)
+  corrplot(pacuta.var$contrib, is.corr=FALSE) 
+  fviz_cos2(Pacuta_scaled_data, choice = "var", axes = 1:3)
+dev.off()
+
+Corr.Fviz <- grid.arrange(mcorrplot, mfviz, pcorrplot, pfviz, ncol=2, top = "All variables on factor map")
+ggsave(file="Output/Final_Figures/Corr-fviz.pdf", Corr.Fviz, width = 10, height = 4, units = c("in"))
+
+
+
+
+```{r}
+recovery_data <- data %>% subset(Phase == "Recovery") %>% select(-Pnet_umol.cm2.hr, -Rdark_umol.cm2.hr, -Pgross_umol.cm2.hr) 
+recovery_pca_data <- recovery_data[complete.cases(recovery_data), ] # only taking rows where all samples have data
+
+## Mcap
+M_acute_data <- subset(Mcap_data, Phase == "Acute")
+M_chronic_data <- subset(Mcap_data, Phase == "Chronic")
+M_recovery_data <- subset(recovery_pca_data, Species == "Mcapitata")
+
+## Pacuta
+P_acute_data <- subset(Pacuta_data, Phase == "Acute")
+P_chronic_data <- subset(Pacuta_data, Phase == "Chronic")
+P_recovery_data <- subset(recovery_pca_data, Species == "Pacuta") %>% filter(Treatment != "HTAC")
+```
+
+Acute timepoints. 
+```{r}
+Mcap_acute_PCA <- prcomp(M_acute_data[c(10:19)], scale=TRUE, center=TRUE)
+Pacuta_acute_PCA <- prcomp(P_acute_data[c(10:19)], scale=TRUE, center=TRUE)
+
+Pacuta_acute_phase <- autoplot(Pacuta_acute_PCA, data = P_acute_data, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'norm',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  theme(legend.position = "none") +
+  xlim(-0.8,0.8) + ylim(-0.7,0.8) +
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("P. acuta; Acute Stress (Day 1 - 1 wk)"); Pacuta_acute_phase
+
+Mcap_acute_phase <- autoplot(Mcap_acute_PCA, data = M_acute_data, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'norm',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  theme(legend.position = "none") + 
+  xlim(-0.7,0.9) + ylim(-0.65,0.7) +
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("M. capitata; Acute Stress (Day 1 - 1 wk)"); Mcap_acute_phase
+```
+
+Chronic timepoints.  
+```{r}
+Mcap_chronic_PCA <- prcomp(M_chronic_data[c(10:19)], scale=TRUE, center=TRUE)
+Pacuta_chronic_PCA <- prcomp(P_chronic_data[c(10:19)], scale=TRUE, center=TRUE)
+
+Pacuta_chronic_phase <- autoplot(Pacuta_chronic_PCA, data = P_chronic_data, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'norm',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  theme(legend.position = "none") + 
+  xlim(-0.8,0.8) + ylim(-0.7,0.8) +
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("P. acuta; Chronic Stress (2-8 wk)"); Pacuta_chronic_phase
+
+Mcap_chronic_phase <- autoplot(Mcap_chronic_PCA, data = M_chronic_data, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'norm',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  theme(legend.position = "none") +
+  xlim(-0.7,0.9) + ylim(-0.65,0.7) +
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("M. capitata; Chronic Stress (2-8 wk)"); Mcap_chronic_phase
+```
+
+Recovery timepoints.
+```{r}
+Mcap_recovery_PCA <- prcomp(M_recovery_data[c(10:16)], scale=TRUE, center=TRUE)
+Pacuta_recovery_PCA <- prcomp(P_recovery_data[c(10:16)], scale=TRUE, center=TRUE)
+
+Pacuta_recovery_phase <- autoplot(Pacuta_recovery_PCA, data = P_recovery_data, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'norm',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  theme(legend.position = "none") + 
+  xlim(-0.8,0.8) + ylim(-0.7,0.8) +
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("P. acuta; Recovery (12,16 wk)"); Pacuta_recovery_phase
+
+Mcap_recovery_phase <- autoplot(Mcap_recovery_PCA, data = M_recovery_data, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'norm',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  theme(legend.position = "none") + 
+  xlim(-0.7,0.9) + ylim(-0.65,0.7) +
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("M. capitata; Recovery (12,16 wk)"); Mcap_recovery_phase
+
+```
+
+```{r}
+Three.phases.PCA <- arrangeGrob(Pacuta_acute_phase, Pacuta_chronic_phase, Pacuta_recovery_phase, Mcap_acute_phase, Mcap_chronic_phase, Mcap_recovery_phase, ncol=3) 
+ggsave(file="Output/Final_Figures/PCA-threephase.pdf", Three.phases.PCA, width = 12, height = 9, units = c("in"))
+ggsave(file="Output/Final_Figures/PCA-threephase.png", Three.phases.PCA, width = 12, height = 9, units = c("in"))
+```
+
+```
 ```
 ```
 
