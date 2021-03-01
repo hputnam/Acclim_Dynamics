@@ -827,7 +827,6 @@ Mcap_group <- autoplot(Mcap_scaled_data, data = Mcap_data, colour = 'Group', sha
          loadings = TRUE, loadings.colour = 'black', size=1, loadings.label = TRUE, 
          loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1,
          frame=TRUE, frame.type = 'norm') + theme_bw() +
-  theme(legend.position = "none") +
   scale_color_manual(values = line.cols) + scale_fill_manual(values = fill.cols) + ggtitle("M. capitata"); Mcap_group
 
 Pacuta_group <- autoplot(Pacuta_scaled_data, data = Pacuta_data, colour = 'Group', shape = "Phase", frame=TRUE, frame.type = 'norm',
@@ -936,60 +935,55 @@ P_recovery_data <- subset(recovery_pca_data, Species == "Pacuta") %>% filter(Tre
 
 Acute timepoints. 
 ```{r}
-Mcap_acute_PCA <- prcomp(M_acute_data[c(9:18)], scale=TRUE, center=TRUE)
-Pacuta_acute_PCA <- prcomp(P_acute_data[c(9:18)], scale=TRUE, center=TRUE)
+Mcap_acute_PCA <- prcomp(M_acute_data[c(10:19)], scale=TRUE, center=TRUE)
+Pacuta_acute_PCA <- prcomp(P_acute_data[c(10:19)], scale=TRUE, center=TRUE)
 
 Pacuta_acute_phase <- autoplot(Pacuta_acute_PCA, data = P_acute_data, colour = 'Treatment',
          loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'norm',
          loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
   theme(legend.position = "none") +
-  xlim(-0.225,0.5) + scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("P. acuta; Acute Stress (Day 1 - 1 wk)"); Pacuta_acute_phase
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("P. acuta; Acute Stress (Day 1 - 1 wk)"); Pacuta_acute_phase
 
 Mcap_acute_phase <- autoplot(Mcap_acute_PCA, data = M_acute_data, colour = 'Treatment',
          loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'norm',
          loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
   theme(legend.position = "none") + 
-  #xlim(-0.225,0.5) + 
   scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("M. capitata; Acute Stress (Day 1 - 1 wk)"); Mcap_acute_phase
 ```
 
 Chronic timepoints.  
 ```{r}
-Mcap_chronic_PCA <- prcomp(M_chronic_data[c(9:18)], scale=TRUE, center=TRUE)
-Pacuta_chronic_PCA <- prcomp(P_chronic_data[c(9:18)], scale=TRUE, center=TRUE)
+Mcap_chronic_PCA <- prcomp(M_chronic_data[c(10:19)], scale=TRUE, center=TRUE)
+Pacuta_chronic_PCA <- prcomp(P_chronic_data[c(10:19)], scale=TRUE, center=TRUE)
 
 Pacuta_chronic_phase <- autoplot(Pacuta_chronic_PCA, data = P_chronic_data, colour = 'Treatment',
          loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'norm',
          loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
   theme(legend.position = "none") + 
-  #xlim(-0.225,0.5) + 
   scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("P. acuta; Chronic Stress (2-8 wk)"); Pacuta_chronic_phase
 
 Mcap_chronic_phase <- autoplot(Mcap_chronic_PCA, data = M_chronic_data, colour = 'Treatment',
          loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'norm',
          loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
   theme(legend.position = "none") +
-  #xlim(-0.225,0.5) + 
   scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("M. capitata; Chronic Stress (2-8 wk)"); Mcap_chronic_phase
 ```
 
 Recovery timepoints.
 ```{r}
-Mcap_recovery_PCA <- prcomp(M_recovery_data[c(9:15)], scale=TRUE, center=TRUE)
-Pacuta_recovery_PCA <- prcomp(P_recovery_data[c(9:15)], scale=TRUE, center=TRUE)
+Mcap_recovery_PCA <- prcomp(M_recovery_data[c(10:16)], scale=TRUE, center=TRUE)
+Pacuta_recovery_PCA <- prcomp(P_recovery_data[c(10:16)], scale=TRUE, center=TRUE)
 
 Pacuta_recovery_phase <- autoplot(Pacuta_recovery_PCA, data = P_recovery_data, colour = 'Treatment',
          loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'norm',
          loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
   theme(legend.position = "none") + 
-  #xlim(-0.225,0.5) + 
   scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("P. acuta; Recovery (12,16 wk)"); Pacuta_recovery_phase
 
 Mcap_recovery_phase <- autoplot(Mcap_recovery_PCA, data = M_recovery_data, colour = 'Treatment',
          loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'norm',
          loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
   theme(legend.position = "none") + 
-  #xlim(-0.225,0.5) + 
   scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("M. capitata; Recovery (12,16 wk)"); Mcap_recovery_phase
 
 ```
