@@ -778,11 +778,9 @@ anova(Pacuta_Growth_LMER_tank_plug, ddf="Satterthwaite", type='III') # Type III 
 
 # Multivariate analysis 
 
-## Stress PCAs 
-
-Plot PCA with prcomp to center and scale. 
-
+## PCA dataframes and color choices 
 ```{r}
+## Stress PCAs 
 pca_data <- data[complete.cases(data), ] # only taking rows where all samples have data
 Pacuta_data <- subset(pca_data, Species=="Pacuta") # subset to P. acuta
 Mcap_data <- subset(pca_data, Species=="Mcapitata") # subset to M. capitata
@@ -790,33 +788,52 @@ Mcap_data <- subset(pca_data, Species=="Mcapitata") # subset to M. capitata
 Mcap_scaled_data <- prcomp(Mcap_data[c(10:19)], scale=TRUE, center=TRUE) # columns 10-19 are the data values
 Pacuta_scaled_data <- prcomp(Pacuta_data[c(10:19)], scale=TRUE, center=TRUE) # columns 10-19 are the data values
 
-## P acuta screeplot
+## Screeplot
+# P acuta 
 Pacuta_data.cov <- cov(Pacuta_data[,c(10:19)])
 Pacuta_data.eigen <- eigen(Pacuta_data.cov)
 plot(Pacuta_data.eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') + lines(Pacuta_data.eigen$values)
-
-# Mcap screeplot 
+# Mcap  
 Mcap_data.cov <- cov(Mcap_data[,c(10:19)])
 Mcap_data.eigen <- eigen(Mcap_data.cov)
 plot(Mcap_data.eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') + lines(Mcap_data.eigen$values)
 
+## Timeseries PCAs 
+pca_timeseriesdata <- timeseries.data[complete.cases(timeseries.data), ] # only taking rows where all samples have data
+Pacuta_timeseriesdata <- subset(pca_timeseriesdata, Species=="Pacuta") # subset to P. acuta
+Mcap_timeseriesdata <- subset(pca_timeseriesdata, Species=="Mcapitata") # subset to M. capitata
+
+Mcap_scaled_timeseriesdata <- prcomp(Mcap_timeseriesdata[c(10:16)], scale=TRUE, center=TRUE) # columns 8-14 are the data values
+Pacuta_scaled_timeseriesdata <- prcomp(Pacuta_timeseriesdata[c(10:16)], scale=TRUE, center=TRUE) # columns 10-16 are the data values
+
+## Screeplot
+## P acuta 
+Pacuta_timeseriesdata.cov <- cov(Pacuta_timeseriesdata[,c(10:16)])
+Pacuta_timeseriesdata.eigen <- eigen(Pacuta_timeseriesdata.cov)
+plot(Pacuta_timeseriesdata.eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') + lines(Pacuta_timeseriesdata.eigen$values)
+# M cap
+Mcap_timeseriesdata.cov <- cov(Mcap_timeseriesdata[,c(10:16)])
+Mcap_timeseriesdata.eigen <- eigen(Mcap_timeseriesdata.cov)
+plot(Mcap_timeseriesdata.eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') + lines(Mcap_timeseriesdata.eigen$values)
+```
+
+## Plotting stress timepoints. 
+```{r}
 # Choosing colors for PCA 
 line.cols <- c("lightblue", "blue", "salmon", "red3", "lightblue", "blue", "salmon", "red3")
 fill.cols <- c("white", "white", "white", "white", "lightblue", "blue", "salmon", "red3")
 
-# "cornflowerblue", "darkblue", "firebrick1", "darkred"
-```
-
-```{r}
 Mcap_group <- autoplot(Mcap_scaled_data, data = Mcap_data, colour = 'Group', shape = "Phase",
          loadings = TRUE, loadings.colour = 'black', size=1, loadings.label = TRUE, 
          loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1,
          frame=TRUE, frame.type = 'norm') + theme_bw() +
+  theme(legend.position = "none") +
   scale_color_manual(values = line.cols) + scale_fill_manual(values = fill.cols) + ggtitle("M. capitata"); Mcap_group
 
 Pacuta_group <- autoplot(Pacuta_scaled_data, data = Pacuta_data, colour = 'Group', shape = "Phase", frame=TRUE, frame.type = 'norm',
          loadings = TRUE, loadings.colour = 'black', size=1, loadings.label = TRUE, 
          loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + 
+  theme(legend.position = "top") +
   theme_bw() + scale_color_manual(values = line.cols) + scale_fill_manual(values = fill.cols) + ggtitle("P. acuta"); Pacuta_group
 
 Stress.PCAs <- arrangeGrob(Mcap_group, Pacuta_group, ncol=2)
@@ -824,9 +841,34 @@ ggsave(file="Output/Final_Figures/PCA-stress.pdf", Stress.PCAs, width = 10, heig
 ggsave(file="Output/Final_Figures/PCA-stress.png", Stress.PCAs, width = 10, height = 4, units = c("in"))
 ```
 
-Contribution of variables to PCs. 
+## Plotting timeseries with recovery timepoints. 
+```{r}
+# Choosing colors for PCA 
+time.line.cols <- c("lightblue", "blue", "salmon", "red3", "lightblue", "blue", "salmon", "red3", "lightblue", "blue", "salmon", "red3")
+time.fill.cols <- c("white", "white", "white", "white", "lightblue", "blue", "salmon", "red3", "dodgerblue2", "navyblue", "firebrick3", "darkred")
+
+Pacuta_timeseries <- autoplot(Pacuta_scaled_timeseriesdata, data = Pacuta_timeseriesdata, colour = 'Group', shape = "Phase",
+         loadings = TRUE, loadings.colour = 'black', size=1, loadings.label = TRUE, 
+         loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + 
+  theme_bw() + scale_color_manual(values = time.line.cols) + scale_fill_manual(values = time.fill.cols) + ggtitle("P. acuta"); Pacuta_timeseries
+
+Mcap_timeseries <- autoplot(Mcap_scaled_timeseriesdata, data = Mcap_timeseriesdata, colour = 'Group', shape = "Phase",
+         loadings = TRUE, loadings.colour = 'black', size=1, loadings.label = TRUE, 
+         loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1,
+         frame=TRUE, frame.type = 'norm') + theme_bw() +
+  scale_color_manual(values = time.line.cols) + scale_fill_manual(values = time.fill.cols) + ggtitle("M. capitata"); Mcap_timeseries
+
+Timeseries.PCAs <- arrangeGrob(Mcap_timeseries, Pacuta_timeseries, ncol=2)
+ggsave(file="Output/Final_Figures/PCA-timeseries.pdf", Timeseries.PCAs, width = 10, height = 4, units = c("in"))
+ggsave(file="Output/Final_Figures/PCA-timeseries.png", Timeseries.PCAs, width = 10, height = 4, units = c("in"))
+```
+
+
+## Contribution of variables to PCs. 
 ```{r}
 ## http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/112-pca-principal-component-analysis-essentials/
+
+## Stress timepoints 
 mcap.var <- get_pca_var(Mcap_scaled_data)
 pacuta.var <- get_pca_var(Pacuta_scaled_data)
 
@@ -838,15 +880,13 @@ par(mfrow=c(2,2))
   fviz_cos2(Pacuta_scaled_data, choice = "var", axes = 1:3)
 dev.off()
 
-
-
 Corr.Fviz <- grid.arrange(mcorrplot, mfviz, pcorrplot, pfviz, ncol=2, top = "All variables on factor map")
 ggsave(file="Output/Final_Figures/Corr-fviz.pdf", Corr.Fviz, width = 10, height = 4, units = c("in"))
 ```
 
 
-PERMANOVA for P. acuta and M. cap. 
-Stress treatments (with resp and photo)
+## PERMANOVA Analysis 
+For P. acuta and M. cap. stress treatments (with resp and photo)
 ```{r}
 ## Pacuta - effect of treatment and timepoint
 # scale data
@@ -861,127 +901,7 @@ mcap_vegan <- scale(Mcap_data[ ,9:18])
 adonis(mcap_vegan ~ Timepoint*Temperature*CO2, data = Mcap_data, method='eu')
 ```
 
-
-Entire timeseries (without resp/photo and with recovery timepoints).
-```{r}
-pca_timeseriesdata <- timeseries.data[complete.cases(timeseries.data), ] # only taking rows where all samples have data
-timeseries_scaled_data <- prcomp(pca_timeseriesdata[c(9:15)], scale=TRUE, center=TRUE) # columns 8-14 are the data values
-
-## screeplot
-pca_timeseriesdata.cov <- cov(pca_timeseriesdata[,c(9:15)])
-pca_timeseriesdata.eigen <- eigen(pca_timeseriesdata.cov)
-plot(pca_timeseriesdata.eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') + lines(pca_timeseriesdata.eigen$values)
-
-Timeseries.Species.PCA <- autoplot(timeseries_scaled_data, data = pca_timeseriesdata, colour = 'Species',
-         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
-         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw(); Timeseries.Species.PCA
-
-Timeseries.Treatment.PCA <- autoplot(timeseries_scaled_data, data = pca_timeseriesdata, colour = 'Treatment',
-         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
-         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
-  #xlim(-0.23,0.13) + 
-  scale_color_manual(values = cols) + scale_fill_manual(values = cols); Timeseries.Treatment.PCA
-
-Timeseries.Timepoint.PCA <- autoplot(timeseries_scaled_data, data = pca_timeseriesdata, colour = 'Timepoint',
-         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
-         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
-  #xlim(-0.23,0.13) + 
-  scale_colour_brewer(); Timeseries.Timepoint.PCA
-
-ggsave(file="Output/Final_Figures/Timeseries-Species-PCA.pdf", Timeseries.Species.PCA, width = 11, height = 6, units = c("in"))
-ggsave(file="Output/Final_Figures/Timeseries-Species-PCA.png", Timeseries.Species.PCA, width = 11, height = 6, units = c("in"))
-
-ggsave(file="Output/Final_Figures/Timeseries-Treatment-PCA.pdf", Timeseries.Treatment.PCA, width = 11, height = 6, units = c("in"))
-ggsave(file="Output/Final_Figures/Timeseries-Treatment-PCA.png", Timeseries.Treatment.PCA, width = 11, height = 6, units = c("in"))
-
-ggsave(file="Output/Final_Figures/Timeseries-Timepoint-PCA.pdf", Timeseries.Timepoint.PCA, width = 11, height = 6, units = c("in"))
-ggsave(file="Output/Final_Figures/Timeseries-Timepoint-PCA.png", Timeseries.Timepoint.PCA, width = 11, height = 6, units = c("in"))
-
-General.Timeseries.PCAs <- arrangeGrob(Timeseries.Species.PCA, Timeseries.Treatment.PCA, Timeseries.Timepoint.PCA, ncol=2)
-ggsave(file="Output/Final_Figures/General-timeseries-PCAs.pdf", General.Timeseries.PCAs, width = 10, height = 6, units = c("in"))
-ggsave(file="Output/Final_Figures/General-timeseries-PCAs.png", General.Timeseries.PCAs, width = 10, height = 6, units = c("in"))
-```
-
-Entire timeseries subsetted to only P. acuta
-```{r}
-Pacuta_timeseriesdata <- subset(pca_timeseriesdata, Species=="Pacuta")
-Pacuta_scaled_timeseriesdata <- prcomp(Pacuta_timeseriesdata[c(9:15)], scale=TRUE, center=TRUE) # columns 8-14 are the data values
-
-## screeplot
-Pacuta_timeseriesdata.cov <- cov(Pacuta_timeseriesdata[,c(9:15)])
-Pacuta_timeseriesdata.eigen <- eigen(Pacuta_timeseriesdata.cov)
-plot(Pacuta_timeseriesdata.eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') + lines(Pacuta_timeseriesdata.eigen$values)
-
-Pacuta_timeseries_treatment <- autoplot(Pacuta_scaled_timeseriesdata, data = Pacuta_timeseriesdata, colour = 'Treatment',
-         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
-         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
-  #xlim(-0.225,0.2) + 
-  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("P. acuta"); Pacuta_timeseries_treatment
-
-Pacuta_timeseries_timepoint <- autoplot(Pacuta_scaled_timeseriesdata, data = Pacuta_timeseriesdata, colour = 'Timepoint',
-         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
-         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
-  #xlim(-0.225,0.2) + 
-  scale_colour_brewer() + ggtitle("P. acuta"); Pacuta_timeseries_timepoint
-
-Pacuta_timeseries_phase <- autoplot(Pacuta_scaled_timeseriesdata, data = Pacuta_timeseriesdata, colour = 'Phase',
-         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
-         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
-  #xlim(-0.225,0.2) + 
-  scale_colour_brewer() + ggtitle("P. acuta"); Pacuta_timeseries_phase
-
-ggsave(file="Output/Final_Figures/Pacuta-Timeseries-Treatment-PCA.pdf", Pacuta_timeseries_treatment, width = 11, height = 6, units = c("in"))
-ggsave(file="Output/Final_Figures/Pacuta-Timeseries-Treatment-PCA.png", Pacuta_timeseries_treatment, width = 11, height = 6, units = c("in"))
-
-ggsave(file="Output/Final_Figures/Pacuta-Timeseries-Timepoint-PCA.pdf", Pacuta_timeseries_timepoint, width = 11, height = 6, units = c("in"))
-ggsave(file="Output/Final_Figures/Pacuta-Timeseries-Timepoint-PCA.png", Pacuta_timeseries_timepoint, width = 11, height = 6, units = c("in"))
-
-Pacuta.timeseries.PCAs <- arrangeGrob(Pacuta_timeseries_treatment, Pacuta_timeseries_timepoint, Pacuta_timeseries_phase, ncol=2)
-ggsave(file="Output/Final_Figures/Pacuta-Timeseries-PCAs.pdf", Pacuta.timeseries.PCAs, width = 10, height = 8, units = c("in"))
-ggsave(file="Output/Final_Figures/Pacuta-Timeseries-PCAs.png", Pacuta.timeseries.PCAs, width = 10, height = 8, units = c("in"))
-```
-
-Entire timeseries only subsetted to M. capitata
-```{r}
-Mcap_timeseriesdata <- subset(pca_timeseriesdata, Species=="Mcapitata")
-Mcap_scaled_timeseriesdata <- prcomp(Mcap_timeseriesdata[c(9:15)], scale=TRUE, center=TRUE) # columns 8-14 are the data values
-
-## screeplot
-Mcap_timeseriesdata.cov <- cov(Mcap_timeseriesdata[,c(9:15)])
-Mcap_timeseriesdata.eigen <- eigen(Mcap_timeseriesdata.cov)
-plot(Mcap_timeseriesdata.eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') + lines(Mcap_timeseriesdata.eigen$values)
-
-Mcap_timeseries_treatment <- autoplot(Mcap_scaled_timeseriesdata, data = Mcap_timeseriesdata, colour = 'Treatment',
-         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
-         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
-  #xlim(-0.225,0.13) + 
-  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("M. capitata"); Mcap_timeseries_treatment
-
-Mcap_timeseries_timepoint <- autoplot(Mcap_scaled_timeseriesdata, data = Mcap_timeseriesdata, colour = 'Timepoint',
-         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
-         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
-  #xlim(-0.225,0.13) + 
-  scale_colour_brewer() + ggtitle("M. capitata"); Mcap_timeseries_timepoint
-
-Mcap_timeseries_phase <- autoplot(Mcap_scaled_timeseriesdata, data = Mcap_timeseriesdata, colour = 'Phase',
-         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
-         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
-  #xlim(-0.225,0.13) + 
-  scale_colour_brewer() + ggtitle("M. capitata"); Mcap_timeseries_phase
-
-ggsave(file="Output/Final_Figures/Mcap-Timeseries-Treatment-PCA.pdf", Mcap_timeseries_treatment, width = 11, height = 6, units = c("in"))
-ggsave(file="Output/Final_Figures/Mcap-Timeseries-Treatment-PCA.png", Mcap_timeseries_treatment, width = 11, height = 6, units = c("in"))
-
-ggsave(file="Output/Final_Figures/Mcap-Timeseries-Timepoint-PCA.pdf", Mcap_timeseries_timepoint, width = 11, height = 6, units = c("in"))
-ggsave(file="Output/Final_Figures/Mcap-Timeseries-Timepoint-PCA.png", Mcap_timeseries_timepoint, width = 11, height = 6, units = c("in"))
-
-Mcap.timeseries.PCAs <- arrangeGrob(Mcap_timeseries_treatment, Mcap_timeseries_timepoint, Mcap_timeseries_phase, ncol=2)
-ggsave(file="Output/Final_Figures/Mcap-Timeseries-PCAs.pdf", Mcap.timeseries.PCAs, width = 10, height = 8, units = c("in"))
-ggsave(file="Output/Final_Figures/Mcap-Timeseries-PCAs.png", Mcap.timeseries.PCAs, width = 10, height = 8, units = c("in"))
-```
-
-PERMANOVA for P. acuta and M. cap. 
-Timeseries (without resp and photo)
+For P. acuta and M. cap. timeseries (without resp and photo)
 ```{r}
 ## Pacuta - effect of treatment and timepoint
 # scale data
@@ -1020,13 +940,13 @@ Mcap_acute_PCA <- prcomp(M_acute_data[c(9:18)], scale=TRUE, center=TRUE)
 Pacuta_acute_PCA <- prcomp(P_acute_data[c(9:18)], scale=TRUE, center=TRUE)
 
 Pacuta_acute_phase <- autoplot(Pacuta_acute_PCA, data = P_acute_data, colour = 'Treatment',
-         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'norm',
          loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
   theme(legend.position = "none") +
   xlim(-0.225,0.5) + scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("P. acuta; Acute Stress (Day 1 - 1 wk)"); Pacuta_acute_phase
 
 Mcap_acute_phase <- autoplot(Mcap_acute_PCA, data = M_acute_data, colour = 'Treatment',
-         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'norm',
          loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
   theme(legend.position = "none") + 
   #xlim(-0.225,0.5) + 
@@ -1039,14 +959,14 @@ Mcap_chronic_PCA <- prcomp(M_chronic_data[c(9:18)], scale=TRUE, center=TRUE)
 Pacuta_chronic_PCA <- prcomp(P_chronic_data[c(9:18)], scale=TRUE, center=TRUE)
 
 Pacuta_chronic_phase <- autoplot(Pacuta_chronic_PCA, data = P_chronic_data, colour = 'Treatment',
-         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'norm',
          loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
   theme(legend.position = "none") + 
   #xlim(-0.225,0.5) + 
   scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("P. acuta; Chronic Stress (2-8 wk)"); Pacuta_chronic_phase
 
 Mcap_chronic_phase <- autoplot(Mcap_chronic_PCA, data = M_chronic_data, colour = 'Treatment',
-         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'norm',
          loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
   theme(legend.position = "none") +
   #xlim(-0.225,0.5) + 
@@ -1059,14 +979,14 @@ Mcap_recovery_PCA <- prcomp(M_recovery_data[c(9:15)], scale=TRUE, center=TRUE)
 Pacuta_recovery_PCA <- prcomp(P_recovery_data[c(9:15)], scale=TRUE, center=TRUE)
 
 Pacuta_recovery_phase <- autoplot(Pacuta_recovery_PCA, data = P_recovery_data, colour = 'Treatment',
-         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'norm',
          loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
   theme(legend.position = "none") + 
   #xlim(-0.225,0.5) + 
   scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("P. acuta; Recovery (12,16 wk)"); Pacuta_recovery_phase
 
 Mcap_recovery_phase <- autoplot(Mcap_recovery_PCA, data = M_recovery_data, colour = 'Treatment',
-         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'norm',
          loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
   theme(legend.position = "none") + 
   #xlim(-0.225,0.5) + 
@@ -1074,11 +994,9 @@ Mcap_recovery_phase <- autoplot(Mcap_recovery_PCA, data = M_recovery_data, colou
 
 ```
 
-
-
 ```{r}
 Three.phases.PCA <- arrangeGrob(Pacuta_acute_phase, Pacuta_chronic_phase, Pacuta_recovery_phase, Mcap_acute_phase, Mcap_chronic_phase, Mcap_recovery_phase, ncol=3) 
-ggsave(file="Output/Final_Figures/Three-Phases-PCAs.pdf", Three.phases.PCA, width = 12, height = 9, units = c("in"))
-ggsave(file="Output/Final_Figures/Three-Phases-PCAs.png", Three.phases.PCA, width = 12, height = 9, units = c("in"))
+ggsave(file="Output/Final_Figures/PCA-threephase.pdf", Three.phases.PCA, width = 12, height = 9, units = c("in"))
+ggsave(file="Output/Final_Figures/PCA-threephase.png", Three.phases.PCA, width = 12, height = 9, units = c("in"))
 ```
 
