@@ -800,7 +800,7 @@ plot(Mcap_data.eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size
 
 ## Timeseries PCAs 
 pca_timeseriesdata <- timeseries.data[complete.cases(timeseries.data), ] # only taking rows where all samples have data
-Pacuta_timeseriesdata <- subset(pca_timeseriesdata, Species=="Pacuta") # subset to P. acuta
+Pacuta_timeseriesdata <- subset(pca_timeseriesdata, Species=="Pacuta") %>% subset(Group != "Recovery HTAC") # subset to P. acuta
 Mcap_timeseriesdata <- subset(pca_timeseriesdata, Species=="Mcapitata") # subset to M. capitata
 
 Mcap_scaled_timeseriesdata <- prcomp(Mcap_timeseriesdata[c(10:16)], scale=TRUE, center=TRUE) # columns 8-14 are the data values
@@ -845,11 +845,13 @@ ggsave(file="Output/Final_Figures/PCA-stress.png", Stress.PCAs, width = 8, heigh
 # Choosing colors for PCA 
 time.line.cols <- c("lightblue", "blue", "salmon", "red3", "lightblue", "blue", "salmon", "red3", "lightblue", "blue", "salmon", "red3")
 time.fill.cols <- c("white", "white", "white", "white", "lightblue", "blue", "salmon", "red3", "dodgerblue2", "navyblue", "firebrick3", "darkred")
-
+plines.cols <- c("lightblue", "blue", "salmon", "red3", "lightblue", "blue", "salmon", "red3", "lightblue", "blue")
+pfill.cols <- c("white", "white", "white", "white", "lightblue", "blue", "salmon", "red3", "dodgerblue2", "navyblue")
+  
 Pacuta_timeseries <- autoplot(Pacuta_scaled_timeseriesdata, data = Pacuta_timeseriesdata, colour = 'Group', shape = "Phase",
-         loadings = TRUE, loadings.colour = 'black', size=1, loadings.label = TRUE, 
+         loadings = TRUE, loadings.colour = 'black', size=1, loadings.label = TRUE, frame=TRUE, frame.type = 'norm',
          loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + 
-  theme_bw() + scale_color_manual(values = time.line.cols) + scale_fill_manual(values = time.fill.cols) + ggtitle("P. acuta"); Pacuta_timeseries
+  theme_bw() + scale_color_manual(values = plines.cols) + scale_fill_manual(values = pfill.cols) + ggtitle("P. acuta"); Pacuta_timeseries
 
 Mcap_timeseries <- autoplot(Mcap_scaled_timeseriesdata, data = Mcap_timeseriesdata, colour = 'Group', shape = "Phase",
          loadings = TRUE, loadings.colour = 'black', size=1, loadings.label = TRUE, 
