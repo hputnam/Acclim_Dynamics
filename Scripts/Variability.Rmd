@@ -1,0 +1,60 @@
+---
+title: "Variability"
+author: "EL Strand"
+date: "2/25/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Clear workspace. 
+```{r}
+rm(list=ls()) 
+```
+
+Read in libraries. 
+```{r}
+library(ggplot2)
+library(plyr)
+library(dplyr)
+library(stats)
+```
+
+Read in dataframes. Run "Statistics.Rmd" script first to create the physiology results dataframe. 
+```{r}
+phys <- read.csv("Output/results_physiology.csv")
+color <- read.csv("Output/results_colorscore.csv")
+growth <- read.csv("Output/results_growth.csv")
+```
+
+Viewing distributions of variables. 
+```{r}
+hist(color$Bleaching.Score) #not normal; heavily negatively skewed
+```
+
+Calculating MAD (Median Absolute Deviation).
+1.4826 constant value is used for normal distributions.
+
+```{r}
+## Color Score 
+sd(color$Beaching.Score)
+mad(color$Bleaching.Score)
+
+color.mad <- color %>% group_by(Species, Treatment, Timepoint) %>%
+  mutate(mad = mad(Bleaching.Score, center = median(Bleaching.Score), constant = 1.4826, na.rm = FALSE, low = FALSE, high = FALSE))
+  
+```
+
+Calculation univariate CV.
+```{r}
+
+```
+
+
+Plotting MAD and univariate CV. 
+```{r}
+
+```
+

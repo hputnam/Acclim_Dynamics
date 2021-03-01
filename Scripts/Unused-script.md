@@ -334,3 +334,74 @@ Anova(Pacuta_Pnet_LMER_tank, type='III') #Anova needs to be capital A to be from
 plot(allEffects(Pacuta_Pnet_LMER_tank))
 ```
 
+```
+Species.PCA <- autoplot(scaled_data, data = pca_data, colour = 'Species',
+         frame=TRUE, size=0.5, frame.type = 'convex', loadings = TRUE, loadings.colour = 'black',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  xlim(-0.25,0.5); Species.PCA
+
+Treatment.PCA <- autoplot(scaled_data, data = pca_data, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  xlim(-0.25,0.5) + scale_color_manual(values = cols) + scale_fill_manual(values = cols); Treatment.PCA
+
+Timepoint.PCA <- autoplot(scaled_data, data = pca_data, colour = 'Timepoint',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  xlim(-0.25,0.5) + scale_colour_brewer(); Timepoint.PCA
+
+ggsave(file="Output/Final_Figures/General-Species-PCA.pdf", Species.PCA, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/General-Species-PCA.png", Species.PCA, width = 11, height = 6, units = c("in"))
+
+ggsave(file="Output/Final_Figures/General-Treatment-PCA.pdf", Treatment.PCA, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/General-Treatment-PCA.png", Treatment.PCA, width = 11, height = 6, units = c("in"))
+
+ggsave(file="Output/Final_Figures/General-Timepoint-PCA.pdf", Timepoint.PCA, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/General-Timepoint-PCA.png", Timepoint.PCA, width = 11, height = 6, units = c("in"))
+
+General.PCAs <- arrangeGrob(Species.PCA, Treatment.PCA, Timepoint.PCA, ncol=2)
+ggsave(file="Output/Final_Figures/General-PCAs.pdf", General.PCAs, width = 10, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/General-PCAs.png", General.PCAs, width = 10, height = 6, units = c("in"))
+
+Subsetted to M. capitata
+```{r}
+Mcap_data <- subset(pca_data, Species=="Mcapitata")
+Mcap_scaled_data <- prcomp(Mcap_data[c(9:18)], scale=TRUE, center=TRUE) # columns 8-17 are the data values
+
+## screeplot
+Mcap_data.cov <- cov(Mcap_data[,c(9:18)])
+Mcap_data.eigen <- eigen(Mcap_data.cov)
+plot(Mcap_data.eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') + lines(Mcap_data.eigen$values)
+
+Mcap_treatment <- autoplot(Mcap_scaled_data, data = Mcap_data, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  #xlim() + 
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("M. capitata"); Mcap_treatment
+
+Mcap_timepoint <- autoplot(Mcap_scaled_data, data = Mcap_data, colour = 'Timepoint',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  
+  #xlim(-0.4,0.4) + 
+  scale_colour_brewer() + ggtitle("M. capitata"); Mcap_timepoint
+
+Mcap_phase <- autoplot(Mcap_scaled_data, data = Mcap_data, colour = 'Phase',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  
+  #xlim(-0.4,0.4) + 
+  scale_colour_brewer() + ggtitle("M. capitata"); Mcap_phase
+
+ggsave(file="Output/Final_Figures/Mcap-Treatment-PCA.pdf", Mcap_treatment, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Mcap-Treatment-PCA.png", Mcap_treatment, width = 11, height = 6, units = c("in"))
+
+ggsave(file="Output/Final_Figures/Mcap-Timepoint-PCA.pdf", Mcap_timepoint, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Mcap-Timepoint-PCA.png", Mcap_timepoint, width = 11, height = 6, units = c("in"))
+
+Mcap.stress.PCAs <- arrangeGrob(Mcap_treatment, Mcap_timepoint, ncol=2)
+ggsave(file="Output/Final_Figures/Mcap-stress-PCAs.pdf", Mcap.stress.PCAs, width = 10, height = 4, units = c("in"))
+ggsave(file="Output/Final_Figures/Mcap-stress-PCAs.png", Mcap.stress.PCAs, width = 10, height = 4, units = c("in"))
+```
+```
+
