@@ -785,7 +785,7 @@ GAMs seem like they could be a good fit.
 
 We only have respiration and photosynthetic rates in stress timepoints so when I took only the complete sets of data, this took out the recovery timepoints.
 
-![stress-PCAs]()
+![stress-PCAs](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/PCA-stress.png?raw=true)
 
 **Pocillopora acuta**
 
