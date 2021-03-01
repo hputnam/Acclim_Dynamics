@@ -82,8 +82,6 @@ AFDW_mismatched2
 
 # Missing list: "2008", "2512", "2522", "2523", "2752", "2880", "2976", "3003", "1603", "1739", "2200", "2528", "2740", "2859", "2981", "2984"
 # Corals we won't have AFDW for: 1174, 1327, 1488 
-# output excluding those is 1
-# need to re-do 2863
 ```
 
 Calculate mass per mL
@@ -104,8 +102,7 @@ AFDW <- AFDW %>%
          dry.bioimass.g = dry.pan.mass.g.ml * vol_mL,
          burnt.bioimass.g = burnt.pan.mass.g.ml * vol_mL,
          DW.mg.cm2 = ((dry.bioimass.g)*1000) / surface.area.cm2,
-         AFDW.mg.cm2 = ((dry.bioimass.g-burnt.bioimass.g)*1000) / surface.area.cm2)
-AFDW
+         AFDW.mg.cm2 = ((dry.bioimass.g-burnt.bioimass.g)*1000) / surface.area.cm2); AFDW
 
 # Transforming the dataframe to be easily analyzed and visualized by type of measurement
 AFDW_long <- AFDW %>% select(Plug_ID, partner, Species, Treatment, Temperature, CO2, Timepoint, DW.mg.cm2, AFDW.mg.cm2) %>%
@@ -115,9 +112,7 @@ AFDW_long <- AFDW %>% select(Plug_ID, partner, Species, Treatment, Temperature, 
 
 Quality control.
 ```{r}
-## temporarily taking out samples that will need to be re-done
-#AFDW_long <- AFDW_long %>% filter(Value > 0)
-#AFDW_long
+ggplot(AFDW, aes(x=partner, y=AFDW.mg.cm2)) + geom_boxplot()
 
 dplyr::filter(AFDW, AFDW.mg.cm2 > 5) # unusually high values for AFDW; think about re-doing?
 dplyr::filter(AFDW, AFDW.mg.cm2 < 0) # output should be zero since negative values are not possible. 
@@ -128,9 +123,9 @@ AFDW.duplicates # Output should be zero
 ```
 
 ```{r}
-# Calculating means per treatment and timepoint. 
+# Calculating means per treatment, partner, and timepoint. 
 AFDW_means <- summarySE(AFDW_long, measurevar="Value", groupvars=c("partner", "Timepoint", "Treatment", "Temperature", "CO2", "Species", "Measurement")) %>%
-  subset(Measurement=="AFDW.mg.cm2")
+  subset(Measurement=="AFDW.mg.cm2") %>% filter(N>2)
 AFDW_means
 
 AFDW_means$Timepoint <- factor(AFDW_means$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
@@ -198,19 +193,28 @@ AFDW_plot <- ggplot(AFDW_means, aes(x=Timepoint, y = Value, group = Treatment, c
   geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2) +
   scale_color_manual(values = cols) + 
   xlab("Timepoint") + 
-  theme_bw() + 
-  ylab(expression(AFDW ~(mg ~cm^-2))) +
-  ggtitle("Tissue Biomass") +
+  theme_classic() + 
+  ylab(expression("Ash Free Dry Weight" ~(mg ~cm^-2))) +
+  #ggtitle("Tissue Biomass") +
   theme(legend.position = "left") +
   geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
+<<<<<<< HEAD
+=======
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+>>>>>>> 39a6705261875c736dd71c45c5d536ac867d9beb
   theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
   theme(panel.border = element_blank(),
   panel.grid.major = element_blank(),
   panel.grid.minor = element_blank(),
+<<<<<<< HEAD
   strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
   # Change axis line
   axis.line = element_line(colour = "black"))
 AFDW_plot
+=======
+  # Change axis line
+  axis.line = element_line(colour = "black")); AFDW_plot
+>>>>>>> 39a6705261875c736dd71c45c5d536ac867d9beb
 
 ggsave(file="Output/Final_Figures/Tissue_Biomass.pdf", AFDW_plot, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Final_Figures/Tissue_Biomass.png", AFDW_plot, width = 11, height = 6, units = c("in"))
@@ -221,9 +225,6 @@ AFDW things to address:
 1. Mcap outlier in HTHC at Day 2 - 1197. But this occurs with both the Host and Sym fraction and similar pattern holds in respiration rates. 
 2. Won't have AFDW values for 1327, 1174, or 1488. 
 3. 16 missing corals contribute to the wide ranges at day 2 and 1 week.
-4. 2863 - redo this point. "Host" written down twice. 
-
-
 
 ############## Bleaching Fragment Test prior to running the rest of the samples.
 

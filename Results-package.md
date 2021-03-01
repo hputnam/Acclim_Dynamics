@@ -9,6 +9,26 @@ ATHC = Ambient Temperature (27C) High pCO2 (~1,200 uatm)
 HTAC = High Temperature (29.5C) Ambient pCO2 (~480 uatm)  
 HTHC = High Temperature (29.5C) High pCO2 (~1,200 uatm)
 
+
+**Environmental History and Degree Heating Weeks in Kaneohe Bay**
+
+NOAA [CRIMP2: Buoy Position: 21.46°N, 157.80°W](https://www.pmel.noaa.gov/co2/story/CRIMP2) and buoy [info](http://www.soest.hawaii.edu/oceanography/edecarlo/Eric_Decarlo_homepage/CRIMP.html); seems to be closest to our sites. Ask Hollie or Ariana for suggestions of other buoys. Data ranges from 2008-2019. Variables in dataset: SST, SSS, Atm. press, xCO2 water, xCO2 air, fCO2 water, fCO2 air, pH on total scale. Data files found [here](https://www.ncei.noaa.gov/data/oceans/ncei/ocads/data/0157415/).
+
+![CRIMP2 location](http://www.soest.hawaii.edu/oceanography/edecarlo/Eric_Decarlo_homepage/CRIMP_files/image001.jpg)
+
+CRIMP2 Temperature Data
+
+![crimp2temp](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/CRIMP2-Temperature.png?raw=true)
+
+The red line is at 29.5, the average temperature for our data. The warm season of 2016 doesn't have data, maybe we can get this from a different buoy?
+
+CRIMP2 pCO2 Data
+
+pCO2 is projected to increase over next 100 years so this probably isn't as relevant to put environmental data into perspective in publication.
+
+![crimp2pco2](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/CRIMP2-pCO2.png?raw=true)
+
+
 ## Sampling Timeline
 |                      	| Acute Stress 	|       	| Chronic Stress 	|      	|      	|      	|      	|      	|      	|      	| Recovery 	|       	|       	|       	|       	|       	|       	|       	|
 |----------------------	|--------------	|-------	|----------------	|------	|------	|------	|------	|------	|------	|------	|----------	|-------	|-------	|-------	|-------	|-------	|-------	|-------	|
@@ -164,13 +184,13 @@ Some univariate physiology variables will also have decreased sample size groups
 This dataset has been QC'd by Emma; final figure as of 20210108.  
 Survivorship was measured every day and each coral was noted as dead or alive for that day. This plot was made with [survfit() function](https://www.rdocumentation.org/packages/survival/versions/2.9-6/topics/survfit).
 
-### Bleaching Score
+### Color Score
 
 ![blch](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Photographic_Bleaching.png?raw=true)
 
-This dataset has been QC'd by Emma; final figure as of 20210108. Corals photographed and red blue green color square quantified in ImageJ.
+This dataset has been QC'd by Emma; final figure as of 20210218. Corals photographed and red blue green color square quantified in ImageJ.
 
-Week 5 data excluded because we didn't trust that set of values for any treatment. Come back to this?
+Week 5 data excluded because we didn't trust that set of values for any treatment.
 
 ### Growth
 
@@ -178,11 +198,9 @@ Week 5 data excluded because we didn't trust that set of values for any treatmen
 
 Buoywant weight technique
 
-Do we like the figure format for Growth, Resp/photo rates, or AFDW/Chl?  
+*P.acuta* Week 10 and 14 have the same value? This is real data, they just have almost identical values for those timepoints. Nothing to change here.
 
-*P.acuta* Week 10 and 14 have the same value? This doesn't seem likely?
-
-Figure as of 20210108.
+Figure as of 20210218.
 
 ### Respiration and photosynthetic rates
 
@@ -195,14 +213,14 @@ This dataset has been QC'd by Emma; final figure as of 20210118.
 
 ![AFDW](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Tissue_Biomass.png?raw=true)
 
+![Ratio](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Tissue_Biomass-Ratio.png?raw=true)
+
 This dataset has been QC'd by Emma; final figure as of 20210108.
 
 In addition to the missing list above, we won't have data for:  
 - 1174: there was no homogenate tissue in this falcon tube. Aliquots were made so this coral will have Chl, Prot, TAC, cell density.    
 - 1327: gained mass in AFDW protocol (not possible); not enough homogenate to do again.  
-- 1488: homogenate tube broke (froze and cracked) and we lost half of tissue homogenate. There was not enough left to do AFDW. There will be data for Chl, Prot, TAC, cell density.
-
-Need to re-do #2863. "Host" written down twice in notebook.
+- 1488: homogenate tube broke (froze and cracked) and we lost half of tissue homogenate. There was not enough left to do AFDW.
 
 **AFDW sample size differences in addition to the 3 above sample size tables.**
 
@@ -219,35 +237,35 @@ Need to re-do #2863. "Host" written down twice in notebook.
 
 | Species  	| Timepoint 	| Treatment 	| Sample Size 	| Notes                                       	|
 |----------	|-----------	|-----------	|-------------	|---------------------------------------------	|
-| P. acuta 	| 8 week    	| HTAC      	| 5           	| 2156 missing data	|
+| P. acuta    	| Day 1     	| HTAC      	| 3           	| 1488 no data; Time limited 1st day in the field 	|
 
-P-2156 missing data. Label rubbed off, will need to re-do.  
-Decide about 1488 sample.  
+P-1488: I don't trust the aliquots for this sample, no data here. See note from AFDW.   
 
-This dataset has been QC'd by Emma; final figure as of 20210118.
+This dataset has been QC'd by Emma; final figure as of 20210216.
 
-### Soluble Protein
+### Host Soluble Protein
 
 ![prot](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Host-Soluble-Protein.png?raw=true)
 
-Week 4 P. acuta ATHC big drop, but samples are not in outlier tests. This still looks weird to me?
+Week 4 P. acuta ATHC big drop, but samples are not in outlier tests. This still looks weird to me? All sample IDs are correct in this group.. 1217, 2530, and 2858 done on Oct7 (each sample run in duplicate like normal). 1194, 1908, and 2882 done on Oct14 (each sample run in duplicate like normal).. Come back to this - what else to check?
 
-No additional groups with a decreased sample size.  
-Decide about 1488 sample.      
+| Species     	| Timepoint 	| Treatment 	| Sample Size 	| Notes                                           	|
+|-------------	|-----------	|-----------	|-------------	|-------------------------------------------------	|
+| P. acuta    	| Day 1     	| HTAC      	| 3           	| 1488 no data (see notes on Chl and AFDW); Time limited 1st day in the field 	|
+
 This dataset has been QC'd by Emma; final figure as of 20210118.
 
-### Total Antioxidant Capacity
+### Host Total Antioxidant Capacity
 
 ![TAC](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Total-Antioxidant-Capacity.png?raw=true)
 
-No additional groups with a decreased sample size.  
-Decide about 1488 sample.
+| Species     	| Timepoint 	| Treatment 	| Sample Size 	| Notes                                           	|
+|-------------	|-----------	|-----------	|-------------	|-------------------------------------------------	|
+| P. acuta    	| Day 1     	| HTAC      	| 3           	| 1488 no data (see notes on Chl and AFDW); Time limited 1st day in the field 	|
 
-Week 4 ATHC P acuta points look wonky like the protein values. Day 2 and Week 1 have very small sample sizes likely leading to large variation above?
+Week 4 ATHC P acuta points look wonky like the protein values. Day 2 and Week 1 have very small sample sizes likely leading to large variation above?  
 
-October 7th (3 plates) were done with an incorrectly diluted stop solution. Decide if need to be re-done.  
-
-Still having an issue with the standard curve variation. According to the [assay kit protocol](https://www.cellbiolabs.com/sites/default/files/STA-360-total-antioxidant-capacity-assay-kit.pdf), 1 mM concentration should be around 1.35 Abs490. The closest st. curve was from Nov 10th plate. All points have been projected onto the st. curve from Nov 10th and TAC calculated from this st. curve. We still need to address this.
+Still having an issue with the standard curve variation. According to the [assay kit protocol](https://www.cellbiolabs.com/sites/default/files/STA-360-total-antioxidant-capacity-assay-kit.pdf), 1 mM concentration should be around 1.35 Abs490. The closest st. curve was from Nov 10th plate. All points have been projected onto the st. curve from Nov 10th and TAC calculated from this st. curve. **We still need to address this**.
 
 TAC calculation done by:  
 
@@ -262,8 +280,9 @@ TAC <- left_join(TAC.values, metadata) %>%
           cre.umol.mgprot = cre.umol / (prot_ug / 1000))  # Convert to CRE per mg protein by dividing by total protein
 ```
 
-This is still producing very small values (0.04840641-1.60261156 CRE umol.mg prot). The above calculation is what was recommended by Hollie and Ross. So we have to divide by liters to get uM.mg prot to compare to the literature?
+### Statistical Methods
 
+Markdown sheet found [here](https://github.com/hputnam/Acclim_Dynamics/blob/master/Statistical-methods.md).
 
 ## Molecular Response Variables
 
@@ -291,19 +310,6 @@ Notebook post coming soon. Symbiont Type Profiles made from [SymPortal](https://
 Figure 20210120
 
 ![relab](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/rel.abund.its2.png?raw=true)
-
-Edits to ITS2 script confirm with Hollie, I changed:  
-
-```
-# Line 44 originally said 3:14, but that was cutting off a profile at the beginning
-Pact <- as.matrix(Pact[,2:14])
-
-# Line 76 originally said 3:14, but that was cutting off a profile at the beginning
-Mcap <- as.matrix(Mcap[,2:14])
-
-# Line 107 was [2:12], but that was cutting off a profile at the end
-Rel.data <- data/rowSums(data[,2:13])
-```
 
 
 PERMANOVA results:  

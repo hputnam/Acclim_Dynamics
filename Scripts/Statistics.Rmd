@@ -1,0 +1,1129 @@
+---
+title: "Statistics.Rmd"
+author: "EL Strand"
+date: "2/11/2021"
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Clears workspace. 
+```{r}
+rm(list=ls())
+```
+
+Loading libraries. 
+```{r}
+library(ggplot2)
+library(tidyverse)
+library(plyr)
+library(dplyr)
+library(mgcv) # GAM function
+library(ggfortify)
+library(devtools)
+install_github("vqv/ggbiplot")
+library(lme4)
+library(gridExtra)
+library(vegan)
+library(effects)
+library(Rmisc)
+library(lmerTest)
+library(lessR)
+library(car)
+```
+
+### Read in data files to analyze. 
+
+```{r}
+Master <- read.csv("Environmental_data/Master_Fragment.csv") %>% select(Plug_ID, Species, ANALYSIS, Timepoint, Treatment, Tank, Temperature, CO2) %>%
+  filter(ANALYSIS == "Physiology" | ANALYSIS == "Physiology/Molecular")
+  
+Photo.Resp <- read.csv("Physiology_variables/Respirometry/Output/Resp_AllRates.csv") %>% select(Fragment.ID.x, Pnet_umol.cm2.hr, Rdark_umol.cm2.hr, Pgross_umol.cm2.hr) %>%
+  dplyr::rename(Plug_ID = Fragment.ID.x)
+  Photo.Resp$Plug_ID <- gsub("P-", "", Photo.Resp$Plug_ID)
+  Photo.Resp$Plug_ID <- gsub("M-", "", Photo.Resp$Plug_ID)
+  Photo.Resp <- Photo.Resp %>% separate(Plug_ID, c("Plug_ID", "Date")) %>% select(-Date)
+
+Chlorophyll <-  read.csv("Output/chlorophyll.csv") %>% select(Plug_ID, chla.ug.cm2, chlc2.ug.cm2)
+
+Biomass <- read.csv("Output/Tissue_Biomass.csv") %>% select(Plug_ID, partner, AFDW.mg.cm2)
+
+Protein <- read.csv("Output/soluble_protein.csv") %>% select(Plug_ID, prot_mg.cm2)
+
+Antioxidant <- read.csv("Output/antioxidant_capacity.csv") %>% select(Plug_ID, cre.umol.mgprot)
+
+Color.Score <- read.csv("Physiology_variables/Bleaching_Score_Output.csv") %>% select(PLUG.ID, Bleaching.Score, Timepoint) %>% dplyr::rename(Plug_ID = PLUG.ID) %>% 
+  dplyr::rename(Blch.Time = Timepoint)
+Color.Score$Blch.Time <- gsub("^.{0,4}", "", Color.Score$Blch.Time) # taking out the "Week" in every row
+Color.Score$Blch.Time <- paste(Color.Score$Blch.Time, "week") # adding "week" after each number in every row 
+
+Growth <- read.csv("Physiology_variables/Growth_Buoyant_Weight/Growth_Rates.csv") %>% select(PLUG.ID, T0.g.d.cm2, T1.g.d.cm2, T2.g.d.cm2, T3.g.d.cm2, T4.g.d.cm2, T5.g.d.cm2,
+                                                                                             T6.g.d.cm2, T7.g.d.cm2, T8.g.d.cm2) %>% 
+  gather("Growth.Time", "Growth.Rate", 2:10) %>% na.omit(Growth.Rate) %>% dplyr::rename(Plug_ID=PLUG.ID) %>%
+  mutate(Growth.Time = case_when(
+    Growth.Time == "T0.g.d.cm2" ~ "1 week",
+    Growth.Time == "T1.g.d.cm2" ~ "2 week", 
+    Growth.Time == "T2.g.d.cm2" ~ "4 week",
+    Growth.Time == "T3.g.d.cm2" ~ "6 week",
+    Growth.Time == "T4.g.d.cm2" ~ "8 week",
+    Growth.Time == "T5.g.d.cm2" ~ "10 week",
+    Growth.Time == "T6.g.d.cm2" ~ "12 week",
+    Growth.Time == "T7.g.d.cm2" ~ "14 week",
+    Growth.Time == "T8.g.d.cm2" ~ "16 week")
+  )
+Growth$Plug_ID <- as.integer(Growth$Plug_ID)
+
+# Cell.density
+
+# come back to adding Color.Score and Growth back in and subsetting for where all three timepoint columns match 
+# joining all datasets together, reshaping the AFDW partner into columns, renaming those columns, removing an NA column, and calculating S:H AFDW ratio
+data <- join_all(list(Master, Photo.Resp, Chlorophyll, Biomass, Protein, Antioxidant), by='Plug_ID', type='left') %>%
+  spread(partner, AFDW.mg.cm2) %>% dplyr::rename(Host_AFDW.mg.cm2 = Host) %>% dplyr::rename(Sym_AFDW.mg.cm2 = Sym) %>% select(-"<NA>") %>%
+  mutate(Ratio_AFDW.mg.cm2=Sym_AFDW.mg.cm2/Host_AFDW.mg.cm2) 
+data$Timepoint <- factor(data$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week", "12 week", "16 week"))
+
+data <- data %>% 
+  mutate(Phase = case_when(
+    Timepoint == "Day 1" ~ "Acute",
+    Timepoint == "Day 2" ~ "Acute",
+    Timepoint == "1 week" ~ "Acute",
+    Timepoint == "2 week" ~ "Chronic",
+    Timepoint == "4 week" ~ "Chronic",
+    Timepoint == "6 week" ~ "Chronic",
+    Timepoint == "8 week" ~ "Chronic",
+    Timepoint == "12 week" ~ "Recovery",
+    Timepoint == "16 week" ~ "Recovery"))
+
+timeseries.data <- data %>% select(-Pnet_umol.cm2.hr, -Rdark_umol.cm2.hr, -Pgross_umol.cm2.hr)
+
+pacuta_full_data <- data %>% subset(Species == "Pacuta")
+mcap_full_data <- data %>% subset(Species == "Mcapitata")
+
+color.data <- full_join(Master, Color.Score, by = "Plug_ID") %>% na.omit()
+Growth.data <- full_join(Master, Growth, by = "Plug_ID") %>% na.omit()
+```
+
+Plot AFDW Ratio. 
+Taking out 1116 because it was an outlier. 
+
+```{r}
+cols <- c("lightblue", "blue", "salmon", "red3")
+
+boxplot(data$Ratio_AFDW.mg.cm2)
+filter(data, Ratio_AFDW.mg.cm2>3)
+
+data <- data %>% filter(Ratio_AFDW.mg.cm2<3)
+Ratio.means <- data %>% select(Plug_ID, Species, Timepoint, Treatment, Temperature, CO2, Ratio_AFDW.mg.cm2) %>% na.omit() %>% 
+  summarySE(measurevar="Ratio_AFDW.mg.cm2", groupvars=c("Species", "Timepoint", "Treatment", "Temperature", "CO2")) %>% filter(N>2) %>%
+  mutate(Species = case_when(
+    Species == "Mcapitata" ~ "Montipora capitata",
+    Species == "Pacuta" ~ "Pocillopora acuta"
+  )) 
+  
+AFDW_Ratio_plot <- ggplot(Ratio.means, aes(x=Timepoint, y = Ratio_AFDW.mg.cm2, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(~ Species, scales = "free") +
+  geom_errorbar(aes(ymin=Ratio_AFDW.mg.cm2-se, ymax=Ratio_AFDW.mg.cm2+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + 
+  theme_classic() + 
+  #ylab("expression(AFDW ~(mg ~cm^-2))") +
+  ylab("Ash Free Dry Weight S:H Ratio") +
+  theme(legend.position = "left") +
+  geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) +
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  # Change axis line
+  axis.line = element_line(colour = "black")); AFDW_Ratio_plot
+
+ggsave(file="Output/Final_Figures/Tissue_Biomass-Ratio.pdf", AFDW_Ratio_plot, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Tissue_Biomass-Ratio.png", AFDW_Ratio_plot, width = 11, height = 6, units = c("in"))
+```
+
+
+# Univariate analysis
+
+## Statistical Modeling
+Fixed factors: Temperature, CO2, Species, Timepoint. 
+Random factors: Tank and Plug ID
+
+When adding GAM, use model.sel()  
+MuMIn package
+
+### Photosynthetic Rates and Respiration 
+
+Raw data distribution view.
+```{r}
+hist(pacuta_full_data$Pnet_umol.cm2.hr)
+hist(pacuta_full_data$Pgross_umol.cm2.hr)
+hist(pacuta_full_data$Rdark_umol.cm2.hr)
+
+hist(mcap_full_data$Pnet_umol.cm2.hr)
+hist(mcap_full_data$Pgross_umol.cm2.hr)
+hist(mcap_full_data$Rdark_umol.cm2.hr)
+# mcap doesn't look normal, the models should account for this but might need to transform post models 
+```
+
+*P. acuta* linear mixed effect models.  
+Net photosynthetic rates. 
+```{r}
+## Pnet
+Pacuta_Pnet_LMER <- lmer(Pnet_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values 
+
+## summary of the model chosen from above
+## plot(Pacuta_Pnet_LMER) in console to view diagnostic plots
+summary(Pacuta_Pnet_LMER)
+qqPlot(residuals(Pacuta_Pnet_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_Pnet_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+#leveneTest(residuals(Pacuta_Pnet_LMER))
+leveneTest(pacuta_full_data$Pnet_umol.cm2.hr ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
+#bartlett.test(Pacuta_Pnet_LMER)
+
+## significance of model
+anova(Pacuta_Pnet_LMER, ddf="lme4", type='III')
+Anova(Pacuta_Pnet_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Pacuta_Pnet_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+Gross photosynthetic rates. 
+```{r}
+## Pgross 
+Pacuta_Pgross_LMER <- lmer(Pgross_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
+
+## summary of the model chosen from above
+## plot(Pacuta_Pgross_LMER) in console to view diagnostic plots
+summary(Pacuta_Pgross_LMER)
+qqPlot(residuals(Pacuta_Pgross_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_Pgross_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(pacuta_full_data$Pgross_umol.cm2.hr ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
+
+## significance of model
+anova(Pacuta_Pgross_LMER, ddf="lme4", type='III')
+Anova(Pacuta_Pgross_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Pacuta_Pgross_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+```{r}
+## Dark Resp
+Pacuta_Resp_LMER <- lmer(Rdark_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values 
+
+## summary of the model chosen from above
+## plot(Pacuta_Resp_LMER) in console to view diagnostic plots
+summary(Pacuta_Resp_LMER)
+qqPlot(residuals(Pacuta_Resp_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_Resp_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(pacuta_full_data$Rdark_umol.cm2.hr ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
+
+## significance of model
+anova(Pacuta_Resp_LMER, ddf="lme4", type='III')
+Anova(Pacuta_Resp_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Pacuta_Resp_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+*M.capitata* linear mixed effect models 
+
+Net photosynthetic rates. 
+```{r}
+## Pnet
+Mcap_Pnet_LMER <- lmer(log(Pnet_umol.cm2.hr) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values 
+
+## summary of the model chosen from above
+## plot(Mcap_Pnet_LMER) in console to view diagnostic plots
+summary(Mcap_Pnet_LMER)
+qqPlot(residuals(Mcap_Pnet_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_Pnet_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap_full_data$Pnet_umol.cm2.hr ~ mcap_full_data$Timepoint*mcap_full_data$Temperature*mcap_full_data$CO2)
+
+## significance of model
+anova(Mcap_Pnet_LMER, ddf="lme4", type='III')
+Anova(Mcap_Pnet_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Mcap_Pnet_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+```{r}
+## Pgross
+Mcap_Pgross_LMER <- lmer(log(Pgross_umol.cm2.hr) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values 
+
+## summary of the model chosen from above
+## plot(Mcap_Pnet_LMER) in console to view diagnostic plots
+summary(Mcap_Pgross_LMER)
+qqPlot(residuals(Mcap_Pgross_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_Pgross_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap_full_data$Pgross_umol.cm2.hr ~ mcap_full_data$Timepoint*mcap_full_data$Temperature*mcap_full_data$CO2)
+
+## significance of model
+anova(Mcap_Pgross_LMER, ddf="lme4", type='III')
+Anova(Mcap_Pgross_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Mcap_Pgross_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+```{r}
+## Dark Resp 
+mcap_full_data$Rdarkplus1 <- mcap_full_data$Rdark_umol.cm2.hr+1
+  
+Mcap_Resp_LMER <- lmer(log(Rdarkplus1) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values 
+
+## summary of the model chosen from above
+## plot(Mcap_Resp_LMER) in console to view diagnostic plots
+summary(Mcap_Resp_LMER)
+qqPlot(residuals(Mcap_Resp_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_Resp_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap_full_data$Rdark_umol.cm2.hr ~ mcap_full_data$Timepoint*mcap_full_data$Temperature*mcap_full_data$CO2)
+
+## significance of model
+anova(Mcap_Resp_LMER, ddf="lme4", type='III')
+Anova(Mcap_Resp_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Mcap_Resp_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+
+### Chlorophyll Concentration
+
+Raw data distribution view.
+```{r}
+hist(pacuta_full_data$chla.ug.cm2)
+hist(mcap_full_data$chla.ug.cm2)
+# mcap doesn't look normal, the models should account for this but might need to transform post models 
+```
+
+Model comparisons. 
+*P. acuta* 
+
+The full P.acuta dataset received the error `fixed-effect model matrix is rank deficient so dropping 3 columns / coefficients`. 
+
+```{r}
+## Subset out 12 and 16 week timepoints 
+#Pacuta_stress_data <- pacuta_full_data %>% filter(Timepoint !="12 week" & Timepoint !="16 week")
+  
+Pacuta_Chl_LMER <- lmer(chla.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values 
+
+## summary of the model chosen from above
+## plot(Pacuta_Chl_LMER) in console to view diagnostic plots
+summary(Pacuta_Chl_LMER)
+qqPlot(residuals(Pacuta_Chl_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_Chl_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(pacuta_full_data$chla.ug.cm2 ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
+
+## significance of model
+anova(Pacuta_Chl_LMER, ddf="lme4", type='III')
+Anova(Pacuta_Chl_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Pacuta_Chl_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+*M. capitata* 
+```{r}
+Mcap_Chl_LMER <- lmer(chla.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values 
+
+## summary of the model chosen from above
+## plot(Mcap_Chl_LMER) in console to view diagnostic plots
+summary(Mcap_Chl_LMER)
+qqPlot(residuals(Mcap_Chl_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_Chl_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap_full_data$chla.ug.cm2 ~ mcap_full_data$Timepoint*mcap_full_data$Temperature*mcap_full_data$CO2)
+
+## significance of model
+anova(Mcap_Chl_LMER, ddf="lme4", type='III')
+Anova(Mcap_Chl_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Mcap_Chl_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+### Tissue Biomass 
+Raw data distribution view.
+```{r}
+hist(pacuta_full_data$Host_AFDW.mg.cm2) # normal
+hist(pacuta_full_data$Sym_AFDW.mg.cm2) # right/positively skewed 
+hist(pacuta_full_data$Ratio_AFDW.mg.cm2) # extremely right/positively skewed
+
+hist(mcap_full_data$Host_AFDW.mg.cm2) # right/positively skewed
+hist(mcap_full_data$Sym_AFDW.mg.cm2) # right/positively skewed
+hist(mcap_full_data$Ratio_AFDW.mg.cm2) # normal 
+```
+
+*P.acuta* mixed effect models 
+
+Host AFDW.
+```{r}
+#### P acuta -- this needs to be done with Pacuta_stress_data b/c recovery timepoints are small or not existent.
+## Host 
+Pacuta_Host_LMER <- lmer(Host_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
+
+isSingular(Pacuta_Host_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
+
+## summary of the model chosen from above
+## plot(Mcap_Chl_LMER) in console to view diagnostic plots
+summary(Pacuta_Host_LMER)
+qqPlot(residuals(Pacuta_Host_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_Host_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(pacuta_full_data$Host_AFDW.mg.cm2 ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
+
+## significance of model
+anova(Pacuta_Host_LMER, ddf="lme4", type='III')
+Anova(Pacuta_Host_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Pacuta_Host_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+Sym AFDW. 
+```{r}
+## Sym
+Pacuta_Sym_LMER <- lmer(Sym_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
+
+## summary of the model chosen from above
+## plot(Mcap_Chl_LMER) in console to view diagnostic plots
+summary(Pacuta_Sym_LMER)
+qqPlot(residuals(Pacuta_Sym_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_Sym_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(pacuta_full_data$Sym_AFDW.mg.cm2 ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
+
+## significance of model
+anova(Pacuta_Sym_LMER, ddf="lme4", type='III')
+Anova(Pacuta_Sym_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Pacuta_Sym_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+S:H Ratio AFDW 
+```{r}
+## S:H Ratio 
+Pacuta_SHRatio_LMER <- lmer(log(Ratio_AFDW.mg.cm2) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
+
+isSingular(Pacuta_SHRatio_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
+
+## summary of the model chosen from above
+## plot(Mcap_Chl_LMER) in console to view diagnostic plots
+summary(Pacuta_SHRatio_LMER)
+qqPlot(residuals(Pacuta_SHRatio_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_SHRatio_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(pacuta_full_data$Ratio_AFDW.mg.cm2 ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
+
+## significance of model
+anova(Pacuta_SHRatio_LMER, ddf="lme4", type='III')
+Anova(Pacuta_SHRatio_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Pacuta_SHRatio_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+*M. capitata* mixed effect models. 
+
+Host AFDW. 
+```{r}
+## Host 
+Mcap_Host_LMER <- lmer(Host_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
+
+isSingular(Mcap_Host_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
+
+## summary of the model chosen from above
+## plot(Mcap_Chl_LMER) in console to view diagnostic plots
+summary(Mcap_Host_LMER)
+qqPlot(residuals(Mcap_Host_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_Host_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap_full_data$Host_AFDW.mg.cm2 ~ mcap_full_data$Timepoint*mcap_full_data$Temperature*mcap_full_data$CO2)
+
+## significance of model
+anova(Mcap_Host_LMER, ddf="lme4", type='III')
+Anova(Mcap_Host_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Mcap_Host_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+Sym AFDW. 
+```{r}
+## Sym
+Mcap_Sym_LMER <- lmer(Sym_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
+
+## summary of the model chosen from above
+## plot(Mcap_Chl_LMER) in console to view diagnostic plots
+summary(Mcap_Sym_LMER)
+qqPlot(residuals(Mcap_Sym_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_Sym_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap_full_data$Sym_AFDW.mg.cm2 ~ mcap_full_data$Timepoint*mcap_full_data$Temperature*mcap_full_data$CO2)
+
+## significance of model
+anova(Mcap_Sym_LMER, ddf="lme4", type='III')
+Anova(Mcap_Sym_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Mcap_Sym_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+S:H Ratio AFDW. 
+```{r}
+## S:H Ratio 
+Mcap_SHRatio_LMER <- lmer(Ratio_AFDW.mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
+
+isSingular(Mcap_SHRatio_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
+
+## summary of the model chosen from above
+## plot(Mcap_Chl_LMER) in console to view diagnostic plots
+summary(Mcap_SHRatio_LMER)
+qqPlot(residuals(Mcap_SHRatio_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_SHRatio_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap_full_data$Ratio_AFDW.mg.cm2 ~ mcap_full_data$Timepoint*mcap_full_data$Temperature*mcap_full_data$CO2)
+
+## significance of model
+anova(Mcap_SHRatio_LMER, ddf="lme4", type='III')
+Anova(Mcap_SHRatio_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Mcap_SHRatio_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+### Soluble Protein
+
+Raw distribution view. 
+```{r}
+hist(pacuta_full_data$prot_mg.cm2) 
+hist(mcap_full_data$prot_mg.cm2) 
+# both slightly right skewed positively 
+```
+
+Mixed effect modeling. 
+
+*P. acuta*
+```{r}
+## Pacuta 
+Pacuta_prot_LMER <- lmer(prot_mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
+
+## summary of the model chosen from above
+## plot(Mcap_Chl_LMER) in console to view diagnostic plots
+summary(Pacuta_prot_LMER)
+qqPlot(residuals(Pacuta_prot_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_prot_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(pacuta_full_data$prot_mg.cm2 ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
+
+## significance of model
+anova(Pacuta_prot_LMER, ddf="lme4", type='III')
+Anova(Pacuta_prot_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Pacuta_prot_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+*M. capitata* 
+```{r}
+## Mcap
+Mcap_prot_LMER <- lmer(prot_mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
+
+isSingular(Mcap_prot_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
+
+## summary of the model chosen from above
+## plot(Mcap_prot_LMER) in console to view diagnostic plots
+summary(Mcap_prot_LMER)
+qqPlot(residuals(Mcap_prot_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_prot_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap_full_data$prot_mg.cm2 ~ mcap_full_data$Timepoint*mcap_full_data$Temperature*mcap_full_data$CO2)
+
+## significance of model
+anova(Mcap_prot_LMER, ddf="lme4", type='III')
+Anova(Mcap_prot_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Mcap_prot_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+### Host Total Antioxidant Capacity
+
+Raw distribution view. 
+```{r}
+hist(pacuta_full_data$cre.umol.mgprot) 
+hist(mcap_full_data$cre.umol.mgprot) 
+# both very right skewed positively 
+```
+
+Mixed effect modeling  
+
+*P. acuta*
+```{r}
+## Pacuta 
+Pacuta_TAC_LMER <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
+
+isSingular(Pacuta_TAC_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
+
+## summary of the model chosen from above
+## plot(Mcap_prot_LMER) in console to view diagnostic plots
+summary(Pacuta_TAC_LMER)
+qqPlot(residuals(Pacuta_TAC_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_TAC_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(pacuta_full_data$cre.umol.mgprot ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2) 
+
+## significance of model
+anova(Pacuta_TAC_LMER, ddf="lme4", type='III')
+Anova(Pacuta_TAC_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Pacuta_TAC_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+*M. capitata*
+```{r}
+## Mcapitata
+Mcap_TAC_LMER <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
+
+isSingular(Mcap_TAC_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
+
+## summary of the model chosen from above
+## plot(Mcap_TAC_LMER) in console to view diagnostic plots
+summary(Mcap_TAC_LMER)
+qqPlot(residuals(Mcap_TAC_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_TAC_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap_full_data$cre.umol.mgprot ~ mcap_full_data$Timepoint*mcap_full_data$Temperature*mcap_full_data$CO2) 
+
+## significance of model
+anova(Mcap_TAC_LMER, ddf="lme4", type='III')
+Anova(Mcap_TAC_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Mcap_TAC_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+### Bleaching Score 
+
+Raw distribution score.
+```{r}
+color.data$Plug_ID <- as.character(color.data$Plug_ID)
+color.data$Blch.Time <- as.factor(color.data$Blch.Time)
+mcap.color <- color.data %>% subset(Species == "Mcapitata")
+pacuta.color <- color.data %>% subset(Species == "Pacuta")
+
+hist(pacuta.color$Bleaching.Score) 
+hist(mcap.color$Bleaching.Score) 
+# both very left/negatively skewed 
+```
+
+
+Mixed effect modeling. Adding Plug ID as random factor because this was repeated measures. 
+```{r}
+## Mcap 
+mcap.color$Color.Transformed <- mcap.color$Bleaching.Score+100
+range(mcap.color$Color.Transformed)
+hist(mcap.color$Color.Transformed)
+
+Mcap_Color_LMER_tank_plug <- lmer((Bleaching.Score^(1/4)) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.color) #GLMM; nesting Plug ID in tank because the Plug IDs never moved tanks 
+# GAM 
+# anova(GLMM, GAM) # report AIC values
+
+## summary of the model chosen from above
+## plot(Mcap_TAC_LMER) in console to view diagnostic plots
+summary(Mcap_Color_LMER_tank_plug)
+qqPlot(residuals(Mcap_Color_LMER_tank_plug)) # qqplot and histogram 
+hist(residuals(Mcap_Color_LMER_tank_plug)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap.color$Bleaching.Score ~ mcap.color$Timepoint*mcap.color$Temperature*mcap.color$CO2)
+
+## significance of model
+anova(Mcap_Color_LMER_tank_plug, ddf="lme4", type='III')
+Anova(Mcap_Color_LMER_tank_plug, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Mcap_Color_LMER_tank_plug, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+```{r}
+## Pacuta 
+pacuta.color$Color.Transformed <- pacuta.color$Bleaching.Score+120
+range(pacuta.color$Color.Transformed)
+hist(pacuta.color$Color.Transformed)
+
+Pacuta_Color_LMER_tank_plug <- lmer(log(Color.Transformed) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=pacuta.color) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
+ 
+
+alias(Pacuta_Color_GLM) # to see which groups are issues and being dropped as columns / coefficients 
+
+## summary of the model chosen from above
+## plot(Mcap_TAC_LMER) in console to view diagnostic plots
+summary(Pacuta_Color_LMER_tank_plug)
+qqPlot(residuals(Pacuta_Color_LMER_tank_plug)) # qqplot and histogram 
+hist(residuals(Pacuta_Color_LMER_tank_plug)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(pacuta.color$Color.Transformed ~ pacuta.color$Timepoint*pacuta.color$Temperature*pacuta.color$CO2)
+
+## significance of model
+anova(Pacuta_Color_LMER_tank_plug, ddf="lme4", type='III')
+Anova(Pacuta_Color_LMER_tank_plug, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Pacuta_Color_LMER_tank_plug, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+### Buoyant Weight 
+
+Raw distribution score.
+```{r}
+Growth.data$Plug_ID <- as.character(Growth.data$Plug_ID)
+Growth.data$Growth.Time <- as.factor(Growth.data$Growth.Time)
+mcap.Growth <- Growth.data %>% subset(Species == "Mcapitata")
+pacuta.Growth <- Growth.data %>% subset(Species == "Pacuta")
+
+hist(pacuta.Growth$Growth.Rate) 
+hist(mcap.Growth$Growth.Rate) 
+# both very heavy tailed distribution
+```
+
+*M. capitata* mixed effect modeling.
+```{r}
+#  excluded in BW script (6 and 8 week 1210 Mcapitata - ATAC Tank 1)
+
+Mcap_Growth_LMER_tank_plug <- lmer(Growth.Rate ~ Growth.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.Growth) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
+
+## summary of the model chosen from above
+## plot(Mcap_TAC_LMER) in console to view diagnostic plots
+summary(Mcap_Growth_LMER_tank_plug)
+qqPlot(residuals(Mcap_Growth_LMER_tank_plug)) # qqplot and histogram 
+hist(residuals(Mcap_Growth_LMER_tank_plug)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap.Growth$Growth.Rate ~ mcap.Growth$Timepoint*mcap.Growth$Temperature*mcap.Growth$CO2)
+
+## significance of model
+anova(Mcap_Growth_LMER_tank_plug, ddf="lme4", type='III')
+Anova(Mcap_Growth_LMER_tank_plug, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Mcap_Growth_LMER_tank_plug, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+*P. acuta* mixed effect modeling.
+```{r}
+Pacuta_Growth_LMER_tank_plug <- lmer(log(Growth.Rate) ~ Growth.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=pacuta.Growth) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
+
+## summary of the model chosen from above
+## plot(Mcap_TAC_LMER) in console to view diagnostic plots
+summary(Pacuta_Growth_LMER_tank_plug)
+qqPlot(residuals(Pacuta_Growth_LMER_tank_plug)) # qqplot and histogram 
+hist(residuals(Pacuta_Growth_LMER_tank_plug)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(pacuta.Growth$Growth.Rate ~ pacuta.Growth$Timepoint*pacuta.Growth$Temperature*pacuta.Growth$CO2)
+
+## significance of model
+anova(Pacuta_Growth_LMER_tank_plug, ddf="lme4", type='III')
+Anova(Pacuta_Growth_LMER_tank_plug, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Pacuta_Growth_LMER_tank_plug, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+
+
+# Multivariate analysis 
+
+## PCA 
+
+Plot PCA with prcomp to center and scale. 
+
+```{r}
+pca_data <- data[complete.cases(data), ] # only taking rows where all samples have data
+
+scaled_data <- prcomp(pca_data[c(9:18)], scale=TRUE, center=TRUE) # columns 8-17 are the data values
+
+## screeplot
+pca_data.cov <- cov(pca_data[,c(9:18)])
+pca_data.eigen <- eigen(pca_data.cov)
+plot(pca_data.eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') + lines(pca_data.eigen$values)
+```
+
+Group by species, timepoint, treatment. 
+```{r}
+cols <- c("lightblue", "blue", "salmon", "red3")
+
+Species.PCA <- autoplot(scaled_data, data = pca_data, colour = 'Species',
+         frame=TRUE, size=0.5, frame.type = 'convex', loadings = TRUE, loadings.colour = 'black',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  xlim(-0.25,0.5); Species.PCA
+
+Treatment.PCA <- autoplot(scaled_data, data = pca_data, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  xlim(-0.25,0.5) + scale_color_manual(values = cols) + scale_fill_manual(values = cols); Treatment.PCA
+
+Timepoint.PCA <- autoplot(scaled_data, data = pca_data, colour = 'Timepoint',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  xlim(-0.25,0.5) + scale_colour_brewer(); Timepoint.PCA
+
+ggsave(file="Output/Final_Figures/General-Species-PCA.pdf", Species.PCA, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/General-Species-PCA.png", Species.PCA, width = 11, height = 6, units = c("in"))
+
+ggsave(file="Output/Final_Figures/General-Treatment-PCA.pdf", Treatment.PCA, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/General-Treatment-PCA.png", Treatment.PCA, width = 11, height = 6, units = c("in"))
+
+ggsave(file="Output/Final_Figures/General-Timepoint-PCA.pdf", Timepoint.PCA, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/General-Timepoint-PCA.png", Timepoint.PCA, width = 11, height = 6, units = c("in"))
+
+General.PCAs <- arrangeGrob(Species.PCA, Treatment.PCA, Timepoint.PCA, ncol=2)
+ggsave(file="Output/Final_Figures/General-PCAs.pdf", General.PCAs, width = 10, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/General-PCAs.png", General.PCAs, width = 10, height = 6, units = c("in"))
+```
+
+Subsetted to only P. acuta
+```{r}
+Pacuta_data <- subset(pca_data, Species=="Pacuta")
+Pacuta_scaled_data <- prcomp(Pacuta_data[c(9:18)], scale=TRUE, center=TRUE) # columns 8-17 are the data values
+
+## screeplot
+Pacuta_data.cov <- cov(Pacuta_data[,c(9:18)])
+Pacuta_data.eigen <- eigen(Pacuta_data.cov)
+plot(Pacuta_data.eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') + lines(Pacuta_data.eigen$values)
+
+Pacuta_treatment <- autoplot(Pacuta_scaled_data, data = Pacuta_data, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  xlim(-0.25,0.25) + scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("P. acuta"); Pacuta_treatment
+
+Pacuta_timepoint <- autoplot(Pacuta_scaled_data, data = Pacuta_data, colour = 'Timepoint',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  xlim(-0.25,0.25) + scale_colour_brewer() + ggtitle("P. acuta"); Pacuta_timepoint
+
+ggsave(file="Output/Final_Figures/Pacuta-Treatment-PCA.pdf", Pacuta_treatment, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Pacuta-Treatment-PCA.png", Pacuta_treatment, width = 11, height = 6, units = c("in"))
+
+ggsave(file="Output/Final_Figures/Pacuta-Timepoint-PCA.pdf", Pacuta_timepoint, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Pacuta-Timepoint-PCA.png", Pacuta_timepoint, width = 11, height = 6, units = c("in"))
+
+Pacuta.stress.PCAs <- arrangeGrob(Pacuta_treatment, Pacuta_timepoint, ncol=2)
+ggsave(file="Output/Final_Figures/Pacuta-stress-PCAs.pdf", Pacuta.stress.PCAs, width = 10, height = 4, units = c("in"))
+ggsave(file="Output/Final_Figures/Pacuta-stress-PCAs.png", Pacuta.stress.PCAs, width = 10, height = 4, units = c("in"))
+```
+
+Subsetted to M. capitata
+```{r}
+Mcap_data <- subset(pca_data, Species=="Mcapitata")
+Mcap_scaled_data <- prcomp(Mcap_data[c(9:18)], scale=TRUE, center=TRUE) # columns 8-17 are the data values
+
+## screeplot
+Mcap_data.cov <- cov(Mcap_data[,c(9:18)])
+Mcap_data.eigen <- eigen(Mcap_data.cov)
+plot(Mcap_data.eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') + lines(Mcap_data.eigen$values)
+
+Mcap_treatment <- autoplot(Mcap_scaled_data, data = Mcap_data, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  #xlim() + 
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("M. capitata"); Mcap_treatment
+
+Mcap_timepoint <- autoplot(Mcap_scaled_data, data = Mcap_data, colour = 'Timepoint',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  
+  #xlim(-0.4,0.4) + 
+  scale_colour_brewer() + ggtitle("M. capitata"); Mcap_timepoint
+
+Mcap_phase <- autoplot(Mcap_scaled_data, data = Mcap_data, colour = 'Phase',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  
+  #xlim(-0.4,0.4) + 
+  scale_colour_brewer() + ggtitle("M. capitata"); Mcap_phase
+
+ggsave(file="Output/Final_Figures/Mcap-Treatment-PCA.pdf", Mcap_treatment, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Mcap-Treatment-PCA.png", Mcap_treatment, width = 11, height = 6, units = c("in"))
+
+ggsave(file="Output/Final_Figures/Mcap-Timepoint-PCA.pdf", Mcap_timepoint, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Mcap-Timepoint-PCA.png", Mcap_timepoint, width = 11, height = 6, units = c("in"))
+
+Mcap.stress.PCAs <- arrangeGrob(Mcap_treatment, Mcap_timepoint, ncol=2)
+ggsave(file="Output/Final_Figures/Mcap-stress-PCAs.pdf", Mcap.stress.PCAs, width = 10, height = 4, units = c("in"))
+ggsave(file="Output/Final_Figures/Mcap-stress-PCAs.png", Mcap.stress.PCAs, width = 10, height = 4, units = c("in"))
+```
+
+PERMANOVA for P. acuta and M. cap. 
+Stress treatments (with resp and photo)
+```{r}
+## Pacuta - effect of treatment and timepoint
+# scale data
+pacuta_vegan <- scale(Pacuta_data[ ,9:18])
+# PerMANOVA - partitioning the euclidean distance matrix by species
+adonis(pacuta_vegan ~ Timepoint*Temperature*CO2, data = Pacuta_data, method='eu')
+
+## Mcap - effect of treatment and timepoint
+# scale data
+mcap_vegan <- scale(Mcap_data[ ,9:18])
+# PerMANOVA - partitioning the euclidean distance matrix by species
+adonis(mcap_vegan ~ Timepoint*Temperature*CO2, data = Mcap_data, method='eu')
+```
+
+
+Entire timeseries (without resp/photo and with recovery timepoints).
+```{r}
+pca_timeseriesdata <- timeseries.data[complete.cases(timeseries.data), ] # only taking rows where all samples have data
+timeseries_scaled_data <- prcomp(pca_timeseriesdata[c(9:15)], scale=TRUE, center=TRUE) # columns 8-14 are the data values
+
+## screeplot
+pca_timeseriesdata.cov <- cov(pca_timeseriesdata[,c(9:15)])
+pca_timeseriesdata.eigen <- eigen(pca_timeseriesdata.cov)
+plot(pca_timeseriesdata.eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') + lines(pca_timeseriesdata.eigen$values)
+
+Timeseries.Species.PCA <- autoplot(timeseries_scaled_data, data = pca_timeseriesdata, colour = 'Species',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw(); Timeseries.Species.PCA
+
+Timeseries.Treatment.PCA <- autoplot(timeseries_scaled_data, data = pca_timeseriesdata, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  #xlim(-0.23,0.13) + 
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols); Timeseries.Treatment.PCA
+
+Timeseries.Timepoint.PCA <- autoplot(timeseries_scaled_data, data = pca_timeseriesdata, colour = 'Timepoint',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  #xlim(-0.23,0.13) + 
+  scale_colour_brewer(); Timeseries.Timepoint.PCA
+
+ggsave(file="Output/Final_Figures/Timeseries-Species-PCA.pdf", Timeseries.Species.PCA, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Timeseries-Species-PCA.png", Timeseries.Species.PCA, width = 11, height = 6, units = c("in"))
+
+ggsave(file="Output/Final_Figures/Timeseries-Treatment-PCA.pdf", Timeseries.Treatment.PCA, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Timeseries-Treatment-PCA.png", Timeseries.Treatment.PCA, width = 11, height = 6, units = c("in"))
+
+ggsave(file="Output/Final_Figures/Timeseries-Timepoint-PCA.pdf", Timeseries.Timepoint.PCA, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Timeseries-Timepoint-PCA.png", Timeseries.Timepoint.PCA, width = 11, height = 6, units = c("in"))
+
+General.Timeseries.PCAs <- arrangeGrob(Timeseries.Species.PCA, Timeseries.Treatment.PCA, Timeseries.Timepoint.PCA, ncol=2)
+ggsave(file="Output/Final_Figures/General-timeseries-PCAs.pdf", General.Timeseries.PCAs, width = 10, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/General-timeseries-PCAs.png", General.Timeseries.PCAs, width = 10, height = 6, units = c("in"))
+```
+
+Entire timeseries subsetted to only P. acuta
+```{r}
+Pacuta_timeseriesdata <- subset(pca_timeseriesdata, Species=="Pacuta")
+Pacuta_scaled_timeseriesdata <- prcomp(Pacuta_timeseriesdata[c(9:15)], scale=TRUE, center=TRUE) # columns 8-14 are the data values
+
+## screeplot
+Pacuta_timeseriesdata.cov <- cov(Pacuta_timeseriesdata[,c(9:15)])
+Pacuta_timeseriesdata.eigen <- eigen(Pacuta_timeseriesdata.cov)
+plot(Pacuta_timeseriesdata.eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') + lines(Pacuta_timeseriesdata.eigen$values)
+
+Pacuta_timeseries_treatment <- autoplot(Pacuta_scaled_timeseriesdata, data = Pacuta_timeseriesdata, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  #xlim(-0.225,0.2) + 
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("P. acuta"); Pacuta_timeseries_treatment
+
+Pacuta_timeseries_timepoint <- autoplot(Pacuta_scaled_timeseriesdata, data = Pacuta_timeseriesdata, colour = 'Timepoint',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  #xlim(-0.225,0.2) + 
+  scale_colour_brewer() + ggtitle("P. acuta"); Pacuta_timeseries_timepoint
+
+Pacuta_timeseries_phase <- autoplot(Pacuta_scaled_timeseriesdata, data = Pacuta_timeseriesdata, colour = 'Phase',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  #xlim(-0.225,0.2) + 
+  scale_colour_brewer() + ggtitle("P. acuta"); Pacuta_timeseries_phase
+
+ggsave(file="Output/Final_Figures/Pacuta-Timeseries-Treatment-PCA.pdf", Pacuta_timeseries_treatment, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Pacuta-Timeseries-Treatment-PCA.png", Pacuta_timeseries_treatment, width = 11, height = 6, units = c("in"))
+
+ggsave(file="Output/Final_Figures/Pacuta-Timeseries-Timepoint-PCA.pdf", Pacuta_timeseries_timepoint, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Pacuta-Timeseries-Timepoint-PCA.png", Pacuta_timeseries_timepoint, width = 11, height = 6, units = c("in"))
+
+Pacuta.timeseries.PCAs <- arrangeGrob(Pacuta_timeseries_treatment, Pacuta_timeseries_timepoint, Pacuta_timeseries_phase, ncol=2)
+ggsave(file="Output/Final_Figures/Pacuta-Timeseries-PCAs.pdf", Pacuta.timeseries.PCAs, width = 10, height = 8, units = c("in"))
+ggsave(file="Output/Final_Figures/Pacuta-Timeseries-PCAs.png", Pacuta.timeseries.PCAs, width = 10, height = 8, units = c("in"))
+```
+
+Entire timeseries only subsetted to M. capitata
+```{r}
+Mcap_timeseriesdata <- subset(pca_timeseriesdata, Species=="Mcapitata")
+Mcap_scaled_timeseriesdata <- prcomp(Mcap_timeseriesdata[c(9:15)], scale=TRUE, center=TRUE) # columns 8-14 are the data values
+
+## screeplot
+Mcap_timeseriesdata.cov <- cov(Mcap_timeseriesdata[,c(9:15)])
+Mcap_timeseriesdata.eigen <- eigen(Mcap_timeseriesdata.cov)
+plot(Mcap_timeseriesdata.eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') + lines(Mcap_timeseriesdata.eigen$values)
+
+Mcap_timeseries_treatment <- autoplot(Mcap_scaled_timeseriesdata, data = Mcap_timeseriesdata, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  #xlim(-0.225,0.13) + 
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("M. capitata"); Mcap_timeseries_treatment
+
+Mcap_timeseries_timepoint <- autoplot(Mcap_scaled_timeseriesdata, data = Mcap_timeseriesdata, colour = 'Timepoint',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  #xlim(-0.225,0.13) + 
+  scale_colour_brewer() + ggtitle("M. capitata"); Mcap_timeseries_timepoint
+
+Mcap_timeseries_phase <- autoplot(Mcap_scaled_timeseriesdata, data = Mcap_timeseriesdata, colour = 'Phase',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  #xlim(-0.225,0.13) + 
+  scale_colour_brewer() + ggtitle("M. capitata"); Mcap_timeseries_phase
+
+ggsave(file="Output/Final_Figures/Mcap-Timeseries-Treatment-PCA.pdf", Mcap_timeseries_treatment, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Mcap-Timeseries-Treatment-PCA.png", Mcap_timeseries_treatment, width = 11, height = 6, units = c("in"))
+
+ggsave(file="Output/Final_Figures/Mcap-Timeseries-Timepoint-PCA.pdf", Mcap_timeseries_timepoint, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Mcap-Timeseries-Timepoint-PCA.png", Mcap_timeseries_timepoint, width = 11, height = 6, units = c("in"))
+
+Mcap.timeseries.PCAs <- arrangeGrob(Mcap_timeseries_treatment, Mcap_timeseries_timepoint, Mcap_timeseries_phase, ncol=2)
+ggsave(file="Output/Final_Figures/Mcap-Timeseries-PCAs.pdf", Mcap.timeseries.PCAs, width = 10, height = 8, units = c("in"))
+ggsave(file="Output/Final_Figures/Mcap-Timeseries-PCAs.png", Mcap.timeseries.PCAs, width = 10, height = 8, units = c("in"))
+```
+
+PERMANOVA for P. acuta and M. cap. 
+Timeseries (without resp and photo)
+```{r}
+## Pacuta - effect of treatment and timepoint
+# scale data
+pacuta_timeseries_vegan <- scale(Pacuta_timeseriesdata[ ,9:15])
+# PerMANOVA - partitioning the euclidean distance matrix by species
+adonis(pacuta_timeseries_vegan ~ Timepoint*Temperature*CO2, data = Pacuta_timeseriesdata, method='eu')
+
+## Mcap - effect of treatment and timepoint
+# scale data
+mcap_timeseries_vegan <- scale(Mcap_timeseriesdata[ ,9:15])
+# PerMANOVA - partitioning the euclidean distance matrix by species
+adonis(mcap_timeseries_vegan ~ Timepoint*Temperature*CO2, data = Mcap_timeseriesdata, method='eu')
+```
+
+### 3 phases 
+Start with pca_data subsetted to each species 
+
+```{r}
+recovery_data <- data %>% subset(Phase == "Recovery") %>% select(-Pnet_umol.cm2.hr, -Rdark_umol.cm2.hr, -Pgross_umol.cm2.hr) 
+recovery_pca_data <- recovery_data[complete.cases(recovery_data), ] # only taking rows where all samples have data
+
+## Mcap
+M_acute_data <- subset(Mcap_data, Phase == "Acute")
+M_chronic_data <- subset(Mcap_data, Phase == "Chronic")
+M_recovery_data <- subset(recovery_pca_data, Species == "Mcapitata")
+
+## Pacuta
+P_acute_data <- subset(Pacuta_data, Phase == "Acute")
+P_chronic_data <- subset(Pacuta_data, Phase == "Chronic")
+P_recovery_data <- subset(recovery_pca_data, Species == "Pacuta") %>% filter(Treatment != "HTAC")
+```
+
+Acute timepoints. 
+```{r}
+Mcap_acute_PCA <- prcomp(M_acute_data[c(9:18)], scale=TRUE, center=TRUE)
+Pacuta_acute_PCA <- prcomp(P_acute_data[c(9:18)], scale=TRUE, center=TRUE)
+
+Pacuta_acute_phase <- autoplot(Pacuta_acute_PCA, data = P_acute_data, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  theme(legend.position = "none") +
+  xlim(-0.225,0.5) + scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("P. acuta; Acute Stress (Day 1 - 1 wk)"); Pacuta_acute_phase
+
+Mcap_acute_phase <- autoplot(Mcap_acute_PCA, data = M_acute_data, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  theme(legend.position = "none") + 
+  #xlim(-0.225,0.5) + 
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("M. capitata; Acute Stress (Day 1 - 1 wk)"); Mcap_acute_phase
+```
+
+Chronic timepoints.  
+```{r}
+Mcap_chronic_PCA <- prcomp(M_chronic_data[c(9:18)], scale=TRUE, center=TRUE)
+Pacuta_chronic_PCA <- prcomp(P_chronic_data[c(9:18)], scale=TRUE, center=TRUE)
+
+Pacuta_chronic_phase <- autoplot(Pacuta_chronic_PCA, data = P_chronic_data, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  theme(legend.position = "none") + 
+  #xlim(-0.225,0.5) + 
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("P. acuta; Chronic Stress (2-8 wk)"); Pacuta_chronic_phase
+
+Mcap_chronic_phase <- autoplot(Mcap_chronic_PCA, data = M_chronic_data, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  theme(legend.position = "none") +
+  #xlim(-0.225,0.5) + 
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("M. capitata; Chronic Stress (2-8 wk)"); Mcap_chronic_phase
+```
+
+Recovery timepoints.
+```{r}
+Mcap_recovery_PCA <- prcomp(M_recovery_data[c(9:15)], scale=TRUE, center=TRUE)
+Pacuta_recovery_PCA <- prcomp(P_recovery_data[c(9:15)], scale=TRUE, center=TRUE)
+
+Pacuta_recovery_phase <- autoplot(Pacuta_recovery_PCA, data = P_recovery_data, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  theme(legend.position = "none") + 
+  #xlim(-0.225,0.5) + 
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("P. acuta; Recovery (12,16 wk)"); Pacuta_recovery_phase
+
+Mcap_recovery_phase <- autoplot(Mcap_recovery_PCA, data = M_recovery_data, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'convex',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  theme(legend.position = "none") + 
+  #xlim(-0.225,0.5) + 
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("M. capitata; Recovery (12,16 wk)"); Mcap_recovery_phase
+
+```
+
+
+
+```{r}
+Three.phases.PCA <- arrangeGrob(Pacuta_acute_phase, Pacuta_chronic_phase, Pacuta_recovery_phase, Mcap_acute_phase, Mcap_chronic_phase, Mcap_recovery_phase, ncol=3) 
+ggsave(file="Output/Final_Figures/Three-Phases-PCAs.pdf", Three.phases.PCA, width = 12, height = 9, units = c("in"))
+ggsave(file="Output/Final_Figures/Three-Phases-PCAs.png", Three.phases.PCA, width = 12, height = 9, units = c("in"))
+```
+

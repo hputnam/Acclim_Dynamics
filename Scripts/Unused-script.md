@@ -179,4 +179,158 @@ Bleached2 <- ggplot(TAC_testing, aes(x=bleaching_score, y=CRE.umol.mgprot)) + ge
   facet_wrap(~Species) +
   theme(legend.position = "")
 Bleached2
+
+## 20201007 
+# Plate 1
+Oct7plate1_platemap <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20201007_Plate1_TAC_platemap.csv") 
+  Oct7plate1_platemap$Plug_ID <- as.character(Oct7plate1_platemap$Plug_ID)
+Oct7_plate1_final <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20201007_plate1_final.csv", header=T) %>% dplyr::rename(Abs_final = X490.490)
+Oct7_plate1_initial <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20201007_plate1_initial.csv", header=T) %>% dplyr::rename(Abs_initial = X490.490)
+Oct7_plate1 <- full_join(Oct7plate1_platemap, Oct7_plate1_initial, by="Well") %>%
+  full_join(Oct7_plate1_final) %>%
+  filter(!is.na(Plug_ID))
+
+# Plate 2
+Oct7plate2_platemap <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20201007_Plate2_TAC_platemap.csv") 
+  Oct7plate2_platemap$Plug_ID <- as.character(Oct7plate2_platemap$Plug_ID)
+Oct7_plate2_final <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20201007_plate2_final.csv", header=T) %>% dplyr::rename(Abs_final = X490.490)
+Oct7_plate2_initial <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20201007_plate2_initial.csv", header=T) %>% dplyr::rename(Abs_initial = X490.490)
+Oct7_plate2 <- full_join(Oct7plate2_platemap, Oct7_plate2_initial, by="Well") %>%
+  full_join(Oct7_plate2_final) %>%
+  filter(!is.na(Plug_ID))
+
+# Plate 3
+Oct7plate3_platemap <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20201007_Plate3_TAC_platemap.csv") 
+  Oct7plate3_platemap$Plug_ID <- as.character(Oct7plate3_platemap$Plug_ID)
+Oct7_plate3_final <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20201007_plate3_final.csv", header=T) %>% dplyr::rename(Abs_final = X490.490)
+Oct7_plate3_initial <- read.csv("Physiology_variables/Total_Antioxidant_Capacity/20201007_plate3_initial.csv", header=T) %>% dplyr::rename(Abs_initial = X490.490)
+Oct7_plate3 <- full_join(Oct7plate3_platemap, Oct7_plate3_initial, by="Well") %>%
+  full_join(Oct7_plate3_final) %>%
+  filter(!is.na(Plug_ID))
+
+Oct7 <- union(Oct7_plate1, Oct7_plate2) %>% union(Oct7_plate3)
+Oct7_st <- Oct7 %>% filter(grepl("Standard", Plug_ID)) %>% dplyr::rename(Standard = Plug_ID)
+
+TAC.plate.numbers <- read_csv("Physiology_variables/Total_antioxidant_capacity/total_TAC_platemaps.csv") %>% 
+  select(-Well) %>% distinct()
+  
+  
+finalbydate <- full_join(TAC.plate.numbers, QC, by="Plug_ID")
+ggplot(finalbydate, aes(x=Plate, y=Abs_final)) + geom_boxplot() + theme(axis.text.x = element_text(angle = 90))
+## standard in graph aren't plotting correctly 
+
+## 20201007
+Oct7_st <- Oct7_st %>%
+  mutate(Abs_net = Abs_final - Abs_initial) %>% 
+  dplyr::group_by(Standard) %>%
+  summarise(Abs_net = mean(Abs_net)) %>%
+  mutate(Abs_net.adj = Abs_net - Abs_net[Standard == "Standard10"])
+
+Oct7_st$conc_mM <- concentration[match(Oct7_st$Standard, st.name)]
+  Oct7_st$conc_mM <- as.numeric(Oct7_st$conc_mM)
+
+TAC_mod_lin2 <- lm(conc_mM ~ Abs_net.adj, data = Oct7_st)
+summary(TAC_mod_lin2)
+
+std_curve_plot2 <- Oct7_st %>%
+  ggplot(aes(x = Abs_net.adj, y = conc_mM)) +
+  geom_point(color = "blue", size = 1.5) + 
+  theme_bw() + 
+  xlim(0,1.5) +
+  labs(title = paste("Adj R2 = ", signif(summary(TAC_mod_lin2)$adj.r.squared, 5),
+                     "; TAC Standard Curve Oct 7 Standards")) + 
+  geom_smooth(method = "lm")
+std_curve_plot2
+
+## October 7 Plates (3)
+Oct7 <- Oct7 %>% 
+  mutate(Abs_net = Abs_final - Abs_initial) %>% #subtract initial from final to get delta abs
+  dplyr::group_by(Plug_ID) %>% # group to calculate mean
+  summarise(Abs_net = mean(Abs_net)) %>% #calculate mean abs of duplicates
+  mutate(Abs_net.adj = Abs_net - Nov10_st$Abs_net[Nov10_st$Standard == "Standard10"],
+         uae.mM = map_dbl(Abs_net.adj, ~ predict(TAC_mod_linNov10, newdata = data.frame(Abs_net.adj = .)))) #use the regression to calculate all the mean UAE values from the abs values
+std_curve_plotNov10 + #plot the standard curve to check this against the protocol
+  geom_point(data = Oct7, aes(x = Abs_net.adj, y = uae.mM), pch = "X", cex = 3, alpha = 0.3) +
+    labs(title = "Oct 7 samples projected on Nov 10 curve")
+    
+    ## October 7 plates
+dplyr::filter(Oct7, Plug_ID == "Standard1") # uae.mM is 0.9964323
+Oct7dilute.tac <- Oct7 %>% filter(uae.mM > 0.9964323) # output is 0 samples
 ```
+
+Unused from environmental data script 
+
+
+
+
+
+Viewing the temperature and pH data from local NOAA Hawaii Buoys (XX) to guide decisions in experimental design.
+
+Reading in temperature and pH data files.
+```{r}
+NOAA_temp <- read.csv('Environmental_data/NOAA_Temp_Buoy_CO-OPS_1612480_from_20180901_to_20180923.csv')
+
+# renaming columns and deleting the empty conductivity column
+NOAA_temp <- NOAA_temp %>% dplyr::rename(Date = DATE.TIME) %>% dplyr::rename(Temperature = WATERTEMP) %>% select(-CONDUCTIVITY) %>% na.omit(NOAA_temp)
+
+# separating date and time into two columns
+NOAA_temp <- NOAA_temp %>% tidyr::separate(Date, c("month", "day", "year", "hour", "seconds"))
+
+# calculating hourly temperature averages by day 
+NOAA_means_hd <- summarySE(NOAA_temp, measurevar="Temperature", groupvars=c("day", "hour"))
+NOAA_means_hd
+
+NOAA_means_h <- summarySE(NOAA_temp, measurevar="Temperature", groupvars=c("hour"))
+NOAA_means_h
+
+ggplot(NOAA_means_hd, aes(x=hour, y=Temperature)) + 
+  geom_point(aes(colour=day)) + 
+  theme_classic() + 
+  ggtitle("Moku o Loe NOAA Buoy (September 2018)") + 
+  xlab("Hour") + ylab("Temperature (°C)")
+
+ggplot(NOAA_means_h, aes(x=hour, y=Temperature)) + 
+  geom_point()+ 
+  theme_classic() + 
+  ggtitle("Moku o Loe NOAA Buoy (September 2018)") + 
+  xlab("Hour") + ylab("Temperature (°C)")
+
+# calculating daily temperature ranges
+NOAA_daily <- NOAA_temp %>% dplyr::group_by(day) %>%
+  dplyr::summarise(min = min(Temperature),
+                   max = max(Temperature)) %>%
+  dplyr::mutate(range = max-min,
+                daily.mean = mean(range),
+                daily.se = std.error(range))
+
+
+Graphing above dataframes. 
+```{r}
+## Total September 1 2018 - September 23 2018
+ggplot(NOAA_temp, aes(x=Date, y=Temperature)) +
+  geom_line() +
+  xlab("") +
+  theme_classic() +
+  theme(axis.text.x=element_text(angle=60, hjust=1)) +
+  # scale_x_date(limit=c(as.Date("2019-08-31"),as.Date("2019-09-24"))) +
+  ylim(25,30)
+
+## Subset to show daily variation 
+```
+
+Unused script from statistics Rmd
+
+```
+Pacuta_Pnet_LMER_tank <- lmer(Pnet_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
+Pacuta_Pnet_LMER <- glm(Pnet_umol.cm2.hr ~ Timepoint*Temperature*CO2, na.action=na.omit, data=pacuta_full_data) # GLM
+anova(Pacuta_Pnet_LMER_tank, Pacuta_Pnet_LMER) # AIC with tank = 151.40; without tank = 146.81. GLMM (5 points lower) with tank wins, move on to residuals
+
+summary(Pacuta_Pnet_LMER_tank)
+qqPlot(residuals(Pacuta_Pnet_LMER_tank))
+hist(residuals(Pacuta_Pnet_LMER_tank))
+# the above looks normal; no need to transform
+
+Anova(Pacuta_Pnet_LMER_tank, type='III') #Anova needs to be capital A to be from car function and distinguish types of ANOVAs
+plot(allEffects(Pacuta_Pnet_LMER_tank))
+```
+

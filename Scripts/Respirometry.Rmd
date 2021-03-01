@@ -255,6 +255,7 @@ Present.DS$Date <- as.Date(Present.DS$Date, format = "%m/%d/%y")
 ```
 
 ```{r}
+<<<<<<< HEAD
 
 Sp.labs <- c("M. capitata", "P. acuta")
 names(Sp.labs) <- c("Montipora", "Pocillopora")
@@ -312,11 +313,48 @@ Calculating means.
 # write.csv(resp.data, file="Physiology_variables/Respirometry/Output/Resp_AllRates.csv") # raw data
 # write.csv(AllMeans, file="Physiology_variables/Respirometry/Output/Resp_AllMeans.csv") # Mean data
 # ```
+=======
+Missing <- Missing %>% select(Fragment.ID.x, Date.x, Species.x, Treatment, Pnet_umol.cm2.hr, Pgross_umol.cm2.hr, Rdark_umol.cm2.hr) %>%
+  gather("Measurement", "Value", 5:7) 
+Means <- summarySE(Missing, measurevar="Value", groupvars=c("Species.x", "Date.x", "Treatment", "Measurement")) %>% 
+  filter(N>2) %>% na.omit() %>% dplyr::rename(Date = Date.x) %>% dplyr::rename(Species = Species.x)
+
+#AllMeans <- ddply(Missing, c('Date.x','Species.x', 'Treatment'), summarize,
+                  #pnet
+                 # Pnet.mean= mean(Pnet_umol.cm2.hr, na.rm=T), #mean pnet
+                 # N = sum(!is.na(Pnet_umol.cm2.hr)), # sample size
+                #  Pnet.se = sd(Pnet_umol.cm2.hr, na.rm=T)/sqrt(N), #SE
+                  #Rdark
+                #  Rdark.mean= mean(Rdark_umol.cm2.hr, na.rm=T), #mean rdark
+                #  Rdark.se = sd(Rdark_umol.cm2.hr, na.rm=T)/sqrt(N), #SE
+                  #Pgross
+                 # Pgross.mean  = mean(Pgross_umol.cm2.hr, na.rm=TRUE),
+                #  Pgross.se = sd (Pgross_umol.cm2.hr, na.rm=TRUE)/sqrt(N))
+#AllMeans
+#colnames(AllMeans) <- c("Date", "Species", "Treatment", "Pnet.mean", "N",   "Pnet.se",  "Rdark.mean",   "Rdark.se", "Pgross.mean",  "Pgross.se")
+#AllMeans$Group <- paste(AllMeans$Species, AllMeans$Treatment, sep = "_")
+
+# checking sample sizes
+#dplyr::filter(AllMeans, N < 6)
+
+# exporting results 
+write.csv(resp.data, file="Physiology_variables/Respirometry/Output/Resp_AllRates.csv") # raw data
+write.csv(AllMeans, file="Physiology_variables/Respirometry/Output/Resp_AllMeans.csv") # Mean data
+```
+
+Taking out outliers. 
+```{r}
+ggplot(Missing, aes(x=Treatment, y=Value)) + geom_boxplot() + theme_classic() + 
+  facet_wrap(~ Measurement) + 
+  ylab("umol.cm2.hr")
+```
+>>>>>>> 39a6705261875c736dd71c45c5d536ac867d9beb
 
 
 
 Subsetting by species and changing respiration values to absolute value. 
 ```{r}
+<<<<<<< HEAD
 # # Adding timepoint column to AllMeans 
 # AllMeans <- AllMeans %>% 
 #   mutate(Timepoint = case_when(
@@ -338,6 +376,38 @@ Subsetting by species and changing respiration values to absolute value.
 # # Changing respiration rates to absolute values
 # Pact$Rdark.mean <- abs(Pact$Rdark.mean)
 # Mcap$Rdark.mean <- abs(Mcap$Rdark.mean)
+=======
+# Adding timepoint column to AllMeans 
+Means <- Means %>% 
+  mutate(Timepoint = case_when(
+    Date == "20180922" ~ "Day 1",
+    Date == "20180923" ~ "Day 2", 
+    Date == "20180929" ~ "1 week",
+    Date == "20181006" ~ "2 week",
+    Date == "20181020" ~ "4 week",
+    Date == "20181103" ~ "6 week",
+    Date == "20181117" ~ "8 week")
+  ) %>%
+  mutate(Species = case_when(
+    Species == "Montipora" ~ "Montipora capitata",
+    Species == "Pocillopora" ~ "Pocillopora acuta"
+  )) %>%
+  mutate(Measurement = case_when(
+    Measurement == "Pgross_umol.cm2.hr" ~ "Gross Photosynthesis",
+    Measurement == "Pnet_umol.cm2.hr" ~ "Net Photosynthesis",
+    Measurement == "Rdark_umol.cm2.hr" ~ "Dark Respiration"
+  )); Means
+
+Means$Timepoint <- factor(Means$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week"))
+
+# Separating by species 
+Pact  <- subset(Means, Species=="Pocillopora")
+Mcap <- subset(Means, Species=="Montipora")
+
+# Changing respiration rates to absolute values
+#Pact$Rdark.mean <- abs(Pact$Rdark.mean)
+#Mcap$Rdark.mean <- abs(Mcap$Rdark.mean)
+>>>>>>> 39a6705261875c736dd71c45c5d536ac867d9beb
 ```
 
 Plotting respiration and photosynthetic rates. 
@@ -431,6 +501,36 @@ To plot a response variable with both species on one graph, use facet_wrap(~Spec
 # ggsave(file="Output/Final_Figures/Respirometry.pdf", Resp.Figs, width = 11, height = 10, units = c("in"))
 # ggsave(file="Output/Final_Figures/Respirometry.png", Resp.Figs, width = 11, height = 10, units = c("in"))
 ```
+
+Facet wrap figure.
+```{r}
+colors <- c("lightblue", "blue", "salmon", "red3")
+
+Resp_facetplot <- ggplot(Means, aes(x=Timepoint, y = Value, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(Measurement ~ Species, scales = "free") +
+  geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2) +
+  scale_color_manual(values = colors) + 
+  xlab("Timepoint") + 
+  ylab(bquote('Change in oxygen levels ('*mu~ 'mol' ~cm^-2*~ h^-1*')')) + # y-axis label and y axis range
+  theme_classic() + 
+  theme(legend.position = "left") +
+  geom_vline(xintercept = c(7.8), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  #scale_x_discrete(breaks = c("Week1", "Week2", "Week4", "Week6", "Week8", "Week12", "Week16"), labels = c("1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week")) +
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  # Change axis line
+  axis.line = element_line(colour = "black")); Resp_facetplot
+
+ggsave(file="Output/Final_Figures/Respirometry.pdf", Resp_facetplot, width = 11, height = 10, units = c("in"))
+ggsave(file="Output/Final_Figures/Respirometry.png", Resp_facetplot, width = 11, height = 10, units = c("in"))
+```
+
+
+
 
 Statistical analyses. 
 ```{r}
