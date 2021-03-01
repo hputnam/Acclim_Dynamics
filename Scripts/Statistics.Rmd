@@ -836,9 +836,9 @@ Pacuta_group <- autoplot(Pacuta_scaled_data, data = Pacuta_data, colour = 'Group
   theme(legend.position = "top") +
   theme_bw() + scale_color_manual(values = line.cols) + scale_fill_manual(values = fill.cols) + ggtitle("P. acuta"); Pacuta_group
 
-Stress.PCAs <- arrangeGrob(Mcap_group, Pacuta_group, ncol=2)
-ggsave(file="Output/Final_Figures/PCA-stress.pdf", Stress.PCAs, width = 10, height = 4, units = c("in"))
-ggsave(file="Output/Final_Figures/PCA-stress.png", Stress.PCAs, width = 10, height = 4, units = c("in"))
+Stress.PCAs <- arrangeGrob(Mcap_group, Pacuta_group, ncol=1)
+ggsave(file="Output/Final_Figures/PCA-stress.pdf", Stress.PCAs, width = 4, height = 10, units = c("in"))
+ggsave(file="Output/Final_Figures/PCA-stress.png", Stress.PCAs, width = 4, height = 10, units = c("in"))
 ```
 
 ## Plotting timeseries with recovery timepoints. 
@@ -858,9 +858,9 @@ Mcap_timeseries <- autoplot(Mcap_scaled_timeseriesdata, data = Mcap_timeseriesda
          frame=TRUE, frame.type = 'norm') + theme_bw() +
   scale_color_manual(values = time.line.cols) + scale_fill_manual(values = time.fill.cols) + ggtitle("M. capitata"); Mcap_timeseries
 
-Timeseries.PCAs <- arrangeGrob(Mcap_timeseries, Pacuta_timeseries, ncol=2)
-ggsave(file="Output/Final_Figures/PCA-timeseries.pdf", Timeseries.PCAs, width = 10, height = 4, units = c("in"))
-ggsave(file="Output/Final_Figures/PCA-timeseries.png", Timeseries.PCAs, width = 10, height = 4, units = c("in"))
+Timeseries.PCAs <- arrangeGrob(Mcap_timeseries, Pacuta_timeseries, ncol=1)
+ggsave(file="Output/Final_Figures/PCA-timeseries.pdf", Timeseries.PCAs, width = 4, height = 10, units = c("in"))
+ggsave(file="Output/Final_Figures/PCA-timeseries.png", Timeseries.PCAs, width = 4, height = 10, units = c("in"))
 ```
 
 
