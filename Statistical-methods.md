@@ -778,7 +778,7 @@ GAMs seem like they could be a good fit.
 
 **3 phases**
 
-![3-phases](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Three-Phases-PCAs.png?raw=true)
+![3-phases](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/PCA-threephase.png?raw=true)
 
 
 ### Stress Treatment
