@@ -146,7 +146,7 @@ Resp.CV <- ggplot(resp.mad, aes(x=Timepoint, y = cv, group = Treatment, color = 
   axis.line = element_line(colour = "black")); Resp.CV
   
 Resp <- arrangeGrob(Resp.MAD, Resp.CV, ncol=1)
-ggsave(file="Output/Final_Figures/MAD-Resp.png", Resp, width = 11, height = 10, units = c("in"))
+ggsave(file="Output/Final_Figures/MAD-Resp.png", Resp, width = 11, height = 12, units = c("in"))
 ```
 
 ```{r}
@@ -186,7 +186,7 @@ CHL.CV <- ggplot(chl.mad, aes(x=Timepoint, y = cv, group = Treatment, color = Tr
   
 Chl <- arrangeGrob(CHLMAD, CHL.CV, ncol=1)
 
-ggsave(file="Output/Final_Figures/MAD-Chl.png", Chl, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/MAD-Chl.png", Chl, width = 11, height = 8, units = c("in"))
 ```
 
 ```{r}
@@ -225,7 +225,7 @@ PROT.TAC.CV <- ggplot(Tac.prot.mad, aes(x=Timepoint, y = cv, group = Treatment, 
 
 ProtTAC <- arrangeGrob(PROT.TAC.MAD, PROT.TAC.CV, ncol=1)
 
-ggsave(file="Output/Final_Figures/MAD-Prot-TAC.png", ProtTAC, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/MAD-Prot-TAC.png", ProtTAC, width = 11, height = 12, units = c("in"))
 ```
 
 AFDW
@@ -264,7 +264,7 @@ AFDW.CV <- ggplot(AFDW.mad, aes(x=Timepoint, y = cv, group = Treatment, color = 
   axis.line = element_line(colour = "black")); AFDW.CV
 
 AFDW <- arrangeGrob(AFDW.MAD, AFDW.CV, ncol=1)
-ggsave(file="Output/Final_Figures/MAD-AFDW.png", AFDW, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/MAD-AFDW.png", AFDW, width = 11, height = 12, units = c("in"))
 ```
 
 
