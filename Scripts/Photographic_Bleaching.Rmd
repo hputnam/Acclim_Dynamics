@@ -133,46 +133,6 @@ All.Means$Timepoint <- factor(All.Means$Timepoint, levels = c("Week1", "Week2", 
 All.Means <- All.Means %>% subset(Timepoint!="Week5")
 ```
 
-Plotting bleaching intensity for both species, and for all timepoints and treatments. 
-```{r}
-cols <- c("lightblue", "blue", "salmon", "red3")
-
-Fig.All <- ggplot(All.Means, aes(x=Timepoint, y=mean, group=SpGroup)) + 
-  geom_line(aes(linetype= Species, colour=Treatment, group=SpGroup), position = position_dodge(width = 0.1), alpha=0.5) + # colour, group both depend on cond2
-  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), colour="black", width=0, size=0.5, position = position_dodge(width = 0.1)) +
-  geom_point(aes(colour=Treatment, shape=Species), size = 1, position = position_dodge(width = 0.1)) +
-  scale_colour_manual(values=cols) +
-  #annotate("text", x=43, y=1.85, label = "a", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=132, y=2.15, label = "b", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=c(43,43), y=c(2.45,2.2), label = "ab", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=c(141,141), y=c(3.15,3.4), label = "c", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=35, y=0.5, label = ".", size = 1) + #add text to the graphic for posthoc letters
-  xlab("Timepoint") +
-  ylab(expression(paste("Color Score"))) +
-  ylim(-110, 20) +
-  theme_bw() + #Set the background color
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
-        axis.line = element_line(color = 'black'), #Set the axes color
-        panel.border = element_blank(), #Set the border
-        panel.grid.major = element_blank(), #Set the major gridlines
-        panel.grid.minor = element_blank(), #Set the minor gridlines
-        plot.background=element_blank(),  #Set the plot background
-        legend.position= "right") + #remove legend background
-  ggtitle("Photographic Bleaching") +
-  theme(plot.title = element_text(face = 'bold', 
-                                  size = 10, 
-                                  hjust = 0))
-Fig.All
-
-#pdf("Physiology_variables/Bleaching_All.pdf")
-#print(Fig.All, newpage = FALSE)
-#dev.off()
-
-#png("Physiology_variables/Bleaching_All.png")
-#print(Fig.All, newpage = FALSE)
-#dev.off()
-```
-
 Subsetting larger bleaching dataframe to species level.
 ```{r}
 Mcap.Blch <- subset(All.Means, Species=="Montipora")
@@ -209,78 +169,5 @@ Blch_plot <- ggplot(All.Means, aes(x=Timepoint, y = Bleaching.Score, group = Tre
 
 ggsave(file="Output/Final_Figures/Photographic_Bleaching.pdf", Blch_plot, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Final_Figures/Photographic_Bleaching.png", Blch_plot, width = 11, height = 6, units = c("in"))
-```
-
-
-Calculating M.cap means and plotting bleaching score
-```{r}
-Fig.MC <- ggplot(Mcap.Blch, aes(x=Timepoint, y=mean, group=Treatment)) + 
-  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), colour="black", width=.1, position = position_dodge(width = 0.1)) +
-  geom_point(aes(colour=Treatment), size = 2, position = position_dodge(width = 0.1)) +
-  geom_line(aes(colour=Treatment, group=Treatment), position = position_dodge(width = 0.2), alpha=0.4) + # colour, group both depend on cond2
-  scale_colour_manual(values=cols) +
-  #annotate("text", x=43, y=1.85, label = "a", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=132, y=2.15, label = "b", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=c(43,43), y=c(2.45,2.2), label = "ab", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=c(141,141), y=c(3.15,3.4), label = "c", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=35, y=0.5, label = ".", size = 1) + #add text to the graphic for posthoc letters
-  xlab("Timepoint") +
-  ylab(expression(paste("Color Score"))) +
-  ylim(-110,20)+
-  theme_bw() + #Set the background color
-  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3), #Set the text angle
-        axis.line = element_line(color = 'black'), #Set the axes color
-        panel.border = element_blank(), #Set the border
-        panel.grid.major = element_blank(), #Set the major gridlines
-        panel.grid.minor = element_blank(), #Set the minor gridlines
-        plot.background=element_blank(),  #Set the plot background
-        legend.position='none') + #remove legend background
-  ggtitle("A) M. capitata") +
-  theme(plot.title = element_text(face = 'bold.italic', 
-                                  size = 14, 
-                                  hjust = 0)) +
-  geom_vline(xintercept = c(8.45), colour="black", linetype="dotted")
-
-Fig.MC
-
-```
-
-Calculating P. acuta means and plotting bleaching score
-```{r}
-Fig.PA <- ggplot(Pact.Blch, aes(x=Timepoint, y=mean, group=Treatment)) + 
-  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), colour="black", width=.1, position = position_dodge(width = 0.1)) +
-  geom_point(aes(colour=Treatment), size = 2, position = position_dodge(width = 0.1)) +
-  geom_line(aes(colour=Treatment, group=Treatment), position = position_dodge(width = 0.2), alpha=0.4) + # colour, group both depend on cond2
-  scale_colour_manual(values=cols) +
-  #annotate("text", x=43, y=1.85, label = "a", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=132, y=2.15, label = "b", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=c(43,43), y=c(2.45,2.2), label = "ab", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=c(141,141), y=c(3.15,3.4), label = "c", size = 3) + #add text to the graphic for posthoc letters
-  #annotate("text", x=35, y=0.5, label = ".", size = 1) + #add text to the graphic for posthoc letters
-  xlab("Timepoint") +
-  ylab(expression(paste("Color Score"))) +
-  ylim(-110,20)+
-  theme_bw() + #Set the background color
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
-        axis.line = element_line(color = 'black'), #Set the axes color
-        panel.border = element_blank(), #Set the border
-        panel.grid.major = element_blank(), #Set the major gridlines
-        panel.grid.minor = element_blank(), #Set the minor gridlines
-        plot.background=element_blank()) +  #Set the plot background
-       # legend.position='none') + #remove legend background
-  ggtitle("B) P. acuta") +
-  theme(plot.title = element_text(face = 'bold.italic', 
-                                  size = 14, 
-                                  hjust = 0)) + 
-  geom_vline(xintercept = c(8.45), colour="black", linetype="dotted") 
-
-Fig.PA
-
-
-Colorscr <- ggarrange(Fig.MC, Fig.PA,ncol = 2, nrow = 1)
-ggsave("Output/All.Color.Score.pdf", Colorscr, width=10, height=4)
-
-Colorscr <- ggarrange(Fig.MC, Fig.PA,ncol = 2, nrow = 1)
-ggsave("Output/All.Color.Score.png", Colorscr, width=10, height=4)
 ```
 

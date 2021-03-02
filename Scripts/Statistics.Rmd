@@ -196,7 +196,6 @@ hist(residuals(Pacuta_Pnet_LMER))
 leveneTest(pacuta_full_data$Pnet_umol.cm2.hr ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
 #bartlett.test(Pacuta_Pnet_LMER)
 
-blast <- blast %>% subset(Gene_ID == "x")
 
 ## significance of model
 anova(Pacuta_Pnet_LMER, ddf="lme4", type='III')

@@ -26,6 +26,8 @@ Need to run Statistics.Rmd, Photographic_Bleaching.Rmd, Survivorship.Rmd first
 ## splots[[1]] = mcap surv; splots[[2]] = pacuta surv
 ## Blch_plot = color score 
 
-
+ggarrange(Blch_plot, ggarrange(mcap.three, pacuta.three,
+          labels = c("A", "B")),
+          nrow=2)
 
 ```
