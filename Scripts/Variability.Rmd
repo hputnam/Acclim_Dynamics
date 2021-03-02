@@ -250,7 +250,7 @@ AFDW.MAD <- ggplot(AFDW.mad, aes(x=Timepoint, y = mad, group = Treatment, color 
 
 AFDW.CV <- ggplot(AFDW.mad, aes(x=Timepoint, y = cv, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
-  facet_grid(Response ~ Species, scales = "free") +
+  facet_grid(Response ~ Species) +
   scale_color_manual(values = cols) + 
   xlab("Timepoint") + ylab("Coefficient of Variation") + ggtitle("Tissue Biomass CV") +
   theme_classic() + 
