@@ -147,6 +147,7 @@ AFDW_Ratio_plot <- ggplot(Ratio.means, aes(x=Timepoint, y = Ratio_AFDW.mg.cm2, g
   theme(panel.border = element_blank(),
   panel.grid.major = element_blank(),
   panel.grid.minor = element_blank(),
+  strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
   # Change axis line
   axis.line = element_line(colour = "black")); AFDW_Ratio_plot
 

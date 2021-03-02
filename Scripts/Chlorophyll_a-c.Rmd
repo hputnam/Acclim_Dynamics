@@ -281,63 +281,6 @@ export_formattable <- function(f, file, width = "100%", height = NULL,
 export_formattable(Chl.samples.sizes, file = "Output/Chl_means_samplesizes.png")
 ```
 
-Plotting timeseries
-## BELOW IS USING THE INCORRECT MEANS TABLE. RE-VISIT TO TAKE THIS OUT 
-```{r}
-cols <- c("lightblue", "blue", "pink", "red")
-
-Fig.chla <- ggplot(mean.chl.a, aes(x=Timepoint, y=mean, group=Treatment)) + 
-  geom_line(aes(colour=Treatment, group=Treatment), position = position_dodge(width = 0.1), alpha=1) + # colour, group both depend on cond2
-  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), colour="darkgray", width=0, size=1, position = position_dodge(width = 0.1)) +
-  geom_point(aes(colour=Treatment), size = 3, position = position_dodge(width = 0.1)) +
-  scale_colour_manual(values=cols) +
-  xlab("Timepoint") +
-  ylab(expression(Chl-a ~(µg ~cm^-2))) +
-  #ylim(-0.5,1.5) +
-  theme_bw() + #Set the background color
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
-        axis.line = element_line(color = 'black'), #Set the axes color
-        panel.border = element_blank(), #Set the border
-        panel.grid.major = element_blank(), #Set the major gridlines
-        panel.grid.minor = element_blank(), #Set the minor gridlines
-        legend.position = "none", #remove legend
-        plot.background=element_blank())+  #Set the plot background
-  ggtitle("A) Chla") +
-  facet_grid(rows=vars(Species), scales="free_y") +
-  geom_vline(xintercept = c(7.2), colour="black", linetype="dotted")+
-  theme(plot.title = element_text(face = 'bold.italic', 
-                                  size = 12, 
-                                  hjust = 0))
-Fig.chla
-
-Fig.chlc2 <- ggplot(mean.chl.c, aes(x=Timepoint, y=mean, group=Treatment)) + 
-  geom_line(aes(colour=Treatment, group=Treatment), position = position_dodge(width = 0.1), alpha=1) + # colour, group both depend on cond2
-  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), colour="darkgray", width=0, size=1, position = position_dodge(width = 0.1)) +
-  geom_point(aes(colour=Treatment), size = 3, position = position_dodge(width = 0.1)) +
-  scale_colour_manual(values=cols) +
-  xlab("Timepoint") +
-  ylab(expression(Chl-c2 ~(µg ~cm^-2))) +
-  #ylim(-0.5,1.5) +
-  theme_bw() + #Set the background color
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
-        axis.line = element_line(color = 'black'), #Set the axes color
-        panel.border = element_blank(), #Set the border
-        panel.grid.major = element_blank(), #Set the major gridlines
-        panel.grid.minor = element_blank(), #Set the minor gridlines
-        legend.position = "none", #remove legend
-        plot.background=element_blank())+  #Set the plot background
-  ggtitle("B) Chlc2") +
-  facet_grid(rows=vars(Species), scales="free_y") +
-  geom_vline(xintercept = c(7.2), colour="black", linetype="dotted")+
-  theme(plot.title = element_text(face = 'bold.italic', 
-                                  size = 12, 
-                                  hjust = 0))
-Fig.chlc2
-
-# chl.Figs <- arrangeGrob(Fig.chla, Fig.chlc2, ncol=2)
-# ggsave(file="Output/Chlorophyll.pdf", chl.Figs, width = 11, height = 6, units = c("in"))
-```
-
 Plotting timeseries with corrected means table. 
 
 ```{r}
@@ -359,111 +302,14 @@ CHL <- ggplot(Chl_means, aes(x=Timepoint, y = Value, group = Treatment, color = 
   theme(panel.border = element_blank(),
   panel.grid.major = element_blank(),
   panel.grid.minor = element_blank(),
-<<<<<<< HEAD
   strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
   # Change axis line
-  axis.line = element_line(colour = "black"))
-
-CHL
-=======
-  # Change axis line
   axis.line = element_line(colour = "black")); CHL
->>>>>>> 39a6705261875c736dd71c45c5d536ac867d9beb
+
 
 ggsave(file="Output/Final_Figures/Chlorophyll.pdf", CHL, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Final_Figures/Chlorophyll.png", CHL, width = 11, height = 6, units = c("in"))
 ```
-
-
-Plotting timeseries with corrected means table. 
-```{r}
-## Chlc2 
-Mcap.chlc <- Chlc2_means %>% subset(Species=="Mcapitata")
-Pacuta.chlc <- Chlc2_means %>% subset(Species=="Pacuta")
-  
-Mcap.Chlc2.fig <- ggplot(Mcap.chlc, aes(x=Timepoint, y = chlc2.ug.cm2, group = Treatment, color = Treatment)) +
-  geom_line() + geom_point() +
-  geom_errorbar(aes(ymin=chlc2.ug.cm2-se, ymax=chlc2.ug.cm2+se), width=.2) +
-  scale_color_manual(values = cols) + 
-  xlab("Timepoint") + 
-  ylab(expression(Chlc2 ~(ug ~cm^2))) +
-  theme_bw() + 
-  ylim(0,1.25) +
-  ggtitle("Montipora capitata") +
-  theme(legend.position = c(), legend.title = element_text(size=8), legend.text = element_text(size=7), legend.background = element_blank(), 
-       legend.key = element_blank()) +
-  geom_vline(xintercept = c(7.35), colour="black", linetype="dotted") +
-  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
-  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) #Set the text angle 
-Mcap.Chlc2.fig
-
-Pacuta.Chlc2.fig <- ggplot(Pacuta.chlc, aes(x=Timepoint, y = chlc2.ug.cm2, group = Treatment, color = Treatment)) +
-  geom_line() + geom_point() +
-  geom_errorbar(aes(ymin=chlc2.ug.cm2-se, ymax=chlc2.ug.cm2+se), width=.2) +
-  scale_color_manual(values = cols) + 
-  xlab("Timepoint") + 
-  ylab(expression(Chlc2 ~(ug ~cm^2))) +
-  theme_bw() + 
-  ylim(0,1.25) +
-  ggtitle("Pocillopora acuta") +
-  theme(legend.position = c(0.9,0.8), legend.title = element_text(size=8), legend.text = element_text(size=7), legend.background = element_blank(), 
-        legend.key = element_blank()) +
-  geom_vline(xintercept = c(7.35), colour="black", linetype="dotted") +
-  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
-  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) #Set the text angle 
-Pacuta.Chlc2.fig
-
-## Chla 
-Mcap.chla <- Chla_means %>% subset(Species=="Mcapitata")
-Pacuta.chla <- Chla_means %>% subset(Species=="Pacuta")
-  
-Mcap.Chla.fig <- ggplot(Mcap.chla, aes(x=Timepoint, y = chla.ug.cm2, group = Treatment, color = Treatment)) +
-  geom_line() + geom_point() +
-  geom_errorbar(aes(ymin=chla.ug.cm2-se, ymax=chla.ug.cm2+se), width=.2) +
-  scale_color_manual(values = cols) + 
-  xlab("Timepoint") + 
-  ylab(expression(Chla ~(ug ~cm^2))) +
-  theme_bw() + 
-  ylim(0,4.5) +
-  ggtitle("Montipora capitata") +
-  theme(legend.position = c(), legend.title = element_text(size=8), legend.text = element_text(size=7), legend.background = element_blank(), 
-       legend.key = element_blank()) +
-  geom_vline(xintercept = c(7.35), colour="black", linetype="dotted") +
-  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
-  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) #Set the text angle 
-Mcap.Chla.fig
-
-Pacuta.Chla.fig <- ggplot(Pacuta.chla, aes(x=Timepoint, y = chla.ug.cm2, group = Treatment, color = Treatment)) +
-  geom_line() + geom_point() +
-  geom_errorbar(aes(ymin=chla.ug.cm2-se, ymax=chla.ug.cm2+se), width=.2) +
-  scale_color_manual(values = cols) + 
-  xlab("Timepoint") + 
-  ylab(expression(Chla ~(ug ~cm^2))) +
-  theme_bw() + 
-  ylim(0,4.5) +
-  ggtitle("Pocillopora acuta") +
-  theme(legend.position = c(0.9,0.8), legend.title = element_text(size=8), legend.text = element_text(size=7), legend.background = element_blank(), 
-        legend.key = element_blank()) +
-  geom_vline(xintercept = c(7.35), colour="black", linetype="dotted") +
-  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
-  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) #Set the text angle 
-Pacuta.Chla.fig
-
-Chl.Figs2 <- arrangeGrob(Mcap.Chlc2.fig, Pacuta.Chlc2.fig, Mcap.Chla.fig, Pacuta.Chla.fig, ncol=2)
-ggsave(file="Output/Final_Figures/Chlorophyll-final2.pdf", Chl.Figs2, width = 11, height = 6, units = c("in"))
-ggsave(file="Output/Final_Figures/Chlorophyll-final2.png", Chl.Figs2, width = 11, height = 6, units = c("in"))
-```
-
-Statistics. 
-```{r}
-
-```
-
-
-
-
-
-
 
 ############## Bleaching Fragment Test prior to running the rest of the samples.
 
