@@ -300,7 +300,11 @@ mutate(mad = mad(Response.Value, center = median(Response.Value), constant = 1.4
 
 ![resp-mad](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/MAD-Resp.png?raw=true)
 
+![Chl-mad](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/MAD-Chl.png?raw=true)
 
+![prot-mad](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/MAD-Prot-TAC.png?raw=true)
+
+![AFDW-mad](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/MAD-AFDW.png?raw=true)
 
 ### Statistical Methods
 
