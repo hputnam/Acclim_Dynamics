@@ -11,7 +11,7 @@ library(ggpubr)
 set.seed(54321)
 
 # import data
-data <- read.csv("RAnalysis/Data/full_phys.csv") #read in file
+data <- read.csv("Output/results_physiology.csv") #read in file
 data <- data[ ,-c(10:12)]
 data <- na.omit(data)
 unique(data$Phase)
@@ -94,4 +94,4 @@ Pacuta.plot <- Pact.pca.out %>%
 multi.page <- ggarrange(Mcapitata.plot, Pacuta.plot,
                         nrow = 2, ncol = 1)
 
-ggexport(multi.page, filename = "RAnalysis/Output/multi.page.ggplot2.pdf")
+ggexport(multi.page, filename = "Output/multi.page.ggplot2.pdf")
