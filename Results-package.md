@@ -312,7 +312,7 @@ mutate(mad = mad(Response.Value, center = median(Response.Value), constant = 1.4
 
 Next steps:  
 - 1.4826 value for non Gaussian distribution   
-- stats test that Tanner references (bf test)
+- stats test that Tanner references (bf test)  
 - Color score, Growth  
 - Multivariate on gene counts  
 - multivariate MAD from prcomp?
