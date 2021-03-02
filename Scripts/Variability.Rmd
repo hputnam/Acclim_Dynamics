@@ -52,7 +52,7 @@ Calculating MAD (Median Absolute Deviation).
 phys.mad <- phys %>% select(-chla.ug.cm2) %>% gather("Response", "Response.Value", 10:18) %>%
   group_by(Species, Treatment, Timepoint, Response) %>%
   mutate(mad = mad(Response.Value, center = median(Response.Value), constant = 1.4826, na.rm = FALSE, low = FALSE, high = FALSE)) %>%
-  mutate(cv = ((mad/mean(Response.Value))*100)) %>% filter(cv<200) %>% 
+  mutate(cv = ((mad/mean(Response.Value))*100)) %>% 
   #gather("Measurement", "Value", 13:14) %>%
   mutate(Species = case_when(
     Species == "Mcapitata" ~ "Montipora capitata",
@@ -103,6 +103,8 @@ total.CV <- ggplot(phys.mad, aes(x=Timepoint, y = cv, group = Treatment, color =
   panel.grid.minor = element_blank(),
   # Change axis line
   axis.line = element_line(colour = "black")); total.CV
+
+ggsave(file="Output/Final_Figures/CV-total.png", total.CV, width = 11, height = 10, units = c("in"))
 ```
 
 
@@ -127,7 +129,7 @@ Resp.MAD <- ggplot(resp.mad, aes(x=Timepoint, y = mad, group = Treatment, color 
   # Change axis line
   axis.line = element_line(colour = "black")); Resp.MAD
 
-Resp.CV <- ggplot(resp.mad, aes(x=Timepoint, y = cv, group = Treatment, color = Treatment)) +
+#Resp.CV <- ggplot(resp.mad, aes(x=Timepoint, y = cv, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
   facet_grid(Response ~ Species, scales = "free") +
   scale_color_manual(values = cols) + 
@@ -143,8 +145,8 @@ Resp.CV <- ggplot(resp.mad, aes(x=Timepoint, y = cv, group = Treatment, color = 
   # Change axis line
   axis.line = element_line(colour = "black")); Resp.CV
   
-Resp <- arrangeGrob(Resp.MAD, Resp.CV, ncol=1)
-ggsave(file="Output/Final_Figures/MAD-Resp.png", Resp, width = 11, height = 10, units = c("in"))
+#Resp <- arrangeGrob(Resp.MAD, Resp.CV, ncol=1)
+ggsave(file="Output/Final_Figures/MAD-Resp.png", Resp.MAD, width = 11, height = 10, units = c("in"))
 ```
 
 ```{r}

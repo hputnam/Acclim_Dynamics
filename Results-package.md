@@ -310,6 +310,9 @@ mutate(mad = mad(Response.Value, center = median(Response.Value), constant = 1.4
 
 ![cv](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/CV-total.png?raw=true)
 
+TAC values
+![tac](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/TAC-values.png?raw=true)
+
 Next steps:  
 - 1.4826 value for non Gaussian distribution   
 - stats test that Tanner references (bf test)
