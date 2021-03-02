@@ -28,7 +28,7 @@ library(tidyr)
 
 Read in dataframes. Run "Statistics.Rmd" script first to create the physiology results dataframe. 
 ```{r}
-phys <- read.csv("Output/results_physiology.csv")
+phys <- read.csv("Output/results_physiology.csv") 
 color <- read.csv("Output/results_colorscore.csv")
 growth <- read.csv("Output/results_growth.csv")
 
@@ -63,7 +63,6 @@ phys.mad <- phys %>% select(-chla.ug.cm2) %>% unite(Big.Group, Group, Species, r
 phys.mad$Timepoint <- factor(phys.mad$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week", "12 week", "16 week"))
 ggplot(phys.mad, aes(x=Treatment, y=mad, color=Treatment)) + geom_boxplot() + facet_grid(Species ~ Response) + theme_bw()
 
-
 ## Color Score 
 color.mad <- color %>% group_by(Species, Treatment, Blch.Time) %>%
   mutate(mad = mad(Bleaching.Score, center = median(Bleaching.Score), constant = 1.4826, na.rm = FALSE, low = FALSE, high = FALSE)) %>%
@@ -89,8 +88,6 @@ growth.mad$Timepoint <- factor(growth.mad$Timepoint, levels = c("Week1", "Week2"
 
 Plot CV 
 ```{r}
-cv.subset <- phys.mad %>% filter(cv<200)
-
 total.CV <- ggplot(phys.mad, aes(x=Timepoint, y = cv, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
   facet_grid(Species ~ Response) +
@@ -107,24 +104,7 @@ total.CV <- ggplot(phys.mad, aes(x=Timepoint, y = cv, group = Treatment, color =
   # Change axis line
   axis.line = element_line(colour = "black")); total.CV
 
-CV.subset <- ggplot(cv.subset, aes(x=Timepoint, y = cv, group = Treatment, color = Treatment)) +
-  geom_line() + geom_point() +
-  facet_grid(Species ~ Response) +
-  scale_color_manual(values = cols) + 
-  xlab("Timepoint") + ylab("Coefficient of Variation (%)") + ggtitle("Subset CV") +
-  theme_classic() + 
-  theme(legend.position = "left") +
-  geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
-  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
-  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
-  theme(panel.border = element_blank(),
-  panel.grid.major = element_blank(),
-  panel.grid.minor = element_blank(),
-  # Change axis line
-  axis.line = element_line(colour = "black")); CV.subset
-
 ggsave(file="Output/Final_Figures/CV-total.png", total.CV, width = 11, height = 10, units = c("in"))
-ggsave(file="Output/Final_Figures/CV-subset.png", total.CV, width = 11, height = 10, units = c("in"))
 ```
 
 
@@ -149,9 +129,9 @@ Resp.MAD <- ggplot(resp.mad, aes(x=Timepoint, y = mad, group = Treatment, color 
   # Change axis line
   axis.line = element_line(colour = "black")); Resp.MAD
 
-#Resp.CV <- ggplot(resp.mad, aes(x=Timepoint, y = cv, group = Treatment, color = Treatment)) +
+Resp.CV <- ggplot(resp.mad, aes(x=Timepoint, y = cv, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
-  facet_grid(Response ~ Species, scales = "free") +
+  facet_grid(Response ~ Species) +
   scale_color_manual(values = cols) + 
   xlab("Timepoint") + ylab("Coefficient of Variation (%)") + ggtitle("Resp / Photo CV") +
   theme_classic() + 
@@ -165,8 +145,8 @@ Resp.MAD <- ggplot(resp.mad, aes(x=Timepoint, y = mad, group = Treatment, color 
   # Change axis line
   axis.line = element_line(colour = "black")); Resp.CV
   
-#Resp <- arrangeGrob(Resp.MAD, Resp.CV, ncol=1)
-ggsave(file="Output/Final_Figures/MAD-Resp.png", Resp.MAD, width = 11, height = 10, units = c("in"))
+Resp <- arrangeGrob(Resp.MAD, Resp.CV, ncol=1)
+ggsave(file="Output/Final_Figures/MAD-Resp.png", Resp, width = 11, height = 10, units = c("in"))
 ```
 
 ```{r}
@@ -188,7 +168,25 @@ CHLMAD <- ggplot(chl.mad, aes(x=Timepoint, y = mad, group = Treatment, color = T
   panel.grid.minor = element_blank(),
   axis.line = element_line(colour = "black")); CHLMAD
 
-ggsave(file="Output/Final_Figures/MAD-Chl.png", CHLMAD, width = 11, height = 6, units = c("in"))
+CHL.CV <- ggplot(chl.mad, aes(x=Timepoint, y = cv, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(~ Species) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + ylab("Coefficient of Variation (%)") + ggtitle("Chl CV") +
+  theme_classic() + 
+  theme(legend.position = "left") +
+  #geom_vline(xintercept = c(7.8), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  # Change axis line
+  axis.line = element_line(colour = "black")); CHL.CV
+  
+Chl <- arrangeGrob(CHLMAD, CHL.CV, ncol=1)
+
+ggsave(file="Output/Final_Figures/MAD-Chl.png", Chl, width = 11, height = 6, units = c("in"))
 ```
 
 ```{r}
@@ -210,7 +208,24 @@ PROT.TAC.MAD <- ggplot(Tac.prot.mad, aes(x=Timepoint, y = mad, group = Treatment
   panel.grid.minor = element_blank(),
   axis.line = element_line(colour = "black")); PROT.TAC.MAD
 
-ggsave(file="Output/Final_Figures/MAD-Prot-TAC.png", PROT.TAC.MAD, width = 11, height = 6, units = c("in"))
+PROT.TAC.CV <- ggplot(Tac.prot.mad, aes(x=Timepoint, y = cv, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(Response ~ Species) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + ylab("Coefficient of Variation (%)") + ggtitle("TAC and Protein CV") +
+  theme_classic() + 
+  theme(legend.position = "left") +
+  geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  axis.line = element_line(colour = "black")); PROT.TAC.CV
+
+ProtTAC <- arrangeGrob(PROT.TAC.MAD, PROT.TAC.CV, ncol=1)
+
+ggsave(file="Output/Final_Figures/MAD-Prot-TAC.png", ProtTAC, width = 11, height = 6, units = c("in"))
 ```
 
 AFDW
@@ -233,7 +248,23 @@ AFDW.MAD <- ggplot(AFDW.mad, aes(x=Timepoint, y = mad, group = Treatment, color 
   panel.grid.minor = element_blank(),
   axis.line = element_line(colour = "black")); AFDW.MAD
 
-ggsave(file="Output/Final_Figures/MAD-AFDW.png", AFDW.MAD, width = 11, height = 6, units = c("in"))
+AFDW.CV <- ggplot(AFDW.mad, aes(x=Timepoint, y = cv, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(Response ~ Species, scales = "free") +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + ylab("Coefficient of Variation") + ggtitle("Tissue Biomass CV") +
+  theme_classic() + 
+  theme(legend.position = "left") +
+  geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  axis.line = element_line(colour = "black")); AFDW.CV
+
+AFDW <- arrangeGrob(AFDW.MAD, AFDW.CV, ncol=1)
+ggsave(file="Output/Final_Figures/MAD-AFDW.png", AFDW, width = 11, height = 6, units = c("in"))
 ```
 
 
