@@ -306,6 +306,15 @@ mutate(mad = mad(Response.Value, center = median(Response.Value), constant = 1.4
 
 ![AFDW-mad](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/MAD-AFDW.png?raw=true)
 
+Next steps:  
+- Decide if CV or MAD is more telling  
+- stats test that Tanner references  
+- Color score, Growth  
+- Multivariate on gene counts  
+- multivariate MAD from prcomp? 
+
+
+
 ### Statistical Methods
 
 Markdown sheet found [here](https://github.com/hputnam/Acclim_Dynamics/blob/master/Statistical-methods.md).
