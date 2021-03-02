@@ -286,8 +286,10 @@ TAC <- left_join(TAC.values, metadata) %>%
 
 MAD = Median Absolute Deviation  
 - Measures variation within each metric  
-- MAD = median(| median of group - absolute deviation of each sample group |)  
+- MAD = median(| absolute deviation of each sample group - median of group|)  
 - mad function in R
+
+ANOVA on the absolute deviations of each sample group (functionally equivalent to Brown-Forsythe test)
 
 CV = Coefficient of variation  
 - magnitudes of individual variation across phys traits  
@@ -295,7 +297,7 @@ CV = Coefficient of variation
 
 ```
 mutate(mad = mad(Response.Value, center = median(Response.Value), constant = 1.4826, na.rm = FALSE, low = FALSE, high = FALSE)) %>%
-  mutate(cv = (mad/mean(Response.Value)*100))
+  mutate(cv = ((mad/mean(Response.Value))*100))
   ```
 
 ![resp-mad](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/MAD-Resp.png?raw=true)
@@ -307,11 +309,11 @@ mutate(mad = mad(Response.Value, center = median(Response.Value), constant = 1.4
 ![AFDW-mad](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/MAD-AFDW.png?raw=true)
 
 Next steps:  
-- Decide if CV or MAD is more telling  
-- stats test that Tanner references  
+- 1.4826 value for non Gaussian distribution   
+- stats test that Tanner references (bf test)
 - Color score, Growth  
 - Multivariate on gene counts  
-- multivariate MAD from prcomp? 
+- multivariate MAD from prcomp?
 
 
 
