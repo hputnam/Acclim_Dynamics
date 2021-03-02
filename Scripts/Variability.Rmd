@@ -49,9 +49,10 @@ Calculating MAD (Median Absolute Deviation).
 
 ```{r}
 ## Physiology 
-phys.mad <- phys %>% select(-chla.ug.cm2) %>% gather("Response", "Response.Value", 10:18) %>%
-  group_by(Species, Treatment, Timepoint, Response) %>%
-  mutate(mad = mad(Response.Value, center = median(Response.Value), constant = 1.4826, na.rm = FALSE, low = FALSE, high = FALSE)) %>%
+phys.mad <- phys %>% select(-chla.ug.cm2) %>% unite(Big.Group, Group, Species, remove = FALSE, sep = " ") %>%
+  subset(Big.Group != "Recovery HTAC Pacuta") %>% gather("Response", "Response.Value", 11:19) %>%
+  group_by(Species, Treatment, Timepoint, Response) %>% 
+  mutate(mad = mad(Response.Value, center = median(Response.Value), constant = 1.4826, na.rm = TRUE, low = FALSE, high = FALSE)) %>%
   mutate(cv = ((mad/mean(Response.Value))*100)) %>% 
   #gather("Measurement", "Value", 13:14) %>%
   mutate(Species = case_when(
@@ -88,6 +89,8 @@ growth.mad$Timepoint <- factor(growth.mad$Timepoint, levels = c("Week1", "Week2"
 
 Plot CV 
 ```{r}
+cv.subset <- phys.mad %>% filter(cv<200)
+
 total.CV <- ggplot(phys.mad, aes(x=Timepoint, y = cv, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
   facet_grid(Species ~ Response) +
@@ -104,7 +107,24 @@ total.CV <- ggplot(phys.mad, aes(x=Timepoint, y = cv, group = Treatment, color =
   # Change axis line
   axis.line = element_line(colour = "black")); total.CV
 
+CV.subset <- ggplot(cv.subset, aes(x=Timepoint, y = cv, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(Species ~ Response) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + ylab("Coefficient of Variation (%)") + ggtitle("Subset CV") +
+  theme_classic() + 
+  theme(legend.position = "left") +
+  geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  # Change axis line
+  axis.line = element_line(colour = "black")); CV.subset
+
 ggsave(file="Output/Final_Figures/CV-total.png", total.CV, width = 11, height = 10, units = c("in"))
+ggsave(file="Output/Final_Figures/CV-subset.png", total.CV, width = 11, height = 10, units = c("in"))
 ```
 
 

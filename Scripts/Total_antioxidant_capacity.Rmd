@@ -419,7 +419,7 @@ Calculating mean values per treatment per time point. Checking sample sizes. Rea
 TAC <- read.csv("Output/antioxidant_capacity.csv") %>% na.omit()
 
 TAC.values <- ggplot(TAC, aes(x=Treatment, y=cre.umol.mgprot, color = Species)) + geom_boxplot() + theme_classic() 
-ggsave(file="Output/Final_Figures/TAC-values.png", TAC.values, width = 11, height = 10, units = c("in"))
+ggsave(file="Output/Final_Figures/TAC-values.png", TAC.values, width = 8, height = 5, units = c("in"))
 
 TAC.means <- summarySE(TAC, measurevar="cre.umol.mgprot", groupvars=c("Timepoint", "Treatment", "Temperature", "CO2", "Species")) %>% filter(N>2) %>%
   mutate(Species = case_when(
