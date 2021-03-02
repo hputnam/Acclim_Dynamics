@@ -885,36 +885,25 @@ pacuta.three <- autoplot(Pacuta_scaled_timeseriesdata, data = Pacuta_timeseriesd
 
 Three <- arrangeGrob(mcap.three, pacuta.three, ncol=1)
 ggsave(file="Output/Final_Figures/PCA-threephase.pdf", Three, width = 12, height = 12, units = c("in"))
+ggsave(file="Output/Final_Figures/PCA-threephase.png", Three, width = 12, height = 12, units = c("in"))
 ```
 
 ## PERMANOVA Analysis 
-For P. acuta and M. cap. stress treatments (with resp and photo)
+
+For P. acuta and M. cap. timeseries (without resp and photo). 
 ```{r}
 ## Pacuta - effect of treatment and timepoint
 # scale data
-pacuta_vegan <- scale(Pacuta_data[ ,9:18])
-# PerMANOVA - partitioning the euclidean distance matrix by species
-adonis(pacuta_vegan ~ Timepoint*Temperature*CO2, data = Pacuta_data, method='eu')
-
-## Mcap - effect of treatment and timepoint
-# scale data
-mcap_vegan <- scale(Mcap_data[ ,9:18])
-# PerMANOVA - partitioning the euclidean distance matrix by species
-adonis(mcap_vegan ~ Timepoint*Temperature*CO2, data = Mcap_data, method='eu')
-```
-
-For P. acuta and M. cap. timeseries (without resp and photo)
-```{r}
-## Pacuta - effect of treatment and timepoint
-# scale data
-pacuta_timeseries_vegan <- scale(Pacuta_timeseriesdata[ ,9:15])
+pacuta_timeseries_vegan <- scale(Pacuta_timeseriesdata[ ,10:16])
 # PerMANOVA - partitioning the euclidean distance matrix by species
 adonis(pacuta_timeseries_vegan ~ Timepoint*Temperature*CO2, data = Pacuta_timeseriesdata, method='eu')
+adonis(pacuta_timeseries_vegan ~ Phase*Temperature*CO2, data = Pacuta_timeseriesdata, method='eu')
 
 ## Mcap - effect of treatment and timepoint
 # scale data
-mcap_timeseries_vegan <- scale(Mcap_timeseriesdata[ ,9:15])
+mcap_timeseries_vegan <- scale(Mcap_timeseriesdata[ ,10:16])
 # PerMANOVA - partitioning the euclidean distance matrix by species
 adonis(mcap_timeseries_vegan ~ Timepoint*Temperature*CO2, data = Mcap_timeseriesdata, method='eu')
+adonis(mcap_timeseries_vegan ~ Phase*Temperature*CO2, data = Mcap_timeseriesdata, method='eu')
 ```
 
