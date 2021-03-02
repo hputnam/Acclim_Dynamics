@@ -280,13 +280,27 @@ TAC <- left_join(TAC.values, metadata) %>%
           cre.umol.mgprot = cre.umol / (prot_ug / 1000))  # Convert to CRE per mg protein by dividing by total protein
 ```
 
+### Univariate Variability
+
+[Tanner et al](https://reader.elsevier.com/reader/sd/pii/S1095643319303411?token=2AB5B29AAF12986713BC6F350B737384B0236CC06FBD9EFF28A42F6A2027DC768B29120E0EA1E63A2B70A2CE27BE255F)
+
+MAD = Median Absolute Deviation  
+- Measures variation within each metric
+
+CV = Coefficient of variation  
+- magnitudes of individual variation across phys traits 
+
+![resp-mad]()
+
+
+
 ### Statistical Methods
 
 Markdown sheet found [here](https://github.com/hputnam/Acclim_Dynamics/blob/master/Statistical-methods.md).
 
 ## Molecular Response Variables
 
-Sample sizes: n=3 per treatment per timepoint. 251 total. 
+Sample sizes: n=3 per treatment per timepoint. 251 total.
 
 | Species               	| Timepoint 	| Treatment 	| Sample Size 	| Notes            	|
 |-----------------------	|-----------	|-----------	|-------------	|------------------	|
