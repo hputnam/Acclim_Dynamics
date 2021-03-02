@@ -91,7 +91,7 @@ Resp.MAD <- ggplot(resp.mad, aes(x=Timepoint, y = mad, group = Treatment, color 
   geom_line() + geom_point() +
   facet_grid(Response ~ Species, scales = "free") +
   scale_color_manual(values = cols) + 
-  xlab("Timepoint") + ylab("Median Absolute Deviation") +
+  xlab("Timepoint") + ylab("Median Absolute Deviation") + ggtitle("Resp / Photo MAD")
   theme_classic() + 
   theme(legend.position = "left") +
   #geom_vline(xintercept = c(7.8), colour="black", linetype="dotted") +
@@ -114,7 +114,7 @@ CHLMAD <- ggplot(chl.mad, aes(x=Timepoint, y = mad, group = Treatment, color = T
   geom_line() + geom_point() +
   facet_grid(~ Species, scales = "free") +
   scale_color_manual(values = cols) + 
-  xlab("Timepoint") + ylab("Median Absolute Deviation") + ggtitle("Chlorophyll c2 Content") +
+  xlab("Timepoint") + ylab("Median Absolute Deviation") + ggtitle("Chlorophyll c2 MAD") +
   theme_classic() + 
   theme(legend.position = "left") +
   geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
@@ -136,7 +136,7 @@ PROT.TAC.MAD <- ggplot(Tac.prot.mad, aes(x=Timepoint, y = mad, group = Treatment
   geom_line() + geom_point() +
   facet_grid(Response ~ Species, scales = "free") +
   scale_color_manual(values = cols) + 
-  xlab("Timepoint") + ylab("Median Absolute Deviation") +
+  xlab("Timepoint") + ylab("Median Absolute Deviation") + ggtitle("TAC and Protein MAD")
   theme_classic() + 
   theme(legend.position = "left") +
   geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
@@ -159,7 +159,7 @@ AFDW.MAD <- ggplot(AFDW.mad, aes(x=Timepoint, y = mad, group = Treatment, color 
   geom_line() + geom_point() +
   facet_grid(Response ~ Species, scales = "free") +
   scale_color_manual(values = cols) + 
-  xlab("Timepoint") + ylab("Median Absolute Deviation") +
+  xlab("Timepoint") + ylab("Median Absolute Deviation") + ggtitle("Tissue Biomass MAD")
   theme_classic() + 
   theme(legend.position = "left") +
   geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
@@ -170,6 +170,11 @@ AFDW.MAD <- ggplot(AFDW.mad, aes(x=Timepoint, y = mad, group = Treatment, color 
   panel.grid.minor = element_blank(),
   axis.line = element_line(colour = "black")); AFDW.MAD
 
-ggsave(file="Output/Final_Figures/MAD-AFDW.png", PROT.TAC.MAD, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/MAD-AFDW.png", AFDW.MAD, width = 11, height = 6, units = c("in"))
+```
+
+
+```{r}
+
 ```
 
