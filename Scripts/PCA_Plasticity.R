@@ -15,6 +15,7 @@ data <- read.csv("Output/results_physiology.csv") #read in file
 data <- data[ ,-c(10:12)]
 data <- na.omit(data)
 unique(data$Phase)
+data <- data %>% filter(Timepoint=="Day 2"| Timepoint== "2 week"| Timepoint== "4 week" | Timepoint== "8 week" | Timepoint== "12 week")
 M.data <- data %>% filter(Species=="Mcapitata")
 P.data <- data %>% filter(Species=="Pacuta")
 Mcap.data <- M.data[,c(10:16)]
@@ -38,26 +39,35 @@ biplot(Mcap.pca.out) #plot results
 Mcap.mod <- adonis2(Mcap.data.scaled ~ Temperature * CO2 * Timepoint, data = Mcap.info, method = "euclidian") # PERMANOVA
 Mcap.mod
 
-Mcap.pca.out %>%
-  augment(M.data) %>% # add original dataset back in
-  ggplot(aes(.fittedPC1, .fittedPC2, color = Temperature)) + 
-  geom_point(size = 1.5) +
-  theme_half_open(12) + background_grid()+
-  stat_ellipse() +
-  facet_grid(cols=vars(Phase))+
-  xlab("PC1 48%") + ylab("PC2 18%")
+# Mcap.pca.out %>%
+#   augment(M.data) %>% # add original dataset back in
+#   ggplot(aes(.fittedPC1, .fittedPC2, color = Temperature)) + 
+#   geom_point(size = 1.5) +
+#   theme_half_open(12) + background_grid()+
+#   stat_ellipse() +
+#   facet_grid(cols=vars(Phase))+
+#   xlab("PC1 48%") + ylab("PC2 18%")
 
 #Set Factor order for Timepoint
 M.data$Timepoint <- factor(M.data$Timepoint, levels = c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
 
-Mcapitata.plot <-Mcap.pca.out %>%
+Mcapitata.plot <- Mcap.pca.out %>%
   augment(M.data) %>% # add original dataset back in
   ggplot(aes(.fittedPC1, .fittedPC2, color = Temperature)) + 
-  geom_point(size = 1.5) +
+  geom_point(size = 1.5, alpha=0.5) +
   theme_half_open(12) + background_grid()+
   stat_ellipse() +
   facet_grid(cols=vars(Timepoint))+
-  xlab("PC1 45%") + ylab("PC2 21%")
+  xlab("PC1 51%") + ylab("PC2 18%"); Mcapitata.plot
+
+Mcapitata.plot.all <- Mcap.pca.out %>%
+  augment(M.data) %>% # add original dataset back in
+  ggplot(aes(.fittedPC1, .fittedPC2, color = Temperature)) + 
+  geom_point(size = 1.5, alpha=0.5) +
+  theme_half_open(12) + background_grid()+
+  #stat_ellipse() +
+  #facet_grid(cols=vars(Timepoint))+
+  xlab("PC1 51%") + ylab("PC2 18%"); Mcapitata.plot.all
 
 ### Pact
 #PCA
@@ -69,14 +79,14 @@ biplot(Pact.pca.out) #plot results
 Pact.mod <- adonis2(Pact.data.scaled ~ Temperature * CO2 * Timepoint, data = Pact.info, method = "euclidian") # PERMANOVA
 Pact.mod
 
-Pact.pca.out %>%
-  augment(P.data) %>% # add original dataset back in
-  ggplot(aes(.fittedPC1, .fittedPC2, color = Temperature)) + 
-  geom_point(size = 1.5) +
-  theme_half_open(12) + background_grid()+
-  stat_ellipse() +
-  facet_grid(cols=vars(Phase))+
-  xlab("PC1 45%") + ylab("PC2 21%")
+# Pact.pca.out %>%
+#   augment(P.data) %>% # add original dataset back in
+#   ggplot(aes(.fittedPC1, .fittedPC2, color = Temperature)) + 
+#   geom_point(size = 1.5) +
+#   theme_half_open(12) + background_grid()+
+#   stat_ellipse() +
+#   facet_grid(cols=vars(Phase))+
+#   xlab("PC1 45%") + ylab("PC2 21%")
 
 #Set Factor order for Timepoint
 P.data$Timepoint <- factor(P.data$Timepoint, levels = c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
@@ -84,14 +94,24 @@ P.data$Timepoint <- factor(P.data$Timepoint, levels = c("Day 1","Day 2","1 week"
 Pacuta.plot <- Pact.pca.out %>%
   augment(P.data) %>% # add original dataset back in
   ggplot(aes(.fittedPC1, .fittedPC2, color = Temperature)) + 
-  geom_point(size = 1.5) +
+  geom_point(size = 1.5, alpha=0.5) +
   theme_half_open(12) + background_grid()+
   stat_ellipse() +
   facet_grid(cols=vars(Timepoint))+
-  xlab("PC1 45%") + ylab("PC2 21%")
+  xlab("PC1 47%") + ylab("PC2 21%"); Pacuta.plot 
 
 
-multi.page <- ggarrange(Mcapitata.plot, Pacuta.plot,
-                        nrow = 2, ncol = 1)
+Pacuta.plot.all <- Pact.pca.out %>%
+  augment(P.data) %>% # add original dataset back in
+  ggplot(aes(.fittedPC1, .fittedPC2, color = Temperature)) + 
+  geom_point(size = 1.5, alpha=0.7) +
+  theme_half_open(12) + background_grid()+
+  #stat_ellipse() +
+  #facet_grid(cols=vars(Timepoint))+
+  xlab("PC1 47%") + ylab("PC2 21%"); Pacuta.plot.all 
+
+
+multi.page <- ggarrange(Mcapitata.plot, Pacuta.plot, Mcapitata.plot.all, Pacuta.plot.all,
+                        nrow = 2, ncol = 2)
 
 ggexport(multi.page, filename = "Output/multi.page.ggplot2.pdf")
