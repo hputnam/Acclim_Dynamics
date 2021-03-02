@@ -285,12 +285,20 @@ TAC <- left_join(TAC.values, metadata) %>%
 [Tanner et al](https://reader.elsevier.com/reader/sd/pii/S1095643319303411?token=2AB5B29AAF12986713BC6F350B737384B0236CC06FBD9EFF28A42F6A2027DC768B29120E0EA1E63A2B70A2CE27BE255F)
 
 MAD = Median Absolute Deviation  
-- Measures variation within each metric
+- Measures variation within each metric  
+- MAD = median(| median of group - absolute deviation of each sample group |)  
+- mad function in R
 
 CV = Coefficient of variation  
-- magnitudes of individual variation across phys traits 
+- magnitudes of individual variation across phys traits  
+- CV = (MAD / group mean) x 100
 
-![resp-mad]()
+```
+mutate(mad = mad(Response.Value, center = median(Response.Value), constant = 1.4826, na.rm = FALSE, low = FALSE, high = FALSE)) %>%
+  mutate(cv = (mad/mean(Response.Value)*100))
+  ```
+
+![resp-mad](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/MAD-Resp.png?raw=true)
 
 
 
