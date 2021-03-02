@@ -91,7 +91,7 @@ Resp.MAD <- ggplot(resp.mad, aes(x=Timepoint, y = mad, group = Treatment, color 
   geom_line() + geom_point() +
   facet_grid(Response ~ Species, scales = "free") +
   scale_color_manual(values = cols) + 
-  xlab("Timepoint") + ylab("Median Absolute Deviation") + ggtitle("Resp / Photo MAD")
+  xlab("Timepoint") + ylab("Median Absolute Deviation") + ggtitle("Resp / Photo MAD") +
   theme_classic() + 
   theme(legend.position = "left") +
   #geom_vline(xintercept = c(7.8), colour="black", linetype="dotted") +
@@ -136,7 +136,7 @@ PROT.TAC.MAD <- ggplot(Tac.prot.mad, aes(x=Timepoint, y = mad, group = Treatment
   geom_line() + geom_point() +
   facet_grid(Response ~ Species, scales = "free") +
   scale_color_manual(values = cols) + 
-  xlab("Timepoint") + ylab("Median Absolute Deviation") + ggtitle("TAC and Protein MAD")
+  xlab("Timepoint") + ylab("Median Absolute Deviation") + ggtitle("TAC and Protein MAD") +
   theme_classic() + 
   theme(legend.position = "left") +
   geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
@@ -159,7 +159,7 @@ AFDW.MAD <- ggplot(AFDW.mad, aes(x=Timepoint, y = mad, group = Treatment, color 
   geom_line() + geom_point() +
   facet_grid(Response ~ Species, scales = "free") +
   scale_color_manual(values = cols) + 
-  xlab("Timepoint") + ylab("Median Absolute Deviation") + ggtitle("Tissue Biomass MAD")
+  xlab("Timepoint") + ylab("Median Absolute Deviation") + ggtitle("Tissue Biomass MAD") +
   theme_classic() + 
   theme(legend.position = "left") +
   geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
