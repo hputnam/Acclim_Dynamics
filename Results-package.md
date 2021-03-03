@@ -28,6 +28,23 @@ pCO2 is projected to increase over next 100 years so this probably isn't as rele
 
 ![crimp2pco2](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/CRIMP2-pCO2.png?raw=true)
 
+## Collection Timeline
+
+| Date Collected 	| Site Name         	| Coordinates                	|
+|----------------	|-------------------	|----------------------------	|
+| 20180904       	| SITE 2 HIMB       	| 21°26'09.8"N 157°47'12.7"W 	|
+| 20180905       	| SITE 6 REEF 42.43 	| 21°28'37.9"N 157°49'36.8"W 	|
+| 20180906       	| SITE 5 REEF 35.36 	| 21°28'26.0"N 157°50'01.2"W 	|
+| 20180907       	| SITE 4 REEF 11.13 	| 21°27'02.9"N 157°47'41.8"W 	|
+| 20180908       	| SITE 1 LILIPUNA   	| 21°25'45.9"N 157°47'28.0"W 	|
+| 20180910       	| SITE 3 REEF 18    	| 21°27'02.9"N 157°48'40.1"W 	|
+
+Experimental treatment started on 20180922.
+
+*M. capitata* spawning dates:  
+*P. acuta* spawning dates: 
+
+
 
 ## Sampling Timeline
 |                      	| Acute Stress 	|       	| Chronic Stress 	|      	|      	|      	|      	|      	|      	|      	| Recovery 	|       	|       	|       	|       	|       	|       	|       	|
