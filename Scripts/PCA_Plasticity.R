@@ -7,6 +7,7 @@ library(broom)  # devtools::install_github("tidymodels/broom")
 library(cowplot)
 library(ggpubr)
 library(ggfortify)
+library(ggrepel)
 
 # set seed
 set.seed(54321)
@@ -82,14 +83,21 @@ Mcapitata.plot <- Mcap.pca.out %>%
 
 ggsave(file="Output/Final_Figures/CSP-5TP-Mcap.png", Mcapitata.plot, width = 6, height = 5, units = c("in"))
 
-Mcapitata.plot.all <- Mcap.pca.out %>%
+Mcapitata.all <- Mcap.pca.out %>%
   augment(Mcap.info) %>% # add original dataset back in
-  ggplot(aes(.fittedPC1, .fittedPC2, color = Temperature)) + 
+  group_by(Timepoint, Temperature) %>%
+  mutate(PC1.mean = mean(.fittedPC1),
+         PC2.mean = mean(.fittedPC2))
+
+Mcapitata.all.fig <- ggplot(Mcapitata.all, aes(.fittedPC1, .fittedPC2, color = Temperature)) + 
   geom_point(size = 1.5, alpha=0.3) +
+  geom_point(aes(x=PC1.mean, y=PC2.mean)) +
+  geom_line(aes(x=PC1.mean, y=PC2.mean)) +
+  geom_text(aes(PC1.mean, PC2.mean, label=Timepoint), vjust=-1.5, color="black") +
   theme_half_open(12) + background_grid() +
   ggtitle("Montipora capitata") + 
   theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) +
-  theme(legend.title = element_text(size=12, face="bold"), legend.position = "none") +
+  theme(legend.title = element_text(size=12, face="bold")) +
   scale_color_manual(values = c("deepskyblue", "firebrick1"), aesthetics = c("colour")) +
   xlab("PC1 47%") + ylab("PC2 21%"); Mcapitata.plot.all 
 
@@ -159,7 +167,9 @@ Pact.all <- Pact.pca.out %>%
   
 Pact.all.fig <- ggplot(Pact.all, aes(.fittedPC1, .fittedPC2, color = Temperature)) + 
   geom_point(size = 1.5, alpha=0.3) +
-  #geom_point(data = Pact.all)
+  geom_point(aes(x=PC1.mean, y=PC2.mean)) +
+  geom_line(aes(x=PC1.mean, y=PC2.mean)) +
+  geom_text(aes(PC1.mean, PC2.mean, label=Timepoint), vjust=-1.5, color="black") +
   theme_half_open(12) + background_grid() +
   ggtitle("Pocillopora acuta") + 
   theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) +
