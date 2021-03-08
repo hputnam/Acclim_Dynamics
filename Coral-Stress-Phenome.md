@@ -57,3 +57,5 @@ Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’
 ![5tp](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/CSP-5TP.png?raw=true)
 
 ![all](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/CSP-all.png?raw=true)
+
+The above figure is connecting dots by x axis placement, not factor(timepoint). Come back to how to change this.. 

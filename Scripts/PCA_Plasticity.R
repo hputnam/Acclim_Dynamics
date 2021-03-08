@@ -103,7 +103,7 @@ Mcapitata.all.fig <- ggplot(Mcapitata.all, aes(.fittedPC1, .fittedPC2, color = T
   scale_color_manual(values = c("deepskyblue", "firebrick1"), aesthetics = c("colour")) +
   xlab("PC1 47%") + ylab("PC2 21%"); Mcapitata.all.fig 
 
-ggsave(file="Output/Final_Figures/CSP-all-Mcap.png", Mcapitata.plot.all, width = 6, height = 5, units = c("in"))
+ggsave(file="Output/Final_Figures/CSP-all-Mcap.png", Mcapitata.all.fig, width = 6, height = 5, units = c("in"))
 
 ### Pact
 #PCA
