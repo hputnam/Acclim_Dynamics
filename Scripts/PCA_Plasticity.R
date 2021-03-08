@@ -8,6 +8,7 @@ library(cowplot)
 library(ggpubr)
 library(ggfortify)
 library(ggrepel)
+library(gridExtra)
 
 # set seed
 set.seed(54321)
@@ -96,6 +97,7 @@ Mcapitata.all.fig <- ggplot(Mcapitata.all, aes(.fittedPC1, .fittedPC2, color = T
   geom_text(aes(PC1.mean, PC2.mean, label=Timepoint), vjust=-1.5, color="black") +
   theme_half_open(12) + background_grid() +
   ggtitle("Montipora capitata") + 
+  theme(legend.position = c(0.8, 0.1)) +
   theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) +
   theme(legend.title = element_text(size=12, face="bold")) +
   scale_color_manual(values = c("deepskyblue", "firebrick1"), aesthetics = c("colour")) +
@@ -148,6 +150,7 @@ Pacuta.plot <- Pact.pca.out %>%
   theme_classic() +
   ggtitle("Pocillopora acuta") + 
   facet_grid(cols=vars(Timepoint)) +
+  theme(legend.position = c(0.9, 0.1)) +
   theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) +
   theme(legend.title = element_text(size=12, face="bold")) +
   scale_color_manual(values = c("deepskyblue", "firebrick1"), aesthetics = c("colour")) +
@@ -172,6 +175,7 @@ Pact.all.fig <- ggplot(Pact.all, aes(.fittedPC1, .fittedPC2, color = Temperature
   geom_text(aes(PC1.mean, PC2.mean, label=Timepoint), vjust=-1.5, color="black") +
   theme_half_open(12) + background_grid() +
   ggtitle("Pocillopora acuta") + 
+  theme(legend.position = c(0.8, 0.1)) +
   theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) +
   theme(legend.title = element_text(size=12, face="bold")) +
   scale_color_manual(values = c("deepskyblue", "firebrick1"), aesthetics = c("colour")) +
@@ -179,7 +183,7 @@ Pact.all.fig <- ggplot(Pact.all, aes(.fittedPC1, .fittedPC2, color = Temperature
 
 ggsave(file="Output/Final_Figures/CSP-all-Pact.png", Pact.all.fig, width = 6, height = 5, units = c("in"))
 
-All <- arrangeGrob(Mcapitata.plot.all, Pact.all.fig, ncol=2)
+All <- arrangeGrob(Mcapitata.all.fig, Pact.all.fig, ncol=2)
 ggsave(file="Output/Final_Figures/CSP-all.png", All, width = 12, height = 6, units = c("in"))
 
 
