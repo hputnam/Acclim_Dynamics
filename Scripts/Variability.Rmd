@@ -4,7 +4,7 @@ author: "EL Strand"
 date: "2/25/2021"
 output: html_document
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ```{r setup, include=FALSE}
@@ -23,6 +23,8 @@ library(plyr)
 library(dplyr)
 library(stats)
 library(tidyr)
+library(vegan)
+library(broom)
 ```
 
 
@@ -267,8 +269,53 @@ AFDW <- arrangeGrob(AFDW.MAD, AFDW.CV, ncol=1)
 ggsave(file="Output/Final_Figures/MAD-AFDW.png", AFDW, width = 11, height = 12, units = c("in"))
 ```
 
+Phys multivariate MAD and CV.  
+Euclidean distances is chosen because we have continuous numerical values and we want to reflect absolute distances.  
+- binary=FALSE: no to presence-absence standardization  
+- diag=FALSE: no to computing diagonals  ## COME BACK TO THIS 
+- upper=FALSE: no to returning only upper diagonal 
+- na.rm=FASLE: no removing NA values (we've already done this in a previous step)
 
 ```{r}
+multi.phys.mad <- phys %>% select(-chla.ug.cm2, -Group, -Rdark_umol.cm2.hr, -Pnet_umol.cm2.hr, -Pgross_umol.cm2.hr, -Phase) %>% unite(Group, Timepoint, Treatment, remove = FALSE, sep = " ")
+multi.phys.mad <- multi.phys.mad[complete.cases(multi.phys.mad), ] #only taking complete cases 
+multi.phys.mad$Timepoint <- factor(multi.phys.mad$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week", "12 week", "16 week"))
 
+mcap.multi.phys <- multi.phys.mad %>% filter(Species=="Mcapitata") 
+mcap.multi.phys.mad <- mcap.multi.phys %>% select(c(10:15))
+
+pact.multi.phys <- multi.phys.mad %>% filter(Species=="Pacuta") 
+pact.multi.phys.mad <- pact.multi.phys %>% select(c(10:15))
+
+#Scale and center datasets
+Mcap.data.scaled <- scale(mcap.multi.phys.mad, center = T, scale = T) # scaled variables
+Pact.data.scaled <- scale(pact.multi.phys.mad, center = T, scale = T) # scaled variables
+
+#Distance matrix 
+Mcap.dist <- vegdist(Mcap.data.scaled, method="euclidean", binary=FALSE, diag=FALSE, upper=FALSE, na.rm = FALSE)
+Pact.dist <- vegdist(Pact.data.scaled, method="euclidean", binary=FALSE, diag=FALSE, upper=FALSE, na.rm = FALSE)
+```
+
+Multivariate homogenity of groups dispersons (variances):    
+helpful link [here](https://rdrr.io/rforge/vegan/man/betadisper.html).
+
+Come back to the bias.adjust - adjusts for small sample size bias (but what is small in this context?)
+
+20210308 - stuck on converting distances to dataframe for the following MAD calculation. 
+```{r}
+##Mcap 
+Mcap.disper <- betadisper(Mcap.dist, mcap.multi.phys$Group, type = c("median","centroid"), bias.adjust = FALSE)
+
+boxplot(Mcap.disper, ylab = "Distance to centroid")
+
+Mcap.disper$distances
+
+Mcap.out <- as.data.frame(Mcap.disper$distances)
+Mcap.out$Plug_ID <- mcap.multi.phys$Plug_ID
+
+%>% full_join(Mcap.out, mcap.multi.phys, by='row.names')
+
+##Pacuta
+Pact.disper <- betadisper(Pact.dist, pact.multi.phys$Group, type = c("median","centroid"), bias.adjust = FALSE)
 ```
 
