@@ -25,6 +25,7 @@ library(stats)
 library(tidyr)
 library(vegan)
 library(broom)
+library(robustbase)
 ```
 
 
@@ -46,7 +47,7 @@ hist(phys$chlc2.ug.cm2)
 hist(phys$prot_mg.cm2); hist(phys$cre.umol.mgprot)
 ```
 
-Calculating MAD (Median Absolute Deviation).
+## Calculating Univariate MAD (Median Absolute Deviation).
 1.4826 constant value is used for normal distributions -- come back to color score and growth for this one.  
 
 ```{r}
@@ -269,7 +270,7 @@ AFDW <- arrangeGrob(AFDW.MAD, AFDW.CV, ncol=1)
 ggsave(file="Output/Final_Figures/MAD-AFDW.png", AFDW, width = 11, height = 12, units = c("in"))
 ```
 
-Phys multivariate MAD and CV.  
+## Phys multivariate MAD and CV.  
 Euclidean distances is chosen because we have continuous numerical values and we want to reflect absolute distances.  
 - binary=FALSE: no to presence-absence standardization  
 - diag=FALSE: no to computing diagonals  ## COME BACK TO THIS 
@@ -282,14 +283,15 @@ multi.phys.mad <- multi.phys.mad[complete.cases(multi.phys.mad), ] #only taking 
 multi.phys.mad$Timepoint <- factor(multi.phys.mad$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week", "12 week", "16 week"))
 
 mcap.multi.phys <- multi.phys.mad %>% filter(Species=="Mcapitata") 
-mcap.multi.phys.mad <- mcap.multi.phys %>% select(c(10:15))
+mcap.multi.phys.info <- mcap.multi.phys %>% select(1:9)
+mcap.multi.phys.data <- mcap.multi.phys %>% select(c(10:15))
 
 pact.multi.phys <- multi.phys.mad %>% filter(Species=="Pacuta") 
-pact.multi.phys.mad <- pact.multi.phys %>% select(c(10:15))
+pact.multi.phys.data <- pact.multi.phys %>% select(c(10:15))
 
 #Scale and center datasets
-Mcap.data.scaled <- scale(mcap.multi.phys.mad, center = T, scale = T) # scaled variables
-Pact.data.scaled <- scale(pact.multi.phys.mad, center = T, scale = T) # scaled variables
+Mcap.data.scaled <- scale(mcap.multi.phys.data, center = T, scale = T) # scaled variables
+Pact.data.scaled <- scale(mcap.multi.phys.data, center = T, scale = T) # scaled variables
 
 #Distance matrix 
 Mcap.dist <- vegdist(Mcap.data.scaled, method="euclidean", binary=FALSE, diag=FALSE, upper=FALSE, na.rm = FALSE)
@@ -299,23 +301,81 @@ Pact.dist <- vegdist(Pact.data.scaled, method="euclidean", binary=FALSE, diag=FA
 Multivariate homogenity of groups dispersons (variances):    
 helpful link [here](https://rdrr.io/rforge/vegan/man/betadisper.html).
 
-Come back to the bias.adjust - adjusts for small sample size bias (but what is small in this context?)
-
-20210308 - stuck on converting distances to dataframe for the following MAD calculation. 
 ```{r}
 ##Mcap 
-Mcap.disper <- betadisper(Mcap.dist, mcap.multi.phys$Group, type = c("median","centroid"), bias.adjust = FALSE)
+Mcap.disper <- betadisper(Mcap.dist, mcap.multi.phys.info$Group, type = c("median","centroid"), bias.adjust = FALSE)
 
 boxplot(Mcap.disper, ylab = "Distance to centroid")
 
 Mcap.disper$distances
 
 Mcap.out <- as.data.frame(Mcap.disper$distances)
-Mcap.out$Plug_ID <- mcap.multi.phys$Plug_ID
+Mcap.out$Plug_ID <- mcap.multi.phys.info$Plug_ID
 
-%>% full_join(Mcap.out, mcap.multi.phys, by='row.names')
+Mcap <- full_join(mcap.multi.phys.info, Mcap.out, by='Plug_ID') %>% dplyr::rename(Dist = "Mcap.disper$distances")
+
+hist(Mcap$Dist)
 
 ##Pacuta
 Pact.disper <- betadisper(Pact.dist, pact.multi.phys$Group, type = c("median","centroid"), bias.adjust = FALSE)
 ```
+
+Calculating MAD the same as above but using the multivariate distance to the median. 
+Mcap distance to the median is not normal distribution. Come back to this constant value 
+```{r}
+Mcap.mad <- Mcap %>% group_by(Treatment, Timepoint) %>% 
+  mutate(mad = mad(Dist, center = median(Dist), constant = 1.4826, na.rm = TRUE, low = FALSE, high = FALSE)) %>%
+  mutate(Species = case_when(
+    Species == "Mcapitata" ~ "Montipora capitata",
+    Species == "Pacuta" ~ "Pocillopora acuta"
+  ))
+
+Mcap.Multi.MAD <- ggplot(Mcap.mad, aes(x=Timepoint, y = mad, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(~ Species) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + ylab("Multivariate MAD score") + ggtitle("Multivariate Physiological MAD") +
+  theme_classic() + 
+  theme(legend.position = "left") +
+  geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  axis.line = element_line(colour = "black")); Mcap.Multi.MAD
+```
+
+CVm - CV equation is different than univariate so CVm is needed. 
+1. Decide about scaled vs. not scaled. This is currently using scaled data 
+2. Figure out to subset 
+3. Take out groups less than/= 2?
+
+```{r}
+# scaled data and info together
+Mcap.data.scaled.df <- as.data.frame(Mcap.data.scaled)
+Mcap.data.scaled.df$Plug_ID <- Mcap$Plug_ID
+Mcap.CVm <- full_join(Mcap, Mcap.data.scaled.df, by="Plug_ID")
+
+# creating 36 dataframes based on 'Group' and then selecting the data columns in each of them
+split.frames <- split(Mcap.CVm, Mcap.CVm$Group)
+new_list <- lapply(split.frames, function(x) x%>% select(11:16))
+subset_list <- lapply(new_list, function(x) Filter(function(y) nrow(y) >= 2, x))
+
+for(i in 1:length(new_list)){
+  covMcd(i)
+}
+
+
+phys.cov <- covMcd(Mcap.data.scaled)
+summary(phys.cov)
+
+phys.cov.scaled <- covMcd(mcap.multi.phys.data)
+summary(phys.cov.scaled)
+
+Multi.mad <- phys.cov$cov
+MMad.T <- t(Multi.mad)
+```
+
+
 
