@@ -113,5 +113,10 @@ ggplot(purple, aes(x=Plug_ID, y=Value, color=Measurement)) +
   geom_line() +
   ylab("mg.cm2") +
   theme_classic()
+
+ggplot(purple, aes(x=prot_ug.cm2.562, y=prot_ug.cm2, color=Treatment)) + geom_point() +
+  xlim(0,1300) + ylim(0,1300)
+
+cor.test(purple$prot_ug.cm2.562, purple$prot_ug.cm2)
 ```
 
