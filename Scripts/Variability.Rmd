@@ -31,7 +31,8 @@ library(robustbase)
 
 Read in dataframes. Run "Statistics.Rmd" script first to create the physiology results dataframe. 
 ```{r}
-phys <- read.csv("Output/results_physiology.csv") 
+phys <- read.csv("Output/results_physiology.csv") %>% group_by(Species, Timepoint, Treatment) %>% 
+  filter(n() >= 3) %>% ungroup()
 color <- read.csv("Output/results_colorscore.csv")
 growth <- read.csv("Output/results_growth.csv")
 
@@ -191,10 +192,10 @@ Chl <- arrangeGrob(CHLMAD, CHL.CV, ncol=1)
 
 ggsave(file="Output/Final_Figures/MAD-Chl.png", Chl, width = 11, height = 8, units = c("in"))
 ```
-
+The missing values are because it can't calculate MAD with NAs in the group but removing the NAs removes the entire sample. Come back to this if we want to visualize this individually. 
 ```{r}
 ## TAC and Prot
-Tac.prot.mad <- phys.mad %>% subset(Response == "cre.umol.mgprot" | Response == "prot_mg.cm2") %>% na.omit()
+Tac.prot.mad <- phys.mad %>% subset(Response == "cre.umol.mgprot" | Response == "prot_mg.cm2")
 
 PROT.TAC.MAD <- ggplot(Tac.prot.mad, aes(x=Timepoint, y = mad, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
@@ -357,13 +358,46 @@ Mcap.data.scaled.df <- as.data.frame(Mcap.data.scaled)
 Mcap.data.scaled.df$Plug_ID <- Mcap$Plug_ID
 Mcap.CVm <- full_join(Mcap, Mcap.data.scaled.df, by="Plug_ID")
 
-# creating 36 dataframes based on 'Group' and then selecting the data columns in each of them
+# creating 34 dataframes based on 'Group' and then selecting the data columns in each of them
 split.frames <- split(Mcap.CVm, Mcap.CVm$Group)
-new_list <- lapply(split.frames, function(x) x%>% select(11:16))
-subset_list <- lapply(new_list, function(x) Filter(function(y) nrow(y) >= 2, x))
+new_list <- lapply(split.frames, function(x) x %>% select(11:16)) 
+matrix_list <- lapply(new_list, function(x) data.matrix(x))
 
-for(i in 1:length(new_list)){
-  covMcd(i)
+new_list$`1 week ATAC` # example view of one of the dataframes
+matrix_list$`1 week ATAC` # example view of the matrices 
+str(matrix_list$`1 week ATAC`)
+str(Mcap.data.scaled)
+
+onewk <- mcap.multi.phys %>% subset(Group == "6 week ATAC")
+mmc4 <- read.csv("mmc4.txt", sep="\t") %>% select(-protein)
+mmc4 <- data.matrix(mmc4)
+## use sample info to subset for e and then do covMcd and CVm equation
+
+sample.info <- data.frame(c(colnames(mmc4)))
+sample.info$site <- sample.info$c.colnames.mmc4..
+sample.info <- sample.info[-1,]
+#sample <- substr(sample.info$c.colnames.mmc4..,3,3)
+sample <- sub("\\..*", "", sample.info$c.colnames.mmc4..) # keep everything before the period 
+samplex <- str_sub(sample.info$c.colnames.mmc4..,-6,-6)
+
+#sample <- gsub("..*$", "", sample.info$c.colnames.mmc4..)
+sample <- gsub("X([0-9]+)_.*", "\\1", sample.info$c.colnames.mmc4..)
+
+sub(" xxx.*", "", x)
+
+u <- covMcd(mmc4)
+
+head(u$cov)
+
+CVm <- sqrt((t(u$cov)*sum(u$cov))/((t(u$cov)*u$cov)^2))
+
+
+boxplot(CVm)
+
+covMcd(matrix_list$`1 week ATAC`) # this still doesn't work with just one matrix.. 
+
+for(i in 1:length(matrix_list)){
+  covMcd(i$Value)
 }
 
 
