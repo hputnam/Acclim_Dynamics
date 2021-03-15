@@ -148,6 +148,8 @@ species.names <- list(
 species_labeller <- function(variable,value){
   return(species.names[value])}
 
+cols <- c("lightblue", "blue", "salmon", "red3")
+
 Blch_plot <- ggplot(All.Means, aes(x=Timepoint, y = Bleaching.Score, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
   facet_grid(~Species, scales = "free", labeller = species_labeller) +
@@ -169,5 +171,30 @@ Blch_plot <- ggplot(All.Means, aes(x=Timepoint, y = Bleaching.Score, group = Tre
 
 ggsave(file="Output/Final_Figures/Photographic_Bleaching.pdf", Blch_plot, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Final_Figures/Photographic_Bleaching.png", Blch_plot, width = 11, height = 6, units = c("in"))
+```
+
+For Coral Stress Phenome Paper
+```{r}
+CSP_plot <- ggplot(All.Means, aes(x=Timepoint, y = Bleaching.Score, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(~Species, scales = "free", labeller = species_labeller) +
+  geom_errorbar(aes(ymin=Bleaching.Score-se, ymax=Bleaching.Score+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + 
+  ylab("Color Score") + # y-axis label and y axis range
+  theme_classic() + 
+  theme(legend.position = c(0.09, 0.22)) +
+  geom_vline(xintercept = c(7.8), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  scale_x_discrete(breaks = c("Week1", "Week2", "Week4", "Week6", "Week8", "Week12", "Week16"), labels = c("1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week")) +
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
+  # Change axis line
+  axis.line = element_line(colour = "black")); CSP_plot
+
+ggsave(file="Output/Final_Figures/CSP-Photographic_Bleaching.png", CSP_plot, width = 11, height = 6, units = c("in"))
 ```
 

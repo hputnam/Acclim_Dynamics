@@ -58,6 +58,6 @@ Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’
 
 The above figure is connecting dots by x axis placement, not factor(timepoint). Come back to how to change this..
 
-![blchscore](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Photographic_Bleaching.png?raw=true)
+![blchscore](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/CSP-Photographic_Bleaching.png?raw=true)
 
 ![surv](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/All_survivorship.png?raw=true)
