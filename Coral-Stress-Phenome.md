@@ -54,8 +54,6 @@ Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’
 
 ![biplots](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/CSP-PCAs.png?raw=true)
 
-Stuck on how to get the above ellipse to be just an outline and not have color in the middle.. come back to this.  
-
 ![all](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/CSP-all.png?raw=true)
 
 The above figure is connecting dots by x axis placement, not factor(timepoint). Come back to how to change this..
