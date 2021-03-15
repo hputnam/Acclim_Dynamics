@@ -49,7 +49,7 @@ Mcap.biplot <- autoplot(Mcap.pca.out, data = Mcap.info, colour = 'Temperature',
                        loadings = TRUE, loadings.colour = 'black', frame=TRUE, frame.type = 'norm',
                        loadings.label = TRUE, loadings.label.size = 4, loadings.label.colour = 'black', repel=TRUE,
                        loadings.label.vjust=2, loadings.label.hjust=0.1) +
-  scale_color_manual(values = c("deepskyblue", "firebrick1"), aesthetics = c("colour", "fill")) +
+  scale_color_manual(values = c("deepskyblue", "firebrick1")) + scale_fill_manual(values = c("white", "white")) +
   theme_bw() + ggtitle("Montipora capitata") + 
   theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) + 
   theme(legend.title = element_text(size=12, face="bold")) + 
@@ -119,7 +119,7 @@ Pacuta.biplot <- autoplot(Pact.pca.out, data = Pact.info, colour = 'Temperature'
                         loadings = TRUE, loadings.colour = 'black', frame=TRUE, frame.type = 'norm',
                         loadings.label = TRUE, loadings.label.size = 4, loadings.label.colour = 'black', repel=TRUE,
                         loadings.label.vjust = 2) +
-  scale_color_manual(values = c("deepskyblue", "firebrick1"), aesthetics = c("colour", "fill")) +
+  scale_color_manual(values = c("deepskyblue", "firebrick1")) + scale_fill_manual(values = c("white", "white")) +
   theme_bw() + ggtitle("Pocillopora acuta") + 
   theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) + 
   theme(legend.title = element_text(size=12, face="bold")) + 

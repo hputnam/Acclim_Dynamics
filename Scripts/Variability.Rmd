@@ -369,9 +369,11 @@ str(matrix_list$`1 week ATAC`)
 str(Mcap.data.scaled)
 
 onewk <- mcap.multi.phys %>% subset(Group == "6 week ATAC")
+
 mmc4 <- read.csv("mmc4.txt", sep="\t") %>% select(-protein)
 mmc4 <- data.matrix(mmc4)
 ## use sample info to subset for e and then do covMcd and CVm equation
+colnames(mmc4) <- samplex
 
 sample.info <- data.frame(c(colnames(mmc4)))
 sample.info$site <- sample.info$c.colnames.mmc4..
