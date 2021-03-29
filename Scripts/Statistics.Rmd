@@ -673,6 +673,7 @@ hist(mcap.color$Color.Transformed)
 Mcap_Color_LMER_tank_plug <- lmer((Bleaching.Score^(1/4)) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.color) #GLMM; nesting Plug ID in tank because the Plug IDs never moved tanks 
 # GAM 
 # anova(GLMM, GAM) # report AIC values
+Mcap_Color_LMER_tank_plug <- lmer(log(Bleaching.Score) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.color)
 
 ## summary of the model chosen from above
 ## plot(Mcap_TAC_LMER) in console to view diagnostic plots
