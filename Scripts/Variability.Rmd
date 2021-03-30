@@ -65,7 +65,6 @@ phys.mad <- phys %>% select(-chla.ug.cm2) %>% unite(Big.Group, Group, Species, r
   ))
   
 phys.mad$Timepoint <- factor(phys.mad$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week", "12 week", "16 week"))
-ggplot(phys.mad, aes(x=Treatment, y=mad, color=Treatment)) + geom_boxplot() + facet_grid(Species ~ Response) + theme_bw()
 
 ## Color Score 
 color.mad <- color %>% group_by(Species, Treatment, Blch.Time) %>%
@@ -318,8 +317,25 @@ Mcap <- full_join(mcap.multi.phys.info, Mcap.out, by='Plug_ID') %>% dplyr::renam
 hist(Mcap$Dist)
 
 ##Pacuta
-Pact.disper <- betadisper(Pact.dist, pact.multi.phys$Group, type = c("median","centroid"), bias.adjust = FALSE)
+#Pact.disper <- betadisper(Pact.dist, pact.multi.phys$Group, type = c("median","centroid"), bias.adjust = FALSE)
 ```
+
+Testing this on subsets 
+
+M. capitata
+```{r}
+## Day 1 ATAC
+oneday.ATAC <- mcap.multi.phys %>% subset(Group == "Day 1 ATAC") %>% select(c(10:15))
+oneday.ATAC.scaled <- scale(oneday.ATAC, center = T, scale = T) # scaled variables
+
+oneday <- mcap.multi.phys %>% subset(Timepoint == "Day 1") %>% select(c(10:15))
+oneday.scaled <- scale(oneday, center = T, scale = T) # scaled variables; n = 8 
+
+week6.ATAC <- mcap.multi.phys %>% subset(Group == "6 week HTHC") %>% select(c(10:15))
+week6.ATAC.scaled <- scale(week6.ATAC, center = T, scale = T) # scaled variables
+```
+
+
 
 Calculating MAD the same as above but using the multivariate distance to the median. 
 Mcap distance to the median is not normal distribution. Come back to this constant value 
@@ -358,18 +374,43 @@ Mcap.data.scaled.df <- as.data.frame(Mcap.data.scaled)
 Mcap.data.scaled.df$Plug_ID <- Mcap$Plug_ID
 Mcap.CVm <- full_join(Mcap, Mcap.data.scaled.df, by="Plug_ID")
 
+## testing one subset # Day 1 Mcap ATAC n=4 
+oneday.ATAC.scaled.matrix <- data.matrix(oneday.ATAC.scaled)
+covMcd(oneday.ATAC.scaled.matrix) # Error in covMcd(oneday.ATAC.scaled.matrix) : n <= p -- you can't be serious!
+## testing one timepoint together # Day 1 n=8
+oneday.scaled.matrix <- data.matrix(oneday.scaled)
+one.daycovMcd <- covMcd(oneday.scaled.matrix) # This worked --- the only difference here is the sample size....
+summary(one.daycovMcd)
+## testing one subset # Week 6 Mcap ATAC n=6
+week6.ATAC.scaled.matrix <- data.matrix(week6.ATAC.scaled)
+covMcd(week6.ATAC.scaled.matrix) # Error in covMcd(week6.ATAC.scaled.matrix) : n <= p -- you can't be serious!
+
+## I think n = sample size; p = number of variables (6) so the number of observations has to be bigger than the number of variables 
+## n=8 was the only one that worked... 
+
+
+## the entire dataset 
+covMcd(Mcap.data.scaled) # This worked 
+
+
+
 # creating 34 dataframes based on 'Group' and then selecting the data columns in each of them
 split.frames <- split(Mcap.CVm, Mcap.CVm$Group)
 new_list <- lapply(split.frames, function(x) x %>% select(11:16)) 
 matrix_list <- lapply(new_list, function(x) data.matrix(x))
 
 new_list$`1 week ATAC` # example view of one of the dataframes
-matrix_list$`1 week ATAC` # example view of the matrices 
+matrix_list$`1 week ATAC` # example view of the matrices ; we want a matrix here 
 str(matrix_list$`1 week ATAC`)
 str(Mcap.data.scaled)
 
 onewk <- mcap.multi.phys %>% subset(Group == "6 week ATAC")
 
+
+
+
+
+#### Richelle data ; stuck on subsetting her groups
 mmc4 <- read.csv("mmc4.txt", sep="\t") %>% select(-protein)
 mmc4 <- data.matrix(mmc4)
 ## use sample info to subset for e and then do covMcd and CVm equation
@@ -413,5 +454,20 @@ Multi.mad <- phys.cov$cov
 MMad.T <- t(Multi.mad)
 ```
 
+Trying multivariate with GE counts matrix. 
+```{r}
+library(data.table)
+library(janitor)
+counts <- read.csv("Mcap.mRNA.fa.salmon.allSamples.numreads.matrix", sep='\t')
+transp.counts <- transpose(counts)
+
+colnames(transp.counts) <- rownames(counts)
+rownames(transp.counts) <- colnames(counts)
+transp.counts <- slice(transp.counts, 2:133)
+
+transp.counts.matrix <- as.matrix(transp.counts)
+transp.counts.scaled <- scale(transp.counts.matrix, center = T, scale = T)
+# stuck on Error in colMeans(x, na.rm = TRUE) : 'x' must be numeric
+```
 
 
