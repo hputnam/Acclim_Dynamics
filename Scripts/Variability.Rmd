@@ -404,7 +404,7 @@ matrix_list$`1 week ATAC` # example view of the matrices ; we want a matrix here
 str(matrix_list$`1 week ATAC`)
 str(Mcap.data.scaled)
 
-onewk <- mcap.multi.phys %>% subset(Group == "6 week ATAC")
+#onewk <- mcap.multi.phys %>% subset(Group == "6 week ATAC")
 
 
 
