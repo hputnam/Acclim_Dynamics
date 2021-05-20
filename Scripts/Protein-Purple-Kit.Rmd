@@ -1,0 +1,219 @@
+---
+title: "Prot-Purple"
+author: "EL Strand"
+date: "5/19/2021"
+output: html_document
+---
+
+Code modified from R. Cunning, H. Putnam, and E5 group; link [here](https://github.com/urol-e5/timeseries/blob/master/timepoint_1/scripts/Protein.Rmd).
+
+9-10 protein plate with each one containing a standard curve. 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+## install packages if you dont already have them
+if (!require("plyr")) install.packages("plyr")
+if (!require("dplyr")) install.packages("dplyr")
+if (!require("ggplot2")) install.packages("ggplot2")
+if (!require("tidyverse")) install.packages("tidyverse")
+if (!require("broom")) install.packages("broom")
+if (!require("Rmisc")) install.packages("Rmisc")
+
+
+# load packages
+library(plyr)
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(Rmisc)
+library(broom)
+
+## always load plyr before dplyr
+```
+
+Read in all data files. 
+```{r}
+# List protein data files
+prot_path = "Physiology_variables/Soluble_Protein/BCA-Purple-Kit/"      # Path to prot data directory
+all_prot_files <- list.files(path = prot_path, pattern = "*.csv")          # List all files in directory
+prot_platemaps <- list.files(path = prot_path, pattern = "map")       # List platemap files
+prot_data_files <- setdiff(all_prot_files, prot_platemaps)                 # List data files
+
+# Read in all files into tibble
+df <- tibble(file = prot_data_files) %>%
+  separate(file, into = c("date", "plate"), remove = FALSE) %>%
+  unite(plate, date, plate) %>%
+  mutate(platemap = map(plate, ~read_csv(paste0(prot_path, ., "_map.csv"))),
+         prot_data = map(file, ~read_csv(paste0(prot_path, .)))) 
+
+# Merge platemap and data for each plate
+df <- df %>%
+  mutate(merged = map2(platemap, prot_data, ~ right_join(.x, .y)))
+```
+
+Create standard curves. 
+```{r}
+# Create standard curve following kit instructions
+standards <- tribble(
+  ~std, ~BSA_ug.mL,
+  "A",        2000,
+  "B",        1500,
+  "C",        1000,
+  "D",         750,
+  "E",         500,
+  "F",         250,
+  "G",         125,
+  "H",          25,
+  "I",           0
+)
+
+std_curve <- df %>%
+  unnest(merged) %>%
+  filter(grepl("Standard", Plug_ID)) %>%
+  select(plate, Well, Plug_ID, abs562 = `562`) %>%
+  dplyr::rename(std = Plug_ID) %>%
+  mutate(std = str_sub(std, 9, 9)) %>%
+  dplyr::group_by(plate, std) %>%
+  mutate(abs562.mean = mean(abs562)) %>% # calculates means using the above group by fxns 
+  select(-Well, -abs562) %>% # taking out original values to then be able to remove duplicates
+  distinct() %>%
+  ungroup(std) %>% # the below fxn needs to be only grouped by plate
+  mutate(abs562 = abs562.mean - abs562.mean[std == "I"]) %>% # subtract blank absorbance value from all (adjusted value)
+  left_join(standards)
+```
+
+Fit a linear model for the standards. 
+```{r}
+mod <- lm(formula = BSA_ug.mL ~ abs562, data = std_curve)
+fitted <- mod %>% broom::augment()
+std_curve <- left_join(std_curve, fitted)
+
+# Plot standard curve
+std_curve_plot <- 
+  ggplot(aes(x = abs562, y = BSA_ug.mL, group=plate, color=plate), data = std_curve) +
+  geom_point()
+
+std_curve_plot + 
+  geom_line(data = std_curve, aes(x = abs562, y = .fitted)) +
+  labs(title = "Standard curve")
+```
+
+Calculate protein concentration for all samples using standard curve
+```{r}
+prot <- df %>%
+  unnest(merged) %>%
+  filter(!grepl("Standard", Plug_ID)) %>%                     # Get just samples (not standards)
+  select(plate, Well, Plug_ID, abs562 = `562`) %>%        # Select only needed columns
+  filter(!is.na(Plug_ID)) %>%                                 # Filter out empty wells
+  filter(Plug_ID != "BK") %>%                                 # Filter out blank wells
+  mutate(prot_ug.mL = map_dbl(abs562, ~ predict(mod, newdata = data.frame(abs562 = .)))) # Use standard curve to convert absorbance to protein 
+  
+std_curve_plot + 
+  geom_point(data = prot, aes(x = abs562, y = prot_ug.mL), pch = "X", cex = 5, alpha = 0.3) +
+  labs(title = "All samples projected on standard curve")
+
+prot <- prot %>% ## I keep this after the std curve plot so I can plot the abs562 above and take that column out below 
+  group_by(plate, Plug_ID) %>%
+  mutate(prot_ug.mL = mean(prot_ug.mL)) %>% select(-Well, -abs562) %>% distinct()
+
+## visual check to see if any protein samples are above the standard curve 
+## if so, I would have to dilute them and redo the sample 
+```
+
+Normalize to surface area 
+```{r}
+# Surface area data
+sa <- read.csv("Physiology_variables/Respirometry/coral_surface_area.csv") %>% dplyr::rename(Plug_ID = Sample_ID) %>% select(Plug_ID, surface.area.cm2)
+sa$Plug_ID <- as.character(sa$Plug_ID)
+
+# Tissue homogenate volume data
+homog_vols <- read_csv("Physiology_variables/homogenate_vol.csv") %>% select(Species, Plug_ID, vol_mL)
+homog_vols$Plug_ID <- as.character(homog_vols$Plug_ID)
+
+# Coral sample metadata
+metadata <- read_csv("Environmental_data/Master_Fragment.csv") %>% select(Species, Plug_ID, Tank, Treatment, Temperature, CO2, Timepoint, ANALYSIS, Sample.Date) %>%
+  subset(ANALYSIS=="Physiology" | ANALYSIS=="Physiology/Molecular")
+metadata$Plug_ID <- as.character(metadata$Plug_ID)
+
+# Join homogenate volumes and surface area with sample metadata
+metadata <- full_join(metadata, homog_vols) %>% full_join(sa) %>% na.omit() 
+
+# Join prot data with metadata
+prot <- left_join(prot, metadata) %>%
+  mutate(prot_ug = prot_ug.mL * vol_mL,
+         prot_ug.cm2 = prot_ug / surface.area.cm2,
+         prot_mg.cm2 = prot_ug.cm2 / 1000)
+
+## data vis and outlier check 
+boxplot(prot$prot_ug)
+hist(prot$prot_ug)
+
+boxplot.stats(prot$prot_ug)$out
+
+prot %>% ggplot(aes(x=plate, y=prot_ug)) + geom_boxplot() #looking for any plate that is an outlier 
+
+prot <- prot %>% na.omit()
+
+prot %>% filter(!is.na(Species)) %>% select(-plate) %>%
+  #select(Plug_ID, prot_ug.mL, prot_ug, prot_ug.cm2, prot_mg.cm2) %>%
+  write_csv(., path = "Output/soluble_protein.csv")
+```
+List missing values. 
+```{r}
+which(is.na(metadata))
+```
+
+Calculating protein means. 
+```{r}
+prot.means <- prot %>% summarySE(measurevar="prot_mg.cm2", groupvars=c("Timepoint", "Treatment", "Temperature", "CO2", "Species")) %>%
+  filter(N>2) %>%
+  mutate(Species = case_when(
+    Species == "Mcapitata" ~ "Montipora capitata",
+    Species == "Pacuta" ~ "Pocillopora acuta"
+  ))
+
+prot.means$Timepoint <- factor(prot.means$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
+
+# Looking at sample sizes 
+dplyr::filter(prot.means, N > 6) # this output should be zero b/c the biggest sample size is 6
+dplyr::filter(prot.means, N < 6) # this output should just be the Day 1, Day 2, Week 1, 12 week, and 16 week decreased sample sizes
+
+filter(prot, Timepoint == "6 week" & Species == "Mcapitata" & Treatment == "HTHC")
+## 2869 and 1430 done twice; took out second plate values. 
+## To-Do: 1413
+```
+
+
+
+Plot by treatment and time. 
+```{r}
+cols <- c("lightblue", "blue", "pink", "red")
+
+PROT <- ggplot(prot.means, aes(x=Timepoint, y = prot_mg.cm2, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(~Species) +
+  geom_errorbar(aes(ymin=prot_mg.cm2-se, ymax=prot_mg.cm2+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + 
+  theme_classic() + 
+  ylab(expression(protein ~(mg ~cm^2))) +
+  ggtitle("Host soluble protein") +
+  theme(legend.position = "left") +
+  geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
+  # Change axis line
+  axis.line = element_line(colour = "black")); PROT
+
+ggsave(file="Output/Final_Figures/Host-Soluble-Protein.pdf", PROT, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Host-Soluble-Protein.png", PROT, width = 11, height = 6, units = c("in"))
+```
+
+
+
+
