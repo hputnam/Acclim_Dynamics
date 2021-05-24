@@ -1,0 +1,48 @@
+---
+title: "Cell Counts"
+author: "EL Strand"
+date: "5/24/2021"
+output: html_document
+---
+
+Code modified from R. Cunning, H. Putnam, and E5 group; link [here](https://github.com/urol-e5/timeseries/blob/master/timepoint_1/scripts/Sym-Density.Rmd).
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load packages.
+```{r}
+library(tidyverse)
+```
+
+Import dataframes.
+```{r}
+# Haemocytometer count data
+haemo_sym_counts <- read_csv("Physiology_variables/cell-counts-haemo.csv")
+cellometer_sym_counts <- read_csv("Physiology_variables/cell-counts-cellometer.csv")
+
+# Surface area data
+sa <- read.csv("Physiology_variables/Respirometry/coral_surface_area.csv") %>% dplyr::rename(Plug_ID = Sample_ID) %>% select(Plug_ID, surface.area.cm2)
+sa$Plug_ID <- as.character(sa$Plug_ID)
+
+# Tissue homogenate volume data
+homog_vols <- read_csv("Physiology_variables/homogenate_vol.csv") %>% select(Species, Plug_ID, vol_mL)
+homog_vols$Plug_ID <- as.character(homog_vols$Plug_ID)
+
+# Coral sample metadata
+metadata <- read_csv("Environmental_data/Master_Fragment.csv") %>% select(Species, Plug_ID, Tank, Treatment, Temperature, CO2, Timepoint, ANALYSIS, Sample.Date) %>%
+  subset(ANALYSIS=="Physiology" | ANALYSIS=="Physiology/Molecular")
+metadata$Plug_ID <- as.character(metadata$Plug_ID)
+
+# Join homogenate volumes and surface area with sample metadata
+metadata <- full_join(metadata, homog_vols) %>% full_join(sa) %>% na.omit() 
+```
+
+Calculate mean counts.
+```{r}
+
+```
+
+
+
