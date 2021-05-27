@@ -111,7 +111,7 @@ haemo_sym_counts %>% na.omit() %>%
                geom = "errorbar", color = "black", width = 0.1) +
   stat_summary(fun = mean, geom = "point", color = "black")           # Plot mean
 
-counts %>%
+testing <- counts %>%
   ggplot(aes(x=cellometer.cells.cm2, y=haemo.cells.cm2, group = Tech, color = Tech)) + 
   geom_jitter(width = 0.1) + 
   facet_grid(~Species) +
@@ -121,5 +121,6 @@ counts %>%
   xlim(0, 3000000) +
   geom_abline(slope=1)
   
+ggsave(file="Output/Cellometer-testing.png", testing, width = 11, height = 6, units = c("in"))
 ```
 

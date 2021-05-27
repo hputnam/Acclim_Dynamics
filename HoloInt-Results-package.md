@@ -265,13 +265,13 @@ This dataset has been QC'd by Emma; final figure as of 20210216.
 
 ![prot](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Host-Soluble-Protein.png?raw=true)
 
-Week 4 P. acuta ATHC big drop, but samples are not in outlier tests. This still looks weird to me? All sample IDs are correct in this group.. 1217, 2530, and 2858 done on Oct7 (each sample run in duplicate like normal). 1194, 1908, and 2882 done on Oct14 (each sample run in duplicate like normal).. Come back to this - what else to check?
+All samples done on BCA purple kit instead of Rapid Gold.
 
 | Species     	| Timepoint 	| Treatment 	| Sample Size 	| Notes                                           	|
 |-------------	|-----------	|-----------	|-------------	|-------------------------------------------------	|
 | P. acuta    	| Day 1     	| HTAC      	| 3           	| 1488 no data (see notes on Chl and AFDW); Time limited 1st day in the field 	|
 
-This dataset has been QC'd by Emma; final figure as of 20210118.
+This dataset has been QC'd by Emma; final figure as of 20210527.
 
 ### Host Total Antioxidant Capacity
 
