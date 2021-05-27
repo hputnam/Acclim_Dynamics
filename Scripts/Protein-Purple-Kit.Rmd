@@ -7,7 +7,7 @@ output: html_document
 
 Code modified from R. Cunning, H. Putnam, and E5 group; link [here](https://github.com/urol-e5/timeseries/blob/master/timepoint_1/scripts/Protein.Rmd).
 
-9-10 protein plate with each one containing a standard curve. 
+9-10 protein plates with each one containing a standard curve. 
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -96,7 +96,8 @@ std_curve_plot <-
 
 std_curve_plot + 
   geom_line(data = std_curve, aes(x = abs562, y = .fitted)) +
-  labs(title = "Standard curve")
+  labs(title = "Standard curve") + 
+  theme_classic()
 ```
 
 Calculate protein concentration for all samples using standard curve
@@ -106,7 +107,6 @@ prot <- df %>%
   filter(!grepl("Standard", Plug_ID)) %>%                     # Get just samples (not standards)
   select(plate, Well, Plug_ID, abs562 = `562`) %>%        # Select only needed columns
   filter(!is.na(Plug_ID)) %>%                                 # Filter out empty wells
-  filter(Plug_ID != "BK") %>%                                 # Filter out blank wells
   mutate(prot_ug.mL = map_dbl(abs562, ~ predict(mod, newdata = data.frame(abs562 = .)))) # Use standard curve to convert absorbance to protein 
   
 std_curve_plot + 
@@ -147,7 +147,7 @@ prot <- left_join(prot, metadata) %>%
 
 ## data vis and outlier check 
 boxplot(prot$prot_ug)
-hist(prot$prot_ug)
+hist(prot$prot_ug) 
 
 boxplot.stats(prot$prot_ug)$out
 
@@ -179,7 +179,7 @@ prot.means$Timepoint <- factor(prot.means$Timepoint, levels=c("Day 1","Day 2","1
 dplyr::filter(prot.means, N > 6) # this output should be zero b/c the biggest sample size is 6
 dplyr::filter(prot.means, N < 6) # this output should just be the Day 1, Day 2, Week 1, 12 week, and 16 week decreased sample sizes
 
-filter(prot, Timepoint == "6 week" & Species == "Mcapitata" & Treatment == "HTHC")
+filter(prot, Timepoint == "Day 2" & Species == "Pacuta" & Treatment == "ATAC")
 ## 2869 and 1430 done twice; took out second plate values. 
 ## To-Do: 1413
 ```

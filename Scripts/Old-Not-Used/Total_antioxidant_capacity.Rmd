@@ -284,7 +284,7 @@ std_curve_plotFeb15
 
 
 ```{r}
-## All points projected on Nov 10 standard curve plot (std_curve_plotNov18) ; standard curve 5 (Nov10_st) ; linear model 5 (TAC_mod_linNov10)
+## All points projected on Nov 10 standard curve plot (std_curve_plotNov10) ; standard curve 5 (Nov10_st) ; linear model 5 (TAC_mod_linNov10)
 
 ## October 14 Plates (3)
 Oct14 <- Oct14 %>% 

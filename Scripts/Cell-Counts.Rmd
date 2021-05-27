@@ -119,7 +119,7 @@ testing <- counts %>%
   theme_classic() + 
   ylim(0, 3000000) + 
   xlim(0, 3000000) +
-  geom_abline(slope=1)
+  geom_abline(slope=1); testing
   
 ggsave(file="Output/Cellometer-testing.png", testing, width = 11, height = 6, units = c("in"))
 ```
