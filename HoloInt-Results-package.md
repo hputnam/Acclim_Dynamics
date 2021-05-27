@@ -42,11 +42,12 @@ pCO2 is projected to increase over next 100 years so this probably isn't as rele
 Experimental treatment started on 20180922.
 
 *M. capitata* spawning dates:  
-*P. acuta* spawning dates: 
+*P. acuta* spawning dates:
 
 
 
 ## Sampling Timeline
+
 |                      	| Acute Stress 	|       	| Chronic Stress 	|      	|      	|      	|      	|      	|      	|      	| Recovery 	|       	|       	|       	|       	|       	|       	|       	|
 |----------------------	|--------------	|-------	|----------------	|------	|------	|------	|------	|------	|------	|------	|----------	|-------	|-------	|-------	|-------	|-------	|-------	|-------	|
 |                      	| Day 1        	| Day 2 	| Wk 1           	| Wk 2 	| Wk 3 	| Wk 4 	| Wk 5 	| Wk 6 	| Wk 7 	| Wk 8 	| Wk 9     	| Wk 10 	| Wk 11 	| Wk 12 	| Wk 13 	| Wk 14 	| Wk 15 	| Wk 16 	|
