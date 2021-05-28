@@ -14,7 +14,7 @@ library(ggforce)
 # set seed
 set.seed(54321)
 
-# import data
+# import data; results physiology csv is from 'Statistics' Rmd. 
 data <- read.csv("Output/results_physiology.csv") %>% #read in file
   select(-Pnet_umol.cm2.hr, -Rdark_umol.cm2.hr, -Pgross_umol.cm2.hr, -chla.ug.cm2) %>% na.omit() %>%
   filter(Timepoint=="Day 2"| Timepoint== "2 week"| Timepoint== "4 week" | Timepoint== "8 week" | Timepoint== "12 week")
@@ -104,14 +104,14 @@ filter(Mcapitata.all, Timepoint == "12 week" & Temperature == "Ambient")
 Mcapitata.all.fig <- ggplot(Mcapitata.all, aes(.fittedPC1, .fittedPC2, color = Temperature)) + 
   geom_point(size = 1.5, alpha=0.3) +
   geom_point(aes(x=PC1.mean, y=PC2.mean)) +
-  geom_segment(aes(x = 1.06, y = 0.351, xend = -0.239, yend = -0.0732, colour = Temperature), data=high) + # Day 2 to 2 week
-  geom_segment(aes(x = -0.239, y = -0.0732, xend = 0.703, yend = -0.202, colour = Temperature), data=high) + # 2 week to 4 week
-  geom_segment(aes(x = 0.703, y = -0.202, xend = -1.48, yend = -0.281, colour = Temperature), data=high) + # 4 week to 8 week
-  geom_segment(aes(x = -1.48, y = -0.281, xend = -0.821, yend = 0.662, colour = Temperature), data=high, arrow = arrow()) + # 8 week to 12 week
-  geom_segment(aes(x = 0.121, y = 0.0600, xend = 0.572, yend = -0.0918, colour = Temperature), data=amb) + # Day 2 to 2 week
-  geom_segment(aes(x = 0.572, y = -0.0918, xend = 0.968, yend = -0.279, colour = Temperature), data=amb) + # 2 week to 4 week
-  geom_segment(aes(x = 0.968, y = -0.279, xend = -0.352, yend = -0.520, colour = Temperature), data=amb) + # 4 week to 8 week
-  geom_segment(aes(x = -0.352, y = -0.520, xend = -0.444, yend = 0.543, colour = Temperature), data=amb, arrow = arrow()) + # 8 week to 12 week
+  # geom_segment(aes(x = 1.06, y = 0.351, xend = -0.239, yend = -0.0732, colour = Temperature), data=high) + # Day 2 to 2 week
+  # geom_segment(aes(x = -0.239, y = -0.0732, xend = 0.703, yend = -0.202, colour = Temperature), data=high) + # 2 week to 4 week
+  # geom_segment(aes(x = 0.703, y = -0.202, xend = -1.48, yend = -0.281, colour = Temperature), data=high) + # 4 week to 8 week
+  # geom_segment(aes(x = -1.48, y = -0.281, xend = -0.821, yend = 0.662, colour = Temperature), data=high, arrow = arrow()) + # 8 week to 12 week
+  # geom_segment(aes(x = 0.121, y = 0.0600, xend = 0.572, yend = -0.0918, colour = Temperature), data=amb) + # Day 2 to 2 week
+  # geom_segment(aes(x = 0.572, y = -0.0918, xend = 0.968, yend = -0.279, colour = Temperature), data=amb) + # 2 week to 4 week
+  # geom_segment(aes(x = 0.968, y = -0.279, xend = -0.352, yend = -0.520, colour = Temperature), data=amb) + # 4 week to 8 week
+  # geom_segment(aes(x = -0.352, y = -0.520, xend = -0.444, yend = 0.543, colour = Temperature), data=amb, arrow = arrow()) + # 8 week to 12 week
   geom_text(aes(PC1.mean, PC2.mean, label=Timepoint), vjust=-1.5, color="black") +
   theme_half_open(12) + background_grid() +
   ggtitle("Montipora capitata") + 

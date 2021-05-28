@@ -57,7 +57,7 @@ Biomass <- read.csv("Output/Tissue_Biomass.csv") %>% select(Plug_ID, partner, AF
 
 Protein <- read.csv("Output/soluble_protein.csv") %>% select(Plug_ID, prot_mg.cm2)
 
-Antioxidant <- read.csv("Output/antioxidant_capacity.csv") %>% select(Plug_ID, cre.umol.mgprot)
+Antioxidant <- read.csv("Output/antioxidant.csv") %>% select(Plug_ID, cre.umol.mgprot)
 
 Color.Score <- read.csv("Physiology_variables/Bleaching_Score_Output.csv") %>% select(PLUG.ID, Bleaching.Score, Timepoint) %>% dplyr::rename(Plug_ID = PLUG.ID) %>% 
   dplyr::rename(Blch.Time = Timepoint)
