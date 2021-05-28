@@ -11,6 +11,10 @@ library(ggrepel)
 library(gridExtra)
 library(ggforce)
 
+############### 5 TP FOR CSP 
+
+######## Mcap 
+
 # set seed
 set.seed(54321)
 
@@ -93,29 +97,29 @@ Mcapitata.all <- Mcap.pca.out %>%
 high <- Mcapitata.all %>% subset(Temperature == "High")
 amb <- Mcapitata.all %>% subset(Temperature == "Ambient")
 
-filter(Mcapitata.all, Timepoint == "Day 2" & Temperature == "Ambient")
-filter(Mcapitata.all, Timepoint == "2 week" & Temperature == "Ambient")
-filter(Mcapitata.all, Timepoint == "4 week" & Temperature == "Ambient")
-filter(Mcapitata.all, Timepoint == "8 week" & Temperature == "Ambient")
-filter(Mcapitata.all, Timepoint == "12 week" & Temperature == "Ambient")
+d2 <- filter(Mcapitata.all, Timepoint == "Day 2" & Temperature == "High")
+w2 <- filter(Mcapitata.all, Timepoint == "2 week" & Temperature == "High")
+w4 <- filter(Mcapitata.all, Timepoint == "4 week" & Temperature == "High")
+w8 <- filter(Mcapitata.all, Timepoint == "8 week" & Temperature == "High")
+w12 <- filter(Mcapitata.all, Timepoint == "12 week" & Temperature == "High")
 
 ### come back to finding a more elegant way to do geom segment; this will have to change after I do protein  
 
 Mcapitata.all.fig <- ggplot(Mcapitata.all, aes(.fittedPC1, .fittedPC2, color = Temperature)) + 
   geom_point(size = 1.5, alpha=0.3) +
   geom_point(aes(x=PC1.mean, y=PC2.mean)) +
-  # geom_segment(aes(x = 1.06, y = 0.351, xend = -0.239, yend = -0.0732, colour = Temperature), data=high) + # Day 2 to 2 week
-  # geom_segment(aes(x = -0.239, y = -0.0732, xend = 0.703, yend = -0.202, colour = Temperature), data=high) + # 2 week to 4 week
-  # geom_segment(aes(x = 0.703, y = -0.202, xend = -1.48, yend = -0.281, colour = Temperature), data=high) + # 4 week to 8 week
-  # geom_segment(aes(x = -1.48, y = -0.281, xend = -0.821, yend = 0.662, colour = Temperature), data=high, arrow = arrow()) + # 8 week to 12 week
-  # geom_segment(aes(x = 0.121, y = 0.0600, xend = 0.572, yend = -0.0918, colour = Temperature), data=amb) + # Day 2 to 2 week
-  # geom_segment(aes(x = 0.572, y = -0.0918, xend = 0.968, yend = -0.279, colour = Temperature), data=amb) + # 2 week to 4 week
-  # geom_segment(aes(x = 0.968, y = -0.279, xend = -0.352, yend = -0.520, colour = Temperature), data=amb) + # 4 week to 8 week
-  # geom_segment(aes(x = -0.352, y = -0.520, xend = -0.444, yend = 0.543, colour = Temperature), data=amb, arrow = arrow()) + # 8 week to 12 week
+  # geom_segment(aes(x = 1.009253, y = 0.1522638, xend = -0.3706539, yend = -0.06665108, colour = Temperature), data=high) + # Day 2 to 2 week
+  # geom_segment(aes(x = -0.3706539, y = -0.06665108, xend = 0.7987893, yend = 0.2311786, colour = Temperature), data=high) + # 2 week to 4 week
+  # geom_segment(aes(x = 0.7987893, y = 0.2311786, xend = -1.592824, yend = -0.281, colour = Temperature), data=high) + # 4 week to 8 week
+  # geom_segment(aes(x = -1.592824, y = -0.281, xend = -0.821, yend = 0.662, colour = Temperature), data=high, arrow = arrow()) + # 8 week to 12 week
+  # geom_segment(aes(x = 0.1876167, y = -0.07391899, xend = 0.5884197, yend = -0.2212294, colour = Temperature), data=amb) + # Day 2 to 2 week
+  # geom_segment(aes(x = 0.5884197, y = -0.2212294, xend = 1.037685, yend = -0.09580057, colour = Temperature), data=amb) + # 2 week to 4 week
+  # geom_segment(aes(x = 1.037685, y = -0.09580057, xend = -1.592824, yend = -0.002057404, colour = Temperature), data=amb) + # 4 week to 8 week
+  # geom_segment(aes(x = -1.592824, y = -0.002057404, xend = -0.7918154, yend = 0.4534351, colour = Temperature), data=amb, arrow = arrow()) + # 8 week to 12 week
   geom_text(aes(PC1.mean, PC2.mean, label=Timepoint), vjust=-1.5, color="black") +
   theme_half_open(12) + background_grid() +
   ggtitle("Montipora capitata") + 
-  theme(legend.position = c(0.8, 0.1)) +
+  theme(legend.position = c(0.8, 0.9)) +
   theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) +
   theme(legend.title = element_text(size=12, face="bold")) +
   scale_color_manual(values = c("deepskyblue", "firebrick1"), aesthetics = c("colour")) +
@@ -123,7 +127,8 @@ Mcapitata.all.fig <- ggplot(Mcapitata.all, aes(.fittedPC1, .fittedPC2, color = T
 
 ggsave(file="Output/Final_Figures/CSP-all-Mcap.png", Mcapitata.all.fig, width = 6, height = 5, units = c("in"))
 
-### Pact
+######## Pacuta  
+
 #PCA
 Pact.pca.out <- prcomp(Pact.data.scaled, center=FALSE, scale=FALSE) #run PCA
 P.summary <- summary(Pact.pca.out); P.summary #view results
@@ -189,23 +194,23 @@ Pact.all <- Pact.pca.out %>%
 high <- Pact.all %>% subset(Temperature == "High")
 amb <- Pact.all %>% subset(Temperature == "Ambient")
 
-filter(Pact.all, Timepoint == "Day 2" & Temperature == "High")
-filter(Pact.all, Timepoint == "2 week" & Temperature == "High")
-filter(Pact.all, Timepoint == "4 week" & Temperature == "High")
-filter(Pact.all, Timepoint == "8 week" & Temperature == "High")
-filter(Pact.all, Timepoint == "12 week" & Temperature == "High")
+d2<- filter(Pact.all, Timepoint == "Day 2" & Temperature == "Ambient")
+w2 <- filter(Pact.all, Timepoint == "2 week" & Temperature == "Ambient")
+w4 <- filter(Pact.all, Timepoint == "4 week" & Temperature == "Ambient")
+w8 <- filter(Pact.all, Timepoint == "8 week" & Temperature == "Ambient")
+w12 <- filter(Pact.all, Timepoint == "12 week" & Temperature == "High")
   
 Pact.all.fig <- ggplot(Pact.all, aes(.fittedPC1, .fittedPC2, color = Temperature)) + 
   geom_point(size = 1.5, alpha=0.3) +
   geom_point(aes(x=PC1.mean, y=PC2.mean)) +
-  geom_segment(aes(x = -0.813, y = -1.03, xend = -1.30, yend = -0.0509, colour = Temperature), data=amb) + # Day 2 to 2 week
-  geom_segment(aes(x = -1.30, y = -0.0509, xend = 0.138, yend = -0.556, colour = Temperature), data=amb) + # 2 week to 4 week
-  geom_segment(aes(x = 0.138, y = -0.556, xend = -0.0865, yend = 0.463, colour = Temperature), data=amb) + # 4 week to 8 week
-  geom_segment(aes(x = -0.0865, y = 0.463, xend = -0.173, yend = 0.479, colour = Temperature), data=amb, arrow = arrow()) + # 8 week to 12 week
-  geom_segment(aes(x = -0.391, y = -0.616, xend = -0.0670, yend = 0.196, colour = Temperature), data=high) + # Day 2 to 2 week
-  geom_segment(aes(x = -0.0670, y = 0.196, xend = 0.545, yend = 0.233, colour = Temperature), data=high) + # 2 week to 4 week
-  geom_segment(aes(x = 0.545, y = 0.233, xend = 1.61, yend = 0.466, colour = Temperature), data=high) + # 4 week to 8 week
-  geom_segment(aes(x = 1.61, y = 0.466, xend = 3.52, yend = 0.746, colour = Temperature), data=high, arrow = arrow()) + # 8 week to 12 week
+  geom_segment(aes(x = -0.8570813, y = -0.7157772, xend = -1.391668, yend = 0.107712, colour = Temperature), data=amb) + # Day 2 to 2 week
+  geom_segment(aes(x = -1.391668, y = 0.107712, xend = 0.07845254, yend = -0.6590729, colour = Temperature), data=amb) + # 2 week to 4 week
+  geom_segment(aes(x = 0.07845254, y = -0.6590729, xend = -0.01105945, yend = -0.004638033, colour = Temperature), data=amb) + # 4 week to 8 week
+  geom_segment(aes(x = -0.01105945, y = -0.004638033, xend = -0.1590089, yend = 0.5087522, colour = Temperature), data=amb, arrow = arrow()) + # 8 week to 12 week
+  geom_segment(aes(x = -0.863, y = -0.127, xend = -0.1864421, yend = 0.2238403, colour = Temperature), data=high) + # Day 2 to 2 week
+  geom_segment(aes(x = -0.1864421, y = 0.2238403, xend = 0.6347599, yend = -0.1661942, colour = Temperature), data=high) + # 2 week to 4 week
+  geom_segment(aes(x = 0.6347599, y = -0.1661942, xend = 1.955725, yend = 0.4820474, colour = Temperature), data=high) + # 4 week to 8 week
+  geom_segment(aes(x = 1.955725, y = 0.4820474, xend = 4.210992, yend = 0.9925344, colour = Temperature), data=high, arrow = arrow()) + # 8 week to 12 week
   geom_text(aes(PC1.mean, PC2.mean, label=Timepoint), vjust=-1.5, color="black") +
   theme_half_open(12) + background_grid() +
   ggtitle("Pocillopora acuta") + 
@@ -220,16 +225,62 @@ ggsave(file="Output/Final_Figures/CSP-all-Pact.png", Pact.all.fig, width = 6, he
 All <- arrangeGrob(Mcapitata.all.fig, Pact.all.fig, ncol=2)
 ggsave(file="Output/Final_Figures/CSP-all.png", All, width = 12, height = 6, units = c("in"))
 
+############### 
 
-multi.page <- ggarrange(Mcapitata.plot, Pacuta.plot, Mcapitata.plot.all, Pacuta.plot.all,
-                        nrow = 2, ncol = 2)
+################ FINAL FIGURES 
 
-ggexport(multi.page, filename = "Output/multi.page.ggplot2.pdf")
+library(grid)
+library(ggmap)
+
+### PACUTA 
+
+Pacuta.inset <- autoplot(Pact.pca.out, data = Pact.info, colour = 'Temperature', 
+                       loadings = TRUE, loadings.colour = 'black', frame=TRUE, frame.type = 'norm',
+                       loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', repel=TRUE,
+                       loadings.label.vjust=2, loadings.label.hjust=0.1) +
+  scale_color_manual(values = c("deepskyblue", "firebrick1")) + scale_fill_manual(values = alpha(c("white", "white"), .001)) +
+  theme_bw() + theme(legend.position = "none"); Pacuta.inset
+
+Pacuta.inset.final <- Pact.all.fig +
+  inset(ggplotGrob(Pacuta.inset), xmin = -5.8, xmax = -1, ymin = -5.8, ymax = -2); Pacuta.inset.final
+
+ggsave(file="Output/Final_Figures/CSP-inset-pacuta.png", Pacuta.inset.final, width = 10, height = 8, units = c("in"))
 
 
-## 4 panel figure 
-## Timeseries, general PCA, bleaching score, survfit plot 
+### MCAP 
+# revision of Mcap.biplot
+
+Mcap.inset <- autoplot(Mcap.pca.out, data = Mcap.info, colour = 'Temperature', 
+                        loadings = TRUE, loadings.colour = 'black', frame=TRUE, frame.type = 'norm',
+                        loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', repel=TRUE,
+                        loadings.label.vjust=2, loadings.label.hjust=0.1) +
+  scale_color_manual(values = c("deepskyblue", "firebrick1")) + scale_fill_manual(values = alpha(c("white", "white"), .001)) +
+  theme_bw() + theme(legend.position = "none"); Mcap.inset
+
+Mcap.inset.final <- Mcapitata.all.fig +
+  inset(ggplotGrob(Mcap.inset), xmin = 3.2, xmax = 9, ymin = -3.1, ymax = 0); Mcap.inset.final
+
+ggsave(file="Output/Final_Figures/CSP-inset-mcap.png", Mcap.inset.final, width = 10, height = 8, units = c("in"))
+
+### Export both 
+inset.all <- arrangeGrob(Mcap.inset.final, Pacuta.inset.final, ncol=2)
+ggsave(file="Output/Final_Figures/CSP-inset-all.png", inset.all, width = 12, height = 6, units = c("in"))
+
+################ STATISTICS 
+
+## Pacuta - effect of treatment and timepoint
+
+# scaled dataframe = Pact.data.scaled
+# metadata = Pact.info
+# PerMANOVA - partitioning the euclidean distance matrix by species
+adonis(Pact.data.scaled ~ Timepoint*Temperature*CO2, data = Pact.info, method='eu')
+
+## Mcap - effect of treatment and timepoint
+
+# scaled dataframe = Mcap.data.scaled
+# metadata = Mcap.info
+# PerMANOVA - partitioning the euclidean distance matrix by species
+adonis(Mcap.data.scaled ~ Timepoint*Temperature*CO2, data = Mcap.info, method='eu')
 
 
-four <- arrangeGrob(Biplots, ncol=1)
-ggsave(file="Output/Final_Figures/CSP-4panel.png", four, width = 12, height = 5, units = c("in"))
+
