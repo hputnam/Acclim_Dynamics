@@ -5,26 +5,225 @@ date: "5/27/2021"
 output: html_document
 ---
 
+Code modified from R. Cunning, H. Putnam, and E5 group; link [here](https://github.com/urol-e5/timeseries/blob/master/timepoint_1/scripts/antioxidant_capacity.Rmd).
+
+9-10 antioxidant plates with each date containing a standard curve (not each plate will have a standard curve).  
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+# load packages
+## always load plyr before dplyr
+library(plyr)
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(broom)
+library(Rmisc)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+Clears workspace. 
+```{r}
+rm(list=ls())
 ```
 
-## Including Plots
+Read in all data files. 
+```{r}
+# List protein data files
+tac_path = "Physiology_variables/Total_Antioxidant_Capacity/"      # Path to prot data directory
+all_tac_files <- list.files(path = tac_path, pattern = "*.csv")          # List all files in directory
+tac_platemaps <- list.files(path = tac_path, pattern = "platemap")       # List platemap files
+tac_data_files <- setdiff(all_tac_files, tac_platemaps)                 # List data files
 
-You can also embed plots, for example:
+# Read in all files into tibble
+df <- tibble(file = tac_data_files) %>%
+  separate(file, into = c("date", "plate", "readtime"), remove = FALSE) %>%
+  unite(plate, date, plate) %>%                                                          # keep readtime separate so R can pair the map to both final and initial files 
+  mutate(platemap = map(plate, ~read_csv(paste0(tac_path, ., "_TAC_platemap.csv"))),
+         tac_data = map( file, ~read_csv(paste0(tac_path, .)))) 
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+# Merge platemap and data for each plate
+df <- df %>%
+  mutate(merged = map2(platemap, tac_data, ~ right_join(.x, .y)))
+
+
+# files that have 'standard' or 'NA' are characters, but all numeric plug ids are numeric and need to be changed to character
+# 3-6, 9-12, 17-18, 21-24
+
+#df[[6]][[1:32]]$Plug_ID <- sapply(df[[6]][[1:32]]$Plug_ID,as.character)
+
+# come back to a cleaner way to do this 
+df[[6]][[3]]$Plug_ID <- as.character(df[[6]][[3]]$Plug_ID)
+df[[6]][[4]]$Plug_ID <- as.character(df[[6]][[4]]$Plug_ID)
+df[[6]][[5]]$Plug_ID <- as.character(df[[6]][[5]]$Plug_ID)
+df[[6]][[6]]$Plug_ID <- as.character(df[[6]][[6]]$Plug_ID)
+df[[6]][[9]]$Plug_ID <- as.character(df[[6]][[9]]$Plug_ID)
+df[[6]][[10]]$Plug_ID <- as.character(df[[6]][[10]]$Plug_ID)
+df[[6]][[11]]$Plug_ID <- as.character(df[[6]][[11]]$Plug_ID)
+df[[6]][[12]]$Plug_ID <- as.character(df[[6]][[12]]$Plug_ID)
+df[[6]][[17]]$Plug_ID <- as.character(df[[6]][[17]]$Plug_ID)
+df[[6]][[18]]$Plug_ID <- as.character(df[[6]][[18]]$Plug_ID)
+df[[6]][[21]]$Plug_ID <- as.character(df[[6]][[21]]$Plug_ID)
+df[[6]][[22]]$Plug_ID <- as.character(df[[6]][[22]]$Plug_ID)
+df[[6]][[23]]$Plug_ID <- as.character(df[[6]][[23]]$Plug_ID)
+df[[6]][[24]]$Plug_ID <- as.character(df[[6]][[24]]$Plug_ID)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Plot standard curves and calculate fitted model values. 
+```{r}
+# Create standards following kit instructions
+standards <- tribble(
+  ~std, ~conc_mM,
+  1,           1,
+  2,         0.5,
+  3,        0.25,
+  4,       0.125,
+  5,      0.0625,
+  6,     0.03125,
+  7,     0.01560,
+  8,     0.00780,
+  9,     0.00390,
+ 10,           0
+)
+
+std_curve <- df %>%
+  unnest(merged) %>%
+  filter(grepl("Standard", Plug_ID)) %>%
+  dplyr::rename(absorbance = '490:490') %>% 
+  select(plate, Well, Plug_ID, absorbance, readtime) %>%
+  rename(std = Plug_ID) %>%
+  mutate(std = as.numeric(str_sub(std, 9, 10))) %>%
+  spread(readtime, absorbance) %>%
+  mutate(net_abs = final - initial) %>%
+  mutate(net_abs = net_abs - net_abs[std == "10"]) %>%
+  left_join(standards) %>%
+  group_by(plate)
+
+## Visualizing standard curves and choosing nov10 to use for all samples 
+std_curve %>%
+  ggplot(aes(x = net_abs, y = conc_mM, group = plate, color = plate)) +
+  geom_point() + theme_bw() +
+  labs(title = "Standard curve") 
+
+nov10 <- std_curve %>% subset(plate=="20201110_plate1") 
+
+nov10plot <- nov10 %>%
+  ggplot(aes(x = net_abs, y = conc_mM, group = plate, color = plate)) +
+  geom_point() + theme_bw() +
+  #geom_line(aes(x = net_abs, y = .fitted)) +
+  labs(title = "Nov 10 standard curve"); nov10plot
+
+# Fit linear model
+lmod <- lm(conc_mM ~ net_abs, data = nov10)
+
+# Get fitted values
+fitted <- lmod %>% 
+  broom::augment(newdata = tibble(net_abs = seq(0, max(std_curve$net_abs), 0.005)))
+```
+
+Calculating TAC values. 
+```{r}
+tac <- df %>%
+  unnest(merged) %>%
+  filter(!grepl("Standard", Plug_ID)) %>%             # filters out the standard values 
+  dplyr::rename(absorbance = '490:490') %>% 
+  select(plate, Well, Plug_ID, absorbance, readtime) %>%
+  spread(readtime, absorbance) %>%
+  # Use standard curve to predict concentrations based on sample absorbance values
+  mutate(net_abs = final - initial,
+         uae.mmol.L = map_dbl(net_abs, ~ predict(lmod, newdata = data.frame(net_abs = .)))) 
+
+nov10plot +
+  geom_point(data = tac, aes(x = net_abs, y = uae.mmol.L), pch = "X", cex = 3, alpha = 0.3) +
+    labs(title = "All samples projected on standard curve")
+
+tac <- tac %>%
+  group_by(Plug_ID) %>%
+  mutate(uae.mmol.L = mean(uae.mmol.L)) %>% select(-Well, -final, -initial, -net_abs) %>% distinct()
+```
+
+Read in metadata and calculate TAC.
+```{r}
+# Protein output data = already has metadata and homogenate volume
+protein <- read.csv("Output/soluble_protein.csv") %>% na.omit() %>% select(Plug_ID, vol_mL, Species, Tank, Timepoint, Temperature, Treatment, CO2, prot_ug)
+protein$Plug_ID <- as.character(protein$Plug_ID)
+
+# Join TAC data with metadata
+tac <- left_join(tac, protein) %>%
+  mutate(cre.umol.L = uae.mmol.L * 2189) %>%   # Convert to CRE (see product manual) per unit sample volume
+  mutate(cre.umol = cre.umol.L * (vol_mL / 1000),  # Convert to CRE per coral by multiplying by homog. vol.
+         cre.umol.mgprot = cre.umol / (prot_ug / 1000))  # Convert to CRE per mg protein by dividing by total protein
+
+tac <- tac %>% filter(!is.na(Plug_ID)) %>% filter(!is.na(Species))
+
+## Remove 1430 and 2391 as an outlier 
+tac <- tac %>% filter(!grepl("1430", Plug_ID)) %>% filter(!grepl("2391", Plug_ID))
+
+## data vis and outlier check 
+boxplot(tac$cre.umol.mgprot)
+hist(tac$cre.umol.mgprot)
+boxplot.stats(tac$cre.umol.mgprot)$out
+
+#looking for any plate that is an outlier 
+tac %>% ggplot(aes(x=plate, y=cre.umol.mgprot)) + geom_boxplot() + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  facet_grid(Species ~ Treatment) + theme_bw()
+
+# List missing values. 
+which(is.na(tac))
+
+# taking out plate 
+tac <- tac %>% select(-plate) %>% distinct()
+
+# output data
+tac %>%
+  write_csv(., file = "Output/antioxidant.csv")
+```
+
+Calculating means. 
+```{r}
+tac.means <- tac %>% summarySE(measurevar="cre.umol.mgprot", groupvars=c("Timepoint", "Treatment", "Temperature", "CO2", "Species")) %>%
+  filter(N>2) %>%
+  mutate(Species = case_when(
+    Species == "Mcapitata" ~ "Montipora capitata",
+    Species == "Pacuta" ~ "Pocillopora acuta"
+  ))
+
+tac.means$Timepoint <- factor(tac.means$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
+
+# Looking at sample sizes 
+dplyr::filter(tac.means, N > 6) # this output should be zero b/c the biggest sample size is 6
+dplyr::filter(tac.means, N < 6) # this output should just be the Day 1, Day 2, Week 1, 12 week, and 16 week decreased sample sizes
+
+filter(tac, Timepoint == "6 week" & Species == "Mcapitata" & Treatment == "ATAC")
+
+```
+Figure construction.
+```{r}
+cols <- c("lightblue", "blue", "pink", "red")
+
+tac.plot <- ggplot(tac.means, aes(x=Timepoint, y = cre.umol.mgprot, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(~Species) +
+  geom_errorbar(aes(ymin=cre.umol.mgprot-se, ymax=cre.umol.mgprot+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + 
+  theme_classic() + 
+  ylab(expression("Copper Reducing Equivalents" ~(umol ~mg^-1))) +
+  ggtitle("Total Antioxidant Capacity") +
+  theme(legend.position = "left") +
+  geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
+  # Change axis line
+  axis.line = element_line(colour = "black")); tac.plot
+
+ggsave(file="Output/Final_Figures/Antioxidant.pdf", tac.plot, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Antioxidant.png", tac.plot, width = 11, height = 6, units = c("in"))
+```
+
+
