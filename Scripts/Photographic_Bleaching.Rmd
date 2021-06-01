@@ -158,7 +158,9 @@ Blch_plot <- ggplot(All.Means, aes(x=Timepoint, y = Bleaching.Score, group = Tre
   xlab("Timepoint") + 
   ylab("Color Score") + # y-axis label and y axis range
   theme_classic() + 
-  theme(legend.position = "left") +
+  theme(legend.position = c(0.1,0.3)) +
+  theme(legend.text = element_text(size = 7)) +
+  theme(legend.title = element_text(size = 9)) +
   geom_vline(xintercept = c(7.8), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
   scale_x_discrete(breaks = c("Week1", "Week2", "Week4", "Week6", "Week8", "Week12", "Week16"), labels = c("1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week")) +
