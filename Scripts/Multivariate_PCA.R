@@ -26,14 +26,14 @@ data$Timepoint <- factor(data$Timepoint, levels = c("Day 2", "2 week", "4 week",
 
 cols <- c("lightblue", "red")
 
-unique(data$Phase) # checking that all three phases are present
+#unique(data$Phase) # checking that all three phases are present
 
-M.data <- data %>% filter(Species=="Mcapitata") %>% select(c(10:15))
-P.data <- data %>% filter(Species=="Pacuta") %>% select(c(10:15))
+M.data <- data %>% filter(Species=="Mcapitata") %>% select(c(11:16)) ## By Reef = 11:16
+P.data <- data %>% filter(Species=="Pacuta") %>% select(c(11:16)) ## By Reef = 11:16
 
 #Identify Factors 
-Mcap.info <- data %>% filter(Species=="Mcapitata") %>% select(c(1:9,16))
-Pact.info <-  data %>% filter(Species=="Pacuta") %>% select(c(1:9,16))
+Mcap.info <- data %>% filter(Species=="Mcapitata") %>% select(c(1:10,17))
+Pact.info <-  data %>% filter(Species=="Pacuta") %>% select(c(1:10,17))
 
 #Scale and center datasets
 Mcap.data.scaled <- scale(M.data, center = T, scale = T) # scaled variables
@@ -44,6 +44,48 @@ Pact.data.scaled <- scale(P.data, center = T, scale = T) # scaled variables
 Mcap.pca.out <- prcomp(Mcap.data.scaled, center=FALSE, scale=FALSE) #run PCA
 M.summary <- summary(Mcap.pca.out); M.summary #view results
 biplot(Mcap.pca.out) #plot results
+
+
+#### Plotting just by reef
+
+## MCap 
+
+Mcap.reef.info <- Mcap.info %>% subset(Treatment == "ATAC") 
+Mcap.reef.data <- data %>% subset(Treatment == "ATAC") %>% filter(Species=="Mcapitata") %>% select(c(11:16))
+M.reef.scaled <- scale(Mcap.reef.data, center = T, scale = T)
+M.reef.pca.out <- prcomp(M.reef.scaled, center=FALSE, scale=FALSE)
+
+Mcap.reef <- autoplot(M.reef.pca.out, data = Mcap.reef.info, colour = 'Site.Name', 
+                        loadings = TRUE, loadings.colour = 'black', frame=TRUE, #frame.type = 'norm',
+                        loadings.label = TRUE, loadings.label.size = 4, loadings.label.colour = 'black', repel=TRUE,
+                        loadings.label.vjust=2, loadings.label.hjust=0.1) +
+  #scale_color_manual(values = c("deepskyblue", "firebrick1")) + scale_fill_manual(values = c("white", "white")) +
+  theme_bw() + ggtitle("Montipora capitata - ATAC all time points") + 
+  theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) + 
+  theme(legend.title = element_text(size=12, face="bold")) + 
+  theme(legend.text = element_text(size=12)) +
+  theme(legend.position = c(0.9, 0.1)) + 
+  theme(legend.background = element_rect(size=0.1, linetype="solid", colour ="black")); Mcap.reef
+
+## Pacuta 
+Pact.reef.info <- Pact.info %>% subset(Treatment == "ATAC") 
+Pact.reef.data <- data %>% subset(Treatment == "ATAC") %>% filter(Species=="Pacuta") %>% select(c(11:16))
+P.reef.scaled <- scale(Pact.reef.data, center = T, scale = T)
+P.reef.pca.out <- prcomp(P.reef.scaled, center=FALSE, scale=FALSE)
+
+Pact.reef <- autoplot(P.reef.pca.out, data = Pact.reef.info, colour = 'Site.Name', 
+                      loadings = TRUE, loadings.colour = 'black', frame=TRUE, #frame.type = 'norm',
+                      loadings.label = TRUE, loadings.label.size = 4, loadings.label.colour = 'black', repel=TRUE,
+                      loadings.label.vjust=2, loadings.label.hjust=0.1) +
+  #scale_color_manual(values = c("deepskyblue", "firebrick1")) + scale_fill_manual(values = c("white", "white")) +
+  theme_bw() + ggtitle("Pocillopora acuta - ATAC all time points") + 
+  theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) + 
+  theme(legend.title = element_text(size=12, face="bold")) + 
+  theme(legend.text = element_text(size=12)) +
+  theme(legend.position = "left") + 
+  theme(legend.background = element_rect(size=0.1, linetype="solid", colour ="black")); Pact.reef
+
+
 
 # PERMANOVA
 Mcap.mod <- adonis2(Mcap.data.scaled ~ Temperature * CO2 * Timepoint, data = Mcap.info, method = "euclidian"); Mcap.mod # PERMANOVA

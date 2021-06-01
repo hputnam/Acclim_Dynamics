@@ -15,6 +15,21 @@
                 "path": "~/MyProjects/Holobiont_Integration/RAnalysis/Scripts/Surface_Area.R",
                 "state": 1,
                 "type": 1
+            },
+            {
+                "id": 1,
+                "path": "~/MyProjects/Acclim_Dynamics/Scripts/Multivariate_PCA.R",
+                "line_number": 253,
+                "function_steps": "",
+                "function_name": "toplevel",
+                "state": 1,
+                "editor_state": 1,
+                "editor_line_number": 253,
+                "is_pending_debug_completion": false,
+                "needs_updated_steps": true,
+                "type": 1,
+                "is_package_breakpoint": false,
+                "package_name": ""
             }
         ]
     }

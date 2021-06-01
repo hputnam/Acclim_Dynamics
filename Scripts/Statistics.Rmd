@@ -42,7 +42,7 @@ library(factoextra)
 ### Read in data files to analyze. 
 
 ```{r}
-Master <- read.csv("Environmental_data/Master_Fragment.csv") %>% select(Plug_ID, Species, ANALYSIS, Timepoint, Treatment, Tank, Temperature, CO2) %>%
+Master <- read.csv("Environmental_data/Master_Fragment.csv") %>% select(Site.Name, Plug_ID, Species, ANALYSIS, Timepoint, Treatment, Tank, Temperature, CO2) %>%
   filter(ANALYSIS == "Physiology" | ANALYSIS == "Physiology/Molecular")
   
 Photo.Resp <- read.csv("Physiology_variables/Respirometry/Output/Resp_AllRates.csv") %>% select(Fragment.ID.x, Pnet_umol.cm2.hr, Rdark_umol.cm2.hr, Pgross_umol.cm2.hr) %>%
@@ -153,6 +153,7 @@ AFDW_Ratio_plot <- ggplot(Ratio.means, aes(x=Timepoint, y = Ratio_AFDW.mg.cm2, g
 
 ggsave(file="Output/Final_Figures/Tissue_Biomass-Ratio.pdf", AFDW_Ratio_plot, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Final_Figures/Tissue_Biomass-Ratio.png", AFDW_Ratio_plot, width = 11, height = 6, units = c("in"))
+
 ```
 
 
@@ -183,9 +184,12 @@ hist(mcap_full_data$Rdark_umol.cm2.hr)
 Net photosynthetic rates. 
 ```{r}
 ## Pnet
-Pacuta_Pnet_LMER <- lmer(Pnet_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
+Pacuta_Pnet_LMER <- lmer(Pnet_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM 
+
+Pacuta_Pnet_LMER.reef <- lmer(Pnet_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=pacuta_full_data) #GLMM with site
 # GAM 
-# anova(GLMM, GAM) # report AIC values 
+
+anova(Pacuta_Pnet_LMER, Pacuta_Pnet_LMER.reef) # report AIC values 
 
 ## summary of the model chosen from above
 ## plot(Pacuta_Pnet_LMER) in console to view diagnostic plots
@@ -200,7 +204,9 @@ leveneTest(pacuta_full_data$Pnet_umol.cm2.hr ~ pacuta_full_data$Timepoint*pacuta
 
 ## significance of model
 anova(Pacuta_Pnet_LMER, ddf="lme4", type='III')
+
 Anova(Pacuta_Pnet_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+Anova(Pacuta_Pnet_LMER.reef, ddf="lme4", type='III') # Type III Wald chisquare tests
 
 anova(Pacuta_Pnet_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
 ```
