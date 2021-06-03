@@ -1,0 +1,113 @@
+Hobo logger notes 
+
+2018-09-03 logger calibration start time for 10:00.
+
+2018-09-05 hobos taken out of water; exclude this day
+
+2018-09-03 - 2018-09-08 all in one tank; start at Sept 6th 
+
+OUT 2018-09-08 11:00 - 2018-09-09 10:30 
+OUT cleaning 2018-09-11 11:00-17:00
+
+INCLUDE 
+2018-09-04  
+2018-09-06/07
+2018-09-09
+
+OUT Tank 6, 12 cleaning 2018-09-13 15:00-19:00
+
+OUT Tank 8, 11 cleaning 2018-09-14 11:00-14:00
+
+OUT 2018-09-18 cleaning 9:00 - 17:00 
+
+OUT Tank 11 2018-09-27 8:49 - 9:35
+OUT Tank 12 2018-09-27 10:12 - 10:44
+OUT Tank 6 2018-09-27 10:45 - 11:26 
+OUT Tank 5 2018-09-27 11:40 - 12:20 
+
+OUT Tank 4 2018-09-28 8:57 - 9:41 
+OUT Tank 10 2018-09-28 9:35 - 12:40 
+OUT Tank 9 2018-09-28 10:20 - 11:06 
+OUT Tank 3 2018-09-28 10:40 - 14:50 
+OUT Tank 7 2018-09-28 11:55 - 12:35 
+OUT Tank 8 2018-09-28 11:30 - 12:23
+OUT Tank 1 2018-09-28 12:37 - 13:24 
+OUT Tank 2 2018-09-28 13:24 - 14:30 
+
+OUT All 2018-09-29 10:43 - 11:40 
+
+OUT All 2018-10-08 9:33 - 10:08 
+
+OUT Tank 6 2018-10-08 10:20-11:13
+OUT Tank 12 2018-10-08 10:57 - 11:46 
+OUT Tank 5 2018-10-08 11:49 - 13:00 
+OUT Tank 11 2018-10-08 14:06 - 14:45 
+OUT Tank 4 2018-10-08 14:47 - 16:00 
+OUT Tank 10 2018-10-08 15:30 - 17:00 
+
+OUT Tank 1 2018-10-09 9:40 - 10:17 
+OUT Tank 7 2018-10-09 10:15 - 11:05 
+OUT Tank 8 2018-10-09 10:50 - 11:33 
+OUT Tank 2 2018-10-09 11:30 - 12:00 
+OUT Tank 9 2018-10-09 11:55 - 12:10 
+OUT Tank 3 2018-10-09 12:30 - 14:42 
+
+Power out night of 10-09 and reboot 10-10 at 10:00 
+
+2018-10-11 night: tank 4 temp too high, fixed at 1:30 am 2018-10-12. Take out 2018-10-11 11:00 - 2018-10-12 2:00 
+
+OUT All 2018-10-16 11:00-12:30 
+
+OUT Tank 6 2018-10-21 10:35 - 11:15
+OUT Tank 4 2018-10-21 10:50 - 11:44
+OUT Tank 8 2018-10-21 11:20 - 12:15
+OUT Tank 12 2018-10-21 11:47 - 12:44
+OUT Tank 1 2018-10-21 12:20 - 13:48 
+OUT Tank 11 2018-10-21 12:45 - 14:20 
+OUT Tank 5 2018-10-21 13:52 - 15:00 
+OUT Tank 3 2018-10-21 14:15 - 14:58 
+OUT Tank 9 2018-10-21 14:40 - 15:20 
+OUT Tank 10 2018-10-21 15:05 - 15:40 
+OUT Tank 7 2018-10-21 15:45 - 16:20 
+OUT Tank 2 2018-10-21 16:00 - 17:00
+
+OUT Tank 12 2018-10-29 9:40 - 10:46 
+OUT Tank 11 2018-10-29 10:55 - 11:42 
+OUT Tank 10 2018-10-29 13:00 - 14:08 
+
+Outlets went out 2018-11-01 0:00-10:44
+
+OUT Tank 7 2018-11-08 8:45 - 9:54 
+OUT Tank 1 2018-11-08 8:54 - 9:54 
+OUT Tank 2 2018-11-08 9:14 - 9:54 
+OUT Tank 3 2018-11-08 9:45 - 10:09 
+OUT Tank 8 2018-11-08 10:15 - 10:58 
+OUT Tank 11 2018-11-08 10:35 - 11:02 
+OUT Tank 10 2018-11-08 10:48 - 12:20 
+OUT Tank 4 2018-11-08 11:00 - 12:20 
+OUT Tank 6 2018-11-08 11:20 - 12:20 
+
+OUT All 2018-11-08 12:20 - 13:04 
+
+OUT Tank 12 2018-11-09 10:14 - 10:42 
+OUT Tank 5 2018-11-09 10:15 - 10:54 
+OUT Tank 9 2018-11-09 10:20 - 11:18 
+
+21st - revisit notebook
+
+
+2018-11-28 hobo download - find where it dropped that day 
+
+2018-12-05 same as above
+2018-12-12 same as above 
+12-19
+12-26
+
+
+CO2 Notes 
+Tank 5 CO2 OFF 2018-09-27 11:40-17:40
+
+Power out night of 10-09 and reboot 10-10 at 10:00
+
+2018-10-15 Tank 5 pH probe out of water; take out 14:00 - 14:45 
+2018-10-16 Tank 5 pH probe out of water; take out 11:30 - 13:00 
