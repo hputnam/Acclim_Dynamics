@@ -6,14 +6,16 @@ Results markdown sheet link [here](https://github.com/hputnam/Acclim_Dynamics/bl
 
 I used a generalized linear mixed model (GLMM) using Tank as a random factor (and Plug ID for repeated measures in Color Score and Growth) and compared this to a generalized additive model (GAM) using model comparisons like AIC scores. I chose Type III ANOVA because we have unbalanced sample sizes, and I wanted the ANOVA to test the significance of the interactive terms before the main effects.
 
+
+#### Example code used for all variables
+
 Example code below for creating the two models, comparing them, and checking the residuals of that model before completing an ANOVA test.
 
 ```
 ## Generalized Linear Mixed Model.
 Pacuta_Pnet_LMER <- lmer(Pnet_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data)
 
-## Generalized Additive Model.
-
+Pacuta_Pnet_LMER.reef <- lmer(Pnet_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=pacuta_full_data)
 
 ## Diagnositics of the more appropriate model from above
 ## plot(Pacuta_Pnet_LMER) in console to view diagnostic plots
@@ -73,9 +75,37 @@ Temperature:CO2            0.0003 0.00028     1   8.109  0.0025            0.961
 Timepoint:Temperature:CO2  1.3710 0.22850     6 120.633  2.0173            0.068440
 ```
 
+#### Model selection
+
+| Species            	| Variable     	| Random factors chosen  	|
+|--------------------	|--------------	|------------------------	|
+| Pocillopora acuta  	| Pnet rates   	| Reef and tank          	|
+| Pocillopora acuta  	| Pgross rates 	| Reef and tank          	|
+| Pocillopora acuta  	| Resp rates   	| Tank                   	|
+| Pocillopora acuta  	| Chl          	| Reef and tank          	|
+| Pocillopora acuta  	| Sym AFDW     	| Reef and tank          	|
+| Pocillopora acuta  	| Host AFDW    	| Tank                   	|
+| Pocillopora acuta  	| Ratio AFDW   	| Tank                   	|
+| Pocillopora acuta  	| Protein      	| Reef and tank          	|
+| Pocillopora acuta  	| TAC          	| Tank                   	|
+| Montipora capitata 	| Pnet rates   	| Tank                   	|
+| Montipora capitata 	| Pgross rates 	| Tank                   	|
+| Montipora capitata 	| Resp rates   	| Tank                   	|
+| Montipora capitata 	| Chl          	| Tank                   	|
+| Montipora capitata 	| Sym AFDW     	| Tank                   	|
+| Montipora capitata 	| Host AFDW    	| Tank                   	|
+| Montipora capitata 	| Ratio AFDW   	| Tank                   	|
+| Montipora capitata 	| Protein      	| Reef and tank          	|
+| Montipora capitata 	| TAC          	| Tank                   	|
+
+
 ### Respiration and photosynthetic rates
 
-**P. acuta**
+#### P. acuta
+
+**Pnet rates = GLMM w/ tank and reef as random factor**   
+**Pgross rates = GLMM w/ tank and reef as random factor**   
+**Resp rates = GLMM w/ tank as random factor**  
 
 Net and gross photosynethic rates have equal variances, normal residuals and normal histogram. Respiration rates have normal residuals but unequal variances.
 
@@ -90,51 +120,51 @@ Analysis of Deviance Table (Type III Wald chisquare tests)
 
 Response: Pnet_umol.cm2.hr
                             Chisq Df           Pr(>Chisq)
-(Intercept)               78.0734  1 < 0.0000000000000002
-Timepoint                 13.6698  6              0.03355
-Temperature                6.2095  1              0.01271
-CO2                        0.6040  1              0.43706
-Timepoint:Temperature     14.6975  6              0.02274
-Timepoint:CO2              5.2191  6              0.51603
-Temperature:CO2            0.6397  1              0.42382
-Timepoint:Temperature:CO2 12.1038  6              0.05969
+(Intercept)               80.6210  1 < 0.0000000000000002
+Timepoint                 13.7308  6              0.03279
+Temperature                6.3005  1              0.01207
+CO2                        0.8529  1              0.35574
+Timepoint:Temperature     15.8640  6              0.01450
+Timepoint:CO2              5.5982  6              0.46966
+Temperature:CO2            0.4649  1              0.49536
+Timepoint:Temperature:CO2 13.4339  6              0.03664
 
 Type III Analysis of Variance Table with Satterthwaite's method
                            Sum Sq Mean Sq NumDF   DenDF F value              Pr(>F)
-Timepoint                 11.3832 1.89720     6 120.633 16.7492 0.00000000000005485
-Temperature                2.4616 2.46162     1   8.109 21.7321            0.001562
-CO2                        0.2117 0.21170     1   8.109  1.8690            0.208285
-Timepoint:Temperature      6.8962 1.14937     6 120.633 10.1471 0.00000000454251390
-Timepoint:CO2              0.7311 0.12184     6 120.633  1.0757            0.380893
-Temperature:CO2            0.0003 0.00028     1   8.109  0.0025            0.961603
-Timepoint:Temperature:CO2  1.3710 0.22850     6 120.633  2.0173            0.068440
+Timepoint                 10.9275 1.82124     6 118.643 17.2812 0.00000000000002758
+Temperature                2.4037 2.40368     1   8.231 22.8077            0.001292
+CO2                        0.2366 0.23659     1   8.163  2.2450            0.171687
+Timepoint:Temperature      6.8208 1.13681     6 117.446 10.7868 0.00000000155438205
+Timepoint:CO2              0.6439 0.10731     6 118.151  1.0182            0.416883
+Temperature:CO2            0.0025 0.00247     1   8.113  0.0234            0.882182
+Timepoint:Temperature:CO2  1.4158 0.23596     6 117.963  2.2390            0.044078
 
 -------
 
-## Gross photosynethic rates
+## Gross photosynthetic rates
 
 Analysis of Deviance Table (Type III Wald chisquare tests)
 
 Response: Pgross_umol.cm2.hr
                             Chisq Df           Pr(>Chisq)
-(Intercept)               91.5956  1 < 0.0000000000000002
-Timepoint                 14.6865  6              0.02284
-Temperature                5.7251  1              0.01672
-CO2                        0.9741  1              0.32366
-Timepoint:Temperature     14.2763  6              0.02670
-Timepoint:CO2              5.2522  6              0.51190
-Temperature:CO2            0.6780  1              0.41028
-Timepoint:Temperature:CO2 11.9308  6              0.06353
+(Intercept)               95.3113  1 < 0.0000000000000002
+Timepoint                 14.9597  6              0.02057
+Temperature                5.8979  1              0.01516
+CO2                        1.3638  1              0.24287
+Timepoint:Temperature     15.9238  6              0.01417
+Timepoint:CO2              5.9706  6              0.42649
+Temperature:CO2            0.4789  1              0.48893
+Timepoint:Temperature:CO2 13.7720  6              0.03229
 
 Type III Analysis of Variance Table with Satterthwaite's method
-                           Sum Sq Mean Sq NumDF   DenDF F value               Pr(>F)
-Timepoint                 18.0070  3.0012     6 120.665 19.1942 0.000000000000001305
-Temperature                3.4803  3.4803     1   8.104 22.2583             0.001454
-CO2                        0.3039  0.3039     1   8.104  1.9435             0.200327
-Timepoint:Temperature      9.3211  1.5535     6 120.665  9.9357 0.000000006745129489
-Timepoint:CO2              1.2734  0.2122     6 120.665  1.3574             0.237334
-Temperature:CO2            0.0000  0.0000     1   8.104  0.0002             0.988896
-Timepoint:Temperature:CO2  1.8655  0.3109     6 120.665  1.9885             0.072453
+                           Sum Sq Mean Sq NumDF   DenDF F value                Pr(>F)
+Timepoint                 17.1658  2.8610     6 118.549 20.1346 0.0000000000000003973
+Temperature                3.3486  3.3486     1   8.251 23.5662              0.001158
+CO2                        0.3377  0.3377     1   8.168  2.3764              0.160978
+Timepoint:Temperature      9.1095  1.5182     6 117.273 10.6849 0.0000000018831238417
+Timepoint:CO2              1.1154  0.1859     6 118.089  1.3084              0.258748
+Temperature:CO2            0.0025  0.0025     1   8.109  0.0174              0.898385
+Timepoint:Temperature:CO2  1.9569  0.3261     6 117.754  2.2953              0.039345
 
 -------
 
@@ -165,7 +195,11 @@ Timepoint:Temperature:CO2 0.08038 0.013396     6 120.915  1.8818              0.
 
 ```
 
-**M. capitata**
+#### M. capitata
+
+**Pnet = w/ tank as random factor**  
+**Pgross = w/ tank as random factor**  
+**Resp = w/ tank as random factor**  
 
 All rates were log transformed and 1 was added to each respiration rate prior to transformation.
 
@@ -256,8 +290,11 @@ Timepoint:Temperature:CO2 1.32010 0.22002     6 118.792  1.4040 0.21869
 
 ### Chlorophyll concentration
 
-*M. capitata*  
+#### Mcapitata
+
 - Homogeneity of variance didn't pass but normal qqplot
+
+**Model with just tank as random factor**  
 
 ```
 Analysis of Deviance Table (Type III Wald chisquare tests)
@@ -286,38 +323,49 @@ Timepoint:Temperature:CO2  6.3291  0.7911     8 148.031  1.3330 0.2314470
 ```
 
 
-*P. acuta*  
+#### Pacuta  
+
+**Model with tank and reef as random factors chosen.**
+
 - Warning: `fixed-effect model matrix is rank deficient so dropping 3 columns / coefficients`. This is dropping the treatment/timepoints for P.acuta that are 0 (week 12, 16 heated treatments).
+
+- Warning: Missing cells for: Timepoint16 week:TemperatureHigh, Timepoint16 week:TemperatureHigh:CO2Ambient, Timepoint12 week:TemperatureHigh:CO2High, Timepoint16 week:TemperatureHigh:CO2High.  
+Interpret type III hypotheses with care.
 
 ```
 Analysis of Deviance Table (Type III Wald chisquare tests)
 
 Response: chla.ug.cm2
                             Chisq Df       Pr(>Chisq)
-(Intercept)               42.2551  1 0.00000000008011
-Timepoint                  4.4807  8          0.81136
-Temperature                3.0746  1          0.07952
-CO2                        5.8220  1          0.01583
-Timepoint:Temperature     14.4630  7          0.04353
-Timepoint:CO2              9.2609  8          0.32077
-Temperature:CO2            2.6284  1          0.10497
-Timepoint:Temperature:CO2  7.0653  6          0.31485
+(Intercept)               44.9965  1 0.00000000001974
+Timepoint                  4.1925  8          0.83935
+Temperature                2.4668  1          0.11628
+CO2                        4.7215  1          0.02979
+Timepoint:Temperature     17.1065  7          0.01672
+Timepoint:CO2             10.3922  8          0.23857
+Temperature:CO2            2.1004  1          0.14726
+Timepoint:Temperature:CO2  7.6236  6          0.26700
 
 Type III Analysis of Variance Table with Satterthwaite's method
-                           Sum Sq Mean Sq NumDF   DenDF F value     Pr(>F)
-Timepoint                 13.1226  1.6403     8 133.652  5.1920 0.00001172
-Temperature                3.5396  3.5396     1   9.668 11.2035  0.0077506
-CO2                        0.2237  0.2237     1   8.282  0.7082  0.4236871
-Timepoint:Temperature      9.8908  1.4130     7 133.849  4.4724  0.0001679
-Timepoint:CO2              2.1329  0.2666     8 133.611  0.8439  0.5657408
-Temperature:CO2            0.1579  0.1579     1   9.319  0.4998  0.4968851
-Timepoint:Temperature:CO2  2.2322  0.3720     6 133.773  1.1776  0.3220477
+                           Sum Sq Mean Sq NumDF   DenDF F value      Pr(>F)
+Timepoint                 12.0695 1.50869     8 131.010  5.4614 0.000005975
+Temperature                3.0934 3.09342     1   9.710 11.1980    0.007716
+CO2                        0.1213 0.12126     1   8.188  0.4390    0.525828
+Timepoint:Temperature      9.8717 1.41024     7 130.360  5.1050 0.000037755
+Timepoint:CO2              2.9115 0.36394     8 130.750  1.3174    0.240283
+Temperature:CO2            0.1021 0.10205     1   9.189  0.3694    0.558034
+Timepoint:Temperature:CO2  2.1060 0.35100     6 130.743  1.2706    0.275266
 
 ```
 
 ### Tissue Biomass  
 
-**P. acuta**
+#### Pocillopora acuta
+
+**Host = Model with tank as random factor**  
+**Sym = Model with tank and reef as random factors**  
+**S:H ratio = Model with tank as random factor**  
+
 
 S:H Ratio was log transformed.  
 Warning: `fixed-effect model matrix is rank deficient so dropping 3 columns / coefficients`; see above note.  
@@ -325,6 +373,10 @@ Warning: `fixed-effect model matrix is rank deficient so dropping 3 columns / co
 Come back to:  
 - The Pacuta Host AFDW GLMM and Pacuta S:H AFDW GLMM produced the following warning `boundary (singular) fit: see ?isSingular`. This means that some "dimensions" of the variance-covariance matrix have been estimated as exactly zero. The function `isSingular(Pacuta_Host_LMER_tank, tol = 1e-4)` produced TRUE for singularity. What does this mean?  
 - Row 67 is potentially an outlier?
+
+For symbiont --  
+- Warning: Missing cells for: Timepoint16 week:TemperatureHigh, Timepoint16 week:TemperatureHigh:CO2Ambient, Timepoint12 week:TemperatureHigh:CO2High, Timepoint16 week:TemperatureHigh:CO2High.  
+Interpret type III hypotheses with care.
 
 ```
 ## Host Tissue Biomass
@@ -360,24 +412,24 @@ Analysis of Deviance Table (Type III Wald chisquare tests)
 
 Response: Sym_AFDW.mg.cm2
                             Chisq Df     Pr(>Chisq)
-(Intercept)               34.9091  1 0.000000003455
-Timepoint                 30.5267  8      0.0001705
-Temperature                1.9474  1      0.1628669
-CO2                        0.0025  1      0.9600183
-Timepoint:Temperature     10.6634  7      0.1539916
-Timepoint:CO2             14.3146  8      0.0739254
-Temperature:CO2            0.0880  1      0.7667012
-Timepoint:Temperature:CO2  5.3439  6      0.5005229
+(Intercept)               35.5349  1 0.000000002505
+Timepoint                 32.3631  8 0.000080173936
+Temperature                1.3341  1        0.24809
+CO2                        0.1264  1        0.72220
+Timepoint:Temperature     11.7322  7        0.10972
+Timepoint:CO2             17.5146  8        0.02518
+Temperature:CO2            0.0173  1        0.89546
+Timepoint:Temperature:CO2  7.0933  6        0.31231
 
 Type III Analysis of Variance Table with Satterthwaite's method
-                          Sum Sq Mean Sq NumDF   DenDF F value      Pr(>F)
-Timepoint                 7.5445 0.94307     8 130.593  6.1394 0.000001037
-Temperature               1.3900 1.38999     1  10.511  9.0488     0.01248
-CO2                       0.0027 0.00275     1   8.650  0.0179     0.89666
-Timepoint:Temperature     2.0571 0.29387     7 130.892  1.9131     0.07235
-Timepoint:CO2             1.5441 0.19301     8 130.521  1.2565     0.27185
-Temperature:CO2           0.1342 0.13416     1  10.071  0.8734     0.37188
-Timepoint:Temperature:CO2 0.8209 0.13681     6 130.807  0.8906     0.50384
+                          Sum Sq Mean Sq NumDF   DenDF F value       Pr(>F)
+Timepoint                 7.3865 0.92332     8 127.940  6.7659 0.0000002216
+Temperature               1.0822 1.08215     1  10.698  7.9298      0.01721
+CO2                       0.0143 0.01426     1   8.672  0.1045      0.75412
+Timepoint:Temperature     1.8288 0.26126     7 127.331  1.9144      0.07239
+Timepoint:CO2             1.7265 0.21581     8 127.519  1.5814      0.13657
+Temperature:CO2           0.1025 0.10254     1  10.025  0.7514      0.40630
+Timepoint:Temperature:CO2 0.9680 0.16133     6 127.780  1.1822      0.31989
 
 -------
 
@@ -408,7 +460,11 @@ Timepoint:Temperature:CO2  0.9208 0.15347     6   136  0.5578   0.763180
 
 ```
 
-**M. capitata**
+#### Mcapitata
+
+**Host AFDW = model with tank as random factor**  
+**Sym AFDW = model with tank as random factor**  
+**Ratio AFDW = model with tank as random factor**  
 
 Come back to:  
 - Host AFDW and Sym AFDW qqplot post model is normal; but homogeneity of variances is not equal  
@@ -500,65 +556,74 @@ Timepoint:Temperature:CO2 0.52279 0.065349     8   154  0.5993 0.777392
 *M. capitata*      
 - singularity warning described above
 
+**Model with reef and tank as random factors (lower AIC by 0.1)**  
+
 ```
 Analysis of Deviance Table (Type III Wald chisquare tests)
 
 Response: prot_mg.cm2
-                            Chisq Df Pr(>Chisq)
-(Intercept)               19.0318  1 0.00001286
-Timepoint                 12.2397  8  0.1408253
-Temperature                7.8433  1  0.0051009
-CO2                        5.4409  1  0.0196710
-Timepoint:Temperature     21.9725  8  0.0049671
-Timepoint:CO2             13.0215  8  0.1111122
-Temperature:CO2           10.9652  1  0.0009284
-Timepoint:Temperature:CO2 20.1409  8  0.0098160
+                            Chisq Df    Pr(>Chisq)
+(Intercept)               28.6356  1 0.00000008736
+Timepoint                 11.0213  8       0.20049
+Temperature                5.2518  1       0.02192
+CO2                        1.6964  1       0.19276
+Timepoint:Temperature     17.3496  8       0.02667
+Timepoint:CO2              6.1102  8       0.63489
+Temperature:CO2            5.4017  1       0.02012
+Timepoint:Temperature:CO2 11.6574  8       0.16716
 
 Type III Analysis of Variance Table with Satterthwaite's method
-                           Sum Sq  Mean Sq NumDF DenDF F value     Pr(>F)
-Timepoint                 1.75995 0.219994     8   154  4.5817 0.00004993
-Temperature               0.00941 0.009412     1   154  0.1960    0.65858
-CO2                       0.05547 0.055473     1   154  1.1553    0.28413
-Timepoint:Temperature     0.42096 0.052620     8   154  1.0959    0.36903
-Timepoint:CO2             0.56266 0.070333     8   154  1.4648    0.17438
-Temperature:CO2           0.08345 0.083449     1   154  1.7379    0.18936
-Timepoint:Temperature:CO2 0.96709 0.120886     8   154  2.5176    0.01338
+                           Sum Sq  Mean Sq NumDF  DenDF F value      Pr(>F)
+Timepoint                 1.89033 0.236292     8 148.48  5.3946 0.000005757
+Temperature               0.03246 0.032463     1 148.18  0.7411      0.3907
+CO2                       0.08934 0.089344     1 149.56  2.0398      0.1553
+Timepoint:Temperature     0.48476 0.060595     8 149.41  1.3834      0.2081
+Timepoint:CO2             0.77028 0.096285     8 149.24  2.1982      0.0306
+Temperature:CO2           0.01400 0.013996     1 149.88  0.3195      0.5727
+Timepoint:Temperature:CO2 0.51061 0.063827     8 148.67  1.4572      0.1776
 
 ```
 
 *P. acuta*
 
+**Model with tank and reef as random factors**  
+
 Warning: `fixed-effect model matrix is rank deficient so dropping 3 columns / coefficients`.  
+
+Warning: Missing cells for: Timepoint16 week:TemperatureHigh, Timepoint16 week:TemperatureHigh:CO2Ambient, Timepoint12 week:TemperatureHigh:CO2High, Timepoint16 week:TemperatureHigh:CO2High.  
+Interpret type III hypotheses with care.
 
 ```
 Analysis of Deviance Table (Type III Wald chisquare tests)
 
 Response: prot_mg.cm2
-                            Chisq Df        Pr(>Chisq)
-(Intercept)               52.3140  1 0.000000000000473
-Timepoint                  8.5075  8           0.38553
-Temperature                2.0146  1           0.15580
-CO2                        3.9665  1           0.04641
-Timepoint:Temperature     10.7667  7           0.14912
-Timepoint:CO2             16.0142  8           0.04218
-Temperature:CO2            3.9134  1           0.04790
-Timepoint:Temperature:CO2 14.5897  6           0.02370
+                            Chisq Df           Pr(>Chisq)
+(Intercept)               66.6213  1 0.000000000000000329
+Timepoint                 15.5268  8             0.049676
+Temperature                0.3049  1             0.580814
+CO2                        2.5308  1             0.111646
+Timepoint:Temperature     22.1594  7             0.002384
+Timepoint:CO2             14.6260  8             0.066839
+Temperature:CO2            2.3323  1             0.126711
+Timepoint:Temperature:CO2 12.2365  6             0.056895
 
 Type III Analysis of Variance Table with Satterthwaite's method
-                           Sum Sq Mean Sq NumDF   DenDF F value  Pr(>F)
-Timepoint                 1.03592 0.12949     8 134.117  1.7968 0.08292
-Temperature               0.52581 0.52581     1  10.330  7.2960 0.02168
-CO2                       0.02307 0.02307     1   8.523  0.3201 0.58611
-Timepoint:Temperature     1.01594 0.14513     7 134.349  2.0138 0.05774
-Timepoint:CO2             0.44954 0.05619     8 134.069  0.7797 0.62127
-Temperature:CO2           0.03756 0.03756     1   9.872  0.5212 0.48709
-Timepoint:Temperature:CO2 1.05146 0.17524     6 134.219  2.4316 0.02904
+                           Sum Sq  Mean Sq NumDF   DenDF F value    Pr(>F)
+Timepoint                 1.15596 0.144496     8 132.217  4.6780 0.0000464
+Temperature               0.19485 0.194847     1  11.625  6.3081  0.027884
+CO2                       0.00285 0.002853     1   9.023  0.0924  0.768094
+Timepoint:Temperature     0.78769 0.112527     7 131.476  3.6430  0.001265
+Timepoint:CO2             0.23448 0.029310     8 131.964  0.9489  0.478925
+Temperature:CO2           0.03258 0.032584     1  10.731  1.0549  0.326980
+Timepoint:Temperature:CO2 0.37797 0.062994     6 131.868  2.0394  0.064772
 
 ```
 
 ### Host Total Antioxidant Capacity
 
 *P. acuta*  
+
+**Model with tank as random factor**
 
 Warning: `fixed-effect model matrix is rank deficient so dropping 3 columns / coefficients`.
 
@@ -594,6 +659,8 @@ Timepoint:Temperature:CO2 1.6137 0.26896     6   139  0.8355 0.544479
 *M. capitata*    
 - had a singularity warning like above.  
 - log transformed and looked closer to normal than P. acuta
+
+**Model with tank as random factor**
 
 ```
 Analysis of Deviance Table (Type III Wald chisquare tests)

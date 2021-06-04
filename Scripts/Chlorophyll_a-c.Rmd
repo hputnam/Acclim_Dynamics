@@ -130,7 +130,7 @@ Reading in master fragment information. Taking out P-1488 (See notes in results 
 ```{r}
 Master_fragment <- read.csv("Environmental_data/Master_Fragment.csv", header=T, sep=",", na.string="NA") %>% 
   subset(ANALYSIS=="Physiology" | ANALYSIS=="Physiology/Molecular") %>% # need to keep "Physiology" and "Physiology/Molecular"
-  select(Plug_ID, Species, Treatment, Temperature, CO2, Timepoint) 
+  select(Plug_ID, Site.Name, Species, Treatment, Temperature, CO2, Timepoint) 
   Master_fragment$Plug_ID <- as.character(Master_fragment$Plug_ID)
 str(df.chl)
 
@@ -306,6 +306,26 @@ CHL <- ggplot(Chl_means, aes(x=Timepoint, y = Value, group = Treatment, color = 
   # Change axis line
   axis.line = element_line(colour = "black")); CHL
 
+
+CHL.site <- ggplot(Chl_final, aes(x=Timepoint, y = chla.ug.cm2, group = Site.Name, color = Site.Name)) +
+  geom_line() + geom_point() +
+  facet_grid(Treatment ~ Species, scales = "free") +
+  #geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2) +
+  #scale_color_manual(values = cols) + 
+  xlab("Timepoint") + 
+  theme_classic() + 
+  ylab(expression("Concentration" ~(ug ~cm^-2))) +
+  #ggtitle("Chlorophyll a and c2 concentration") +
+  theme(legend.position = "left") +
+  geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
+  # Change axis line
+  axis.line = element_line(colour = "black")); CHL.site
 
 ggsave(file="Output/Final_Figures/Chlorophyll.pdf", CHL, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Final_Figures/Chlorophyll.png", CHL, width = 11, height = 6, units = c("in"))

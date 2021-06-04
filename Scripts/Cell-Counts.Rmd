@@ -98,12 +98,10 @@ counts <- full_join(cellometer_sym_counts, haemo_sym_counts, join_by = "Plug_ID"
   
 counts_lm <- counts %>% subset(!Tech == "Sierra Gray") %>%
   group_by(Species) %>%
-  nest() %>%
-  # Fit linear model
-  mutate(Mod = map(data, ~lm(cellometer.cells.cm2 ~ haemo.cells.cm2, data = .x))) %>%
-  # Get the R2
-  mutate(R2 = map_dbl(Mod, ~round(summary(.x)$r.squared, 3))) %>%
-  unnest(cols = c(data))
+  nest() %>% # nest to do this for eachgroup (Species) defined above 
+  mutate(Mod = map(data, ~lm(cellometer.cells.cm2 ~ haemo.cells.cm2, data = .x))) %>% # Fit linear model
+  mutate(R2 = map_dbl(Mod, ~round(summary(.x)$r.squared, 3))) %>%   # Get the R2
+  unnest(cols = c(data)) # unnest to plot below 
 
 cols <- c("lightblue", "blue", "pink", "red")
 
