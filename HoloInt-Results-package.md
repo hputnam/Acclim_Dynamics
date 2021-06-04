@@ -366,6 +366,8 @@ Notebook post coming soon. Symbiont Type Profiles made from [SymPortal](https://
 
 Figure 20210120
 
+Sample HP192 Pacuta 1755 4 wk ATAC has the profiles usually associated with Mcap and sample HP193 1246 Mcap 4 wk HTHC has the profiles usually associated with Pacuta. Rebecca did the ITS2 work but these two samples were right next to the each other on the strip tube so likely got switched somewhere in the process?
+
 ![relab](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/rel.abund.its2.png?raw=true)
 
 
@@ -374,35 +376,43 @@ PERMANOVA results:
 ```
 # Mcap
 Call:
-adonis(formula = MC.mat ~ TREATMENT * TIME.POINT, data = MC.info,      permutations = 999, method = "bray")
+adonis(formula = MC.mat ~ Temperature * CO2 * Timepoint, data = MC.info,      permutations = 999, method = "bray")
 
 Permutation: free
 Number of permutations: 999
 
 Terms added sequentially (first to last)
 
-                      Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)
-TREATMENT              3     0.577 0.19241 0.61362 0.01419  0.766
-TIME.POINT             1     0.069 0.06911 0.22041 0.00170  0.902
-TREATMENT:TIME.POINT   3     1.160 0.38661 1.23293 0.02850  0.278
-Residuals            124    38.883 0.31357         0.95561       
-Total                131    40.689                 1.00000
+                           Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)
+Temperature                 1     0.130 0.12973 0.44119 0.00324  0.707
+CO2                         1     0.054 0.05377 0.18288 0.00134  0.937
+Timepoint                  11     4.410 0.40095 1.36360 0.10999  0.113
+Temperature:CO2             1     0.300 0.29961 1.01893 0.00747  0.351
+Temperature:Timepoint      10     4.282 0.42820 1.45628 0.10679  0.073
+CO2:Timepoint              10     3.504 0.35039 1.19164 0.08738  0.241
+Temperature:CO2:Timepoint  10     1.837 0.18375 0.62491 0.04582  0.926
+Residuals                  87    25.581 0.29404         0.63797       
+Total                     131    40.098                 1.00000   
 
 # Pact
 Call:
-adonis(formula = PA.mat ~ TREATMENT * TIME.POINT, data = PA.info,      permutations = 999, method = "bray")
+adonis(formula = PA.mat ~ Temperature * CO2 * Timepoint, data = PA.info,      permutations = 999, method = "bray")
 
 Permutation: free
 Number of permutations: 999
 
 Terms added sequentially (first to last)
 
-                      Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)
-TREATMENT              3    1.1257 0.37524 1.67411 0.04156  0.137
-TIME.POINT             1    0.4131 0.41314 1.84317 0.01525  0.152
-TREATMENT:TIME.POINT   3    0.6673 0.22245 0.99242 0.02464  0.432
-Residuals            111   24.8802 0.22415         0.91855       
-Total                118   27.0865                 1.00000  
+                           Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)
+Temperature                 1    0.0123 0.01232  0.0546 0.00047  0.961
+CO2                         1    0.4337 0.43367  1.9207 0.01644  0.147
+Timepoint                   9    1.2209 0.13566  0.6008 0.04629  0.891
+Temperature:CO2             1    0.8171 0.81712  3.6190 0.03098  0.029
+Temperature:Timepoint       9    1.8427 0.20475  0.9068 0.06987  0.553
+CO2:Timepoint               9    2.4246 0.26940  1.1931 0.09193  0.238
+Temperature:CO2:Timepoint   9    1.7854 0.19838  0.8786 0.06770  0.582
+Residuals                  79   17.8374 0.22579         0.67632       
+Total                     118   26.3742                 1.00000
 
 ```
 

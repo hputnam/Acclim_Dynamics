@@ -139,25 +139,21 @@ Mcapitata.all <- Mcap.pca.out %>%
 high <- Mcapitata.all %>% subset(Temperature == "High")
 amb <- Mcapitata.all %>% subset(Temperature == "Ambient")
 
-d2 <- filter(Mcapitata.all, Timepoint == "Day 2" & Temperature == "Ambient")
-w2 <- filter(Mcapitata.all, Timepoint == "2 week" & Temperature == "Ambient")
-w4 <- filter(Mcapitata.all, Timepoint == "4 week" & Temperature == "Ambient")
-w8 <- filter(Mcapitata.all, Timepoint == "8 week" & Temperature == "Ambient")
-w12 <- filter(Mcapitata.all, Timepoint == "12 week" & Temperature == "Ambient")
+mcap.segments <- Mcapitata.all %>% subset(Temperature == "High") %>%
+  select(Timepoint, Temperature, PC1.mean, PC2.mean) %>%
+  gather(variable, value, -(Timepoint:Temperature)) %>%
+  unite(group, Timepoint, variable) %>% distinct() %>%
+  spread(group, value)
+# 
+# PCAfull<-PCAcen + 
+#   geom_segment(aes(x = Day0_PC1.mean, y = Day0_PC2.mean, xend = Day37_PC1.mean, yend = Day37_PC2.mean, colour = Treatment), data = segpoints, size=2, show.legend=FALSE) +
+#   geom_segment(aes(x = Day37_PC1.mean, y = Day37_PC2.mean, xend = Day52_PC1.mean, yend = Day52_PC2.mean, colour = Treatment), data = segpoints, size=2, arrow = arrow(length=unit(0.5,"cm")), show.legend=FALSE); PCAfull
 
 ### come back to finding a more elegant way to do geom segment; this will have to change after I do protein  
 
 Mcapitata.all.fig <- ggplot(Mcapitata.all, aes(.fittedPC1, .fittedPC2, color = Temperature)) + 
   geom_point(size = 1.5, alpha=0.3) +
   geom_point(aes(x=PC1.mean, y=PC2.mean)) +
-  geom_segment(aes(x = 1.009253, y = 0.1522638, xend = -0.3706539, yend = -0.06665108, colour = Temperature), data=high) + # Day 2 to 2 week
-  geom_segment(aes(x = -0.3706539, y = -0.06665108, xend = 0.7987893, yend = -0.2311786, colour = Temperature), data=high) + # 2 week to 4 week
-  geom_segment(aes(x = 0.7987893, y = -0.2311786, xend = -1.592824, yend = -0.002057404, colour = Temperature), data=high) + # 4 week to 8 week
-  geom_segment(aes(x = -1.592824, y = -0.002057404, xend = -0.7918154, yend = 0.4534351, colour = Temperature), data=high, arrow = arrow()) + # 8 week to 12 week
-  geom_segment(aes(x = 0.1876167, y = -0.07391899, xend = 0.5884197, yend = -0.2212294, colour = Temperature), data=amb) + # Day 2 to 2 week
-  geom_segment(aes(x = 0.5884197, y = -0.2212294, xend = 1.037685, yend = -0.09580057, colour = Temperature), data=amb) + # 2 week to 4 week
-  geom_segment(aes(x = 1.037685, y = -0.09580057, xend = -0.3122769, yend = -0.635177, colour = Temperature), data=amb) + # 4 week to 8 week
-  geom_segment(aes(x = -0.3122769, y = -0.635177, xend = -0.4589457, yend = 0.8412633, colour = Temperature), data=amb, arrow = arrow()) + # 8 week to 12 week
   geom_text(aes(PC1.mean, PC2.mean, label=Timepoint), vjust=-1.5, color="black") +
   theme_half_open(12) + background_grid() +
   ggtitle("Montipora capitata") + 
@@ -166,6 +162,10 @@ Mcapitata.all.fig <- ggplot(Mcapitata.all, aes(.fittedPC1, .fittedPC2, color = T
   theme(legend.title = element_text(size=12, face="bold")) +
   scale_color_manual(values = c("deepskyblue", "firebrick1"), aesthetics = c("colour")) +
   xlab("PC1 47%") + ylab("PC2 21%"); Mcapitata.all.fig 
+
+Mcapitata.all.fig + 
+  geom_segment(aes(x = "Day 2_Ambient_PC1.mean", y = "Day 2_Ambient_PC2.mean", xend = "2 week_Ambient_PC1.mean", yend = "2 week_Ambient_PC2.mean", color = Temperature), data = mcap.segments, size=2, show.legend=FALSE) 
+  
 
 ggsave(file="Output/Final_Figures/CSP-all-Mcap.png", Mcapitata.all.fig, width = 6, height = 5, units = c("in"))
 

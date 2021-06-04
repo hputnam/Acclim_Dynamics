@@ -16,6 +16,7 @@ Load packages.
 library(plyr)
 library(dplyr)
 library(tidyverse)
+library(ggpubr)
 ```
 
 Import dataframes.
@@ -94,8 +95,15 @@ cellometer_sym_counts$Timepoint <- factor(cellometer_sym_counts$Timepoint, level
 ```{r}
 counts <- full_join(cellometer_sym_counts, haemo_sym_counts, join_by = "Plug_ID") %>% filter(!is.na(count.mean)) %>% select(-rep, -count, -count.mean, -cells.mL, -cells, -Squares_Counted) %>%
   summarise_each(funs(first(na.omit(.)))) # combining rows that have the same data (plug ids with cellometer and haemcy but originally on two different rows)
-
-#counts$Date <- as.character(counts$Date)
+  
+counts_lm <- counts %>% subset(!Tech == "Sierra Gray") %>%
+  group_by(Species) %>%
+  nest() %>%
+  # Fit linear model
+  mutate(Mod = map(data, ~lm(cellometer.cells.cm2 ~ haemo.cells.cm2, data = .x))) %>%
+  # Get the R2
+  mutate(R2 = map_dbl(Mod, ~round(summary(.x)$r.squared, 3))) %>%
+  unnest(cols = c(data))
 
 cols <- c("lightblue", "blue", "pink", "red")
 
@@ -119,7 +127,11 @@ testing <- counts %>%
   theme_classic() + 
   ylim(0, 3000000) + 
   xlim(0, 3000000) +
-  geom_abline(slope=1); testing
+  geom_abline(slope=1) +
+  geom_label(data = counts_lm, 
+             aes(x = Inf, y = Inf, 
+                 label = paste("R2 = ", R2, sep = " ")),
+             hjust = 1, vjust = 1); testing
   
 ggsave(file="Output/Cellometer-testing.png", testing, width = 11, height = 6, units = c("in"))
 ```
