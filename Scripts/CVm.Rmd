@@ -1,0 +1,189 @@
+---
+title: "CVm.Rmd"
+author: "EL Strand"
+date: "6/7/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(plyr)
+library(dplyr)
+library(ggplot2)
+
+```
+
+# CVm - Physiology 
+
+Selecting variables: protein, TAC, Host AFDW, Ratio AFDW, Chl (5). 
+
+Chlorophyll and Sym AFDW are overlapping on PCAs [here](https://github.com/hputnam/Coral_Stress_Phenome/blob/main/CSP-Results-Update.md) from the 'Multivariate_PCA.R' script. Remove Sym AFDW because this value is also considered in the Ratio AFDW variable. 
+
+Might have to exclude another variable..   
+Re-do this when we have cell counts. 
+
+
+Reading in meta and data frames. 
+```{r}
+meta <- read.csv("Output/results_physiology.csv")
+  meta$Timepoint <- factor(meta$Timepoint, levels = c("Day 1", "Day 2", "1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week"))
+meta$Group <- paste(meta$Timepoint, meta$Treatment, sep = "_") # create groups so that CVm fxn can run on each group
+  
+meta <- meta[complete.cases(meta), ] #only taking complete cases 
+
+Mcap <- meta %>% subset(Species == "Mcapitata")
+Pact <- meta %>% subset(Species == "Pacuta")
+
+Mcap.meta <- Mcap %>% select(Site.Name:CO2)
+Mcap.data <- Mcap %>% select(chlc2.ug.cm2, prot_mg.cm2, cre.umol.mgprot, Ratio_AFDW.mg.cm2)
+
+Pact.meta <- Pact %>% select(Site.Name:CO2)
+Pact.data <- Pact %>% select(chlc2.ug.cm2, prot_mg.cm2, cre.umol.mgprot, Ratio_AFDW.mg.cm2)
+```
+
+Center and scale the dataframes. 
+
+Do you have to center and scale each group? Should it be part of the fore loop below? On PCA you don't center and scale each group b/c then not comparable.. 
+Do poc and mont need to be center and scaled together to be comparable?
+
+```{r}
+# Center and scaling variables
+Mcap.data.scaled <- scale(Mcap.data, center = T, scale = T) 
+Pact.data.scaled <- scale(Pact.data, center = T, scale = T) 
+
+# Creating scaled variables into dataframe again
+Mcap.data.scaled.df <- as.data.frame(Mcap.data.scaled)
+Pact.data.scaled.df <- as.data.frame(Pact.data.scaled)
+
+# Adding plug ID back in to be merged with meta below 
+Mcap.data.scaled.df$Plug_ID <- Mcap$Plug_ID
+Pact.data.scaled.df$Plug_ID <- Pact$Plug_ID
+
+# Merging with metadata; take out original data  
+Mcap.CVm <- Mcap %>% select(Site.Name:CO2) %>% full_join(Mcap.data.scaled.df, by="Plug_ID")
+Pact.CVm <- Pact %>% select(Site.Name:CO2) %>% full_join(Pact.data.scaled.df, by="Plug_ID")
+```
+
+Defining the CVm function based on Tanner et al 2018 and Albert et al 2010. 
+```{r}
+CVm <- function(data) {
+  # MCD estimates
+  #    =============
+  mcd<-covMcd(data,alpha=0.75,cor=T,use.correction=T)
+  mean<-mcd$center # Mean
+  s<-mcd$cov       # Covariance matrix
+  
+  # The new approach CVm
+  CVm<-sqrt((t(mean)%*%s%*%mean)/(t(mean)%*%mean)^2)*100
+  # Standard error of CVm
+  CVm2<-CVm/100
+  SE.CVm<-CVm2/sqrt(2*n)*sqrt(1+2*CVm2^2)*100
+  
+  rslt<-list()
+  rslt$mean<-mean           # MCD mean
+  rslt$s<-s                 # MCD covariance matrix
+  rslt$CVm<-CVm             # Tanner et al: CVm
+  rslt$SE.CVm<-SE.CVm       # Tanner et al: Standard error of CVm
+  return(rslt)
+}
+```
+
+Apply CVm function from above.
+```{r}
+## Based on groups created in first chunk of code.
+## Input is Pact.CVm and Mcap.CVm dataframes that have been centered and scaled and adding back to meta data information
+## For every group (timepoint + treatment), run CVm function on columns 11:15
+Mcap.CVm
+
+split.frames <- split(Mcap.CVm, Mcap.CVm$Group) # splitting based on group
+new_list <- lapply(split.frames, function(x) x %>% select(11:14)) 
+matrix_list <- lapply(new_list, function(x) data.matrix(x))
+
+for(i in 1:length(matrix_list)){
+ CVm()
+}
+
+for(i in Mcap.CVm$Group){
+  CVm()
+}
+
+
+# Error in as.vector(x, mode) : cannot coerce type 'closure' to vector of type 'any'
+# Error in is.data.frame(x) : argument "data" is missing, with no default
+```
+
+Trying it on one group. 
+
+With 5 variables -- 
+Group with n = 6: n == p+1 is too small sample size for MCD  
+Group with n = 4: n <= p -- you can't be serious!
+
+With 4 variables -- 
+Grou with n = 6 worked 
+
+```{r}
+mcd <- covMcd(matrix_list$`1 week_ATAC`,alpha=0.75,cor=T,use.correction=T)
+  mean <- mcd$center # Mean
+  s <- mcd$cov       # Covariance matrix
+  
+  # The new approach CVm
+  CVm <- sqrt((t(mean)%*%s%*%mean)/(t(mean)%*%mean)^2)*100
+  # Standard error of CVm
+  CVm2 <- CVm/100
+  SE.CVm <- CVm2/sqrt(2*n)*sqrt(1+2*CVm2^2)*100
+  
+  rslt <- list()
+  rslt$mean <- mean           # MCD mean
+  rslt$s <- s                 # MCD covariance matrix
+  rslt$CVm <- CVm             # Tanner et al: CVm
+  rslt$SE.CVm <- SE.CVm       # Tanner et al: Standard error of CVm
+  return(rslt)
+```
+
+
+Gene expression CVm. 
+```{r}
+# CVm_GE <- rep(0, 5)
+# CVmSE_GE <- rep(0,5)
+# 
+# for (i in 1:5) {
+#   subset <- subset(adGEt_labels, Treatment == treatments[i])
+#   subset$Treatment <- NULL
+#   #subset <- data.frame(sapply(subset, function(x) as.numeric(as.character(x))))
+#   tran.data <- log10(subset)
+#   m<-colMeans(tran.data) # Mean
+#   s<-var(tran.data)      # Covariance matrix
+#   #remove rows and columns that have only NAs
+#   
+#   n<-dim(tran.data)[1]   # Sample size
+#   CVm<-sqrt((t(m)%*%s%*%m)/(t(m)%*%m)^2)*100 
+#   CVm2 <- CVm/100
+#   CVm_GE[i]<- CVm2
+#   CVmSE_GE[i]<-CVm2/sqrt(2*n)*sqrt(1+2*CVm2^2)*100        # Standard error
+# }
+# 
+# 
+# # MCD estimates
+#   #    =============
+#   mcd<-covMcd(data,alpha=0.75,cor=T,use.correction=T)
+#   mean<-mcd$center # Mean
+#   s<-mcd$cov       # Covariance matrix
+#   
+#   # The new approach CVm
+#   CVm<-sqrt((t(mean)%*%s%*%mean)/(t(mean)%*%mean)^2)*100
+#   # Standard error of CVm
+#   CVm2<-CVm/100
+#   SE.CVm<-CVm2/sqrt(2*n)*sqrt(1+2*CVm2^2)*100
+#   
+#   rslt<-list()
+#   rslt$mean<-mean           # MCD mean
+#   rslt$s<-s                 # MCD covariance matrix
+#   rslt$CVm<-CVm             # Tanner et al: CVm
+#   rslt$SE.CVm<-SE.CVm       # Tanner et al: Standard error of CVm
+#   return(rslt)
+```
+
+
+
+

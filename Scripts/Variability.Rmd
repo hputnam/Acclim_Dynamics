@@ -54,7 +54,7 @@ hist(phys$prot_mg.cm2); hist(phys$cre.umol.mgprot)
 ```{r}
 ## Physiology 
 phys.mad <- phys %>% select(-chla.ug.cm2) %>% unite(Big.Group, Group, Species, remove = FALSE, sep = " ") %>%
-  subset(Big.Group != "Recovery HTAC Pacuta") %>% gather("Response", "Response.Value", 11:19) %>%
+  subset(Big.Group != "Recovery HTAC Pacuta") %>% gather("Response", "Response.Value", 12:20) %>%
   group_by(Species, Treatment, Timepoint, Response) %>% 
   mutate(mad = mad(Response.Value, center = median(Response.Value), constant = 1.4826, na.rm = TRUE, low = FALSE, high = FALSE)) %>%
   mutate(cv = ((mad/mean(Response.Value))*100)) %>% 
@@ -283,11 +283,11 @@ multi.phys.mad <- multi.phys.mad[complete.cases(multi.phys.mad), ] #only taking 
 multi.phys.mad$Timepoint <- factor(multi.phys.mad$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week", "12 week", "16 week"))
 
 mcap.multi.phys <- multi.phys.mad %>% filter(Species=="Mcapitata") 
-mcap.multi.phys.info <- mcap.multi.phys %>% select(1:9)
-mcap.multi.phys.data <- mcap.multi.phys %>% select(c(10:15))
+mcap.multi.phys.info <- mcap.multi.phys %>% select(1:10)
+mcap.multi.phys.data <- mcap.multi.phys %>% select(c(11:16))
 
 pact.multi.phys <- multi.phys.mad %>% filter(Species=="Pacuta") 
-pact.multi.phys.data <- pact.multi.phys %>% select(c(10:15))
+pact.multi.phys.data <- pact.multi.phys %>% select(c(11:16))
 
 #Scale and center datasets
 Mcap.data.scaled <- scale(mcap.multi.phys.data, center = T, scale = T) # scaled variables
@@ -325,7 +325,7 @@ Testing this on subsets
 M. capitata
 ```{r}
 ## Day 1 ATAC
-oneday.ATAC <- mcap.multi.phys %>% subset(Group == "Day 1 ATAC") %>% select(c(10:15))
+oneday.ATAC <- mcap.multi.phys %>% subset(Group == "Day 1 ATAC") %>% select(c(11:16))
 oneday.ATAC.scaled <- scale(oneday.ATAC, center = T, scale = T) # scaled variables
 
 oneday <- mcap.multi.phys %>% subset(Timepoint == "Day 1") %>% select(c(10:15))
