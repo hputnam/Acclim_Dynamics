@@ -40,6 +40,11 @@ otumat <- as.matrix(data[,-c(1)])
 meta <- read.csv("Environmental_data/Master_Fragment.csv", header=T, sep=",", na.string="NA") %>% select(Plug_ID, Species, Timepoint, Temperature, Treatment, CO2)
 meta$Plug_ID <- as.character(meta$Plug_ID)
 
+filter(meta, Plug_ID == "2153") #2153 was used for physiology and molecular so change master spreadsheet to say 12 hour not Day 1
+meta$Timepoint[which(meta$Plug_ID == "2153")] <- "12 hour"
+
+filter(meta, Timepoint == "0 hour" & Treatment == "HTAC" & Species == "Mcapitata")
+
 samples <- read.csv("ITS2_seq/R_Input/Sample_variables.csv") %>% select(Plug_ID, sample) %>% dplyr::rename(sample_name = sample)
 samples$Plug_ID <- as.character(samples$Plug_ID)
 
@@ -119,16 +124,31 @@ all.data <- all.data[,-1]
 Profile <- colnames(all.data[,1:12])
 Profile 
 
-df <- all.data %>%
+df <- all.data %>% dplyr::group_by(Timepoint, Species, Treatment) %>% mutate(id = row_number()) %>%
   pivot_longer(cols = C1d.C42.2.C1.C3cg:D1.D4.D6.D1ab,
                names_to = c("Profile"),
                values_to="rel.abun")
 
 df$Timepoint <- factor(df$Timepoint, levels=c("0 hour","6 hour","12 hour","30 hour","1 week","2 week","4 week", "6 week", "8 week", "12 week", "16 week"))
-df$group <- paste0(df$Timepoint,sep="_",df$Rep)
+
+df$Group <- paste(df$Timepoint, df$id, sep="_")
+df$Group <- as.factor(df$Group)
+
+df$Group <- factor(df$Group, levels=c("0 hour_1", "0 hour_2", "0 hour_3",
+                                      "6 hour_1", "6 hour_2", "6 hour_3",
+                                      "12 hour_1", "12 hour_2", "12 hour_3", "12 hour_4",
+                                      "30 hour_1", "30 hour_2", "30 hour_3",
+                                      "1 week_1", "1 week_2", "1 week_3",
+                                      "2 week_1", "2 week_2", "2 week_3",
+                                      "4 week_1", "4 week_2", "4 week_3", 
+                                      "6 week_1", "6 week_2", "6 week_3", 
+                                      "8 week_1", "8 week_2", "8 week_3", 
+                                      "12 week_1", "12 week_2", "12 week_3", 
+                                      "16 week_1", "16 week_2", "16 week_3"))
+
 str(df)
 
-ggplot(data = df, mapping = aes(x = group, y = rel.abun, fill = Profile)) +
+ggplot(data = df, mapping = aes(x = Group, y = rel.abun, fill = Profile)) +
     geom_bar(position="fill", stat="identity") +
     facet_wrap(facets =  vars(Species, Treatment), ncol = 4)+
     ylab("Relative Abundance")+
@@ -139,8 +159,8 @@ ggplot(data = df, mapping = aes(x = group, y = rel.abun, fill = Profile)) +
     theme(legend.title = element_text(size = 6), 
                legend.text = element_text(size = 4))
 
-#ggsave("Output/Final_Figures/rel.abund.its2.pdf")
-#ggsave("Output/Final_Figures/rel.abund.its2.png")
+ggsave("Output/Final_Figures/rel.abund.its2.pdf")
+ #ggsave("Output/Final_Figures/rel.abund.its2.png")
 
 ```
 
@@ -170,3 +190,27 @@ PA.permanova <- adonis(PA.mat ~ Temperature*CO2*Timepoint, data=PA.info, method 
 PA.permanova
 
 ```
+
+
+# Subset to 5 TP for CSP paper 
+
+30 hour, 2 wk, 6 wk, 8 wk, 12 wk
+
+```{r}
+tp5 <- df %>% subset(Timepoint == "30 hour" | Timepoint == "2 week" | Timepoint == "6 week" | Timepoint == "8 week" | Timepoint == "12 week")
+
+ggplot(data = tp5, mapping = aes(x = Group, y = rel.abun, fill = Profile)) +
+    geom_bar(position="fill", stat="identity") +
+    facet_wrap(facets =  vars(Species, Treatment), ncol = 4)+
+    ylab("Relative Abundance") +
+    xlab("Timepoint") +
+    theme_classic()+
+    theme(axis.text.x = element_text(size=rel(0.3),angle = 90))+
+    guides(shape = guide_legend(override.aes = list(size = 0.2)))+
+    guides(color = guide_legend(override.aes = list(size = 0.2)))+
+    theme(legend.title = element_text(size = 6), 
+               legend.text = element_text(size = 4))
+
+ggsave("Output/Final_Figures/CSP-rel.abund.its2.pdf")
+```
+
