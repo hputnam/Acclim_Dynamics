@@ -201,16 +201,18 @@ tp5 <- df %>% subset(Timepoint == "30 hour" | Timepoint == "2 week" | Timepoint 
 
 ggplot(data = tp5, mapping = aes(x = Group, y = rel.abun, fill = Profile)) +
     geom_bar(position="fill", stat="identity") +
-    facet_wrap(facets =  vars(Species, Treatment), ncol = 4)+
-    ylab("Relative Abundance") +
-    xlab("Timepoint") +
-    theme_classic()+
-    theme(axis.text.x = element_text(size=rel(0.3),angle = 90))+
-    guides(shape = guide_legend(override.aes = list(size = 0.2)))+
-    guides(color = guide_legend(override.aes = list(size = 0.2)))+
+    facet_wrap(facets =  vars(Species, Treatment), ncol = 4) +
+    ylab("Relative Abundance (%)") +
+    xlab("Timepoint_Replicate") +
+    theme_classic() +
+    theme(axis.text.x = element_text(size=rel(0.3),angle = 90)) +
+    guides(shape = guide_legend(override.aes = list(size = 0.2))) +
+    guides(color = guide_legend(override.aes = list(size = 0.2))) +
     theme(legend.title = element_text(size = 6), 
-               legend.text = element_text(size = 4))
+               legend.text = element_text(size = 4)) +
+    
 
 ggsave("Output/Final_Figures/CSP-rel.abund.its2.pdf")
+ggsave("Output/Final_Figures/CSP-rel.abund.its2.png")
 ```
 

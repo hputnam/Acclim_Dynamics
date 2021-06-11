@@ -368,13 +368,14 @@ Figure 20210120
 
 Sample HP192 Pacuta 1755 4 wk ATAC has the profiles usually associated with Mcap and sample HP193 1246 Mcap 4 wk HTHC has the profiles usually associated with Pacuta. Rebecca did the ITS2 work but these two samples were right next to the each other on the strip tube so likely got switched somewhere in the process?
 
+Why does Mcap 12 hour HTAC have n=4 and Mcap 0 hour HTAC have n=2? Physiology/Molecular fragment that was switched out was from the wrong timepoint?
+
 ![relab](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/rel.abund.its2.png?raw=true)
 
 
-PERMANOVA results:  
+*Mcapitata* PERMANOVA results:
 
 ```
-# Mcap
 Call:
 adonis(formula = MC.mat ~ Temperature * CO2 * Timepoint, data = MC.info,      permutations = 999, method = "bray")
 
@@ -383,18 +384,24 @@ Number of permutations: 999
 
 Terms added sequentially (first to last)
 
-                           Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)
-Temperature                 1     0.130 0.12973 0.44119 0.00324  0.707
-CO2                         1     0.054 0.05377 0.18288 0.00134  0.937
-Timepoint                  11     4.410 0.40095 1.36360 0.10999  0.113
-Temperature:CO2             1     0.300 0.29961 1.01893 0.00747  0.351
-Temperature:Timepoint      10     4.282 0.42820 1.45628 0.10679  0.073
-CO2:Timepoint              10     3.504 0.35039 1.19164 0.08738  0.241
-Temperature:CO2:Timepoint  10     1.837 0.18375 0.62491 0.04582  0.926
-Residuals                  87    25.581 0.29404         0.63797       
-Total                     131    40.098                 1.00000   
+                           Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)  
+Temperature                 1     0.130 0.12973 0.43631 0.00324  0.709  
+CO2                         1     0.054 0.05377 0.18086 0.00134  0.917  
+Timepoint                  10     3.823 0.38230 1.28580 0.09534  0.164  
+Temperature:CO2             1     0.352 0.35220 1.18455 0.00878  0.292  
+Temperature:Timepoint      10     4.400 0.43995 1.47969 0.10972  0.091 .
+CO2:Timepoint              10     3.347 0.33472 1.12577 0.08348  0.333  
+Temperature:CO2:Timepoint  10     1.828 0.18282 0.61487 0.04559  0.944  
+Residuals                  88    26.165 0.29733         0.65251         
+Total                     131    40.098                 1.00000         
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-# Pact
+```
+
+*Pacuta* PERMANOVA results:
+
+```
 Call:
 adonis(formula = PA.mat ~ Temperature * CO2 * Timepoint, data = PA.info,      permutations = 999, method = "bray")
 
@@ -403,17 +410,18 @@ Number of permutations: 999
 
 Terms added sequentially (first to last)
 
-                           Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)
-Temperature                 1    0.0123 0.01232  0.0546 0.00047  0.961
-CO2                         1    0.4337 0.43367  1.9207 0.01644  0.147
-Timepoint                   9    1.2209 0.13566  0.6008 0.04629  0.891
-Temperature:CO2             1    0.8171 0.81712  3.6190 0.03098  0.029
-Temperature:Timepoint       9    1.8427 0.20475  0.9068 0.06987  0.553
-CO2:Timepoint               9    2.4246 0.26940  1.1931 0.09193  0.238
-Temperature:CO2:Timepoint   9    1.7854 0.19838  0.8786 0.06770  0.582
-Residuals                  79   17.8374 0.22579         0.67632       
-Total                     118   26.3742                 1.00000
-
+                           Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)  
+Temperature                 1    0.0123 0.01232  0.0546 0.00047  0.965  
+CO2                         1    0.4337 0.43367  1.9207 0.01644  0.144  
+Timepoint                   9    1.2209 0.13566  0.6008 0.04629  0.900  
+Temperature:CO2             1    0.8171 0.81712  3.6190 0.03098  0.032 *
+Temperature:Timepoint       9    1.8427 0.20475  0.9068 0.06987  0.560  
+CO2:Timepoint               9    2.4246 0.26940  1.1931 0.09193  0.273  
+Temperature:CO2:Timepoint   9    1.7854 0.19838  0.8786 0.06770  0.603  
+Residuals                  79   17.8374 0.22579         0.67632         
+Total                     118   26.3742                 1.00000         
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 ```
 
 ### mtORF Sequencing
@@ -440,7 +448,3 @@ RNASeq analysis done by Rutgers team. Gene counts table available.
 Methods
 Manuscript going out for review on 3 methods to examine methylation in Mcap and Pact under ambient conditions.
 https://github.com/hputnam/Meth_Compare
-
-Timeseries of Methylation
-All samples have DNA extracted. We are starting with WGBS from 60 P. acuta (smaller genome) at the same timepoints initially done for metabolomics.
-We expect to submit these in Feb and have data in March.
