@@ -71,9 +71,9 @@ Metabolism: respiration and photosynthetic rates.
 
 The sharp drops ~1-2 weeks are from removing the hobo loggers from the tanks to download the data. I need to go through and remove these time periods.
 
-![hobo-parsed]()
+![hobo-parsed](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Hobo-loggers-parsed.png?raw=true)
 
-The above is after parsing when the heaters were off for shocking, the outlets went out, or the hobo loggers were out of the water. 
+The above is after parsing when the heaters were off for shocking, the outlets went out, or the hobo loggers were out of the water.
 
 **Discrete Temperature and pH Measurements**
 
