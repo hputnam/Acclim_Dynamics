@@ -294,6 +294,8 @@ TAC calculation done by:
 2. CRE.umol.L (from Step 1) * (homog vol/1000)  
 3. CRE.umol.mgprot = CRE.umol.L (from Step 2) / (prot ug / 1000)
 
+Add in to standardize for the 25 uL and 20 uL difference 
+
 ```
 TAC <- left_join(TAC.values, metadata) %>%
    mutate(cre.umol.L = uae.mM * 2189) %>%   # Convert to CRE (see product manual) per unit sample volume
