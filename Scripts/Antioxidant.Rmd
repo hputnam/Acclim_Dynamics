@@ -152,7 +152,8 @@ protein$Plug_ID <- as.character(protein$Plug_ID)
 tac <- left_join(tac, protein) %>%
   mutate(cre.umol.L = uae.mmol.L * 2189) %>%   # Convert to CRE (see product manual) per unit sample volume
   mutate(cre.umol = cre.umol.L * (vol_mL / 1000),  # Convert to CRE per coral by multiplying by homog. vol.
-         cre.umol.mgprot = cre.umol / (prot_ug / 1000))  # Convert to CRE per mg protein by dividing by total protein
+         cre.umol.mgprot = cre.umol / (prot_ug / 1000))  # Convert to CRE per mg protein by dividing by protein
+### account for 25 uL prot and 20 uL TAC difference 
 
 tac <- tac %>% filter(!is.na(Plug_ID)) %>% filter(!is.na(Species))
 
