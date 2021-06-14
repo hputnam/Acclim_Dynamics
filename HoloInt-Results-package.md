@@ -279,7 +279,7 @@ This dataset has been QC'd by Emma; final figure as of 20210527.
 
 ### Host Total Antioxidant Capacity
 
-![TAC](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Total-Antioxidant-Capacity.png?raw=true)
+![TAC](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/Antioxidant.png?raw=true)
 
 | Species     	| Timepoint 	| Treatment 	| Sample Size 	| Notes                                           	|
 |-------------	|-----------	|-----------	|-------------	|-------------------------------------------------	|
