@@ -294,7 +294,7 @@ TAC calculation done by:
 2. CRE.umol.L (from Step 1) * (homog vol/1000)  
 3. CRE.umol.mgprot = CRE.umol.L (from Step 2) / (prot ug / 1000)
 
-Add in to standardize for the 25 uL and 20 uL difference 
+Add in to standardize for the 25 uL and 20 uL difference
 
 ```
 TAC <- left_join(TAC.values, metadata) %>%
@@ -368,8 +368,6 @@ Sample sizes: n=3 per treatment per timepoint. 251 total.
 ### ITS2 Sequencing
 
 Notebook post coming soon. Symbiont Type Profiles made from [SymPortal](https://symportal.org/). We had 17 profiles in our samples. Group label on the x-axis refers to sample. Each bar is one coral.   
-
-Figure 20210120
 
 Sample HP192 Pacuta 1755 4 wk ATAC has the profiles usually associated with Mcap and sample HP193 1246 Mcap 4 wk HTHC has the profiles usually associated with Pacuta. Rebecca did the ITS2 work but these two samples were right next to the each other on the strip tube so likely got switched somewhere in the process?
 
