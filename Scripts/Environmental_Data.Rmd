@@ -136,184 +136,6 @@ CRIMP.pCO2.PLOT <- ggplot(data = CRIMP2.EXPT.pCO2, aes(x = Date.Time, y = pCO2, 
 ggsave(file="Output/CRIMP2-pCO2.png", CRIMP.pCO2.PLOT, width = 11, height = 6, units = c("in"))
 ```
 
-
-### APEX TEMPERATURE AND pH DATA ### 
-
-Apex files were downloaded every 2 days and kept in seperate files. 
-The Sept 18-21 acclimation data file formatting is different - this was probably downloaded differently. Taken out for now. 
-
-Sept 22-24 columns match, Sept 26-Nov 19 columns match. Need to do this separately. 
-
-The PAR sensor was in Tank 1 for the entire experiment. There are other discrete light measurements. 
-
-Reading in data files. 
-```{r}
-# read in tank to treatment values to bind dataframes together later on 
-Trt.Tanks <- read.csv('Environmental_data/Tank_to_Treatment.csv') %>% select(-Tank.Name)
-Trt.Tanks$Tank <- as.character(Trt.Tanks$Tank)
-
-# binding all apex data files together. see above note about some need to be loaded differently
-APEX.data1 <- list.files(path = 'Environmental_data/Apex_continuous_data/Download1', pattern = ".csv", full.names = TRUE) %>% # list files in directory following a particular pattern
-  set_names(.) %>% # get the column names
-  map_dfr(read.table, .id = "file.ID", header=FALSE, sep=",") %>% # join all files together in one data frame by file ID
-  group_by(file.ID) %>% # for each file do the following
-  select(-V1) %>% 
-  row_to_names(row_number=1) %>% rename(file.ID = "Environmental_data/Apex_continuous_data/Download1/Experimental_0922.csv") %>%
-  filter(Date.Time != "Date.Time")
-
-APEX.data2 <- list.files(path = 'Environmental_data/Apex_continuous_data/Download2', pattern = ".csv", full.names = TRUE) %>% # list files in directory following a particular pattern
-  set_names(.) %>% # get the column names
-  map_dfr(read.table, .id = "file.ID", header=FALSE, sep=",") %>% # join all files together in one data frame by file ID
-  group_by(file.ID) %>% # for each file do the following
-  select(-V1) %>%
-  row_to_names(row_number=1) %>% rename(file.ID = "Environmental_data/Apex_continuous_data/Download2/Experimental_0925_0926.csv") %>%
-  filter(Date.Time != "Date.Time")
-
-APEX.data1$Date.Time <- ymd_hms(APEX.data1$Date.Time, quiet=FALSE, tz="UTC", truncated=0)
-APEX.data2$Date.Time <- ymd_hms(APEX.data2$Date.Time, quiet=FALSE, tz="UTC", truncated=0)
-
-Apex.Temp1 <- APEX.data1 %>% select(-contains("pH"), -PAR, -file.ID) %>%
-  gather("Tank", "Temp", 3:14) 
-Apex.Temp2 <- APEX.data2 %>% select(-contains("pH"), -PAR, -file.ID) %>%
-  gather("Tank", "Temp", 2:13) 
-Apex.Temp <- bind_rows(Apex.Temp1, Apex.Temp2)
-Apex.Temp$Tank <- gsub("^.{0,4}", "", Apex.Temp$Tank)
-Apex.Temp <- full_join(Apex.Temp, Trt.Tanks, by="Tank") 
-Apex.Temp$Temp <- as.numeric(Apex.Temp$Temp) 
-Apex.Temp <- Apex.Temp %>% filter(Temp>20)
-
-Apex.pH <- APEX.data %>% select(-contains("Tmp"), -PAR, -file.ID) %>%
-  gather("Tank", "pH", 3:14) 
-Apex.pH$Tank <- gsub("^.{0,3}", "", Apex.pH$Tank)
-Apex.pH <- full_join(Apex.pH, Trt.Tanks, by="Tank")
-
-
-Apex.PAR <- APEX.data %>% select(-contains("Tmp"), -contains("pH"))
-```
-
-```{r}
-APEX.TEMP.PLOT <- ggplot(data = Apex.Temp, aes(x = Date.Time, y = Temp, color = Treatment)) +
-  labs(x = "Date", y = "Temperature") + ggtitle("Apex Sensor") +
-  geom_line() +
-  scale_color_manual(values = colors) + 
-  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
-                     panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  scale_x_datetime(date_breaks = "2 days", labels = date_format("%d %b")) +
-  theme(legend.position="right", legend.background = element_blank()); APEX.TEMP.PLOT 
-
-#junk package? magic package? janitor?
-
-```
-
-
-
-
-
-Read in raw Apex download files with light, temperature, and pH. 
-Improvements:
-1.) Create loop for the select(apexX, -X) function so it is not repetitive.
-2.) Come back to switching time format for Apex 1. 
-```{r}
-## Reading in apex continuous data: temperature and pH 
-apex1 <- read.csv('Environmental_data/Apex_continuous_data/Acclimation_0918_0921.csv') ## NEED TO SWITCH TIME FORMAT
-apex2 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_0922.csv')
-   apex2 <- select(apex2, -X) # removing column labeled X
-apex3 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_0923.csv')
-  apex3 <- select(apex3, -X) 
-apex4 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_0924.csv')
-  apex4 <- select(apex4, -X) 
-apex5 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_0925_0926.csv')
-  apex5 <- select(apex5, -X) 
-apex6 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_0926_0927.csv')
-  apex6 <- select(apex6, -X) 
-apex7 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_0929.csv')
-  apex7 <- select(apex7, -X)
-apex8 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_1001.csv')
-  apex8 <- select(apex8, -X)
-apex9 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_1003.csv')
-  apex9 <- select(apex9, -X)
-apex10 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_1005.csv')
-  apex10 <- select(apex10, -X)
-apex11 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_1007.csv')
-  apex11 <- select(apex11, -X)
-apex12 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_1008.csv')
-  apex12 <- select(apex12, -X)
-apex13 <- read.csv('Environmental_data/Apex_continuous_data/Experimental_1119.csv')
-  apex13 <- select(apex13, -X)
-```
-
-Transforming data to desired format. 
-```{r}
-Apex_data <- bind_rows(apex2, apex3, apex4, apex5, apex6, apex7, apex8, apex9, apex10, apex11, apex12, apex13) %>% select(-Tmp_4.1) ## Joining dataframes apex1 - apex13
-Apex_data <- Apex_data[,order(colnames(Apex_data))] # ordering columns alphabetically 
-Apex_data <- Apex_data %>% gather("Tank", "pH", 3:14) # creates a Tank_number column and pH value column to transform tank columns into rows
-Apex_data <- Apex_data %>% gather("Temp_Tank", "Temperature", 3:14)  %>% select(-Temp_Tank) # creates another Tank column and Temperature value column to transform tank columns into rows
-Apex_data$Tank <- gsub("^.{0,3}", "", Apex_data$Tank) # removing the first three characters aka "pH_" of each element to be just tank number 
-
-
-# Double checking format before moving on.
-head(Apex_data)
-tail(Apex_data)
-```
-
-Grouping by treatment
-```{r}
-Trt.Tanks <- read.csv('Environmental_data/Tank_to_Treatment.csv') %>% select(-Tank.Name)
-Trt.Tanks$Tank <- as.character(Trt.Tanks$Tank) # changing Tank column character
-
-Apex_treatment <- full_join(Apex_data, Trt.Tanks, by = "Tank") 
-head(Apex_treatment)
-```
-
-Calculating average based on treatment and Date.Time
-Summarizing statistics: mean, N, standard deviation, standard error, confidence interval 
-```{r}
-Apex_temp_means <- summarySE(Apex_treatment, measurevar="Temperature", groupvars=c("Date.Time", "Treatment")) %>% na.omit(Temperature)
-  colnames(Apex_temp_means) <- c("Date.Time", "Treatment", "Temp_N", "Temperature", "Temp_sd", "Temp_se", "Temp_ci")
-Apex_pH_means <- summarySE(Apex_treatment, measurevar="pH", groupvars=c("Date.Time", "Treatment")) %>% na.omit(pH)
-  colnames(Apex_pH_means) <- c("Date.Time", "Treatment", "pH_N", "pH", "pH_sd", "pH_se", "pH_ci")
-## come back to N = 36
-  
-Apex_means <- full_join(Apex_temp_means, Apex_pH_means, by = "Date.Time") %>% select(-Treatment.y) %>% rename(Treatment = Treatment.x)
-tail(Apex_means)
-```
-
-Graphing apex temperature continuous data 
-Decide later if want to add in confidence intervals or standard error bars. 
-```{r}
-colors <- c("blue", "lightblue", "salmon", "red3")
-
-ggplot(Apex_temp_means, aes(x=Date.Time, y = Temperature, group = Treatment, color = Treatment)) + 
-  geom_line() + theme_bw() +
-  scale_color_manual(values = colors) + 
-  scale_shape_manual(values=c(21,24), name = "Treatment") +
-  theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
-  xlab("Date") + theme(axis.text.x=element_text(angle=60, hjust=1)) + # x-axis label and rotating text on x axis
-  ylab("Temperature °C") + ylim(c(26,30)) + # y-axis label and y axis range
-  ggtitle("Apex Temperature Data") + theme(plot.title = element_text(hjust = 0.5)) + # title label and centering the title
-  theme(legend.position=c(0.9, 0.8), legend.background = element_blank())  
-
-## come back to temperature being the same for all treatments - hm.
-```
-
-Graphing apex pH continuous data 
-Decide later if want to add in confidence intervals or standard error bars. 
-```{r}
-colors <- c("blue", "lightblue", "salmon", "red3")
-
-ggplot(Apex_pH_means, aes(x=Date.Time, y = pH, group = Treatment, color = Treatment)) + 
-  geom_line() + theme_bw() +
-  scale_color_manual(values = colors) + 
-  scale_shape_manual(values=c(21,24), name = "Treatment") +
-  theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
-  xlab("Date") + theme(axis.text.x=element_text(angle=60, hjust=1)) + # x-axis label and rotating text on x axis
-  ylab("pH") + # y-axis label and y axis range
-  ggtitle("Apex pH Data") + theme(plot.title = element_text(hjust = 0.5)) + # title label and centering the title
-  theme(legend.text = element_text(size = 10))  
-```
-
-
 ### HOBO LOGGER TEMPERATURE DATA ###  
 
 Reading in and transforming hobo logger data. 
@@ -422,7 +244,6 @@ Hobo.filtered.means <- summarySE(Hobo.data.filtered, measurevar = "Temperature",
 Hobo.means <- summarySE(Hobo.data, measurevar = "Temperature", groupvars=c("Date.Time", "Treatment")) #N, mean(Temperature), sd, se, ci
 ```
 
-
 Visualizing data. 
 ```{r}
 colors <- c("lightblue", "blue", "salmon", "red3")
@@ -462,71 +283,25 @@ ggsave(filename = "Output/Hobo-loggers-parsed.pdf", Hobo.parsed, device = "pdf",
 ggsave(filename = "Output/Hobo-loggers-parsed.png", Hobo.parsed, device = "png", width = 11, height = 8)
 ```
 
-
-### LIGHT DATA ### 
-
-Decide if want to visualize/statistically analyze the positions the readings were taken in (6 points in each tank)
-
-Reading in both light data files. 
-The PAR sensor was only in one tank so we only need to subset our Apex_data frame to one tank. 
+Export data table. 
 ```{r}
-Apex_Light <- subset(Apex_data, Tank=="1") %>% select(Date.Time, PAR) 
-# PAR$Date.Time <- parse_date_time(PAR$Date.Time, "%m/%d/%y %I:%M:%S %p", tz="HST")
-Licor_Light <- read.csv('Environmental_data/Discrete_Light_Licor193.csv', sep=",")
+#install.packages("kableExtra")
+library(kableExtra)
 
-Light_tank_info <-read.csv('Environmental_data/Tank_to_Treatment.csv', header=T, sep=",") %>% select(-Tank.Name)
-Licor_Light <- merge(Licor_Light, Light_tank_info, by="Tank") 
-Licor_Light$Tank <- as.character(Licor_Light$Tank) # changing Tank values to character instead of numeric
-```
+# CURRENTLY DONE WITH FILTERED DATA 
+# separating date and time to then average by date, month, etc.. 
+dt <- Hobo.filtered.means %>% na.omit()
+dt$Date <- as.Date(dt$Date.Time)
+dt$Time <- format(dt$Date.Time, "%H:%M:%S")
 
-Visualizing Apex light data. 
-```{r}
-## Apex Data
-ggplot(Apex_Light, aes(x=Date.Time, y = PAR)) + 
-  geom_line() + theme_bw() +
-  # scale_fill_manual(values = "yellow")  
-  theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
-  xlab("Date") + theme(axis.text.x=element_text(angle=60, hjust=1)) + # x-axis label and rotating text on x axis
-  ylab("PAR")  # y-axis label 
+dt.treatment <- dt %>% filter((Date.Time > as.POSIXct("2018-09-22 06:50:00", tz="UTC") & Date.Time < as.POSIXct("2018-11-17 08:00:00", tz="UTC")))
 
-## stuck on same issue as Apex data, trimming the date down
-```
+dt.date.avg.hobo <- summarySE(dt, measurevar = "Temperature", groupvars=c("Date", "Treatment")) #N, mean(Temperature), sd, se, ci
+dt.trt.avg.hobo <- summarySE(dt.treatment, measurevar = "Temperature", groupvars=c("Treatment")) 
 
-Testing if is there a significant difference between tank positions. 
-```{r}
-Licor_bytank <- Licor_Light %>% subset(Measure_Type=="Six-point") %>% subset(Instrument=="LICOR-193")
-Licor_means <- summarySE(Licor_bytank, measurevar="PAR", groupvars=c("Position", "Tank"))
-
-licor_anova <- aov(PAR ~ Position, data = Licor_bytank)
-summary(licor_anova)
-```
-
-Visualizing Licor light data. 
-This includes six-point and one-point measurements, and both hand-held apogee and LICOR-193 instruments. 
-```{r}
-treatment_colors <- c("blue", "lightblue", "salmon", "red3")
-tank_colors <- c("blue", "red3", "lightblue", "lightblue", "red3", "lightblue", "salmon", "red3", "blue", "salmon", "blue", "salmon")
-
-## BY TREATMENT
-ggplot(Licor_Light, aes(x=Treatment, y=PAR, fill=Treatment)) + 
-  geom_boxplot() +
-  scale_fill_manual(values = treatment_colors) +
-  geom_jitter(color="black", size=0.4, alpha=0.9) + 
-  theme_classic() + 
-  theme(legend.position="none", plot.title = element_text(size=11)) + 
-  xlab("Treatment") + 
-  ylab("PAR")
-
-## BY TREATMENT AND TANK
-ggplot(Licor_Light, aes(x=Tank, y=PAR, fill=Tank)) + 
-  geom_boxplot() +
-  scale_fill_manual(values = tank_colors) +
-  scale_x_discrete(limits=c("1","6","8", "3", "11", "12", "4", "7", "9", "2", "5", "10")) + 
-  geom_jitter(color="black", size=0.4, alpha=0.9) + 
-  theme_classic() + 
-  theme(legend.position="none", plot.title = element_text(size=11)) + 
-  xlab("Tank Number") + 
-  ylab("PAR")
+# Exporting hobo logger tables
+write_csv(path = "Environmental_data/Hobologger-Treatment.csv", dt.trt.avg.hobo)
+write_csv(path = "Environmental_data/Hobologger-Date.csv", dt.date.avg.hobo)
 ```
 
 
