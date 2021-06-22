@@ -87,6 +87,17 @@ The above is after parsing when the heaters were off for shocking, the outlets w
 
 ![carbchem](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Carbonate-Chemistry.png?raw=true)
 
+**Apex Data**
+
+We only have certain days worth of data up until October 8th. Ask Hollie where the other files if we have them..
+
+![atemp](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Apex-temp.png?raw=true)
+
+![aph](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Apex-pH.png?raw=true)
+
+![light]
+
+
 ## Physiology Sample Sizes
 
 **List of missing corals**:  

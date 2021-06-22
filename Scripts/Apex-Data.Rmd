@@ -134,8 +134,6 @@ Decide if want to visualize/statistically analyze the positions the readings wer
 Reading in both light data files. 
 The PAR sensor was only in one tank so we only need to subset our Apex_data frame to one tank. 
 ```{r}
-Apex_Light <- subset(Apex_data, Tank=="1") %>% select(Date.Time, PAR) 
-# PAR$Date.Time <- parse_date_time(PAR$Date.Time, "%m/%d/%y %I:%M:%S %p", tz="HST")
 Licor_Light <- read.csv('Environmental_data/Discrete_Light_Licor193.csv', sep=",")
 
 Light_tank_info <-read.csv('Environmental_data/Tank_to_Treatment.csv', header=T, sep=",") %>% select(-Tank.Name)
@@ -145,15 +143,17 @@ Licor_Light$Tank <- as.character(Licor_Light$Tank) # changing Tank values to cha
 
 Visualizing Apex light data. 
 ```{r}
-## Apex Data
-ggplot(Apex_Light, aes(x=Date.Time, y = PAR)) + 
-  geom_line() + theme_bw() +
-  # scale_fill_manual(values = "yellow")  
-  theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
-  xlab("Date") + theme(axis.text.x=element_text(angle=60, hjust=1)) + # x-axis label and rotating text on x axis
-  ylab("PAR")  # y-axis label 
+# Changing character vector to numeric for PAR
+# Filtering to experimental timeperiod 
+APEX.data$PAR <- as.numeric(APEX.data$PAR)
+APEX.PAR <- APEX.data %>% filter((Date.Time > as.POSIXct("2018-09-22 06:50:00", tz="UTC") & Date.Time < as.POSIXct("2018-11-17 08:00:00", tz="UTC")))
 
-## stuck on same issue as Apex data, trimming the date down
+ggplot(APEX.PAR, aes(x=Date.Time, y = PAR)) + 
+  geom_point(size=0.6) + theme_bw() +
+  scale_y_continuous(limits = c(0, 850), breaks = seq(0, 850, by = 50)) +
+  theme_classic() +
+  xlab("Date") + theme(axis.text.x = element_text(angle = 60, hjust = 1)) + # x-axis label and rotating text on x axis
+  ylab("PAR")  # y-axis label 
 ```
 
 Testing if is there a significant difference between tank positions. 
