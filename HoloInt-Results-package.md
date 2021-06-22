@@ -95,7 +95,7 @@ We only have certain days worth of data up until October 8th. Ask Hollie where t
 
 ![aph](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Apex-pH.png?raw=true)
 
-![light]
+![light](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Apex-PAR.png?raw=true)
 
 
 ## Physiology Sample Sizes
