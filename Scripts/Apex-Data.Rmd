@@ -146,19 +146,30 @@ Visualizing Apex light data.
 # Changing character vector to numeric for PAR
 # Filtering to experimental timeperiod 
 APEX.data$PAR <- as.numeric(APEX.data$PAR)
-APEX.PAR <- APEX.data %>% filter((Date.Time > as.POSIXct("2018-09-22 06:50:00", tz="UTC") & Date.Time < as.POSIXct("2018-11-17 08:00:00", tz="UTC")))
+APEX.PAR <- APEX.data %>% filter((Date.Time > as.POSIXct("2018-09-22 06:50:00", tz="UTC") & Date.Time < as.POSIXct("2018-11-17 08:00:00", tz="UTC"))) %>% select(Date.Time, PAR)
 
-ggplot(APEX.PAR, aes(x=Date.Time, y = PAR)) + 
+write_csv(path = "Environmental_data/Apex-PAR.csv", APEX.PAR)
+
+PAR.plot <- ggplot(APEX.PAR, aes(x=Date.Time, y = PAR)) + 
   geom_point(size=0.6) + theme_bw() +
   scale_y_continuous(limits = c(0, 850), breaks = seq(0, 850, by = 50)) +
   theme_classic() +
   xlab("Date") + theme(axis.text.x = element_text(angle = 60, hjust = 1)) + # x-axis label and rotating text on x axis
-  ylab("PAR")  # y-axis label 
+  ylab("PAR"); PAR.plot # y-axis label 
+
+ggsave(filename = "Output/Apex-PAR.png", PAR.plot, device = "png", width = 11, height = 8)
 ```
 
 Testing if is there a significant difference between tank positions. 
-```{r}
+```{r} 
+library(lubridate)
+
 Licor_bytank <- Licor_Light %>% subset(Measure_Type=="Six-point") %>% subset(Instrument=="LICOR-193")
+
+# Combining date and time columns
+Licor_date <- Licor_bytank %>% unite(Date.Time, Date, Time, sep = " ")
+#Licor_bytank$Date.Time <- as.POSIXct(Licor_bytank$Date.Time, tz = "UTC")
+
 Licor_means <- summarySE(Licor_bytank, measurevar="PAR", groupvars=c("Position", "Tank"))
 
 licor_anova <- aov(PAR ~ Position, data = Licor_bytank)
@@ -168,8 +179,8 @@ summary(licor_anova)
 Visualizing Licor light data. 
 This includes six-point and one-point measurements, and both hand-held apogee and LICOR-193 instruments. 
 ```{r}
-treatment_colors <- c("blue", "lightblue", "salmon", "red3")
-tank_colors <- c("blue", "red3", "lightblue", "lightblue", "red3", "lightblue", "salmon", "red3", "blue", "salmon", "blue", "salmon")
+treatment_colors <- c("lightblue", "blue", "salmon", "red3")
+tank_colors <- c("lightblue", "red3", "blue", "blue", "red3", "blue", "salmon", "red3", "lightblue", "salmon", "lightblue", "salmon")
 
 ## BY TREATMENT
 ggplot(Licor_Light, aes(x=Treatment, y=PAR, fill=Treatment)) + 

@@ -244,6 +244,19 @@ Hobo.filtered.means <- summarySE(Hobo.data.filtered, measurevar = "Temperature",
 Hobo.means <- summarySE(Hobo.data, measurevar = "Temperature", groupvars=c("Date.Time", "Treatment")) #N, mean(Temperature), sd, se, ci
 ```
 
+```{r}
+Expt.hobo <- Hobo.data %>% filter((Date.Time > as.POSIXct("2018-09-22 06:50:00", tz="UTC") & Date.Time < as.POSIXct("2018-11-17 08:00:00", tz="UTC"))) %>% na.omit()
+Expt.hobo$Date <- as.Date(Expt.hobo$Date.Time)
+Expt.hobo$Time <- format(Expt.hobo$Date.Time, "%H %M %S")
+
+Hobo.treatment <- summarySE(Expt.hobo, measurevar = "Temperature", groupvars=c("Treatment")) #N, mean(Temperature), sd, se, ci
+Hobo.date <- summarySE(Expt.hobo, measurevar = "Temperature", groupvars=c("Treatment", "Date")) #N, mean(Temperature), sd, se, ci
+
+write_csv(path = "Environmental_data/HOBO-Temperature-Treatment.csv", Hobo.treatment)
+write_csv(path = "Environmental_data/HOBO-Temperature-Date.csv", Hobo.date)
+```
+
+
 Visualizing data. 
 ```{r}
 colors <- c("lightblue", "blue", "salmon", "red3")
@@ -359,5 +372,21 @@ trt.lm <- lm(ml.sec ~ Treatment, data=Flow_Data)
 trt.anova <- aov(ml.sec ~ Treatment, data=Flow_Data)
 summary(trt.lm)
 summary(trt.anova)
+```
+
+### CREATING ENV. DATA TABLE ### 
+
+```{r}
+HOBO.dt.date <- read.csv("Environmental_data/HOBO-Temperature-Treatment.csv")
+HOBO.dt.trt <- read.csv("Environmental_data/HOBO-Temperature-Date.csv")
+
+APEX.dt.temp.date <- read.csv("Environmental_data/Apex-Temperature-Date.csv")
+APEX.dt.temp.trt <- read.csv("Environmental_data/Apex-Temperature-Treatment.csv")
+
+APEX.dt.pH.date <- read.csv("Environmental_data/Apex-pH-Date.csv")
+APEX.dt.pH.trt <- read.csv("Environmental_data/Apex-pH-Treatment.csv")
+
+
+
 ```
 

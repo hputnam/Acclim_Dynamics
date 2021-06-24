@@ -168,6 +168,14 @@ carb.output$Tank <- factor(carb.output$Tank)
 write.table(carb.output, "Environmental_data/Seawater_chemistry_table_Output_All.csv", sep=",", row.names = FALSE) #save data
 ```
 
+```{r}
+treatment.stats <- carb.output %>% subset(Period1 == "Treatment") %>% 
+   gather("Measurement", "Value", 8:10)
+mean.by.treatment <- summarySE(treatment.stats, measurevar = "Value", groupvars=c("Treatment", "Measurement")) 
+```
+
+
+
 Subsetting to groups we want to visualize. 
 ```{r}
 carb.output.long <- pivot_longer(carb.output, cols = Temperature:AragSat) %>%
@@ -255,6 +263,7 @@ ggsave(file="Output/Carbonate-Chemistry.pdf", Carb.Chem.Figs, width = 11, height
 ggsave(file="Output/Carbonate-Chemistry.png", Carb.Chem.Figs, width = 11, height = 10, units = c("in"))
 
 ```
+
 Generating Carb Chem Tables
 ```{r}
 

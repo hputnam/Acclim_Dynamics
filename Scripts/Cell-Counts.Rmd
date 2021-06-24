@@ -95,6 +95,8 @@ cellometer_sym_counts$Timepoint <- factor(cellometer_sym_counts$Timepoint, level
 ```{r}
 counts <- full_join(cellometer_sym_counts, haemo_sym_counts, join_by = "Plug_ID") %>% filter(!is.na(count.mean)) %>% select(-rep, -count, -count.mean, -cells.mL, -cells, -Squares_Counted) %>%
   summarise_each(funs(first(na.omit(.)))) # combining rows that have the same data (plug ids with cellometer and haemcy but originally on two different rows)
+
+write_csv(path = "Physiology_variables/cell-counts.csv", counts)
   
 counts_lm <- counts %>% subset(!Tech == "Sierra Gray") %>%
   group_by(Species) %>%
