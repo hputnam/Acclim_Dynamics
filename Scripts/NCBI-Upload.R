@@ -1,6 +1,8 @@
 ## NCBI Upload 
 
 library(readr)
+library(plyr)
+library(tidyr)
 library(dplyr)
 library(lubridate)
 
@@ -15,9 +17,10 @@ ncbi <- all.data %>% select(NCBI_Sample_Name, NCBI_Sample_Title, Species, Sample
   mutate(Species = case_when(
     Species == "Mcapitata" ~ "Montipora capitata",
     Species == "Pacuta" ~ "Pocillopora acuta"
-  )) %>% dplyr::rename(Organism = Species) %>% dplyr::rename(geo_loc_name = Site.Name)
+  )) %>% dplyr::rename(host = Species) %>% dplyr::rename(geo_loc_name = Site.Name)
 
-ncbi$Sample.Date <- parse_date_time(ncbi$Sample.Date, orders = c("ymd"))
+#ncbi$Sample.Date <- parse_date_time(ncbi$Sample.Date, orders = c("ymd"))
+ncbi$Sample.Date <- as.Date(ymd(ncbi$Sample.Date))
 
 ncbi$env_broad_scale <- "coral reef" 
 ncbi$lat_lon <- ncbi$geo_loc_name
@@ -35,6 +38,7 @@ ncbi <- ncbi %>%
 ncbi$env_medium <- "sea water" 
 ncbi$geo_loc_name <- paste("Hawaii:", ncbi$geo_loc_name, sep=" ")
 ncbi$env_local_scale <- "fringing reef"
+ncbi$organism <- "metagenome"
 
 write_csv(path = "Environmental_data/NCBI-Upload.csv", ncbi)
 

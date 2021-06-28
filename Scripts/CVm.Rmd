@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(plyr)
 library(dplyr)
 library(ggplot2)
-
+library(robustbase)
 ```
 
 # CVm - Physiology 
@@ -28,7 +28,7 @@ Reading in meta and data frames.
 ```{r}
 meta <- read.csv("Output/results_physiology.csv")
   meta$Timepoint <- factor(meta$Timepoint, levels = c("Day 1", "Day 2", "1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week"))
-meta$Group <- paste(meta$Timepoint, meta$Treatment, sep = "_") # create groups so that CVm fxn can run on each group
+meta$Group <- paste(meta$Timepoint, meta$Treatment, meta$Species, sep = "_") # create groups so that CVm fxn can run on each group
   
 meta <- meta[complete.cases(meta), ] #only taking complete cases 
 
@@ -36,10 +36,10 @@ Mcap <- meta %>% subset(Species == "Mcapitata")
 Pact <- meta %>% subset(Species == "Pacuta")
 
 Mcap.meta <- Mcap %>% select(Site.Name:CO2)
-Mcap.data <- Mcap %>% select(chlc2.ug.cm2, prot_mg.cm2, cre.umol.mgprot, Ratio_AFDW.mg.cm2)
+Mcap.data <- Mcap %>% select(chla.ug.cm2, prot_mg.cm2, Ratio_AFDW.mg.cm2)
 
 Pact.meta <- Pact %>% select(Site.Name:CO2)
-Pact.data <- Pact %>% select(chlc2.ug.cm2, prot_mg.cm2, cre.umol.mgprot, Ratio_AFDW.mg.cm2)
+Pact.data <- Pact %>% select(chla.ug.cm2, prot_mg.cm2, Ratio_AFDW.mg.cm2)
 ```
 
 Center and scale the dataframes. 
@@ -68,81 +68,91 @@ Pact.CVm <- Pact %>% select(Site.Name:CO2) %>% full_join(Pact.data.scaled.df, by
 Defining the CVm function based on Tanner et al 2018 and Albert et al 2010. 
 ```{r}
 CVm <- function(data) {
+  n<-dim(data)[1]
+  p<-dim(data)[2]
+  
   # MCD estimates
   #    =============
-  mcd<-covMcd(data,alpha=0.75,cor=T,use.correction=T)
-  mean<-mcd$center # Mean
-  s<-mcd$cov       # Covariance matrix
-  
-  # The new approach CVm
-  CVm<-sqrt((t(mean)%*%s%*%mean)/(t(mean)%*%mean)^2)*100
-  # Standard error of CVm
-  CVm2<-CVm/100
-  SE.CVm<-CVm2/sqrt(2*n)*sqrt(1+2*CVm2^2)*100
-  
-  rslt<-list()
-  rslt$mean<-mean           # MCD mean
-  rslt$s<-s                 # MCD covariance matrix
-  rslt$CVm<-CVm             # Tanner et al: CVm
-  rslt$SE.CVm<-SE.CVm       # Tanner et al: Standard error of CVm
-  return(rslt)
-}
-```
-
-Apply CVm function from above.
-```{r}
-## Based on groups created in first chunk of code.
-## Input is Pact.CVm and Mcap.CVm dataframes that have been centered and scaled and adding back to meta data information
-## For every group (timepoint + treatment), run CVm function on columns 11:15
-Mcap.CVm
-
-split.frames <- split(Mcap.CVm, Mcap.CVm$Group) # splitting based on group
-new_list <- lapply(split.frames, function(x) x %>% select(11:14)) 
-matrix_list <- lapply(new_list, function(x) data.matrix(x))
-
-for(i in 1:length(matrix_list)){
- CVm()
-}
-
-for(i in Mcap.CVm$Group){
-  CVm()
-}
-
-
-# Error in as.vector(x, mode) : cannot coerce type 'closure' to vector of type 'any'
-# Error in is.data.frame(x) : argument "data" is missing, with no default
-```
-
-Trying it on one group. 
-
-With 5 variables -- 
-Group with n = 6: n == p+1 is too small sample size for MCD  
-Group with n = 4: n <= p -- you can't be serious!
-
-With 4 variables -- 
-Grou with n = 6 worked 
-
-```{r}
-mcd <- covMcd(matrix_list$`1 week_ATAC`,alpha=0.75,cor=T,use.correction=T)
+  mcd <- covMcd(data,alpha=0.75,cor=T,use.correction=T)
   mean <- mcd$center # Mean
   s <- mcd$cov       # Covariance matrix
   
-  # The new approach CVm
+  # CVm approached based on Tanner at al 2018 
   CVm <- sqrt((t(mean)%*%s%*%mean)/(t(mean)%*%mean)^2)*100
   # Standard error of CVm
   CVm2 <- CVm/100
   SE.CVm <- CVm2/sqrt(2*n)*sqrt(1+2*CVm2^2)*100
   
-  rslt <- list()
+  rslt<-list()
   rslt$mean <- mean           # MCD mean
   rslt$s <- s                 # MCD covariance matrix
   rslt$CVm <- CVm             # Tanner et al: CVm
   rslt$SE.CVm <- SE.CVm       # Tanner et al: Standard error of CVm
   return(rslt)
+}
 ```
 
+Applying the CVm function above to all the individual groups. 
 
-Gene expression CVm. 
+Error come back to - if the 's' table in the CVm fxn contains all negative values, then the CV calculation produces an NA value. 
+```{r}
+# Combining Mcap and Pacuta back together after analyzing separately 
+# Grouping by group name and adding a sample size column 
+all.CVm <- union(Mcap.CVm, Pact.CVm) %>% group_by(Group, .add = TRUE) %>% dplyr::mutate(count = n()) %>%
+  filter(count > 4)
+
+# Separating dataframes based on the group column (results in 56 new dataframes; i.e. CVm[[1]])
+# This function does this by the Group_by function above alphabetically 
+CVm.split <- all.CVm %>% group_split() 
+
+# selecting only the data column in each df in the all.CVm list 
+CVm.data <- lapply(CVm.split, '[', c(11:13))
+
+# apply the CVm function to all dataframes within the all.CVm list 
+CVm.Results <- lapply(CVm.data, CVm)
+
+## Testing the CVm function on individual dataframes 
+# `df.4 week_ATHC_Pacuta` <- `df.4 week_ATHC_Pacuta` %>% select(11:13)
+# CVm(`df.4 week_ATHC_Pacuta`)
+```
+
+Creating a dataframe from the results of CV function above. 
+```{r}
+df <- data.frame(Reduce(rbind, CVm.Results))
+
+# selecting only the Group column to create a one column df ordered alphabetically to match the order of the group_split() function
+Group.names <- all.CVm[order(all.CVm$Group), 6]
+Group.names <- distinct(Group.names) # removing duplicate rows
+
+# rename the rows to the previous group names 
+df$Group <- Group.names$Group
+```
+
+Example of results from CVm function when the result is negative. 
+
+[[1]]
+[[1]]$mean
+      chla.ug.cm2       prot_mg.cm2 Ratio_AFDW.mg.cm2 
+      -0.43813754       -0.06654211       -0.19536512 
+
+[[1]]$s
+                  chla.ug.cm2 prot_mg.cm2 Ratio_AFDW.mg.cm2
+chla.ug.cm2         -6.658572   -6.956759          3.258124
+prot_mg.cm2         -6.956759  -14.315236          1.585549
+Ratio_AFDW.mg.cm2    3.258124    1.585549         -2.553795
+
+[[1]]$CVm
+     [,1]
+[1,]  NaN
+
+[[1]]$SE.CVm
+     [,1]
+[1,]  NaN
+
+
+
+# CVm - Gene Expression
+
 ```{r}
 # CVm_GE <- rep(0, 5)
 # CVmSE_GE <- rep(0,5)
