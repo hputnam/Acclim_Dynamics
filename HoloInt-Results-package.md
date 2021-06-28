@@ -386,6 +386,8 @@ Why does Mcap 12 hour HTAC have n=4 and Mcap 0 hour HTAC have n=2? Physiology/Mo
 
 ![relab](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/rel.abund.its2.png?raw=true)
 
+![bubble](https://github.com/hputnam/Acclim_Dynamics/blob/master/Output/Final_Figures/rel.abund.its2.bubble.png?raw=true)
+
 
 *Mcapitata* PERMANOVA results:
 
