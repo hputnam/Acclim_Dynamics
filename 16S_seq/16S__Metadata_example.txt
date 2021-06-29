@@ -1,0 +1,16 @@
+#SampleID	SampleName	SampleNumber	PlotOrder	Origin	SiteName	SiteID	CoralType	TissueType	PlugID
+#q2:types	categorical	categorical	numeric	categorical	categorical	categorical	categorical	categorical	categorical
+HP356_S261	1637H	H1	1	SITE 4	Reef.11.13	P61	PA	Hard	1637
+HP357_S201	1060H	H2	2	SITE 3	Reef.18	P44	PA	Hard	1060
+HP358_S210	1041H	H3	3	SITE 4	Reef.11.13	P18	PA	Hard	1041
+HP359_S219	1651H	H4	4	SITE 2	HIMB	M61	MC	Hard	1651
+HP360_S228	1600H	H5	5	SITE 6	Reef.42.43	M57	MC	Hard	1600
+HP361_S236	1196H	H6	6	SITE 3	Reef.18	M48	MC	Hard	1196
+HP355_S253	NegCON	NegCON	7						
+									
+									
+									
+									
+									
+									
+									

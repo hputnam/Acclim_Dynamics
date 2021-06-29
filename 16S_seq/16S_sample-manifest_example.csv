@@ -1,0 +1,15 @@
+sample-id,absolute-filepath,direction
+HP356_S261,$PWD/00_RAWdata/HP356_S261_L001_R1_001.fastq.gz,forward
+HP356_S261,$PWD/00_RAWdata/HP356_S261_L001_R2_001.fastq.gz,reverse
+HP357_S201,$PWD/00_RAWdata/HP357_S201_L001_R1_001.fastq.gz,forward
+HP357_S201,$PWD/00_RAWdata/HP357_S201_L001_R2_001.fastq.gz,reverse
+HP358_S210,$PWD/00_RAWdata/HP358_S210_L001_R1_001.fastq.gz,forward
+HP358_S210,$PWD/00_RAWdata/HP358_S210_L001_R2_001.fastq.gz,reverse
+HP359_S219,$PWD/00_RAWdata/HP359_S219_L001_R1_001.fastq.gz,forward
+HP359_S219,$PWD/00_RAWdata/HP359_S219_L001_R2_001.fastq.gz,reverse
+HP360_S228,$PWD/00_RAWdata/HP360_S228_L001_R1_001.fastq.gz,forward
+HP360_S228,$PWD/00_RAWdata/HP360_S228_L001_R2_001.fastq.gz,reverse
+HP361_S236,$PWD/00_RAWdata/HP361_S236_L001_R1_001.fastq.gz,forward
+HP361_S236,$PWD/00_RAWdata/HP361_S236_L001_R2_001.fastq.gz,reverse
+HP355_S253,$PWD/00_RAWdata/HP355_S253_L001_R1_001.fastq.gz,forward
+HP355_S253,$PWD/00_RAWdata/HP355_S253_L001_R2_001.fastq.gz,reverse
