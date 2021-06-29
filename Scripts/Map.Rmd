@@ -1,0 +1,38 @@
+---
+title: "Map.Rmd"
+author: "Emma Strand"
+date: "6/28/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(plyr)
+library(dplyr)
+library(ggplot2)
+```
+
+Reading in all files. 
+Master = original location  
+Clade annotations = clade name and chimeric info  
+
+```{r}
+Mcap.clade <- read.delim("Environmental_data/clade_annotations_Mcapitata.txt") %>%
+  separate(Sample, c("Species", "Treatment", "Timepoint", "Plug_ID")) %>%
+  select(Plug_ID, Clade)
+
+Pacuta.clade <- read.delim("Environmental_data/clade_annotations_Pacuta.txt") %>%
+  separate(Sample, c("Species", "Treatment", "Timepoint", "Plug_ID")) %>%
+  select(Plug_ID, Clade)
+
+Clade.info <- union(Mcap.clade, Pacuta.clade)
+Clade.info$Plug_ID <- as.character(Clade.info$Plug_ID)
+
+master <- read.csv("Environmental_data/Master_Fragment.csv")
+master$Plug_ID <- as.character(master$Plug_ID)
+  
+meta <- full_join(Clade.info, master, by = "Plug_ID") %>% filter(!is.na(Clade)) %>%
+  select(Plug_ID, Clade, Site.Name, Species)
+
+```
