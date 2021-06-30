@@ -206,3 +206,4 @@ echo "qiime analysis completed $(date)"
 sbatch /data/putnamlab/hputnam/HoloInt_16S/scripts/run_qiime2.sh
 ```
 
+scp -r hputnam@bluewaves.uri.edu:/data/putnamlab/hputnam/HoloInt_16S/core-metrics-results /Users/hputnam/MyProjects/Acclim_Dynamics/16S_seq
