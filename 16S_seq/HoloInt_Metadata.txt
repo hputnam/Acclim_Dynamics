@@ -1,5 +1,5 @@
 #SampleID	SampleName	PlotOrder	SiteName	SiteID	SitePoint	Species	TissueType	PlugID	Treatment	Temp	pH	Tank	Timepoint
-#q2:types	categorical	numeric	categorical	categorical	categorical	categorical	categorical	categorical	categorical	ca	tegorical	categorical	categorical
+#q2:types	categorical	numeric	categorical	categorical	categorical	categorical	categorical	categorical	categorical	categorical	categorical	categorical	categorical
 HPW290	1037	223	Reef.35.36	M35	4	Mcapitata	Hard	1037	ATAC	AT	AC	1	1
 HPW293	1041	226	Reef.11.13	P18	2	Pacuta	Hard	1041	ATAC	AT	AC	1	3
 HPW322	1043	251	Lilipuna.Fringe	P67	7	Pacuta	Hard	1043	ATAC	AT	AC	1	1

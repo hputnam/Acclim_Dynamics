@@ -68,7 +68,7 @@ nano /data/putnamlab/hputnam/HoloInt_16S/scripts/run_qiime2.sh
 #SBATCH -t 24:00:00
 #SBATCH --nodes=1 --ntasks-per-node=1
 #SBATCH --export=NONE
-#SBATCH --mem=300GB
+#SBATCH --mem=500GB
 #SBATCH --partition=putnamlab
 #SBATCH --account=putnamlab
 #SBATCH -D /data/putnamlab/hputnam/HoloInt_16S
@@ -127,7 +127,7 @@ qiime feature-table tabulate-seqs \
 # This section assigns taxonomy based on the imported database (see X_qiime2gettaxonomydb.sh)
 
 qiime feature-classifier classify-sklearn \
-  --i-classifier metadata/gg-13-8-99-515-806-nb-classifier.qza.qza \
+  --i-classifier metadata/gg-13-8-99-515-806-nb-classifier.qza \
   --i-reads rep-seqs.qza \
   --o-classification taxonomy.qza
 qiime metadata tabulate \
@@ -198,7 +198,7 @@ qiime diversity alpha-rarefaction \
   --m-metadata-file $METADATA \
   --o-visualization alpha-rarefaction.qzv
 
-echo "END $(date)"
+echo "qiime analysis completed $(date)"
 
 ```
 
