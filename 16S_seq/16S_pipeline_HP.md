@@ -7,6 +7,7 @@ mkdir /data/putnamlab/hputnam/HoloInt_16S/clean_reads
 mkdir /data/putnamlab/hputnam/HoloInt_16S/scripts
 mkdir /data/putnamlab/hputnam/HoloInt_16S/raw_qc/
 mkdir /data/putnamlab/hputnam/HoloInt_16S/clean_qc/
+mkdir /data/putnamlab/hputnam/HoloInt_16S/metadata/
 
 ### Raw Data Location: 
 /data/putnamlab/KITT/hputnam/20210608_Amplicon/16S_HI/
@@ -49,7 +50,14 @@ scp hputnam@bluewaves.uri.edu:/data/putnamlab/hputnam/HoloInt_16S/raw_qc/16S_raw
 
 
 
+
 #QIIME
+
+### sample manifest
+scp /Users/hputnam/MyProjects/Acclim_Dynamics/16S_seq/HoloInt_sample-manifest.csv hputnam@bluewaves.uri.edu:/data/putnamlab/hputnam/HoloInt_16S/metadata 
+
+### sample metadata
+scp /Users/hputnam/MyProjects/Acclim_Dynamics/16S_seq/HoloInt_Metadata.txt hputnam@bluewaves.uri.edu:/data/putnamlab/hputnam/HoloInt_16S/metadata 
 
 ```
 nano /data/putnamlab/hputnam/HoloInt_16S/scripts/run_qiime2.sh
@@ -60,12 +68,13 @@ nano /data/putnamlab/hputnam/HoloInt_16S/scripts/run_qiime2.sh
 #SBATCH -t 24:00:00
 #SBATCH --nodes=1 --ntasks-per-node=1
 #SBATCH --export=NONE
-#SBATCH --mem=300GB
+#SBATCH --mem=100GB
+#SBATCH --partition=putnamlab
 #SBATCH --account=putnamlab
 #SBATCH -D /data/putnamlab/hputnam/HoloInt_16S
 
 # This script imports and QCs the data using DADA2
-echo "QIIME2 bash script for 16S v5v6 samples started running at: "; date
+echo "QIIME2 bash script for 16S v4 samples started running at: "; date
 
 
 module load QIIME2/2021.4
@@ -78,10 +87,10 @@ module list
 cd /data/putnamlab/hputnam/HoloInt_16S
 
 # Put metadata file name here
-METADATA="/data/putnamlab/hputnam/HoloInt_16S/HoloInt_Metadata.txt"
+METADATA="metadata/HoloInt_Metadata.txt"
 
 # Put sample manifest file name here
-MANIFEST="/data/putnamlab/hputnam/HoloInt_16S/HoloInt_sample-manifest.csv"
+MANIFEST="metadata/HoloInt_sample-manifest.csv"
 
 ##############################################################################
 
@@ -89,7 +98,7 @@ MANIFEST="/data/putnamlab/hputnam/HoloInt_16S/HoloInt_sample-manifest.csv"
 # Paired-end, based on sample-manifest.csv
 qiime tools import --type 'SampleData[PairedEndSequencesWithQuality]' \
   --input-path $MANIFEST --output-path HoloInt_v4-paired-end-sequences.qza \
-  --source-format PairedEndFastqManifestPhred33
+  --input-format PairedEndFastqManifestPhred33
 
 # QC using dada2
 # Adjust the params based on read length and 16S primer length
@@ -118,7 +127,7 @@ qiime feature-table tabulate-seqs \
 # This section assigns taxonomy based on the imported database (see X_qiime2gettaxonomydb.sh)
 
 qiime feature-classifier classify-sklearn \
-  --i-classifier metadata/classifier_16Sv5v6.qza \
+  --i-classifier metadata/gg-13-8-99-515-806-nb-classifier.qza.qza \
   --i-reads rep-seqs.qza \
   --o-classification taxonomy.qza
 qiime metadata tabulate \
@@ -197,8 +206,3 @@ echo "END $(date)"
 sbatch /data/putnamlab/hputnam/HoloInt_16S/scripts/run_qiime2.sh
 ```
 
-/scripts/00_qiime2_putnam*.sh
-
-
-
-## Denoising and clustering
