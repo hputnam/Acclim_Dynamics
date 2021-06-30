@@ -68,7 +68,7 @@ nano /data/putnamlab/hputnam/HoloInt_16S/scripts/run_qiime2.sh
 #SBATCH -t 24:00:00
 #SBATCH --nodes=1 --ntasks-per-node=1
 #SBATCH --export=NONE
-#SBATCH --mem=500GB
+#SBATCH --mem=300GB
 #SBATCH --partition=putnamlab
 #SBATCH --account=putnamlab
 #SBATCH -D /data/putnamlab/hputnam/HoloInt_16S
