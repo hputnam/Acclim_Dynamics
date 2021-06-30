@@ -48,7 +48,10 @@ sbatch /data/putnamlab/hputnam/HoloInt_16S/scripts/run_qc.sh
 scp hputnam@bluewaves.uri.edu:/data/putnamlab/hputnam/HoloInt_16S/raw_qc/16S_raw_qc_multiqc_report.html /Users/hputnam/MyProjects/Acclim_Dynamics
 
 
+### Count Sequences
+```zgrep -c "@M00763" /data/putnamlab/KITT/hputnam/20210608```
 
+HPW116 has less than 10K
 
 
 #QIIME
@@ -68,8 +71,7 @@ nano /data/putnamlab/hputnam/HoloInt_16S/scripts/run_qiime2.sh
 #SBATCH -t 24:00:00
 #SBATCH --nodes=1 --ntasks-per-node=1
 #SBATCH --export=NONE
-#SBATCH --mem=300GB
-#SBATCH --partition=putnamlab
+#SBATCH --mem=100GB
 #SBATCH --account=putnamlab
 #SBATCH -D /data/putnamlab/hputnam/HoloInt_16S
 
