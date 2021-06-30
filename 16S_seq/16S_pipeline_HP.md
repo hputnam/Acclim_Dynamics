@@ -22,7 +22,7 @@ nano /data/putnamlab/hputnam/HoloInt_16S/scripts/run_qc.sh
 #SBATCH -t 24:00:00
 #SBATCH --nodes=1 --ntasks-per-node=1
 #SBATCH --export=NONE
-#SBATCH --mem=100GB
+#SBATCH --mem=50GB
 #SBATCH --account=putnamlab
 #SBATCH -D /data/putnamlab/hputnam/HoloInt_16S
 
