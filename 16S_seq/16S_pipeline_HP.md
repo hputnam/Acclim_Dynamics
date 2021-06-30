@@ -62,6 +62,11 @@ scp /Users/hputnam/MyProjects/Acclim_Dynamics/16S_seq/HoloInt_sample-manifest.cs
 ### sample metadata
 scp /Users/hputnam/MyProjects/Acclim_Dynamics/16S_seq/HoloInt_Metadata.txt hputnam@bluewaves.uri.edu:/data/putnamlab/hputnam/HoloInt_16S/metadata 
 
+### classifier
+cd /data/putnamlab/hputnam/HoloInt_16S/metadata
+
+wget https://data.qiime2.org/2021.4/common/silva-138-99-515-806-nb-classifier.qza
+
 ```
 nano /data/putnamlab/hputnam/HoloInt_16S/scripts/run_qiime2.sh
 ```
@@ -71,7 +76,7 @@ nano /data/putnamlab/hputnam/HoloInt_16S/scripts/run_qiime2.sh
 #SBATCH -t 24:00:00
 #SBATCH --nodes=1 --ntasks-per-node=1
 #SBATCH --export=NONE
-#SBATCH --mem=100GB
+#SBATCH --mem=300GB
 #SBATCH --account=putnamlab
 #SBATCH -D /data/putnamlab/hputnam/HoloInt_16S
 
@@ -126,10 +131,10 @@ qiime feature-table tabulate-seqs \
 
 
 
-# This section assigns taxonomy based on the imported database (see X_qiime2gettaxonomydb.sh)
+# This section assigns taxonomy based on the imported database 
 
 qiime feature-classifier classify-sklearn \
-  --i-classifier metadata/gg-13-8-99-515-806-nb-classifier.qza \
+  --i-classifier metadata/silva-138-99-515-806-nb-classifier.qza \
   --i-reads rep-seqs.qza \
   --o-classification taxonomy.qza
 qiime metadata tabulate \
@@ -140,7 +145,10 @@ qiime taxa barplot \
   --i-taxonomy taxonomy.qza \
   --m-metadata-file $METADATA \
   --o-visualization taxa-bar-plots.qzv
-
+qiime metadata tabulate \
+  --m-input-file rep-seqs.qza \
+  --m-input-file taxonomy.qza \
+  --o-visualization tabulated-feature-metadata.qzv
 
 
 # This script calculates phylogenetic trees for the data
@@ -208,4 +216,11 @@ echo "qiime analysis completed $(date)"
 sbatch /data/putnamlab/hputnam/HoloInt_16S/scripts/run_qiime2.sh
 ```
 
+
+### Download Data from Server 
+```
 scp -r hputnam@bluewaves.uri.edu:/data/putnamlab/hputnam/HoloInt_16S/core-metrics-results /Users/hputnam/MyProjects/Acclim_Dynamics/16S_seq
+
+scp -r hputnam@bluewaves.uri.edu:/data/putnamlab/hputnam/HoloInt_16S/*.qz* /Users/hputnam/MyProjects/Acclim_Dynamics/16S_seq/core-metrics-results
+```
+
