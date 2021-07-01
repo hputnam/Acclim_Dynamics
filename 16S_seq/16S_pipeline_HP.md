@@ -224,3 +224,9 @@ scp -r hputnam@bluewaves.uri.edu:/data/putnamlab/hputnam/HoloInt_16S/core-metric
 scp -r hputnam@bluewaves.uri.edu:/data/putnamlab/hputnam/HoloInt_16S/*.qz* /Users/hputnam/MyProjects/Acclim_Dynamics/16S_seq/core-metrics-results
 ```
 
+# Things to Test
+1. params based on read length and 16S primer length
+ ```e.g., qiime dada2 denoise-paired --verbose --i-demultiplexed-seqs HoloInt_v4-paired-end-sequences.qza \```
+2. qiime feature-classifier
+[premade classifiers](https://docs.qiime2.org/2021.4/data-resources/#taxonomy-classifiers-for-use-with-q2-feature-classifier) 
+
