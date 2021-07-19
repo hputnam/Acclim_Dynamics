@@ -5,12 +5,15 @@ date: "6/28/2021"
 output: html_document
 ---
 
+library(usmap) = HI not resolution enough 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
 library(plyr)
 library(dplyr)
 library(ggplot2)
+library(marmap)
 ```
 
 Reading in all files. 
@@ -36,3 +39,13 @@ meta <- full_join(Clade.info, master, by = "Plug_ID") %>% filter(!is.na(Clade)) 
   select(Plug_ID, Clade, Site.Name, Species)
 
 ```
+
+Loading blank map slate 
+```{r}
+# load hawaii data
+	data(hawaii)
+	data(hawaii.sites)
+	
+plot(hawaii,image=TRUE,draw=TRUE,bpal=pal(100),asp=1,col="grey40",lwd=.7)
+```
+

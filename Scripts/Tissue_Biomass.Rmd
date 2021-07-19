@@ -37,12 +37,13 @@ library(formattable)
 library(data.table)
 library(htmltools)
 library(webshot)
+library(agricolae)
 ```
 
 Dry Weight - organic and inorganic compounds
 Ash-Free Dry Weight - organic compounds 
 
-Read in Ash-Free Dry Weight raw data, surface area, homogenate volume, and master datasheets
+## Read in Ash-Free Dry Weight raw data, surface area, homogenate volume, and master datasheets
 ```{r}
 AFDW_raw <- read.csv("Physiology_variables/AFDW_data.csv") %>% filter(!is.na(Plug_ID))
 AFDW_raw$Plug_ID <- as.character(AFDW_raw$Plug_ID)
@@ -53,7 +54,7 @@ Surface_area <- read.csv("Physiology_variables/Respirometry/coral_surface_area.c
 Homogenate_volume <- read.csv("Physiology_variables/homogenate_vol.csv") %>%
   select(Plug_ID, vol_mL)
 Master_fragment <- read.csv("Environmental_data/Master_Fragment.csv") %>% subset(ANALYSIS=="Physiology" | ANALYSIS=="Physiology/Molecular") %>% # need to keep "Physiology" and "Physiology/Molecular"
-  select(Plug_ID, Species, Treatment, Temperature, CO2, Timepoint) 
+  select(Plug_ID, Species, Treatment, Temperature, CO2, Timepoint, Tank, Site.Name) 
   Master_fragment$Plug_ID <- as.character(Master_fragment$Plug_ID)
 
 AFDW_raw_metadata <- join_all(list(AFDW_raw, Surface_area, Homogenate_volume, Master_fragment), by='Plug_ID', type='left')
@@ -84,7 +85,7 @@ AFDW_mismatched2
 # Corals we won't have AFDW for: 1174, 1327, 1488 
 ```
 
-Calculate mass per mL
+### Calculate mass per mL
 ```{r}
 #different volumes for sym (5ml - just spun down) and host (4ml)
 sym <- 5
@@ -94,7 +95,7 @@ AFDW <- AFDW_raw_metadata %>%
          burnt.pan.mass.g.ml = case_when(partner=="Host" ~ burnt.pan.mass.g/sym, partner=="Sym" ~ burnt.pan.mass.g/host))
 ```
 
-Calculating Tissue Biomass (AFDW)
+# Calculating Tissue Biomass (AFDW)
 ```{r}
 # Calculating Dry Weight and Ash-Free Dry Weight; standardizing by homogenate volume and surface area
 AFDW <- AFDW %>%
@@ -102,12 +103,19 @@ AFDW <- AFDW %>%
          dry.bioimass.g = dry.pan.mass.g.ml * vol_mL,
          burnt.bioimass.g = burnt.pan.mass.g.ml * vol_mL,
          DW.mg.cm2 = ((dry.bioimass.g)*1000) / surface.area.cm2,
-         AFDW.mg.cm2 = ((dry.bioimass.g-burnt.bioimass.g)*1000) / surface.area.cm2); AFDW
+         AFDW.mg.cm2 = ((dry.bioimass.g-burnt.bioimass.g)*1000) / surface.area.cm2)
 
-# Transforming the dataframe to be easily analyzed and visualized by type of measurement
-AFDW_long <- AFDW %>% select(Plug_ID, partner, Species, Treatment, Temperature, CO2, Timepoint, DW.mg.cm2, AFDW.mg.cm2) %>%
-  gather("Measurement", "Value", 8:9) %>%
-  filter(!is.na(Value)) %>% filter(!is.na(Species)) # filters out any data points that don't have a match in the master spreadsheet
+# Calculating AFDW biomass ratio 
+AFDW.final <- AFDW %>% select(Plug_ID, partner, Species, Treatment, Tank, Site.Name, Temperature, CO2, Timepoint, AFDW.mg.cm2) %>%
+  spread(partner, AFDW.mg.cm2) %>% mutate(Ratio_S.H=Sym/Host)
+
+# Taking out 1116 because it was an outlier. 
+filter(AFDW.final, Ratio_S.H>3)
+
+# Calculating means 
+AFDW.host.means <- summarySE(AFDW.final, measurevar = c("Host"), groupvars = c("Treatment", "Timepoint", "Species"))
+AFDW.sym.means <- summarySE(AFDW.final, measurevar = c("Sym"), groupvars = c("Treatment", "Timepoint", "Species"))
+AFDW.ratio.means <- summarySE(AFDW.final, measurevar = c("Ratio_H.S"), groupvars = c("Treatment", "Timepoint", "Species"))
 ```
 
 Quality control.
@@ -117,63 +125,208 @@ ggplot(AFDW, aes(x=partner, y=AFDW.mg.cm2)) + geom_boxplot()
 dplyr::filter(AFDW, AFDW.mg.cm2 > 5) # unusually high values for AFDW; think about re-doing?
 dplyr::filter(AFDW, AFDW.mg.cm2 < 0) # output should be zero since negative values are not possible. 
 
-AFDW.duplicates <- AFDW_long %>% dplyr::group_by(Plug_ID) %>% 
+AFDW.duplicates <- AFDW.final %>% dplyr::group_by(Plug_ID) %>% 
   dplyr::summarise(n = n()) %>% filter(n > 4)
 AFDW.duplicates # Output should be zero 
 ```
 
+### Double checking sample sizes. 
 ```{r}
-# Calculating means per treatment, partner, and timepoint. 
-AFDW_means <- summarySE(AFDW_long, measurevar="Value", groupvars=c("partner", "Timepoint", "Treatment", "Temperature", "CO2", "Species", "Measurement")) %>%
-  subset(Measurement=="AFDW.mg.cm2") %>% filter(N>2)
-AFDW_means
-
-AFDW_means$Timepoint <- factor(AFDW_means$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
-
 # Looking at sample sizes 
-dplyr::filter(AFDW_means, N > 6) # this output should be zero b/c the biggest sample size is 6
+dplyr::filter(AFDW.host.means, N > 6) # this output should be zero b/c the biggest sample size is 6
 #seven <- AFDW_long %>% subset(Timepoint=="4 week") %>% subset(Treatment=="ATHC") %>% subset(partner=="Host") %>% subset(Measurement=="AFDW.mg.cm2") %>% subset(Species=="Mcapitata")
 #seven
 
-dplyr::filter(AFDW_long, Plug_ID=="2863")
-
-# write AFDW data to file
-AFDW %>%
-  select(Plug_ID, partner, DW.mg.cm2, AFDW.mg.cm2) %>%
-  write_csv(path = "Output/Tissue_Biomass.csv")
+dplyr::filter(AFDW.final, Plug_ID=="2863")
 ```
 
-Write means and sample sizes for AFDW to file
+### Export datafile.
 ```{r}
-improvement_formatter <- formatter("span", style = x ~ style(font.weight = "bold", 
-              color = ifelse(x > 5, "black", ifelse(x < 6, "red", "black"))))
+# write AFDW data to file
+AFDW.final %>%
+  select(Plug_ID, Host, Sym, Ratio_S.H) %>%
+  write_csv(path = "Output/Tissue_Biomass.csv")
 
-AFDW_ss <- arrange(AFDW_means, partner, N, Timepoint) %>% 
-  write_csv(path = "Output/Tissue_Biomass_means_samplesizes.csv")
-AFDW_ss
-
-AFDW.samples.sizes <- formattable(AFDW_ss, align =c("l","c","c","c","c", "c", "c", "c", "r"), 
-            list(`Indicator Name` = formatter("span", style = ~ style(color = "grey",font.weight = "bold")), `N` = improvement_formatter)) 
-AFDW.samples.sizes
-
-# I was having trouble with the below command and exporting correcty; function will run but not sure where the png is saving
-# export command for formattable
-export_formattable <- function(f, file, width = "100%", height = NULL, 
-                               background = "white", delay = 0.2)
-    {
-      w <- as.htmlwidget(f, width = width, height = height)
-      path <- html_print(w, background = background, viewer = NULL)
-      url <- paste0("file:///", gsub("\\\\", "/", normalizePath(path)))
-      webshot(url,
-              file = file,
-              selector = ".formattable_widget",
-              delay = delay)
-}
-
-export_formattable(AFDW.samples.sizes, file = "Output/Tissue_Biomass_means_samplesizes.png")
+P.AFDW.final <- AFDW.final %>% subset(Species == "Pocillopora acuta")
+M.AFDW.final <- AFDW.final %>% subset(Species == "Montipora capitata")
 ```
 
-Graphing data.
+# Statistics 
+
+## Raw data distribution view.
+```{r}
+hist(pacuta_full_data$Host) # normal
+hist(pacuta_full_data$Sym) # right/positively skewed 
+hist(pacuta_full_data$Ratio_S.H) # extremely right/positively skewed
+
+hist(mcap_full_data$Host) # right/positively skewed
+hist(mcap_full_data$Sym) # right/positively skewed
+hist(mcap_full_data$Ratio_S.H) # normal 
+```
+
+## Model selection P.acuta
+
+#### Host AFDW = Model with just tank
+
+```{r}
+#### P acuta -- this needs to be done with Pacuta_stress_data b/c recovery timepoints are small or not existent.
+## Host 
+Pacuta_Host_LMER <- lmer(Host ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=P.AFDW.final) 
+Pacuta_Host_LMER.reef <- lmer(Host ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=P.AFDW.final)
+model.sel(Pacuta_Host_LMER, Pacuta_Host_LMER.reef) # model selection function 
+## Model with tank AIC = 420.7; with tank and reef AIC = 421.2 
+## Just tank chosen
+
+## summary of the model chosen from above
+summary(Pacuta_Host_LMER)
+qqPlot(residuals(Pacuta_Host_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_Host_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(P.AFDW.final$Host ~ P.AFDW.final$Timepoint*P.AFDW.final$Temperature*P.AFDW.final$CO2)
+```
+
+#### Sym AFDW = Model with tank and reef 
+
+```{r}
+Pacuta_Sym_LMER <- lmer(Sym ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=P.AFDW.final) 
+Pacuta_Sym_LMER.reef <- lmer(Sym ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=P.AFDW.final)
+model.sel(Pacuta_Sym_LMER, Pacuta_Sym_LMER.reef) # model selection function 
+## Tank and reef model AIC = 271.9; just tank AIC = 277.2. Tank and reef model chosen 
+
+## summary of the model chosen from above
+## plot(Mcap_Chl_LMER) in console to view diagnostic plots
+summary(Pacuta_Sym_LMER)
+qqPlot(residuals(Pacuta_Sym_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_Sym_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(P.AFDW.final$Sym ~ P.AFDW.final$Timepoint*P.AFDW.final$Temperature*P.AFDW.final$CO2)
+```
+
+#### Ratio AFDW = Model with tank 
+
+```{r}
+Pacuta_SHRatio_LMER <- lmer(log(Ratio_S.H) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=P.AFDW.final) #GLMM
+Pacuta_SHRatio_LMER.reef <- lmer(log(Ratio_S.H) ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=P.AFDW.final)
+model.sel(Pacuta_SHRatio_LMER, Pacuta_SHRatio_LMER.reef) # model selection function 
+## Ratio model with tank AIC = 351.7; model with tank and reef AIC = 354.5 
+
+isSingular(Pacuta_SHRatio_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
+
+## summary of the model chosen from above
+## plot(Mcap_Chl_LMER) in console to view diagnostic plots
+summary(Pacuta_SHRatio_LMER)
+qqPlot(residuals(Pacuta_SHRatio_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_SHRatio_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(P.AFDW.final$Ratio_S.H ~ P.AFDW.final$Timepoint*P.AFDW.final$Temperature*P.AFDW.final$CO2)
+```
+
+## Model selection M.capitata 
+
+#### Host AFDW = Model with tank 
+
+```{r}
+## Host 
+Mcap_Host_LMER <- lmer(Host ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=M.AFDW.final) 
+Mcap_Host_LMER.reef <- lmer(Host ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=M.AFDW.final)
+model.sel(Mcap_Host_LMER, Mcap_Host_LMER.reef) # model selection function 
+## Model with just tank AIC = 584.8; model with tank and reef AIC = 587.9 
+
+isSingular(Mcap_Host_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
+
+## summary of the model chosen from above
+## plot(Mcap_Chl_LMER) in console to view diagnostic plots
+summary(Mcap_Host_LMER)
+qqPlot(residuals(Mcap_Host_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_Host_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(M.AFDW.final$Host ~ M.AFDW.final$Timepoint*M.AFDW.final$Temperature*M.AFDW.final$CO2)
+```
+
+#### Sym AFDW = Model with tank 
+
+```{r}
+Mcap_Sym_LMER <- lmer(Sym ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=M.AFDW.final) 
+Mcap_Sym_LMER.reef <- lmer(Sym ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=M.AFDW.final)
+model.sel(Mcap_Sym_LMER, Mcap_Sym_LMER.reef) # model selection function 
+## Model with tank AIC = 540.2; model with tank and reef AIC = 543.2 
+
+## summary of the model chosen from above
+## plot(Mcap_Chl_LMER) in console to view diagnostic plots
+summary(Mcap_Sym_LMER)
+qqPlot(residuals(Mcap_Sym_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_Sym_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(M.AFDW.final$Sym ~ M.AFDW.final$Timepoint*M.AFDW.final$Temperature*M.AFDW.final$CO2)
+
+## Type III Wald chisquare tests
+Anova(Mcap_Sym_LMER, ddf="lme4", type='III') 
+```
+
+
+#### Ratio AFDW = Model with tank 
+
+```{r}
+Mcap_SHRatio_LMER <- lmer(Ratio_S.H ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=M.AFDW.final) 
+Mcap_SHRatio_LMER.reef <- lmer(Ratio_S.H ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=M.AFDW.final)
+model.sel(Mcap_SHRatio_LMER, Mcap_SHRatio_LMER.reef) # model selection function 
+## Model with tank AIC = 250.1; model with tank and reef AIC = 253.3 
+
+isSingular(Mcap_SHRatio_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
+
+## summary of the model chosen from above
+## plot(Mcap_Chl_LMER) in console to view diagnostic plots
+summary(Mcap_SHRatio_LMER)
+qqPlot(residuals(Mcap_SHRatio_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_SHRatio_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(M.AFDW.final$Ratio_S.H ~ M.AFDW.final$Timepoint*M.AFDW.final$Temperature*M.AFDW.final$CO2)
+
+## Type III Wald chisquare tests
+Anova(Mcap_SHRatio_LMER, ddf="lme4", type='III') 
+```
+
+
+## ANOVA & Tukey Post Hoc Test
+
+Type III Wald chi square tests chosen for now. 
+
+Type III Analysis of Variance Table with Satterthwaite's method
+anova(Pacuta_Host_LMER, ddf="Satterthwaite", type='III')
+
+### P. acuta 
+
+```{r}
+Host.AFDW.aov.pacuta <- Anova(Pacuta_Host_LMER, ddf="lme4", type='III') 
+Sym.AFDW.aov.pacuta <- Anova(Pacuta_Sym_LMER.reef, ddf="lme4", type='III') 
+Ratio.AFDW.aov.pacuta <- Anova(Pacuta_SHRatio_LMER, ddf="lme4", type='III') 
+```
+
+```{r}
+host.tukey <- TukeyHSD(x=Host.AFDW.aov.pacuta, conf.level = 0.95)
+
+HSD.test(Host.AFDW.aov.pacuta, 'P.AFDW.final$Temperature')
+
+```
+
+### M. capitata
+
+```{r}
+Host.AFDW.aov.mcap <- Anova(Mcap_Host_LMER, ddf="lme4", type='III') 
+Sym.AFDW.aov.mcap <- Anova(Mcap_Sym_LMER, ddf="lme4", type='III') 
+Ratio.AFDW.aov.mcap <- Anova(Mcap_SHRatio_LMER, ddf="lme4", type='III') 
+```
+
+```{r}
+
+
+```
+
+
+
+# Graphing data
+
+## Host vs Sym 
 ```{r}
 cols <- c("lightblue", "blue", "salmon", "red3")
 
@@ -186,8 +339,10 @@ HostSym_plot
 ggsave(file="Output/Tissue_Biomass_HostvSym.pdf", HostSym_plot, width = 11, height = 6, units = c("in"))
 ```
 
+## Host and Sym 
 ```{r}
-AFDW_plot <- ggplot(AFDW_means, aes(x=Timepoint, y = Value, group = Treatment, color = Treatment)) +
+
+AFDW_plot <- ggplot(AFDW.ratio.means, aes(x=Timepoint, y = Value, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
   facet_grid(partner ~ Species, scales = "free") +
   geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2) +
@@ -209,6 +364,34 @@ AFDW_plot <- ggplot(AFDW_means, aes(x=Timepoint, y = Value, group = Treatment, c
 
 ggsave(file="Output/Final_Figures/Tissue_Biomass.pdf", AFDW_plot, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Final_Figures/Tissue_Biomass.png", AFDW_plot, width = 11, height = 6, units = c("in"))
+```
+
+## Ratio 
+
+```{r}
+AFDW_Ratio_plot <- ggplot(Ratio.means, aes(x=Timepoint, y = Ratio_AFDW.mg.cm2, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(~ Species, scales = "free") +
+  geom_errorbar(aes(ymin=Ratio_AFDW.mg.cm2-se, ymax=Ratio_AFDW.mg.cm2+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + 
+  theme_classic() + 
+  #ylab("expression(AFDW ~(mg ~cm^-2))") +
+  ylab("Ash Free Dry Weight S:H Ratio") +
+  theme(legend.position = "left") +
+  geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) +
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
+  # Change axis line
+  axis.line = element_line(colour = "black")); AFDW_Ratio_plot
+
+ggsave(file="Output/Final_Figures/Tissue_Biomass-Ratio.pdf", AFDW_Ratio_plot, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Tissue_Biomass-Ratio.png", AFDW_Ratio_plot, width = 11, height = 6, units = c("in"))
+
 ```
 
 

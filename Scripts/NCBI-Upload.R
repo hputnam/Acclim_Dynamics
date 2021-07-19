@@ -7,13 +7,16 @@ library(dplyr)
 library(lubridate)
 
 all.data <- read_csv("Environmental_data/Master_Fragment.csv") %>%
+  filter(ANALYSIS == "Molecular" | ANALYSIS == "Physiology/Molecular") 
+seq.id <- read_csv("16S_seq/16s-sample-ids.csv") %>% dplyr::rename(host_subject_id = "16s_ID")
+all.data <- full_join(all.data, seq.id, by = "Plug_ID") %>%
   unite(NCBI_Sample_Name, Plug_ID, Treatment, sep = "_", remove = FALSE)
 
 all.data$Project <- "HoloInt"
 
 all.data <- all.data %>% unite(NCBI_Sample_Title, NCBI_Sample_Name, Project, sep = "_", remove = FALSE) 
 
-ncbi <- all.data %>% select(NCBI_Sample_Name, NCBI_Sample_Title, Species, Sample.Date, Site.Name) %>%
+ncbi <- all.data %>% select(NCBI_Sample_Name, host_subject_id, NCBI_Sample_Title, Species, Sample.Date, Site.Name) %>%
   mutate(Species = case_when(
     Species == "Mcapitata" ~ "Montipora capitata",
     Species == "Pacuta" ~ "Pocillopora acuta"
@@ -39,8 +42,22 @@ ncbi$env_medium <- "sea water"
 ncbi$geo_loc_name <- paste("Hawaii:", ncbi$geo_loc_name, sep=" ")
 ncbi$env_local_scale <- "fringing reef"
 ncbi$organism <- "metagenome"
+ncbi$host_life_stage <- "adult"
+ncbi$host_tissue_sampled <- "tissue biopsy"
+ncbi$isolation_source <- "seawater in experimental tanks" 
+ncbi$samp_collect_device <- "sterile whirlpak"
+ncbi$samp_mat_process <- "whole fragment snap frozen"
+ncbi$size_frac <- "0.5 - 1 cm in any single dimension tissue biopsy"
+ncbi$samp_size <- "3 - 4 cm in any single dimension tissue biopsy"
 
-write_csv(path = "Environmental_data/NCBI-Upload.csv", ncbi)
+## There should be 251 samples (rows). or 252??? 
+nrow(ncbi) 
+## Take out 1177 -- couldn't extract and no sub fragment for this timepoint 
+ncbi <- ncbi[!(ncbi$NCBI_Sample_Name=="1177_HTHC"),]
+## Take out 1236 -- subbed with phys/molecular frag 
+ncbi <- ncbi[!(ncbi$NCBI_Sample_Name=="1236_HTAC"),]
 
-## Decide on organism vs. host columns 
+write_csv(path = "16S_seq/NCBI-Upload-16s.csv", ncbi)
+
+
 

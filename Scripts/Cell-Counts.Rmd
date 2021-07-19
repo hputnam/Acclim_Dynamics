@@ -75,8 +75,8 @@ haemo_sym_counts$Timepoint <- factor(haemo_sym_counts$Timepoint, levels=c("Day 1
 
 ## Cellometer
 cellometer_sym_counts <- cellometer %>%
-  select(Plug_ID, matches("Cell_mL[0-3]")) %>%
-  gather("rep", "count", -Plug_ID) %>%
+  select(Date, Plug_ID, matches("Cell_mL[0-3]")) %>%
+  gather("rep", "count", -Plug_ID, -Date) %>%
   dplyr::group_by(Plug_ID) %>%
   mutate(count.mean = mean(count))
 
@@ -120,10 +120,10 @@ haemo_sym_counts %>% na.omit() %>%
   stat_summary(fun = mean, geom = "point", color = "black")           # Plot mean
 
 testing <- counts %>%
-  ggplot(aes(x=cellometer.cells.cm2, y=haemo.cells.cm2, group = Tech, color = Tech)) + 
+  ggplot(aes(x=cellometer.cells.cm2, y=haemo.cells.cm2, group = Date, color = Date)) + 
   geom_jitter(width = 0.1) + 
   facet_grid(~Species) +
-  labs(color='Haemocytometer Tech') +
+  labs(color='Cellometer Date') +
   theme_classic() + 
   ylim(0, 3000000) + 
   xlim(0, 3000000) +
