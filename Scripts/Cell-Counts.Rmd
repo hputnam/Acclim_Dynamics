@@ -17,6 +17,7 @@ library(plyr)
 library(dplyr)
 library(tidyverse)
 library(ggpubr)
+library(purrr)
 ```
 
 Import dataframes.
@@ -47,8 +48,8 @@ alt$Plug_ID <- as.character(alt$Plug_ID)
 
 # Join homogenate volumes and surface area with sample metadata
 metadata <- full_join(metadata, homog_vols) %>% full_join(sa) %>% filter(!is.na(vol_mL)) %>% 
-  filter(!is.na(ANALYSIS)) %>%
-  full_join(alt)
+  filter(!is.na(ANALYSIS))# %>%
+  #full_join(alt)
 ```
 
 Calculate mean counts.
@@ -93,12 +94,15 @@ cellometer_sym_counts$Timepoint <- factor(cellometer_sym_counts$Timepoint, level
 
 # Plot data
 ```{r}
-counts <- full_join(cellometer_sym_counts, haemo_sym_counts, join_by = "Plug_ID") %>% filter(!is.na(count.mean)) %>% select(-rep, -count, -count.mean, -cells.mL, -cells, -Squares_Counted) %>%
+counts <- full_join(cellometer_sym_counts, haemo_sym_counts, join_by = "Plug_ID") %>% filter(!is.na(count.mean)) %>% 
+  select(-rep, -count, -count.mean, -cells.mL, -cells, -Squares_Counted) %>%
   summarise_each(funs(first(na.omit(.)))) # combining rows that have the same data (plug ids with cellometer and haemcy but originally on two different rows)
 
 write_csv(path = "Physiology_variables/cell-counts.csv", counts)
+
+cellometer.testing <- counts %>% subset(!Date == "Spring-2021")
   
-counts_lm <- counts %>% subset(!Tech == "Sierra Gray") %>%
+counts_lm <- cellometer.testing %>%
   group_by(Species) %>%
   nest() %>% # nest to do this for eachgroup (Species) defined above 
   mutate(Mod = map(data, ~lm(cellometer.cells.cm2 ~ haemo.cells.cm2, data = .x))) %>% # Fit linear model
@@ -119,7 +123,7 @@ haemo_sym_counts %>% na.omit() %>%
                geom = "errorbar", color = "black", width = 0.1) +
   stat_summary(fun = mean, geom = "point", color = "black")           # Plot mean
 
-testing <- counts %>%
+testing <- cellometer.testing %>%
   ggplot(aes(x=cellometer.cells.cm2, y=haemo.cells.cm2, group = Date, color = Date)) + 
   geom_jitter(width = 0.1) + 
   facet_grid(~Species) +
