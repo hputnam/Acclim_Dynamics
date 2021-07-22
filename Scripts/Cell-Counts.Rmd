@@ -112,7 +112,6 @@ counts_test <- full_join(cellometer_sym_counts, haemo_sym_counts, join_by = "Plu
 write_csv(path = "Physiology_variables/cell-counts/calculated-cell-counts.csv", counts)
 
 cellometer.testing <- counts %>% subset(Period == "Pre-homogenizing" | Period == "Post-homogenizing")
-model <- cellometer.testing %>% subset(Period == "Post-homogenizing")
   
 counts_lm <- cellometer.testing %>%
   group_by(Species, Period) %>%
@@ -148,7 +147,17 @@ testing <- cellometer.testing %>%
              aes(x = Inf, y = Inf, 
                  label = paste("R2 = ", R2, sep = " ")),
              hjust = 1, vjust = 1); testing
+
+c1c2 <- cellometer_testing %>%
+  ggplot(aes(x=Cell_mL1, y=Cell_mL2, group = Period, color = Period)) + 
+  geom_jitter(width = 0.1) + 
+  labs(color='Period') + 
+  theme_classic() +
+  ylim(0, 1500000) + 
+  xlim(0, 1500000) + 
+  geom_abline(slope=1)
   
 ggsave(file="Output/Cellometer-testing.png", testing, width = 11, height = 6, units = c("in"))
+ggsave(file="Physiology_variables/cell-counts/Cellometer-c1c2.png", c1c2, width = 11, height = 6, units = c("in"))
 ```
 
