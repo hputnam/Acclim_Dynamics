@@ -30,6 +30,6 @@ sample.manifest <- read.csv("16S_seq/HoloInt_sample-manifest.csv") %>% select(sa
 sample.manifest <- full_join(raw.files, sample.manifest, by = "sample.id")
 sample.manifest <- sample.manifest[, c(2, 1, 3)]
 
-
+sample.manifest %>% write_csv(path = "16S_seq/ES-run/HoloInt_sample-manifest-ES.csv")
 ```
 
