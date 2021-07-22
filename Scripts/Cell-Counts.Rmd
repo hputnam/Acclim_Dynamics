@@ -13,6 +13,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Load packages.
 ```{r}
+rm(list=ls())
+
 library(plyr)
 library(dplyr)
 library(tidyverse)
@@ -43,17 +45,15 @@ metadata <- full_join(metadata, homog_vols) %>% full_join(sa) %>% filter(!is.na(
   filter(!is.na(ANALYSIS))
 ```
 
-
-
 # Testing the cellometer
 
 Import dataframes.
 ```{r}
 # Haemocytometer count data
-haemo_testing <- read_csv("Physiology_variables/cell-counts/cell-counts-testing-haemo.csv") %>% filter(!is.na(Plug_ID))
-  haemo_testing$Plug_ID <- as.character(haemo_testing$Plug_ID)
-cellometer_testing <- read_csv("Physiology_variables/cell-counts/cell-counts-testing-cellometer.csv")
-  cellometer_testing$Plug_ID <- as.character(cellometer_testing$Plug_ID)
+haemo.raw <- read_csv("Physiology_variables/cell-counts/cell-counts-testing-haemo.csv") %>% filter(!is.na(Plug_ID))
+  haemo.raw$Plug_ID <- as.character(haemo.raw$Plug_ID)
+cellometer.raw <- read_csv("Physiology_variables/cell-counts/cell-counts-testing-cellometer.csv")
+  cellometer.raw$Plug_ID <- as.character(cellometer.raw$Plug_ID)
 
 # Adding in Porites test data
 past <- read_csv("Physiology_variables/cell-counts/Porites-test.csv") %>% select(Vial, Species, homo.vol, Surface.Area) %>%
@@ -66,60 +66,71 @@ Calculate mean counts.
 ```{r}
 ## Haemocytometer 
 # Calculate mean counts for each sample
-haemo_sym_counts <- haemo_testing %>%
+haemo <- haemo.raw %>%
   select(Plug_ID, Squares_Counted, matches("Count[0-9]"), Tech) %>%
   gather("rep", "count", -Plug_ID, -Squares_Counted, -Tech) %>%
   dplyr::group_by(Plug_ID, Squares_Counted) %>%
   mutate(count.mean = mean(count))
 
 # Join mean counts with sample metadata
-haemo_sym_counts <- full_join(haemo_sym_counts, metadata) 
+haemo <- full_join(haemo, metadata) 
 
 # Normalize counts by homogenat volume and surface area
-haemo_sym_counts <- haemo_sym_counts %>%
+haemo <- haemo %>%
   mutate(cells.mL = count.mean * 10000 / Squares_Counted,
          cells = cells.mL * vol_mL,
          haemo.cells.cm2 = cells / surface.area.cm2)
 
-haemo_sym_counts <- haemo_sym_counts %>% filter(!is.na(haemo.cells.cm2))
-haemo_sym_counts$Timepoint <- factor(haemo_sym_counts$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
+haemo <- haemo %>% filter(!is.na(haemo.cells.cm2))
+haemo$Timepoint <- factor(haemo$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
 
 ## Cellometer
-cellometer_sym_counts <- cellometer_testing %>%
+cellometer <- cellometer.raw %>%
   select(Date, Period, Plug_ID, matches("Cell_mL[0-3]")) %>%
-  gather("rep", "count", -Period, -Plug_ID, -Date) %>%
+  gather("rep", "count", -Cell_mL1, -Cell_mL2, -Period, -Plug_ID, -Date) %>%
   dplyr::group_by(Plug_ID) %>%
   mutate(count.mean = mean(count))
 
-cellometer_sym_counts <-full_join(cellometer_sym_counts, metadata)
+cellometer <-full_join(cellometer, metadata)
 
-cellometer_sym_counts <- cellometer_sym_counts %>%
+cellometer <- cellometer %>%
   mutate(cells.mL = count.mean,
          cells = cells.mL * vol_mL,
          cellometer.cells.cm2 = cells / surface.area.cm2)
 
-cellometer_sym_counts <- cellometer_sym_counts %>% filter(!is.na(cellometer.cells.cm2))
-cellometer_sym_counts$Timepoint <- factor(cellometer_sym_counts$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
+cellometer <- cellometer %>% filter(!is.na(cellometer.cells.cm2))
+cellometer$Timepoint <- factor(cellometer$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
 ```
 
-# Plot data
+Creating large dataframe.
 ```{r}
-counts_test <- full_join(cellometer_sym_counts, haemo_sym_counts, join_by = "Plug_ID") %>% 
+counts <- full_join(cellometer, haemo, join_by = "Plug_ID") %>% 
   filter(!is.na(count.mean)) %>% 
   select(-rep, -count, -count.mean, -cells.mL, -cells, -Squares_Counted) %>%
   summarise_each(funs(first(na.omit(.)))) # combining rows that have the same data (plug ids with cellometer and haemcy but originally on two different rows)
 
 write_csv(path = "Physiology_variables/cell-counts/calculated-cell-counts.csv", counts)
+```
 
-cellometer.testing <- counts %>% subset(Period == "Pre-homogenizing" | Period == "Post-homogenizing")
-  
-counts_lm <- cellometer.testing %>%
+Creating model.
+```{r}
+lm <- counts %>% subset(Period == "Pre-homogenizing" | Period == "Post-homogenizing") %>%
   group_by(Species, Period) %>%
-  nest() %>% # nest to do this for each group (Species) defined above 
+  nest() %>% # nest to do this for each group (Species, Period) defined above 
   mutate(Mod = map(data, ~lm(cellometer.cells.cm2 ~ haemo.cells.cm2, data = .x))) %>% # Fit linear model
   mutate(R2 = map_dbl(Mod, ~round(summary(.x)$r.squared, 3))) %>%   # Get the R2
   unnest(cols = c(data)) # unnest to plot below 
 
+c1c2.lm <- counts %>% subset(Period == "Pre-homogenizing" | Period == "Post-homogenizing") %>%
+  group_by(Species, Period) %>%
+  nest() %>% # nest to do this for each group (Species, Period) defined above 
+  mutate(Mod = map(data, ~lm(Cell_mL1 ~ Cell_mL2, data = .x))) %>% # Fit linear model
+  mutate(R2 = map_dbl(Mod, ~round(summary(.x)$r.squared, 3))) %>%   # Get the R2
+  unnest(cols = c(data)) # unnest to plot below
+```
+
+Plotting
+```{r}
 cols <- c("lightblue", "blue", "pink", "red")
 
 haemo_sym_counts %>% na.omit() %>%
@@ -134,7 +145,7 @@ haemo_sym_counts %>% na.omit() %>%
                geom = "errorbar", color = "black", width = 0.1) +
   stat_summary(fun = mean, geom = "point", color = "black")           # Plot mean
 
-testing <- cellometer.testing %>%
+testing <- period %>%
   ggplot(aes(x=cellometer.cells.cm2, y=haemo.cells.cm2, group = Period, color = Period)) + 
   geom_jitter(width = 0.1) + 
   facet_grid(Species ~ Period) +
@@ -148,14 +159,19 @@ testing <- cellometer.testing %>%
                  label = paste("R2 = ", R2, sep = " ")),
              hjust = 1, vjust = 1); testing
 
-c1c2 <- cellometer_testing %>%
+c1c2 <- period %>%
   ggplot(aes(x=Cell_mL1, y=Cell_mL2, group = Period, color = Period)) + 
   geom_jitter(width = 0.1) + 
+  facet_grid(Species ~ Period) +
   labs(color='Period') + 
   theme_classic() +
   ylim(0, 1500000) + 
   xlim(0, 1500000) + 
-  geom_abline(slope=1)
+  geom_abline(slope=1) + 
+  geom_label(data = c1c2.data, 
+             aes(x = Inf, y = Inf, 
+                 label = paste("R2 = ", R2, sep = " ")),
+             hjust = 1, vjust = 1); c1c2
   
 ggsave(file="Output/Cellometer-testing.png", testing, width = 11, height = 6, units = c("in"))
 ggsave(file="Physiology_variables/cell-counts/Cellometer-c1c2.png", c1c2, width = 11, height = 6, units = c("in"))
