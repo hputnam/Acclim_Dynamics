@@ -114,8 +114,8 @@ write_csv(path = "Physiology_variables/cell-counts/calculated-cell-counts.csv", 
 cellometer.testing <- counts %>% subset(Period == "Pre-homogenizing" | Period == "Post-homogenizing")
 model <- cellometer.testing %>% subset(Period == "Post-homogenizing")
   
-counts_lm <- model %>%
-  group_by(Species) %>%
+counts_lm <- cellometer.testing %>%
+  group_by(Species, Period) %>%
   nest() %>% # nest to do this for each group (Species) defined above 
   mutate(Mod = map(data, ~lm(cellometer.cells.cm2 ~ haemo.cells.cm2, data = .x))) %>% # Fit linear model
   mutate(R2 = map_dbl(Mod, ~round(summary(.x)$r.squared, 3))) %>%   # Get the R2
@@ -138,7 +138,7 @@ haemo_sym_counts %>% na.omit() %>%
 testing <- cellometer.testing %>%
   ggplot(aes(x=cellometer.cells.cm2, y=haemo.cells.cm2, group = Period, color = Period)) + 
   geom_jitter(width = 0.1) + 
-  facet_grid(~Species) +
+  facet_grid(Species ~ Period) +
   labs(color='Period') +
   theme_classic() + 
   ylim(0, 3000000) + 
