@@ -85,9 +85,9 @@ haemo <- haemo %>% filter(!is.na(haemo.cells.cm2))
 haemo$Timepoint <- factor(haemo$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
 
 ## Cellometer
-cellometer <- cellometer.raw %>%
+cellometer <- cellometer.raw %>% 
   select(Date, Period, Plug_ID, matches("Cell_mL[0-3]")) %>%
-  gather("rep", "count", -Cell_mL1, -Cell_mL2, -Period, -Plug_ID, -Date) %>%
+  gather("rep", "count", -Period, -Plug_ID, -Date) %>% filter(!is.na(count)) %>%
   dplyr::group_by(Plug_ID) %>%
   mutate(count.mean = mean(count))
 
@@ -121,8 +121,8 @@ lm <- counts %>% subset(Period == "Pre-homogenizing" | Period == "Post-homogeniz
   mutate(R2 = map_dbl(Mod, ~round(summary(.x)$r.squared, 3))) %>%   # Get the R2
   unnest(cols = c(data)) # unnest to plot below 
 
-c1c2.lm <- counts %>% subset(Period == "Pre-homogenizing" | Period == "Post-homogenizing") %>%
-  group_by(Species, Period) %>%
+c1c2.lm <- cellometer.raw %>% subset(Period == "Pre-homogenizing" | Period == "Post-homogenizing") %>%
+  group_by(Period) %>%
   nest() %>% # nest to do this for each group (Species, Period) defined above 
   mutate(Mod = map(data, ~lm(Cell_mL1 ~ Cell_mL2, data = .x))) %>% # Fit linear model
   mutate(R2 = map_dbl(Mod, ~round(summary(.x)$r.squared, 3))) %>%   # Get the R2
@@ -133,7 +133,7 @@ Plotting
 ```{r}
 cols <- c("lightblue", "blue", "pink", "red")
 
-haemo_sym_counts %>% na.omit() %>%
+haemo %>% na.omit() %>%
   ggplot(aes(x = Timepoint, y = haemo.cells.cm2, group = Treatment, color = Treatment)) +
   scale_color_manual(values = cols) +
   theme_classic() + 
@@ -145,30 +145,30 @@ haemo_sym_counts %>% na.omit() %>%
                geom = "errorbar", color = "black", width = 0.1) +
   stat_summary(fun = mean, geom = "point", color = "black")           # Plot mean
 
-testing <- period %>%
+testing <- counts %>% subset(Period == "Pre-homogenizing" | Period == "Post-homogenizing") %>%
   ggplot(aes(x=cellometer.cells.cm2, y=haemo.cells.cm2, group = Period, color = Period)) + 
   geom_jitter(width = 0.1) + 
   facet_grid(Species ~ Period) +
   labs(color='Period') +
   theme_classic() + 
-  ylim(0, 3000000) + 
-  xlim(0, 3000000) +
+  ylim(0, 3500000) + 
+  xlim(0, 3500000) +
   geom_abline(slope=1) +
-  geom_label(data = counts_lm, 
+  geom_label(data = lm, 
              aes(x = Inf, y = Inf, 
                  label = paste("R2 = ", R2, sep = " ")),
              hjust = 1, vjust = 1); testing
 
-c1c2 <- period %>%
+c1c2 <- cellometer.raw %>% subset(Period == "Pre-homogenizing" | Period == "Post-homogenizing") %>%
   ggplot(aes(x=Cell_mL1, y=Cell_mL2, group = Period, color = Period)) + 
   geom_jitter(width = 0.1) + 
-  facet_grid(Species ~ Period) +
+  facet_grid(~Period) +
   labs(color='Period') + 
   theme_classic() +
   ylim(0, 1500000) + 
   xlim(0, 1500000) + 
   geom_abline(slope=1) + 
-  geom_label(data = c1c2.data, 
+  geom_label(data = c1c2.lm, 
              aes(x = Inf, y = Inf, 
                  label = paste("R2 = ", R2, sep = " ")),
              hjust = 1, vjust = 1); c1c2
