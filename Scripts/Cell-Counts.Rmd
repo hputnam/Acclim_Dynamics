@@ -88,8 +88,9 @@ haemo$Timepoint <- factor(haemo$Timepoint, levels=c("Day 1","Day 2","1 week","2 
 cellometer <- cellometer.raw %>% 
   select(Date, Period, Plug_ID, matches("Cell_mL[0-3]")) %>%
   gather("rep", "count", -Period, -Plug_ID, -Date) %>% filter(!is.na(count)) %>%
-  dplyr::group_by(Plug_ID) %>%
-  mutate(count.mean = mean(count))
+  dplyr::group_by(Plug_ID, Period) %>%
+  mutate(count.mean = mean(count)) %>%
+  ungroup(Period)
 
 cellometer <-full_join(cellometer, metadata)
 
