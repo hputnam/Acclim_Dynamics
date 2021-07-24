@@ -17,6 +17,7 @@ rm(list=ls())
 
 library(plyr)
 library(dplyr)
+library(tidyr)
 library(tidyverse)
 library(ggpubr)
 library(purrr)
@@ -24,7 +25,7 @@ library(purrr)
 
 # Holobiont Integration sample processing 
 
-Loading data frames 
+Loading data frames. 
 
 ```{r}
 # Surface area data
@@ -47,7 +48,8 @@ metadata <- full_join(metadata, homog_vols) %>% full_join(sa) %>% filter(!is.na(
 
 # Testing the cellometer
 
-Import dataframes.
+Import data frames.
+
 ```{r}
 # Haemocytometer count data
 haemo.raw <- read_csv("Physiology_variables/cell-counts/cell-counts-testing-haemo.csv") %>% filter(!is.na(Plug_ID))
@@ -63,19 +65,20 @@ past$period <- "Post-homogenizing"
 ```
 
 Calculate mean counts.
+
 ```{r}
 ## Haemocytometer 
 # Calculate mean counts for each sample
 haemo <- haemo.raw %>%
-  select(Plug_ID, Squares_Counted, matches("Count[0-9]"), Tech) %>%
-  gather("rep", "count", -Plug_ID, -Squares_Counted, -Tech) %>%
+  select(Haemocytometer_Date, Plug_ID, Squares_Counted, matches("Count[0-9]"), Tech) %>%
+  gather("rep", "count", -Haemocytometer_Date, -Plug_ID, -Squares_Counted, -Tech) %>%
   dplyr::group_by(Plug_ID, Squares_Counted) %>%
   mutate(count.mean = mean(count))
 
 # Join mean counts with sample metadata
 haemo <- full_join(haemo, metadata) 
 
-# Normalize counts by homogenat volume and surface area
+# Normalize counts by homogenate volume and surface area
 haemo <- haemo %>%
   mutate(cells.mL = count.mean * 10000 / Squares_Counted,
          cells = cells.mL * vol_mL,
@@ -103,17 +106,48 @@ cellometer <- cellometer %>% filter(!is.na(cellometer.cells.cm2))
 cellometer$Timepoint <- factor(cellometer$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
 ```
 
+Count1 vs Count2
+```{r}
+cellometer.count.comparison <- cellometer %>% select(Plug_ID, Species, rep, count, Date, Period) %>% 
+  spread(rep, count)
+  
+c1c2.lm <- cellometer.count.comparison %>% subset(Period == "Pre-homogenizing" | Period == "Post-homogenizing") %>%
+  group_by(Period, Species) %>%
+  nest() %>% # nest to do this for each group (Species, Period) defined above 
+  mutate(Mod = map(data, ~lm(Cell_mL1 ~ Cell_mL2, data = .x))) %>% # Fit linear model
+  mutate(R2 = map_dbl(Mod, ~round(summary(.x)$r.squared, 3))) %>%   # Get the R2
+  unnest(cols = c(data)) # unnest to plot below
+
+c1c2 <- cellometer.count.comparison %>% subset(Period == "Pre-homogenizing" | Period == "Post-homogenizing") %>%
+  ggplot(aes(x=Cell_mL1, y=Cell_mL2, group = Period, color = Period)) + 
+  geom_jitter(width = 0.1) + 
+  facet_grid(Species ~ Period) +
+  labs(color='Period') + 
+  theme_classic() +
+  ylim(0, 1500000) + 
+  xlim(0, 1500000) + 
+  geom_abline(slope=1) + 
+  geom_label(data = c1c2.lm, 
+             aes(x = Inf, y = Inf, 
+                 label = paste("R2 = ", R2, sep = " ")),
+             hjust = 1, vjust = 1); c1c2
+
+ggsave(file="Physiology_variables/cell-counts/Cellometer-c1c2.png", c1c2, width = 11, height = 6, units = c("in"))
+```
+
+
 Creating large dataframe.
 ```{r}
 counts <- full_join(cellometer, haemo, join_by = "Plug_ID") %>% 
   filter(!is.na(count.mean)) %>% 
   select(-rep, -count, -count.mean, -cells.mL, -cells, -Squares_Counted) %>%
-  summarise_each(funs(first(na.omit(.)))) # combining rows that have the same data (plug ids with cellometer and haemcy but originally on two different rows)
+  summarise_each(funs(first(na.omit(.)))) 
+# combining rows that have the same data (plug ids with cellometer and haemcy but originally on two different rows)
 
 write_csv(path = "Physiology_variables/cell-counts/calculated-cell-counts.csv", counts)
 ```
 
-Creating model.
+Creating model for regression between cellometer and haemocytometer.
 ```{r}
 lm <- counts %>% subset(Period == "Pre-homogenizing" | Period == "Post-homogenizing") %>%
   group_by(Species, Period) %>%
@@ -121,13 +155,6 @@ lm <- counts %>% subset(Period == "Pre-homogenizing" | Period == "Post-homogeniz
   mutate(Mod = map(data, ~lm(cellometer.cells.cm2 ~ haemo.cells.cm2, data = .x))) %>% # Fit linear model
   mutate(R2 = map_dbl(Mod, ~round(summary(.x)$r.squared, 3))) %>%   # Get the R2
   unnest(cols = c(data)) # unnest to plot below 
-
-c1c2.lm <- cellometer.raw %>% subset(Period == "Pre-homogenizing" | Period == "Post-homogenizing") %>%
-  group_by(Period) %>%
-  nest() %>% # nest to do this for each group (Species, Period) defined above 
-  mutate(Mod = map(data, ~lm(Cell_mL1 ~ Cell_mL2, data = .x))) %>% # Fit linear model
-  mutate(R2 = map_dbl(Mod, ~round(summary(.x)$r.squared, 3))) %>%   # Get the R2
-  unnest(cols = c(data)) # unnest to plot below
 ```
 
 Plotting
@@ -159,22 +186,7 @@ testing <- counts %>% subset(Period == "Pre-homogenizing" | Period == "Post-homo
              aes(x = Inf, y = Inf, 
                  label = paste("R2 = ", R2, sep = " ")),
              hjust = 1, vjust = 1); testing
-
-c1c2 <- cellometer.raw %>% subset(Period == "Pre-homogenizing" | Period == "Post-homogenizing") %>%
-  ggplot(aes(x=Cell_mL1, y=Cell_mL2, group = Period, color = Period)) + 
-  geom_jitter(width = 0.1) + 
-  facet_grid(~Period) +
-  labs(color='Period') + 
-  theme_classic() +
-  ylim(0, 1500000) + 
-  xlim(0, 1500000) + 
-  geom_abline(slope=1) + 
-  geom_label(data = c1c2.lm, 
-             aes(x = Inf, y = Inf, 
-                 label = paste("R2 = ", R2, sep = " ")),
-             hjust = 1, vjust = 1); c1c2
   
 ggsave(file="Output/Cellometer-testing.png", testing, width = 11, height = 6, units = c("in"))
-ggsave(file="Physiology_variables/cell-counts/Cellometer-c1c2.png", c1c2, width = 11, height = 6, units = c("in"))
 ```
 
