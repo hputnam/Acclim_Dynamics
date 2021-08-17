@@ -57,7 +57,26 @@ ncbi <- ncbi[!(ncbi$NCBI_Sample_Name=="1177_HTHC"),]
 ## Take out 1236 -- subbed with phys/molecular frag 
 ncbi <- ncbi[!(ncbi$NCBI_Sample_Name=="1236_HTAC"),]
 
-write_csv(path = "16S_seq/NCBI-Upload-16s.csv", ncbi)
+ncbi$SRA_upload <- "Microbiome metagenome (16S sequencing) from "  
+ncbi <- ncbi %>% unite(title, SRA_upload, host, sep = "", remove = FALSE)
+
+## Inserting the raw read file info 
+## see code to create this list in the 16s analysis pipeline .md 
+raw.reads <- read.csv("16S_seq/filelist.csv", sep = ",", header=FALSE) %>%
+  dplyr::rename(seq.title = V2) %>% select(-V1)
+raw.reads$host_subject_id <- gsub("_.*","", raw.reads$seq.title)
+
+# filename1 = R1 = forward 
+# filename2 = R2 = reverse
+raw.reads <- raw.reads %>% 
+  mutate(direction = case_when(grepl("R1", seq.title) ~ "filename1",
+                               grepl("R2", seq.title) ~ "filename2")) %>%
+  spread(direction, seq.title)
+
+#combing the above dataframe with the ncbi one already made 
+ncbi <- full_join(ncbi, raw.reads, by = "host_subject_id")
+
+write_csv(file = "16S_seq/NCBI-Upload-16s.csv", ncbi)
 
 
 
