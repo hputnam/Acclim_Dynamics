@@ -47,6 +47,8 @@ library(gridExtra)
 library(survminer)
 library(graphics)
 library(grid)
+library(coxme)
+library(jstable)
 ```
 
 Loading dataframes. 
@@ -54,7 +56,13 @@ Loading dataframes.
 Data <- read.csv("Physiology_variables/coral_survivorship_QC.csv", header=T, sep=",", na.string="NA", stringsAsFactors = F) #read in data file
 Tank.Info <- read.csv("Environmental_data/Tank_to_Treatment.csv", header=T, sep=",", na.string="NA") #read in data file 
 Data.Trt <- merge(Data, Tank.Info, by="Tank")
+
+Sample.Info <- read.csv("Environmental_data/Master_Fragment.csv", header=T, sep=",", na.string="NA") %>%
+  select(Tank, Temperature, CO2)
+
+Data.Trt <- merge(Data.Trt, Sample.Info, by = "Tank")
 ```
+
 
 Replace sampled with alive. 
 ```{r}
@@ -72,6 +80,13 @@ Mc.km <- with(Mc.Data, Surv(lifespan, status))
 Mc.km_fit <- survfit(Surv(lifespan, status) ~ Treatment, data=Mc.Data)
 summary(Mc.km_fit)
 
+mc <- coxme(Surv(lifespan, status) ~ Temperature*CO2 + (1|PLUG.ID), data = Mc.Data)
+## just print, no summary
+mc
+
+#mc_ph <- coxph(Surv(lifespan, status) ~ Temperature*CO2 + frailty(PLUG.ID, 
+   # distribution = "gaussian", sparse = FALSE, method = "reml"), data = Mc.Data)
+
 cols <- c("lightblue", "blue", "salmon", "red3")
 MC.sur <- summary(Mc.km_fit, times = c(1:58))
 Mc.km_fit <- survfit(Surv(lifespan, status) ~ Treatment, data=Mc.Data)
@@ -83,6 +98,37 @@ Pa.km <- with(Pa.Data, Surv(lifespan, status))
 Pa.km_fit <- survfit(Surv(lifespan, status) ~ Treatment, data=Pa.Data) #*Origin
 Pa.sur <- summary(Pa.km_fit, times = c(1:58))
 autoplot(Pa.km_fit)
+
+pa <- coxme(Surv(lifespan, status) ~ Temperature*CO2 + (1|PLUG.ID), data = Pa.Data)
+pa
+
+jstable:::coxmeTable(pa)
+jstable:::coxme.display(pa, dec = 10)
+coxme:::print.coxme(pa)
+
+extract_coxme_table <- function (mod){
+    beta <- mod$coefficients$fixed
+    nvar <- length(beta)
+    nfrail <- nrow(mod$var) - nvar
+    se <- sqrt(diag(mod$var)[nfrail + 1:nvar])
+    z<- round(beta/se, 2)
+    p<- signif(1 - pchisq((beta/se)^2, 1), 2)
+    table=data.frame(cbind(beta,se,z,p))
+    return(table)
+}
+
+extract_coxme_table(pa)
+
+print(pa, digits=max(getOption("digits") - 10, 20),
+  signif.stars = getOption("show.signif.stars"), expand=FALSE)
+
+print(coef(summary(pa))[, "p"], digits = 16)
+
+summary(pa)$coefficients
+
+str(summary(pa))
+
+summary(pa)$coefficients[5]
 ```
 
 
