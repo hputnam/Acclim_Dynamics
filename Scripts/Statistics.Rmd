@@ -60,11 +60,6 @@ Protein <- read.csv("Output/soluble_protein.csv") %>% select(Plug_ID, prot_mg.cm
 
 Antioxidant <- read.csv("Output/antioxidant.csv") %>% select(Plug_ID, cre.umol.mgprot)
 
-Color.Score <- read.csv("Physiology_variables/Bleaching_Score_Output.csv") %>% select(PLUG.ID, Bleaching.Score, Timepoint) %>% dplyr::rename(Plug_ID = PLUG.ID) %>% 
-  dplyr::rename(Blch.Time = Timepoint)
-Color.Score$Blch.Time <- gsub("^.{0,4}", "", Color.Score$Blch.Time) # taking out the "Week" in every row
-Color.Score$Blch.Time <- paste(Color.Score$Blch.Time, "week") # adding "week" after each number in every row 
-
 Growth <- read.csv("Physiology_variables/Growth_Buoyant_Weight/Growth_Rates.csv") %>% select(PLUG.ID, T0.g.d.cm2, T1.g.d.cm2, T2.g.d.cm2, T3.g.d.cm2, T4.g.d.cm2, T5.g.d.cm2,
                                                                                              T6.g.d.cm2, T7.g.d.cm2, T8.g.d.cm2) %>% 
   gather("Growth.Time", "Growth.Rate", 2:10) %>% na.omit(Growth.Rate) %>% dplyr::rename(Plug_ID=PLUG.ID) %>%
@@ -109,8 +104,6 @@ timeseries.data <- data %>% select(-Pnet_umol.cm2.hr, -Rdark_umol.cm2.hr, -Pgros
 pacuta_full_data <- data %>% subset(Species == "Pacuta")
 mcap_full_data <- data %>% subset(Species == "Mcapitata")
 
-color.data <- full_join(Master, Color.Score, by = "Plug_ID") %>% na.omit() %>%
-  write_csv(., file = "Output/results_colorscore.csv")
 Growth.data <- full_join(Master, Growth, by = "Plug_ID") %>% na.omit() %>%
   write_csv(., file = "Output/results_growth.csv")
 ```
@@ -557,80 +550,6 @@ tp.model <- lmer(log(cre.umol.mgprot) ~ Temperature*CO2 + (1|Tank), na.action=na
 Anova(tp.model, ddf="lme4", type='III')
 ```
 
-### Bleaching Score 
-
-Raw distribution score.
-```{r}
-color.data$Plug_ID <- as.character(color.data$Plug_ID)
-color.data$Blch.Time <- as.factor(color.data$Blch.Time)
-mcap.color <- color.data %>% subset(Species == "Mcapitata")
-pacuta.color <- color.data %>% subset(Species == "Pacuta")
-
-hist(pacuta.color$Bleaching.Score) 
-hist(mcap.color$Bleaching.Score) 
-# both very left/negatively skewed 
-```
-
-
-Mixed effect modeling. Adding Plug ID as random factor because this was repeated measures. 
-
-Test these models once deciding on a fit with reef as random factor too. 
-```{r}
-## Mcap 
-mcap.color$Color.Transformed <- mcap.color$Bleaching.Score+100
-range(mcap.color$Color.Transformed)
-hist(mcap.color$Color.Transformed)
-
-Mcap_Color_LMER_tank_plug <- lmer((Bleaching.Score^(1/4)) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.color) #GLMM; nesting Plug ID in tank because the Plug IDs never moved tanks 
-Mcap_Color_LMER_tank_plug <- lmer(log(Bleaching.Score) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.color)
-
-## summary of the model chosen from above
-## plot(Mcap_TAC_LMER) in console to view diagnostic plots
-summary(Mcap_Color_LMER_tank_plug)
-qqPlot(residuals(Mcap_Color_LMER_tank_plug)) # qqplot and histogram 
-hist(residuals(Mcap_Color_LMER_tank_plug)) 
-## checking homogeneity of variance using levene test (can also use Bartlett's test function)
-leveneTest(mcap.color$Bleaching.Score ~ mcap.color$Timepoint*mcap.color$Temperature*mcap.color$CO2)
-
-## significance of model
-anova(Mcap_Color_LMER_tank_plug, ddf="lme4", type='III')
-Anova(Mcap_Color_LMER_tank_plug, ddf="lme4", type='III') # Type III Wald chisquare tests
-
-anova(Mcap_Color_LMER_tank_plug, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
-
-## Effects of temperature significant at 12 week only 
-tp <- mcap.color %>% subset(Blch.Time == "1 week")
-tp.model <- lmer(Bleaching.Score ~ Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=tp)
-Anova(tp.model, ddf="lme4", type='III')
-```
-
-```{r}
-## Pacuta 
-pacuta.color$Color.Transformed <- pacuta.color$Bleaching.Score+120
-range(pacuta.color$Color.Transformed)
-hist(pacuta.color$Color.Transformed)
-
-Pacuta_Color_LMER_tank_plug <- lmer(log(Color.Transformed) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=pacuta.color) #GLMM
-# GAM 
-# anova(GLMM, GAM) # report AIC values
- 
-
-alias(Pacuta_Color_GLM) # to see which groups are issues and being dropped as columns / coefficients 
-
-## summary of the model chosen from above
-## plot(Mcap_TAC_LMER) in console to view diagnostic plots
-summary(Pacuta_Color_LMER_tank_plug)
-qqPlot(residuals(Pacuta_Color_LMER_tank_plug)) # qqplot and histogram 
-hist(residuals(Pacuta_Color_LMER_tank_plug)) 
-## checking homogeneity of variance using levene test (can also use Bartlett's test function)
-leveneTest(pacuta.color$Color.Transformed ~ pacuta.color$Timepoint*pacuta.color$Temperature*pacuta.color$CO2)
-
-## significance of model
-anova(Pacuta_Color_LMER_tank_plug, ddf="lme4", type='III')
-Anova(Pacuta_Color_LMER_tank_plug, ddf="lme4", type='III') # Type III Wald chisquare tests
-
-anova(Pacuta_Color_LMER_tank_plug, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
-```
 
 ### Buoyant Weight 
 

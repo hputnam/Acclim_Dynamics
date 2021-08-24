@@ -14,29 +14,23 @@ Clears workspace.
 rm(list=ls())
 ```
 
-Loading in required libraries. 
+### Loading in required libraries. 
 ```{r}
-if ("vegan" %in% rownames(installed.packages()) == 'FALSE') install.packages('vegan') 
-if ("ggpubr" %in% rownames(installed.packages()) == 'FALSE') install.packages('ggpubr') 
-if ("gridExtra" %in% rownames(installed.packages()) == 'FALSE') install.packages('gridExtra') 
-if ("plyr" %in% rownames(installed.packages()) == 'FALSE') install.packages('plyr') 
-if ("emmeans" %in% rownames(installed.packages()) == 'FALSE') install.packages('emmeans') 
-if ("multcompView" %in% rownames(installed.packages()) == 'FALSE') install.packages('multcompView') 
-if ("rstatix" %in% rownames(installed.packages()) == 'FALSE') install.packages('rstatix') 
-
-#Read in required libraries
-##### Include Versions of libraries
 library("vegan")
 library("ggpubr")
 library("gridExtra")
 library("plyr") 
+library("dplyr")
 library("emmeans")
 library("multcompView")
 library("rstatix")
 library("Rmisc")
+library("lme4")
+library("car")
+library("MuMIn")
 ```
 
-Reading in quality controlled version of ImageJ data.
+### Reading in quality controlled version of ImageJ data.
 Protocol for ImageJ Bleaching Score Analysis found [here](https://emmastrand.github.io/EmmaStrand_Notebook/ImageJ-Analysis-Protocols/).  
 ```{r}
 Data <- read.csv("Physiology_variables/Bleaching_ImageJ_QC.csv", header=T, sep=",", na.string="NA") #read in data file
@@ -53,7 +47,7 @@ bad.id.tanks
 Data <-na.omit(Data) # removing all rows with NA values 
 ```
 
-Normalizing to color standards. 
+### Normalizing to color standards. 
 ```{r}
 Data$Red.Norm.Coral <- Data$Red.Coral/Data$Red.Standard
 Data$Green.Norm.Coral <- Data$Green.Coral/Data$Green.Standard
@@ -78,7 +72,7 @@ Blch$Group <- paste(Blch$Timepoint, Blch$Treatment, Blch$Species)
 Blch$SpGroup <- paste(Blch$Treatment, Blch$Species)
 ```
 
-Output: Bleaching Score dataframe and checking for outliers in the dataset. 
+### Output: Color Score dataframe and checking for outliers in the dataset. 
 ```{r}
 write.table(Blch, file = "Physiology_variables/Bleaching_Score_Output.csv", append = FALSE, quote = TRUE, sep = ",",
             eol = "\n", na = "NA", dec = ".", row.names = TRUE,
@@ -91,30 +85,7 @@ boxplot(Bleaching.Score ~ Group, data = x, lwd = 1, ylab = 'PC1Color', las=2, ce
 
 ```
 
-** Statistical Analysis and Plotting ** 
-```{r}
-# for use in plotting to avoid having to run PCA again
-Color.Score <- read.csv("Physiology_variables/Bleaching_Score_Output.csv", header=T, sep=",", na.string="NA") #read in data file
-
-mod1 <- aov(sqrt(Bleaching.Score+200) ~ Temperature*CO2*Timepoint*Species, data=Color.Score) #run an ANOVA 
-hist(residuals(mod1)) #look at normality of data
-boxplot(residuals(mod1)) #look at normality of data
-summary(mod1)
-
-#posthoc analyses
-marginal <- emmeans(mod1, ~ Temperature*CO2*Timepoint*Species)
-
-#letter display of posthoc results
-phlett <- multcomp::cld(marginal,
-          alpha=0.05,
-          Letters=letters,
-          adjust="tukey")
-
-phlett <- phlett[order(phlett$Timepoint, phlett$Temperature, phlett$CO2, phlett$Species),]
-phlett
-```
-
-Calculating means, sample size, and standard error for timepoint, species, and treatment groups. 
+### Calculating means, sample size, and standard error for timepoint, species, and treatment groups. 
 ```{r}
 All.Means <- summarySE(Color.Score, measurevar="Bleaching.Score", groupvars=c("Species", "Timepoint", "Treatment", "Temperature", "CO2")) %>% 
   filter(N>2) %>% na.omit()
@@ -133,13 +104,200 @@ All.Means$Timepoint <- factor(All.Means$Timepoint, levels = c("Week1", "Week2", 
 All.Means <- All.Means %>% subset(Timepoint!="Week5")
 ```
 
-Subsetting larger bleaching dataframe to species level.
+### Subsetting larger bleaching dataframe to species level.
 ```{r}
 Mcap.Blch <- subset(All.Means, Species=="Montipora")
 Pact.Blch <- subset(All.Means, Species=="Pocillopora")
 ```
 
-Plotting Mcap and Pacuta together.
+# Statistics 
+
+### Reading in all dataframes. This can be run separately from the above code. 
+```{r}
+Master <- read.csv("Environmental_data/Master_Fragment.csv") %>% select(Site.Name, Plug_ID, Species, ANALYSIS, Timepoint, Treatment, Tank, Temperature, CO2)
+
+Color.Score <- read.csv("Physiology_variables/Bleaching_Score_Output.csv") %>% select(PLUG.ID, Bleaching.Score, Timepoint) %>% dplyr::rename(Plug_ID = PLUG.ID) %>% 
+  dplyr::rename(Blch.Time = Timepoint)
+Color.Score$Blch.Time <- gsub("^.{0,4}", "", Color.Score$Blch.Time) # taking out the "Week" in every row
+Color.Score$Blch.Time <- paste(Color.Score$Blch.Time, "week") # adding "week" after each number in every row 
+
+color.data <- full_join(Master, Color.Score, by = "Plug_ID") %>% na.omit()
+```
+
+### Raw distribution score.
+```{r}
+color.data$Plug_ID <- as.character(color.data$Plug_ID)
+color.data$Blch.Time <- as.factor(color.data$Blch.Time)
+mcap.color <- color.data %>% subset(Species == "Mcapitata")
+pacuta.color <- color.data %>% subset(Species == "Pacuta")
+
+hist(pacuta.color$Bleaching.Score) 
+hist(mcap.color$Bleaching.Score) 
+# both very left/negatively skewed 
+```
+
+## Mixed effect modeling 
+
+### Checking raw data for both species 
+100 was added to each color score value to shift the distribution to be all positive values instead of negative.
+
+```{r}
+## Mcap 
+mcap.color$Color.Transformed <- mcap.color$Bleaching.Score+100
+range(mcap.color$Color.Transformed)
+hist(mcap.color$Color.Transformed)
+
+## Pacuta 
+pacuta.color$Color.Transformed <- pacuta.color$Bleaching.Score+120
+range(pacuta.color$Color.Transformed)
+hist(pacuta.color$Color.Transformed)
+```
+
+Data is heavily left skewed and calls for transformation.
+
+### Data transformation for M.capitata
+
+Originally, we had our random factors as `(1|Tank/Plug_ID)` because fragments were repeatedly measured and did not move tanks throughout the experiment. However, we got a `boundary (singular) fit: see ?isSingular` warning indicating that our model was over-fitted. **come back to this**. 
+- [Dealing with singular fits in models](https://stats.stackexchange.com/questions/378939/dealing-with-singular-fit-in-mixed-models). This thread suggested using a Bayesian framework if we wanted to keep the random factors.    
+- Alternatively, we could remove the most complex part of the random effects. However, our experimental design calls for this structure: `(1|Tank/Plug_ID)`. 
+
+The data transformation that worked the best was the `Color.Transformed` data column squared. 
+
+```{r}
+# Transforming the data 
+Mcap_Color_sqrt <- lmer((Color.Transformed^(1/2)) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.color) 
+Mcap_Color_qrt <- lmer((Color.Transformed^(1/4)) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.color) 
+Mcap_Color_log <- lmer(log(Color.Transformed) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.color)
+Mcap_Color_sq <- lmer((Color.Transformed^2) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.color)
+
+## summary, qqplot, and histogram of model
+summary(Mcap_Color_sqrt)
+
+qqPlot(residuals(Mcap_Color_sqrt))
+qqPlot(residuals(Mcap_Color_qrt))
+qqPlot(residuals(Mcap_Color_log)) 
+qqPlot(residuals(Mcap_Color_sq)) 
+
+hist(residuals(Mcap_Color_sqrt))
+hist(residuals(Mcap_Color_qrt))
+hist(residuals(Mcap_Color_log)) 
+hist(residuals(Mcap_Color_sq)) 
+
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap.color$Bleaching.Score ~ mcap.color$Timepoint*mcap.color$Temperature*mcap.color$CO2)
+```
+
+### Data transformation for P. acuta 
+
+The data transformation that worked the best was the `Color.Transformed` data column squared. 
+
+```{r}
+# Transforming the data 
+Pacuta_Color_sqrt <- lmer((Color.Transformed^(1/2)) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=pacuta.color) 
+Pacuta_Color_qrt <- lmer((Color.Transformed^(1/4)) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=pacuta.color) 
+Pacuta_Color_log <- lmer(log(Color.Transformed) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=pacuta.color)
+Pacuta_Color_sq <- lmer((Color.Transformed^2) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=pacuta.color)
+
+# to see which groups are issues and being dropped as columns / coefficients 
+alias(Pacuta_Color_sqrt) 
+
+## summary of the model chosen from above
+qqPlot(residuals(Pacuta_Color_sqrt))
+qqPlot(residuals(Pacuta_Color_qrt))
+qqPlot(residuals(Pacuta_Color_log)) 
+qqPlot(residuals(Pacuta_Color_sq)) 
+
+hist(residuals(Pacuta_Color_sqrt))
+hist(residuals(Pacuta_Color_qrt))
+hist(residuals(Pacuta_Color_log)) 
+hist(residuals(Pacuta_Color_sq)) 
+
+## Pacuta_Color_sq model has the most normal distribution of residuals and seems to be the best transformation  
+
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(pacuta.color$Color.Transformed ~ pacuta.color$Timepoint*pacuta.color$Temperature*pacuta.color$CO2)
+```
+
+
+### Model selection for M. capitata
+
+Comparing a model with just tank and plug ID as random factors to a model that include reef origin (Site.Name) as a random factor.
+
+AIC values: 
+Mcap_Color_sq = 33666.2  
+Mcap_Color_sq_reef = 33668.3 
+
+Therefore the `Mcap_Color_sq` model was chosen. Results of ANOVA below:  
+
+Analysis of Deviance Table (Type III Wald chisquare tests)
+
+Response: (Color.Transformed^2)
+                              Chisq Df Pr(>Chisq)    
+(Intercept)               2558.8746  1  < 2.2e-16 ***
+Blch.Time                    7.1054 15   0.954658    
+Temperature                  0.0001  1   0.993883    
+CO2                          0.0004  1   0.984995    
+Blch.Time:Temperature      239.9058 15  < 2.2e-16 ***
+Blch.Time:CO2                9.8222 15   0.830771    
+Temperature:CO2              0.0533  1   0.817434    
+Blch.Time:Temperature:CO2   33.6348 15   0.003831 ** 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+```{r}
+Mcap_Color_sq <- lmer((Color.Transformed^2) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.color)
+Mcap_Color_sq_reef <- lmer((Color.Transformed^2) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID) + (1|Site.Name), na.action=na.omit, data=mcap.color)
+
+model.sel(Mcap_Color_sq, Mcap_Color_sq_reef) # model selection test
+## move forward with Pacuta_Color_sq_reef model 
+
+## significance of model
+Anova(Mcap_Color_sq, ddf="lme4", type='III') # Type III Wald chisquare tests
+anova(Mcap_Color_sq, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+
+### Model selection for P. acuta 
+
+Comparing a model with just tank and plug ID as random factors to a model that include reef origin (Site.Name) as a random factor.
+
+AIC values:  
+Pacuta_Color_sq_reef = 24905.9  
+Pacuta_Color_sq = 24921.4. 
+
+Therefore the `Pacuta_Color_sq_reef` model was chosen because it had a lower AIC value. Results of ANOVA below:  
+
+Analysis of Deviance Table (Type III Wald chisquare tests)
+
+Response: (Color.Transformed^2)
+                             Chisq Df Pr(>Chisq)    
+(Intercept)               410.4792  1  < 2.2e-16 ***
+Blch.Time                  71.0470 15  2.906e-09 ***
+Temperature                 0.0000  1     0.9997    
+CO2                         0.1235  1     0.7252    
+Blch.Time:Temperature     207.0771 11  < 2.2e-16 ***
+Blch.Time:CO2             125.4813 15  < 2.2e-16 ***
+Temperature:CO2             0.0474  1     0.8277    
+Blch.Time:Temperature:CO2  50.0085 11  6.237e-07 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+```{r}
+Pacuta_Color_sq <- lmer((Color.Transformed^2) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=pacuta.color)
+Pacuta_Color_sq_reef <- lmer((Color.Transformed^2) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID) + (1|Site.Name), na.action=na.omit, data=pacuta.color)
+
+model.sel(Pacuta_Color_sq, Pacuta_Color_sq_reef) # model selection test
+## move forward with Pacuta_Color_sq_reef model 
+
+## significance of model
+Anova(Pacuta_Color_sq_reef, ddf="lme4", type='III') # Type III Wald chisquare tests
+anova(Pacuta_Color_sq_reef, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+
+# Plotting 
+
+Mcap and Pacuta together.
 ```{r}
 species.names <- list(
   'Montipora'="Montipora capitata",
