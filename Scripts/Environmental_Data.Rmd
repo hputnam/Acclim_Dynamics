@@ -3,14 +3,6 @@ title: "Environmental_Data"
 author: "EL Strand"
 date: "5/27/2020"
 output:
-<<<<<<< HEAD:Environmental_data/Environmental_Data.Rmd
-  pdf_document: default
-  html_document: default
-=======
-  html_document: default
-  pdf_document: default
->>>>>>> f9e1a2d2ed0e0c3678a201414915d46b95a1197b:Scripts/Environmental_Data.Rmd
----
 
 Select Knit > Project Directory
 ```{r setup, include=FALSE}

@@ -1,6 +1,6 @@
 ---
-title: "Untitled"
-author: "16s.Rmd"
+title: "16S.Rmd"
+author: "Emma Strand"
 date: "6/10/2021"
 output: html_document
 ---
@@ -14,22 +14,80 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(plyr)
 library(dplyr)
+library(tidyr)
+library(readr)
 ```
+
+# 16S Lab protocol from the putnam lab 
+
+[Notebook post](https://github.com/emmastrand/EmmaStrand_Notebook/blob/master/_posts/2021-02-01-16s-Sequencing-HoloInt.md)
 
 # Creating metadata files 
 
-Sample manifest creation based on Hollie's that she made prior.
+Sample manifest creation based on Hollie's that she had made prior. This will be used in the QIIME2 pathway. 
 ```{r}
-raw.files <- read.csv("16S_seq/filelist.csv", header=FALSE) %>% select(V2) %>% dplyr::rename("absolute-filepath" = V2)
-raw.files$`sample.id` <- raw.files$`absolute-filepath`
+sample.manifest <- read.csv("16S_seq/HoloInt_sample-manifest.csv") %>% rename("sample-id" = sample.id) %>%
+  rename(`absolute-filepath` = absolute.filepath) # renaming two columns to the verbiage QIIME2 wants 
+sample.manifest$`absolute-filepath` <- substr(sample.manifest$`absolute-filepath`, 55, 86) # only keep the sequence file name
+sample.manifest$path <- "/data/putnamlab/estrand/HoloInt_16s/raw-data/" # adding this verbiage to each row in a new column
+sample.manifest <- sample.manifest %>% unite(`absolute-filepath`, path, `absolute-filepath`, sep = "") # merging the two columns so it is the absolute filepath 
 
-raw.files$`sample.id` <- substr(raw.files$`sample.id`, 0, 6)
+sample.manifest %>% write_csv(file = "16S_seq/ES-run/HoloInt_sample-manifest-ES.csv") # outputing to our github repo
+# use the command `scp /Users/emmastrand/MyProjects/Acclim_Dynamics/16S_seq/ES-run/HoloInt_sample-manifest-ES.csv emma_strand@bluewaves.uri.edu:/data/putnamlab/estrand/HoloInt_16s/metadata` outside of andromeda to copy this file into the server 
 
-sample.manifest <- read.csv("16S_seq/HoloInt_sample-manifest.csv") %>% select(sample.id, direction)
-
-sample.manifest <- full_join(raw.files, sample.manifest, by = "sample.id")
-sample.manifest <- sample.manifest[, c(2, 1, 3)]
-
-sample.manifest %>% write_csv(path = "16S_seq/ES-run/HoloInt_sample-manifest-ES.csv")
+head(sample.manifest) # double check this is the correct format of final file 
 ```
+
+# See 16s bioinformatic protocol for QIIME2 steps 
+
+[Notebook post](https://github.com/emmastrand/EmmaStrand_Notebook/blob/master/_posts/2021-06-21-16s-Analysis-Pipeline.md). 
+
+The output will be feature tables that will be used in the following section. 
+
+# Phyloseq 
+
+R package documentation [here](https://joey711.github.io/phyloseq/). 
+
+### Load packages 
+
+```{r}
+#BiocManager::install("phyloseq")
+library('phyloseq')
+library('ggplot2')
+library('Rmisc')
+library('cowplot')
+```
+
+### Import dataframe with sample information 
+
+```{r}
+#import dataframe holding sample information
+meta <- read.csv("Environmental_data/Master_Fragment.csv", header=T, sep=",", na.string="NA") %>% 
+  filter(ANALYSIS == "Physiology/Molecular" | ANALYSIS == "Molecular") %>%
+  select(Plug_ID, Species, Timepoint, Temperature, Treatment, CO2) 
+sample.ids <- read.csv("16S_seq/16s-sample-ids.csv")
+
+sample.ids <- full_join(meta, sample.ids, by = "Plug_ID") %>% na.omit()
+rownames(sample.ids) <- sample.ids$`X16s_ID`
+
+head(sample.ids)
+```
+
+### Import QIIME2 output 
+
+```{r}
+# Construct phyloseq object (straightforward from dada2/qiime2 outputs)
+ps <- phyloseq(otu_table(XXXXX, taxa_are_rows=FALSE), 
+               sample_data(sample.ids), 
+               tax_table(taxa.plus))
+
+ps
+```
+
+
+
+
+
+
+
 
