@@ -63,7 +63,7 @@ rownames(Pact) <- Pact$sample_name
 Pact <- as.matrix(Pact[,2:13])
 
 Rel.Sym.Data <- Pact/rowSums(Pact) # calculate the Relative Abundance
-N <- rowSums(Rel.Sym.Data) # calculate row sums of the relative abundnaces, should sum to 1
+N <- rowSums(Rel.Sym.Data) # calculate row sums of the relative abundances, should sum to 1
 N #Display Row Sums, should all be 1
 
 # Transform Relative Abundance Matrix using sqrt
@@ -117,7 +117,7 @@ autoplot(sym.pca.res, data = Mcap_meta, colour = 'Treatment', shape='Timepoint')
 
 ```{r}
 #All Data
-Rel.data <- data[,2:13]/rowSums(data[,2:13]) ## exclude the first column bc it is not an integer 
+Rel.data <- data[,2:13]/rowSums(data[,2:13]) ## exclude the first column because it is not an integer 
 Rel.data$sample_name <- rownames(Rel.data)
 all.data <- merge(Rel.data, meta, by="sample_name")
 all.data <- all.data[,-1]
