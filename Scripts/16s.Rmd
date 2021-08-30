@@ -74,9 +74,11 @@ sample.ids <- read.csv("16S_seq/16s-sample-ids.csv") %>% rename(seq.ID = X16s_ID
 meta <- full_join(meta, sample.ids, by = "Plug_ID") %>% na.omit()
 
 # QIIME2 output file 
-abundance <- read.csv("16S_seq/abundance-level-3.csv") %>% rename(seq.ID = index) # loading in dataframe and renaming the index column to seq.ID
+abundance <- read.csv("16S_seq/abundance-level-2.csv") %>% rename(seq.ID = index) # loading in dataframe and renaming the index column to seq.ID
 rownames(abundance) <- abundance$seq.ID # changing the rownames to the seq.id of that column; needed for as.matrix command
-abundance.matrix <- as.matrix(abundance[,c(2:105)]) # creates a matrix out of the dataframe above 
+abundance.matrix <- as.matrix(abundance[,c(2:51)]) # creates a matrix out of the dataframe above 
+### level 2 columns = 2:51
+### level 3 columns = 2:105
 
 head(sample.ids) # view first five lines of the dataframe 
 head(abundance) # view first five lines of the dataframe 
@@ -90,7 +92,7 @@ N <- rowSums(Relative.abundance) # calculate row sums of the relative abundnaces
 N #Display Row Sums, should all be 1
 
 # calculate the Relative Abundance
-Relative.abundance <- abundance[,2:105]/rowSums(abundance[,2:105]) ## exclude the first column because it is not an integer 
+Relative.abundance <- abundance[,2:51]/rowSums(abundance[,2:51]) ## exclude the first column because it is not an integer 
 Relative.abundance$seq.ID <- rownames(Relative.abundance)
 
 # merging with metadata
@@ -102,8 +104,9 @@ Relative.abundance.meta <- merge(Relative.abundance, meta, by="seq.ID")
 The goal is to have one column with relative abundance value and one column with the OTU name.
 
 ```{r}
+# to get the first and last column names do colnames(abundance) in the console and copy paste column 2 and the last d__bacteria column
 df <- Relative.abundance.meta %>% dplyr::group_by(Timepoint, Species, Treatment) %>% mutate(seq.ID = row_number()) %>%
-  pivot_longer(cols = d__Bacteria.p__Proteobacteria.c__Gammaproteobacteria:d__Archaea.p__Euryarchaeota.c__Methanobacteria,
+  pivot_longer(cols = d__Bacteria.p__Proteobacteria:d__Archaea.p__Euryarchaeota,
                names_to = c("OTU"),
                values_to="rel.abun")
 
