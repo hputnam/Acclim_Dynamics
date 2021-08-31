@@ -44,6 +44,48 @@ head(sample.manifest) # double check this is the correct format of final file
 
 The output will be feature tables that will be used in the following section. 
 
+### Deciding on denoising paramters for DADA2 plug-in
+
+See notebook post link above to the parameters chosen for this comparison.
+```{r}
+red_short <- read.table("16S_seq/ES-run/denoising-outputs/red-short-denoising-metadata.tsv", sep="\t", header = TRUE)
+  red_short$parameter <- "red_short"
+# red_long <- 
+
+green_short <- read.table("16S_seq/ES-run/denoising-outputs/green-short-denoising-metadata.tsv", sep="\t", header = TRUE)
+  green_short$parameter <- "green_short"
+green_long <- read.table("16S_seq/ES-run/denoising-outputs/green-long-denoising-metadata.tsv", sep="\t", header = TRUE)
+  green_long$parameter <- "green_long"
+  
+yellow_short <- read.table("16S_seq/ES-run/denoising-outputs/yellow-short-denoising-metadata.tsv", sep="\t", header = TRUE)
+  yellow_short$parameter <- "yellow_short"
+yellow_long <- read.table("16S_seq/ES-run/denoising-outputs/yellow-long-denoising-metadata.tsv", sep="\t", header = TRUE)
+  yellow_long$parameter <- "yellow_long"
+
+# merging all above dataframes into one large data frame with all denoising statistics
+denoising.stats <- union(red_short, green_short) %>% union(green_long) %>% union(yellow_long) %>% union(yellow_short)
+```
+
+Transforming dataframe to be easier to plot.
+```{r}
+denoising.stats.gathered <- denoising.stats[, c(1,2,3,5,6,8,10,4,7,9)] #rearranging column order for the gather command so that all three desired columns are at the end
+denoising.stats.gathered <- denoising.stats.gathered %>% gather(statistic, value, 8:10)
+denoising.stats.gathered$statistic <- factor(denoising.stats.gathered$statistic, levels=c("percentage.of.input.passed.filter","percentage.of.input.merged","percentage.of.input.non.chimeric"))
+```
+
+Plotting denoising statistics.
+```{r}
+cols <- c("darkgreen", "lightgreen", "firebrick1", "darkgoldenrod2", "gold")
+
+ggplot(data = denoising.stats.gathered, aes(x = parameter, y = value, group = parameter, color = parameter)) +
+  theme_classic() + geom_boxplot() +
+  facet_grid(~statistic, scales = "free") +
+  theme(legend.position = "none") +
+  scale_color_manual(values = cols) + 
+  ylab("Percentage (%)") + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) #Set the text angle
+```
+
 # Phyloseq 
 
 R package documentation [here](https://joey711.github.io/phyloseq/). 
