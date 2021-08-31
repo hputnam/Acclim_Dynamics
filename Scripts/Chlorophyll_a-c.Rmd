@@ -10,6 +10,7 @@ Clears workspace.
 rm(list=ls())
 ```
 
+### Loading all packages needed for this script 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
@@ -36,10 +37,12 @@ library(formattable)
 library(data.table)
 library(htmltools)
 library(webshot)
+library(lme4)
+library(MuMIn)
 ```
 
 
-Reading in datafiles and merging into one large dataframe. 
+# Reading in datafiles and merging into one large dataframe. 
 ```{r}
 df.platemaps <-
   list.files(path = 'Physiology_variables/Chlorophyll-a_c',pattern = "platemap.csv", full.names = TRUE) %>% 
@@ -98,7 +101,7 @@ df.1 <- df.1 %>%
 ```
 
 
-Standardize to surface area and homogenate volume. 
+# Standardize to surface area and homogenate volume. 
 ```{r}
 # Load homogenate volume
 # Load surface area
@@ -126,11 +129,11 @@ df.chl <- df.chl %>%
 df.chl <- filter(df.chl, !Plug_ID %in% c("NA", "BK"))
 ```
 
-Reading in master fragment information. Taking out P-1488 (See notes in results markdown). 
+### Reading in master fragment information. Taking out P-1488 (See notes in results markdown). 
 ```{r}
 Master_fragment <- read.csv("Environmental_data/Master_Fragment.csv", header=T, sep=",", na.string="NA") %>% 
   subset(ANALYSIS=="Physiology" | ANALYSIS=="Physiology/Molecular") %>% # need to keep "Physiology" and "Physiology/Molecular"
-  select(Plug_ID, Site.Name, Species, Treatment, Temperature, CO2, Timepoint) 
+  select(Plug_ID, Site.Name, Species, Treatment, Temperature, CO2, Timepoint, Tank) 
   Master_fragment$Plug_ID <- as.character(Master_fragment$Plug_ID)
 str(df.chl)
 
@@ -147,7 +150,7 @@ Chl_final %>%
 ```
 
 
-Quality control. 
+### Quality control. 
 ```{r}
 range(Chl_final$chla.ug.ml)
 range(Chl_final$chlc2.ug.cm2)
@@ -183,7 +186,7 @@ Chl2_mismatched2
 ```
 
 
-Visually checking for effect of plate. 
+### Visually checking for effect of plate. 
 Only on Chl.c2
 ```{r}
 ## Chl c plotting
@@ -251,7 +254,7 @@ dplyr::filter(Chla_means, N > 6) # this output should be zero b/c the biggest sa
 dplyr::filter(Chla_means, N < 6) # this should be the exact same as above, just double checking
 ```
 
-Write means and sample sizes for AFDW to file
+### Write means and sample sizes for AFDW to file
 ```{r}
 improvement_formatter <- formatter("span", style = x ~ style(font.weight = "bold", 
               color = ifelse(x > 5, "black", ifelse(x < 6, "red", "black"))))
@@ -281,7 +284,7 @@ export_formattable <- function(f, file, width = "100%", height = NULL,
 export_formattable(Chl.samples.sizes, file = "Output/Chl_means_samplesizes.png")
 ```
 
-Plotting timeseries with corrected means table. 
+### Plotting timeseries with corrected means table. 
 
 ```{r}
 cols <- c("lightblue", "blue", "pink", "red")
@@ -330,6 +333,69 @@ CHL.site <- ggplot(Chl_final, aes(x=Timepoint, y = chla.ug.cm2, group = Site.Nam
 ggsave(file="Output/Final_Figures/Chlorophyll.pdf", CHL, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Final_Figures/Chlorophyll.png", CHL, width = 11, height = 6, units = c("in"))
 ```
+
+## Statistics 
+
+Raw data distribution view.
+```{r}
+Mcap_chl <- Chl_final %>% subset(Species == "Mcapitata")
+Pacuta_chl <- Chl_final %>% subset(Species == "Pacuta")
+
+hist(Mcap_chl$chla.ug.cm2) # right skewed
+hist(Mcap_chl$chlc2.ug.cm2) # right skewed 
+
+hist(Pacuta_chl$chla.ug.cm2)
+hist(Pacuta_chl$chlc2.ug.cm2)
+```
+
+### Linear mixed models 
+
+**P.acuta** 
+
+```{r}
+Pacuta_Chl_LMER <- lmer(chla.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_chl) #GLMM
+Pacuta_Chl_LMER.reef <- lmer(chla.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=Pacuta_chl)
+model.sel(Pacuta_Chl_LMER, Pacuta_Chl_LMER.reef) # model selection function 
+## With reef AIC = 376.9; without reef AIC = 384.8. 
+
+## summary of the model chosen from above
+## plot(Pacuta_Chl_LMER) in console to view diagnostic plots
+summary(Pacuta_Chl_LMER)
+qqPlot(residuals(Pacuta_Chl_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_Chl_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(pacuta_full_data$chla.ug.cm2 ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
+
+## Type III Wald chisquare tests
+Anova(Pacuta_Chl_LMER, ddf="lme4", type='III')
+Anova(Pacuta_Chl_LMER.reef, ddf="lme4", type='III')
+
+# # Type III Analysis of Variance Table with Satterthwaite's method
+# anova(Pacuta_Chl_LMER, ddf="Satterthwaite", type='III') 
+# anova(Pacuta_Chl_LMER.reef, ddf="Satterthwaite", type='III') 
+```
+
+**M. capitata** 
+
+```{r}
+Mcap_Chl_LMER <- lmer(chla.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Mcap_chl) 
+Mcap_Chl_LMER.reef <- lmer(chla.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=Mcap_chl)
+model.sel(Mcap_Chl_LMER, Mcap_Chl_LMER.reef) # model selection function  
+## Model with Tank AIC = 513.5; with Tank and Reef AIC = 516.1
+
+## summary of the model chosen from above
+## plot(Mcap_Chl_LMER) in console to view diagnostic plots
+summary(Mcap_Chl_LMER)
+qqPlot(residuals(Mcap_Chl_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_Chl_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap_full_data$chla.ug.cm2 ~ mcap_full_data$Timepoint*mcap_full_data$Temperature*mcap_full_data$CO2)
+
+## Type III Wald chisquare tests
+Anova(Mcap_Chl_LMER, ddf="lme4", type='III')
+```
+
+
 
 ############## Bleaching Fragment Test prior to running the rest of the samples.
 

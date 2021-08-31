@@ -77,13 +77,15 @@ Plotting denoising statistics.
 ```{r}
 cols <- c("darkgreen", "lightgreen", "firebrick1", "darkgoldenrod2", "gold")
 
-ggplot(data = denoising.stats.gathered, aes(x = parameter, y = value, group = parameter, color = parameter)) +
+DADA2 <- ggplot(data = denoising.stats.gathered, aes(x = parameter, y = value, group = parameter, color = parameter)) +
   theme_classic() + geom_boxplot() +
   facet_grid(~statistic, scales = "free") +
   theme(legend.position = "none") +
   scale_color_manual(values = cols) + 
   ylab("Percentage (%)") + 
-  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) #Set the text angle
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)); DADA2 #Set the text angle
+
+ggsave(file="Output/denoising-statistics-DADA2.png", DADA2, width = 11, height = 6, units = c("in"))
 ```
 
 # Phyloseq 
