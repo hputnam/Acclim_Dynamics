@@ -78,7 +78,7 @@ denoising.stats.gathered$statistic <- factor(denoising.stats.gathered$statistic,
 
 Plotting denoising statistics.
 ```{r}
-cols <- c("darkgreen", "lightgreen", "firebrick1", "red", "darkgoldenrod2", "gold")
+cols <- c("darkgreen", "lightgreen", "firebrick4", "red", "darkgoldenrod2", "gold")
 
 DADA2 <- ggplot(data = denoising.stats.gathered, aes(x = parameter, y = value, group = parameter, color = parameter)) +
   theme_classic() + geom_boxplot() +
