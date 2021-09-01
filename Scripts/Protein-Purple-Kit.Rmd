@@ -214,6 +214,79 @@ ggsave(file="Output/Final_Figures/Host-Soluble-Protein.pdf", purple.prot, width 
 ggsave(file="Output/Final_Figures/Host-Soluble-Protein.png", purple.prot, width = 11, height = 6, units = c("in"))
 ```
 
+# Statistics 
+
+
+Raw distribution view. 
+```{r}
+hist(pacuta_full_data$prot_mg.cm2) 
+hist(mcap_full_data$prot_mg.cm2) 
+# both slightly right skewed positively 
+```
+
+Mixed effect modeling. 
+
+*P. acuta*
+```{r}
+## Pacuta 
+Pacuta_prot_LMER <- lmer(prot_mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data)  
+Pacuta_prot_LMER.reef <- lmer(prot_mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=pacuta_full_data)
+model.sel(Pacuta_prot_LMER, Pacuta_prot_LMER.reef) # model selection function 
+## Model with tank AIC = 67.8; model with tank and reef AIC = 64.8. Go with model with reef. 
+
+## summary of the model chosen from above
+## plot(Mcap_Chl_LMER) in console to view diagnostic plots
+summary(Pacuta_prot_LMER)
+qqPlot(residuals(Pacuta_prot_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_prot_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(pacuta_full_data$prot_mg.cm2 ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
+
+## Type III Wald chisquare tests
+Anova(Pacuta_prot_LMER, ddf="lme4", type='III') 
+Anova(Pacuta_prot_LMER.reef, ddf="lme4", type='III') 
+
+## Type III Analysis of Variance Table with Satterthwaite's method
+anova(Pacuta_prot_LMER, ddf="Satterthwaite", type='III') 
+anova(Pacuta_prot_LMER.reef, ddf="Satterthwaite", type='III') 
+
+## Effects of temperature/pco2/both at 4 weeks 
+tp <- pacuta_full_data %>% subset(Timepoint == "4 week")
+tp.model <- lmer(prot_mg.cm2 ~ Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=tp)
+Anova(tp.model, ddf="lme4", type='III')
+```
+
+*M. capitata* 
+```{r}
+## Mcap
+Mcap_prot_LMER <- lmer(prot_mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data)  
+Mcap_prot_LMER.reef <- lmer(prot_mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=mcap_full_data)
+model.sel(Mcap_prot_LMER, Mcap_prot_LMER.reef) # model selection function 
+## With reef AIC = 118.7; without reef AIC = 118.8 
+
+isSingular(Mcap_prot_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
+
+## summary of the model chosen from above
+## plot(Mcap_prot_LMER) in console to view diagnostic plots
+summary(Mcap_prot_LMER)
+qqPlot(residuals(Mcap_prot_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_prot_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap_full_data$prot_mg.cm2 ~ mcap_full_data$Timepoint*mcap_full_data$Temperature*mcap_full_data$CO2)
+
+## Type III Wald chisquare tests
+Anova(Mcap_prot_LMER, ddf="lme4", type='III')
+Anova(Mcap_prot_LMER.reef, ddf="lme4", type='III')
+
+## Type III Analysis of Variance Table with Satterthwaite's method
+anova(Mcap_prot_LMER, ddf="Satterthwaite", type='III') 
+anova(Mcap_prot_LMER.reef, ddf="Satterthwaite", type='III') 
+
+## Effects of temperature starts at 2 weeks only and pCO2 at 6 weeks
+tp <- mcap_full_data %>% subset(Timepoint == "16 week")
+tp.model <- lmer(prot_mg.cm2 ~ Temperature*CO2 + (1|Tank), na.action=na.omit, data=tp)
+Anova(tp.model, ddf="lme4", type='III')
+```
 
 
 

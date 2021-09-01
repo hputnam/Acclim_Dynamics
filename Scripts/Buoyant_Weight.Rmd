@@ -322,9 +322,8 @@ Pact.Means <- subset(All.Means, Species =="Pacuta")
 filter(Pact.Means, TimePoint=="T5.g.d.cm2" | TimePoint=="T7.g.d.cm2") #these points look almost identical; just double checking values 
 ```
 
-<<<<<<< HEAD
-```{r}
 
+```{r}
 Sp.labs <- c("M. capitata", "P. acuta")
 names(Sp.labs) <- c("Mcapitata", "Pacuta")
 
@@ -355,7 +354,7 @@ Calc_plot
 
 ggsave(file="Output/Final_Figures/Calacification.pdf", Calc_plot, width = 11, height = 6, units = c("in"))
 ```
-=======
+
 
 Timepoints:  
 T0.g.d.cm2 = 1 week  
@@ -367,7 +366,6 @@ T5.g.d.cm2 = 10 week
 T6.g.d.cm2 = 12 week  
 T7.g.d.cm2 = 14 week  
 T8.g.d.cm2 = 16 week  
->>>>>>> 39a6705261875c736dd71c45c5d536ac867d9beb
 
 Set time info for plotting.
 ```{r}
@@ -520,20 +518,84 @@ ggsave(file="Output/Final_Figures/Growth.pdf", Growth_facetplot, width = 11, hei
 ggsave(file="Output/Final_Figures/Growth.png", Growth_facetplot, width = 11, height = 6, units = c("in"))
 ```
 
+# Statistics 
 
-
-Statistics. 
 ```{r}
-# Run on long formatted data frame using mg.d.cm2 corrected value 
-mod1 <- aov(mg.d.cm2 ~ Temperature*CO2*TimePoint*Species, data=data.long) #run an ANOVA 
-hist(residuals(mod1)) #look at normality of data
-boxplot(residuals(mod1)) #look at normality of data
-summary(mod1)
+Growth <- read.csv("Physiology_variables/Growth_Buoyant_Weight/Growth_Rates.csv") %>% select(PLUG.ID, T0.g.d.cm2, T1.g.d.cm2, T2.g.d.cm2, T3.g.d.cm2, T4.g.d.cm2, T5.g.d.cm2,
+                                                                                             T6.g.d.cm2, T7.g.d.cm2, T8.g.d.cm2) %>% 
+  gather("Growth.Time", "Growth.Rate", 2:10) %>% na.omit(Growth.Rate) %>% dplyr::rename(Plug_ID=PLUG.ID) %>%
+  mutate(Growth.Time = case_when(
+    Growth.Time == "T0.g.d.cm2" ~ "1 week",
+    Growth.Time == "T1.g.d.cm2" ~ "2 week", 
+    Growth.Time == "T2.g.d.cm2" ~ "4 week",
+    Growth.Time == "T3.g.d.cm2" ~ "6 week",
+    Growth.Time == "T4.g.d.cm2" ~ "8 week",
+    Growth.Time == "T5.g.d.cm2" ~ "10 week",
+    Growth.Time == "T6.g.d.cm2" ~ "12 week",
+    Growth.Time == "T7.g.d.cm2" ~ "14 week",
+    Growth.Time == "T8.g.d.cm2" ~ "16 week")
+  )
+Growth$Plug_ID <- as.integer(Growth$Plug_ID)
 
-## 20200930 ES notes: right/positively skewed data when no transformations applied. the tail of the skew looks close to 0 so left it for now. 
+Growth.data <- full_join(Master, Growth, by = "Plug_ID") %>% na.omit() %>%
+  write_csv(., file = "Output/results_growth.csv")
 ```
 
+Raw distribution score.
+```{r}
+Growth.data$Plug_ID <- as.character(Growth.data$Plug_ID)
+Growth.data$Growth.Time <- as.factor(Growth.data$Growth.Time)
+mcap.Growth <- Growth.data %>% subset(Species == "Mcapitata")
+pacuta.Growth <- Growth.data %>% subset(Species == "Pacuta")
 
+hist(pacuta.Growth$Growth.Rate) 
+hist(mcap.Growth$Growth.Rate) 
+# both very heavy tailed distribution
+```
+
+*M. capitata* mixed effect modeling.
+```{r}
+#  excluded in BW script (6 and 8 week 1210 Mcapitata - ATAC Tank 1)
+
+Mcap_Growth_LMER_tank_plug <- lmer(Growth.Rate ~ Growth.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.Growth) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
+
+## summary of the model chosen from above
+## plot(Mcap_TAC_LMER) in console to view diagnostic plots
+summary(Mcap_Growth_LMER_tank_plug)
+qqPlot(residuals(Mcap_Growth_LMER_tank_plug)) # qqplot and histogram 
+hist(residuals(Mcap_Growth_LMER_tank_plug)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap.Growth$Growth.Rate ~ mcap.Growth$Timepoint*mcap.Growth$Temperature*mcap.Growth$CO2)
+
+## significance of model
+anova(Mcap_Growth_LMER_tank_plug, ddf="lme4", type='III')
+Anova(Mcap_Growth_LMER_tank_plug, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Mcap_Growth_LMER_tank_plug, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
+
+*P. acuta* mixed effect modeling.
+```{r}
+Pacuta_Growth_LMER_tank_plug <- lmer(log(Growth.Rate) ~ Growth.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=pacuta.Growth) #GLMM
+# GAM 
+# anova(GLMM, GAM) # report AIC values
+
+## summary of the model chosen from above
+## plot(Mcap_TAC_LMER) in console to view diagnostic plots
+summary(Pacuta_Growth_LMER_tank_plug)
+qqPlot(residuals(Pacuta_Growth_LMER_tank_plug)) # qqplot and histogram 
+hist(residuals(Pacuta_Growth_LMER_tank_plug)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(pacuta.Growth$Growth.Rate ~ pacuta.Growth$Timepoint*pacuta.Growth$Temperature*pacuta.Growth$CO2)
+
+## significance of model
+anova(Pacuta_Growth_LMER_tank_plug, ddf="lme4", type='III')
+Anova(Pacuta_Growth_LMER_tank_plug, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Pacuta_Growth_LMER_tank_plug, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+```
 
 
 

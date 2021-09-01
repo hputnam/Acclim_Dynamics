@@ -1,0 +1,220 @@
+---
+title: "Statistics.Rmd"
+author: "EL Strand"
+date: "2/11/2021"
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Clears workspace. 
+```{r}
+rm(list=ls())
+```
+
+Loading libraries. 
+```{r}
+library(ggplot2)
+library(tidyverse)
+library(plyr)
+library(dplyr)
+library(mgcv) # GAM function
+library(ggfortify)
+library(devtools)
+install_github("vqv/ggbiplot")
+library(lme4)
+library(gridExtra)
+library(vegan)
+library(effects)
+library(Rmisc)
+library(lmerTest)
+library(lessR)
+library(car)
+library(cowplot)
+library(corrplot)
+library(factoextra)
+library(MuMIn)
+```
+
+### Read in data files to analyze. 
+
+```{r}
+Master <- read.csv("Environmental_data/Master_Fragment.csv") %>% select(Site.Name, Plug_ID, Species, ANALYSIS, Timepoint, Treatment, Tank, Temperature, CO2) %>%
+  filter(ANALYSIS == "Physiology" | ANALYSIS == "Physiology/Molecular")
+  
+Photo.Resp <- read.csv("Physiology_variables/Respirometry/Output/Resp_AllRates.csv") %>% select(Fragment.ID.x, Pnet_umol.cm2.hr, Rdark_umol.cm2.hr, Pgross_umol.cm2.hr) %>%
+  dplyr::rename(Plug_ID = Fragment.ID.x)
+  Photo.Resp$Plug_ID <- gsub("P-", "", Photo.Resp$Plug_ID)
+  Photo.Resp$Plug_ID <- gsub("M-", "", Photo.Resp$Plug_ID)
+  Photo.Resp <- Photo.Resp %>% separate(Plug_ID, c("Plug_ID", "Date")) %>% select(-Date)
+
+Chlorophyll <-  read.csv("Output/chlorophyll.csv") %>% select(Plug_ID, chla.ug.cm2, chlc2.ug.cm2)
+
+Biomass <- read.csv("Output/Tissue_Biomass.csv") %>% select(Plug_ID, partner, AFDW.mg.cm2)
+
+Protein <- read.csv("Output/soluble_protein.csv") %>% select(Plug_ID, prot_mg.cm2)
+
+Antioxidant <- read.csv("Output/antioxidant.csv") %>% select(Plug_ID, cre.umol.mgprot)
+
+# come back to adding Color.Score and Growth back in and subsetting for where all three timepoint columns match 
+# joining all datasets together, reshaping the AFDW partner into columns, renaming those columns, removing an NA column, and calculating S:H AFDW ratio
+data <- join_all(list(Master, Photo.Resp, Chlorophyll, Biomass, Protein, Antioxidant), by='Plug_ID', type='left') %>%
+  spread(partner, AFDW.mg.cm2) %>% dplyr::rename(Host_AFDW.mg.cm2 = Host) %>% dplyr::rename(Sym_AFDW.mg.cm2 = Sym) %>% select(-"<NA>") %>%
+  mutate(Ratio_AFDW.mg.cm2=Sym_AFDW.mg.cm2/Host_AFDW.mg.cm2) 
+data$Timepoint <- factor(data$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week", "12 week", "16 week"))
+
+data <- data %>% 
+  mutate(Phase = case_when(
+    Timepoint == "Day 1" ~ "Acute",
+    Timepoint == "Day 2" ~ "Acute",
+    Timepoint == "1 week" ~ "Acute",
+    Timepoint == "2 week" ~ "Chronic",
+    Timepoint == "4 week" ~ "Chronic",
+    Timepoint == "6 week" ~ "Chronic",
+    Timepoint == "8 week" ~ "Chronic",
+    Timepoint == "12 week" ~ "Recovery",
+    Timepoint == "16 week" ~ "Recovery")) %>%
+  unite(Group, Phase, Treatment, remove = FALSE, sep = " ") %>%
+  write_csv(., file = "Output/results_physiology.csv")
+
+timeseries.data <- data %>% select(-Pnet_umol.cm2.hr, -Rdark_umol.cm2.hr, -Pgross_umol.cm2.hr)
+
+pacuta_full_data <- data %>% subset(Species == "Pacuta")
+mcap_full_data <- data %>% subset(Species == "Mcapitata")
+```
+
+# Multivariate analysis 
+
+## PCA dataframes and color choices 
+```{r}
+## Stress PCAs 
+pca_data <- data[complete.cases(data), ] # only taking rows where all samples have data
+Pacuta_data <- subset(pca_data, Species=="Pacuta") # subset to P. acuta
+Mcap_data <- subset(pca_data, Species=="Mcapitata") # subset to M. capitata
+
+Mcap_scaled_data <- prcomp(Mcap_data[c(10:19)], scale=TRUE, center=TRUE) # columns 10-19 are the data values
+Pacuta_scaled_data <- prcomp(Pacuta_data[c(10:19)], scale=TRUE, center=TRUE) # columns 10-19 are the data values
+
+## Screeplot
+# P acuta 
+Pacuta_data.cov <- cov(Pacuta_data[,c(10:19)])
+Pacuta_data.eigen <- eigen(Pacuta_data.cov)
+plot(Pacuta_data.eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') + lines(Pacuta_data.eigen$values)
+# Mcap  
+Mcap_data.cov <- cov(Mcap_data[,c(10:19)])
+Mcap_data.eigen <- eigen(Mcap_data.cov)
+plot(Mcap_data.eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') + lines(Mcap_data.eigen$values)
+
+## Timeseries PCAs 
+pca_timeseriesdata <- timeseries.data[complete.cases(timeseries.data), ] # only taking rows where all samples have data
+Pacuta_timeseriesdata <- subset(pca_timeseriesdata, Species=="Pacuta") %>% subset(Group != "Recovery HTAC") # subset to P. acuta
+Mcap_timeseriesdata <- subset(pca_timeseriesdata, Species=="Mcapitata") # subset to M. capitata
+  Mcap_acute_data <- subset(Mcap_timeseriesdata, Phase=="Acute")
+
+Mcap_scaled_timeseriesdata <- prcomp(Mcap_timeseriesdata[c(10:16)], scale=TRUE, center=TRUE) # columns 8-14 are the data values
+Pacuta_scaled_timeseriesdata <- prcomp(Pacuta_timeseriesdata[c(10:16)], scale=TRUE, center=TRUE) # columns 10-16 are the data values
+
+## Screeplot
+## P acuta 
+Pacuta_timeseriesdata.cov <- cov(Pacuta_timeseriesdata[,c(10:16)])
+Pacuta_timeseriesdata.eigen <- eigen(Pacuta_timeseriesdata.cov)
+plot(Pacuta_timeseriesdata.eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') + lines(Pacuta_timeseriesdata.eigen$values)
+# M cap
+Mcap_timeseriesdata.cov <- cov(Mcap_timeseriesdata[,c(10:16)])
+Mcap_timeseriesdata.eigen <- eigen(Mcap_timeseriesdata.cov)
+plot(Mcap_timeseriesdata.eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') + lines(Mcap_timeseriesdata.eigen$values)
+```
+
+## Plotting stress timepoints. 
+```{r}
+# Choosing colors for PCA 
+line.cols <- c("lightblue", "blue", "salmon", "red3", "lightblue", "blue", "salmon", "red3")
+fill.cols <- c("white", "white", "white", "white", "lightblue", "blue", "salmon", "red3")
+
+Mcap_group <- autoplot(Mcap_scaled_data, data = Mcap_data, colour = 'Group', shape = "Phase",
+         loadings = TRUE, loadings.colour = 'black', size=1, loadings.label = TRUE, 
+         loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1,
+         frame=TRUE, frame.type = 'norm') + theme_bw() +
+  scale_color_manual(values = line.cols) + scale_fill_manual(values = fill.cols) + ggtitle("M. capitata"); Mcap_group
+
+Pacuta_group <- autoplot(Pacuta_scaled_data, data = Pacuta_data, colour = 'Group', shape = "Phase", frame=TRUE, frame.type = 'norm',
+         loadings = TRUE, loadings.colour = 'black', size=1, loadings.label = TRUE, 
+         loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + 
+  theme(legend.position = "top") +
+  theme_bw() + scale_color_manual(values = line.cols) + scale_fill_manual(values = fill.cols) + ggtitle("P. acuta"); Pacuta_group
+
+Stress.PCAs <- arrangeGrob(Mcap_group, Pacuta_group, ncol=1)
+ggsave(file="Output/Final_Figures/PCA-stress.pdf", Stress.PCAs, width = 8, height = 10, units = c("in"))
+ggsave(file="Output/Final_Figures/PCA-stress.png", Stress.PCAs, width = 8, height = 10, units = c("in"))
+```
+
+## Plotting timeseries with recovery timepoints. 
+```{r}
+# Choosing colors for PCA 
+time.line.cols <- c("lightblue", "blue", "salmon", "red3", "lightblue", "blue", "salmon", "red3", "lightblue", "blue", "salmon", "red3")
+time.fill.cols <- c("white", "white", "white", "white", "lightblue", "blue", "salmon", "red3", "dodgerblue2", "navyblue", "firebrick3", "darkred")
+plines.cols <- c("lightblue", "blue", "salmon", "red3", "lightblue", "blue", "salmon", "red3", "lightblue", "blue")
+pfill.cols <- c("white", "white", "white", "white", "lightblue", "blue", "salmon", "red3", "dodgerblue2", "navyblue")
+  
+Pacuta_timeseries <- autoplot(Pacuta_scaled_timeseriesdata, data = Pacuta_timeseriesdata, colour = 'Group', shape = "Phase",
+         loadings = TRUE, loadings.colour = 'black', size=1, loadings.label = TRUE, frame=TRUE, frame.type = 'norm',
+         loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + 
+  theme_bw() + scale_color_manual(values = plines.cols) + scale_fill_manual(values = pfill.cols) + ggtitle("P. acuta"); Pacuta_timeseries
+
+Mcap_timeseries <- autoplot(Mcap_scaled_timeseriesdata, data = Mcap_timeseriesdata, colour = 'Group', shape = "Phase",
+         loadings = TRUE, loadings.colour = 'black', size=1, loadings.label = TRUE, 
+         loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1,
+         frame=TRUE, frame.type = 'norm') + theme_bw() +
+  scale_color_manual(values = time.line.cols) + scale_fill_manual(values = time.fill.cols) + ggtitle("M. capitata"); Mcap_timeseries
+
+Timeseries.PCAs <- arrangeGrob(Mcap_timeseries, Pacuta_timeseries, ncol=1)
+ggsave(file="Output/Final_Figures/PCA-timeseries.pdf", Timeseries.PCAs, width = 8, height = 10, units = c("in"))
+ggsave(file="Output/Final_Figures/PCA-timeseries.png", Timeseries.PCAs, width = 8, height = 10, units = c("in"))
+```
+
+### 3 phases 
+Start with pca_data subsetted to each species 
+
+```{r}
+mcap.three <- autoplot(Mcap_scaled_timeseriesdata, data = Mcap_timeseriesdata, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'norm',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  theme(legend.position = "none") +
+  facet_grid(~ Phase) + theme_bw() +
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("Montipora capitata"); mcap.three
+
+pacuta.three <- autoplot(Pacuta_scaled_timeseriesdata, data = Pacuta_timeseriesdata, colour = 'Treatment',
+         loadings = TRUE, loadings.colour = 'black', frame=TRUE, size=0.5, frame.type = 'norm',
+         loadings.label = TRUE, loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + theme_bw() +
+  theme(legend.position = "none") +
+  facet_grid(~ Phase) + theme_bw() +
+  scale_color_manual(values = cols) + scale_fill_manual(values = cols) + ggtitle("Pocillopora acuta"); pacuta.three
+
+Three <- arrangeGrob(mcap.three, pacuta.three, ncol=1)
+ggsave(file="Output/Final_Figures/PCA-threephase.pdf", Three, width = 12, height = 12, units = c("in"))
+ggsave(file="Output/Final_Figures/PCA-threephase.png", Three, width = 12, height = 12, units = c("in"))
+```
+
+## PERMANOVA Analysis 
+
+For P. acuta and M. cap. timeseries (without resp and photo). 
+```{r}
+## Pacuta - effect of treatment and timepoint
+# scale data
+pacuta_timeseries_vegan <- scale(Pacuta_timeseriesdata[ ,10:16])
+# PerMANOVA - partitioning the euclidean distance matrix by species
+adonis(pacuta_timeseries_vegan ~ Timepoint*Temperature*CO2, data = Pacuta_timeseriesdata, method='eu')
+adonis(pacuta_timeseries_vegan ~ Phase*Temperature*CO2, data = Pacuta_timeseriesdata, method='eu')
+
+## Mcap - effect of treatment and timepoint
+# scale data
+mcap_timeseries_vegan <- scale(Mcap_timeseriesdata[ ,10:16])
+# PerMANOVA - partitioning the euclidean distance matrix by species
+adonis(mcap_timeseries_vegan ~ Timepoint*Temperature*CO2, data = Mcap_timeseriesdata, method='eu')
+adonis(mcap_timeseries_vegan ~ Phase*Temperature*CO2, data = Mcap_timeseriesdata, method='eu')
+```
+

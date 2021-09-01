@@ -286,7 +286,6 @@ leveneTest(M.AFDW.final$Ratio_S.H ~ M.AFDW.final$Timepoint*M.AFDW.final$Temperat
 Anova(Mcap_SHRatio_LMER, ddf="lme4", type='III') 
 ```
 
-
 ## ANOVA & Tukey Post Hoc Test
 
 Type III Wald chi square tests chosen for now. 

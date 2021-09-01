@@ -39,6 +39,9 @@ library(htmltools)
 library(webshot)
 library(lme4)
 library(MuMIn)
+library(cowplot)
+library(corrplot)
+library(lmerTest)
 ```
 
 
@@ -353,6 +356,10 @@ hist(Pacuta_chl$chlc2.ug.cm2)
 **P.acuta** 
 
 ```{r}
+## Subset out 12 and 16 week timepoints 
+## The full P.acuta dataset received the error `fixed-effect model matrix is rank deficient so dropping 3 columns / coefficients`.
+Pacuta_chl <- Pacuta_chl %>% filter(Timepoint !="12 week" & Timepoint !="16 week")
+
 Pacuta_Chl_LMER <- lmer(chla.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_chl) #GLMM
 Pacuta_Chl_LMER.reef <- lmer(chla.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=Pacuta_chl)
 model.sel(Pacuta_Chl_LMER, Pacuta_Chl_LMER.reef) # model selection function 

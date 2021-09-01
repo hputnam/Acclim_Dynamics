@@ -255,7 +255,6 @@ Present.DS$Date <- as.Date(Present.DS$Date, format = "%m/%d/%y")
 ```
 
 ```{r}
-<<<<<<< HEAD
 
 Sp.labs <- c("M. capitata", "P. acuta")
 names(Sp.labs) <- c("Montipora", "Pocillopora")
@@ -288,9 +287,8 @@ ggsave(file="Output/Final_Figures/Respirometry.pdf", Resp_plot, width = 8, heigh
 ```
 
 
-
 Calculating means.
-# ```{r}
+```{r}
 # AllMeans <- ddply(Present, c('Date.x','Species.x', 'Treatment'), summarize,
 #                   #pnet
 #                   Pnet.mean= mean(Pnet_umol.cm2.hr, na.rm=T), #mean pnet
@@ -312,8 +310,9 @@ Calculating means.
 # # exporting results 
 # write.csv(resp.data, file="Physiology_variables/Respirometry/Output/Resp_AllRates.csv") # raw data
 # write.csv(AllMeans, file="Physiology_variables/Respirometry/Output/Resp_AllMeans.csv") # Mean data
-# ```
-=======
+```
+
+```{r}
 Missing <- Missing %>% select(Fragment.ID.x, Date.x, Species.x, Treatment, Pnet_umol.cm2.hr, Pgross_umol.cm2.hr, Rdark_umol.cm2.hr) %>%
   gather("Measurement", "Value", 5:7) 
 Means <- summarySE(Missing, measurevar="Value", groupvars=c("Species.x", "Date.x", "Treatment", "Measurement")) %>% 
@@ -348,13 +347,11 @@ ggplot(Missing, aes(x=Treatment, y=Value)) + geom_boxplot() + theme_classic() +
   facet_wrap(~ Measurement) + 
   ylab("umol.cm2.hr")
 ```
->>>>>>> 39a6705261875c736dd71c45c5d536ac867d9beb
 
 
 
 Subsetting by species and changing respiration values to absolute value. 
 ```{r}
-<<<<<<< HEAD
 # # Adding timepoint column to AllMeans 
 # AllMeans <- AllMeans %>% 
 #   mutate(Timepoint = case_when(
@@ -376,7 +373,7 @@ Subsetting by species and changing respiration values to absolute value.
 # # Changing respiration rates to absolute values
 # Pact$Rdark.mean <- abs(Pact$Rdark.mean)
 # Mcap$Rdark.mean <- abs(Mcap$Rdark.mean)
-=======
+
 # Adding timepoint column to AllMeans 
 Means <- Means %>% 
   mutate(Timepoint = case_when(
@@ -407,7 +404,6 @@ Mcap <- subset(Means, Species=="Montipora")
 # Changing respiration rates to absolute values
 #Pact$Rdark.mean <- abs(Pact$Rdark.mean)
 #Mcap$Rdark.mean <- abs(Mcap$Rdark.mean)
->>>>>>> 39a6705261875c736dd71c45c5d536ac867d9beb
 ```
 
 Plotting respiration and photosynthetic rates. 
@@ -530,77 +526,191 @@ ggsave(file="Output/Final_Figures/Respirometry.png", Resp_facetplot, width = 11,
 ```
 
 
+# Statistics
 
+### Photosynthetic Rates and Respiration 
 
-Statistical analyses. 
+Raw data distribution view.
 ```{r}
-# index <- c("ATAC", "ATHC", "HTAC", "HTHC")
-# Tmp <- c("Ambient", "Ambient", "High", "High")
-# pCO2 <- c("Ambient", "High", "Ambient", "High")
-# 
-# resp.data$Tmp.Trt <- Tmp[match(resp.data$Treatment, index)]
-# resp.data$pCO2.Trt <- pCO2[match(resp.data$Treatment, index)]
-# 
-# Mcap.All <- subset(resp.data, Species.x=="Montipora")
-# Pact.All  <- subset(resp.data, Species.x=="Pocillopora") 
-# 
-# ## P. acuta
-# # Net Photosynthetic Rates
-# Pact.Pnet.aov <- aov(Pnet_umol.cm2.hr ~ pCO2.Trt*Tmp.Trt*Date.x, data = Pact.All)
-# summary(Pact.Pnet.aov)
-# # TukeyHSD(Pact.Pnet.aov)
-# 
-# hist(Pact.Pnet.aov$residuals)
-# plot(Pact.Pnet.aov$fitted.values, Pact.Pnet.aov$residuals)
-# shapiro.test(Pact.Pnet.aov$residuals) 
-# 
-# # Gross Photosynthetic Rates
-# Pact.Pgross.aov <- aov(Pgross_umol.cm2.hr ~ pCO2.Trt*Tmp.Trt*Date.x, data = Pact.All)
-# summary(Pact.Pgross.aov)
-# #TukeyHSD(Pact.Pgross.aov)
-# 
-# hist(Pact.Pgross.aov$residuals)
-# plot(Pact.Pgross.aov$fitted.values, Pact.Pgross.aov$residuals)
-# shapiro.test(Pact.Pgross.aov$residuals) 
-# 
-# # Dark Respiration Rates
-# Pact.Rdark.aov <- aov(Rdark_umol.cm2.hr ~ pCO2.Trt*Tmp.Trt*Date.x, data = Pact.All)
-# summary(Pact.Rdark.aov)
-# #TukeyHSD(Pact.Rdark.aov)
-# 
-# hist(Pact.Rdark.aov$residuals)
-# plot(Pact.Rdark.aov$fitted.values, Pact.Rdark.aov$residuals)
-# shapiro.test(Pact.Rdark.aov$residuals) 
-# 
-# 
-# ## M. capitata
-# # Net Photosynthetic Rates
-# Mcap.Pnet.aov <- aov(log10(Pnet_umol.cm2.hr) ~ pCO2.Trt*Tmp.Trt*Date.x, data = Mcap.All)
-# summary(Mcap.Pnet.aov)
-# #TukeyHSD(Mcap.Pnet.aov)
-# 
-# hist(Mcap.Pnet.aov$residuals)
-# plot(Mcap.Pnet.aov$fitted.values, Mcap.Pnet.aov$residuals)
-# shapiro.test(Mcap.Pnet.aov$residuals) 
-# 
-# # Gross Photosynthetic Rates
-# Mcap.Pgross.aov <- aov(log10(Pgross_umol.cm2.hr) ~ pCO2.Trt*Tmp.Trt*Date.x, data = Mcap.All)
-# summary(Mcap.Pgross.aov)
-# #TukeyHSD(Mcap.Pgross.aov)
-# 
-# hist(Mcap.Pgross.aov$residuals)
-# plot(Mcap.Pgross.aov$fitted.values, Mcap.Pgross.aov$residuals)
-# shapiro.test(Mcap.Pgross.aov$residuals) 
-# 
-# # Dark Respiration Rates
-# Mcap.Rdark.aov <- aov(Rdark_umol.cm2.hr ~ pCO2.Trt*Tmp.Trt*Date.x, data = Mcap.All)
-# summary(Mcap.Rdark.aov)
-# #TukeyHSD(Mcap.Rdark.aov)
-# 
-# hist(Mcap.Rdark.aov$residuals)
-# plot(Mcap.Rdark.aov$fitted.values, Mcap.Rdark.aov$residuals)
-# shapiro.test(Mcap.Rdark.aov$residuals) 
+hist(pacuta_full_data$Pnet_umol.cm2.hr)
+hist(pacuta_full_data$Pgross_umol.cm2.hr)
+hist(pacuta_full_data$Rdark_umol.cm2.hr)
+
+hist(mcap_full_data$Pnet_umol.cm2.hr)
+hist(mcap_full_data$Pgross_umol.cm2.hr)
+hist(mcap_full_data$Rdark_umol.cm2.hr)
+# mcap doesn't look normal, the models should account for this but might need to transform post models 
 ```
+
+*P. acuta* linear mixed effect models.  
+Net photosynthetic rates. 
+```{r}
+## Pnet model selection
+Pacuta_Pnet_LMER <- lmer(Pnet_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) 
+Pacuta_Pnet_LMER.reef <- lmer(Pnet_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=pacuta_full_data)
+model.sel(Pacuta_Pnet_LMER, Pacuta_Pnet_LMER.reef) # model selection function
+## Pacuta Pnet with reef and tank was the best AIC = 215.5 compared to AIC = 216.3 for just tank
+
+anova(Pacuta_Pnet_LMER, Pacuta_Pnet_LMER.reef) # report AIC values 
+
+## summary of the model chosen from above
+## plot(Pacuta_Pnet_LMER) in console to view diagnostic plots
+summary(Pacuta_Pnet_LMER)
+qqPlot(residuals(Pacuta_Pnet_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_Pnet_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+#leveneTest(residuals(Pacuta_Pnet_LMER))
+leveneTest(pacuta_full_data$Pnet_umol.cm2.hr ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
+#bartlett.test(Pacuta_Pnet_LMER)
+
+
+## significance of model
+Anova(Pacuta_Pnet_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
+Anova(Pacuta_Pnet_LMER.reef, ddf="lme4", type='III') # Type III Wald chisquare tests
+
+anova(Pacuta_Pnet_LMER, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+anova(Pacuta_Pnet_LMER.reef, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+
+## Effect of temperature becomes significant at 4 weeks
+tp <- pacuta_full_data %>% subset(Timepoint == "4 week")
+tp.model <- lmer(Pnet_umol.cm2.hr ~ Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=tp)
+Anova(tp.model, ddf="lme4", type='III')
+```
+
+Gross photosynthetic rates. 
+```{r}
+## Pgross 
+Pacuta_Pgross_LMER <- lmer(Pgross_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) 
+Pacuta_Pgross_LMER.reef <- lmer(Pgross_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=pacuta_full_data)
+model.sel(Pacuta_Pgross_LMER, Pacuta_Pgross_LMER.reef) # model selection function
+## With reef model chosen AIC = 254.0 vs. without reef AIC = 256.9 
+
+## summary of the model chosen from above
+## plot(Pacuta_Pgross_LMER) in console to view diagnostic plots
+summary(Pacuta_Pgross_LMER)
+qqPlot(residuals(Pacuta_Pgross_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_Pgross_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(pacuta_full_data$Pgross_umol.cm2.hr ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
+
+## Type III Wald chisquare tests
+Anova(Pacuta_Pgross_LMER, ddf="lme4", type='III') 
+Anova(Pacuta_Pgross_LMER.reef, ddf="lme4", type='III') 
+
+## Type III Analysis of Variance Table with Satterthwaite's method
+anova(Pacuta_Pgross_LMER, ddf="Satterthwaite", type='III') 
+anova(Pacuta_Pgross_LMER.reef, ddf="Satterthwaite", type='III') 
+```
+
+```{r}
+## Dark Resp
+Pacuta_Resp_LMER <- lmer(Rdark_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
+Pacuta_Resp_LMER.reef <- lmer(Rdark_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=pacuta_full_data)
+model.sel(Pacuta_Resp_LMER, Pacuta_Resp_LMER.reef) # model selection function
+## Model with just tank chosen AIC = -152.2 vs. AIC = -143.7 for both tank and reef 
+
+## summary of the model chosen from above
+## plot(Pacuta_Resp_LMER) in console to view diagnostic plots
+summary(Pacuta_Resp_LMER)
+qqPlot(residuals(Pacuta_Resp_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_Resp_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(pacuta_full_data$Rdark_umol.cm2.hr ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
+
+# Type III Wald chisquare tests
+Anova(Pacuta_Resp_LMER, ddf="lme4", type='III')
+
+# Type III Analysis of Variance Table with Satterthwaite's method
+anova(Pacuta_Resp_LMER, ddf="Satterthwaite", type='III') 
+
+## Effect of temperature/co2/both treatments becomes significant at 4 weeks
+tp <- pacuta_full_data %>% subset(Timepoint == "1 week")
+tp.model <- lmer(Rdark_umol.cm2.hr ~ Temperature*CO2 + (1|Tank), na.action=na.omit, data=tp)
+Anova(tp.model, ddf="lme4", type='III')
+```
+
+*M.capitata* linear mixed effect models 
+
+Net photosynthetic rates. 
+```{r}
+## Pnet
+Mcap_Pnet_LMER <- lmer(log(Pnet_umol.cm2.hr) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) 
+Mcap_Pnet_LMER.reef <- lmer(log(Pnet_umol.cm2.hr) ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=mcap_full_data)
+model.sel(Mcap_Pnet_LMER, Mcap_Pnet_LMER.reef) # model selection function
+## Model with just tank chosen AIC = 189.6 vs AIC = 190 for both tank and site 
+
+## summary of the model chosen from above
+## plot(Mcap_Pnet_LMER) in console to view diagnostic plots
+summary(Mcap_Pnet_LMER)
+qqPlot(residuals(Mcap_Pnet_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_Pnet_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap_full_data$Pnet_umol.cm2.hr ~ mcap_full_data$Timepoint*mcap_full_data$Temperature*mcap_full_data$CO2)
+
+# Type III Wald chisquare tests
+Anova(Mcap_Pnet_LMER, ddf="lme4", type='III') 
+
+# Type III Analysis of Variance Table with Satterthwaite's method
+anova(Mcap_Pnet_LMER, ddf="Satterthwaite", type='III') 
+
+## Effect of temperature becomes significant at 2 weeks then is not significant 
+## Effect of temp:pc02 is significant at 8 weeks 
+tp <- mcap_full_data %>% subset(Timepoint == "6 week")
+tp.model <- lmer(Pnet_umol.cm2.hr ~ Temperature*CO2 + (1|Tank), na.action=na.omit, data=tp)
+Anova(tp.model, ddf="lme4", type='III')
+```
+
+```{r}
+## Pgross
+Mcap_Pgross_LMER <- lmer(log(Pgross_umol.cm2.hr) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) 
+Mcap_Pgross_LMER.reef <- lmer(log(Pgross_umol.cm2.hr) ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=mcap_full_data)
+model.sel(Mcap_Pgross_LMER, Mcap_Pgross_LMER.reef) # model selection function
+## With tank AIC = 171.9; with tank and reef AIC = 174.9. Just tank chosen 
+
+## summary of the model chosen from above
+## plot(Mcap_Pnet_LMER) in console to view diagnostic plots
+summary(Mcap_Pgross_LMER)
+qqPlot(residuals(Mcap_Pgross_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_Pgross_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap_full_data$Pgross_umol.cm2.hr ~ mcap_full_data$Timepoint*mcap_full_data$Temperature*mcap_full_data$CO2)
+
+## Type III Wald chisquare tests
+Anova(Mcap_Pgross_LMER, ddf="lme4", type='III') 
+
+## Type III Analysis of Variance Table with Satterthwaite's method
+anova(Mcap_Pgross_LMER, ddf="Satterthwaite", type='III') 
+```
+
+```{r}
+## Dark Resp 
+mcap_full_data$Rdarkplus1 <- mcap_full_data$Rdark_umol.cm2.hr+1
+  
+Mcap_Resp_LMER <- lmer(log(Rdarkplus1) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data)  
+Mcap_Resp_LMER.reef <- lmer(log(Rdarkplus1) ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=mcap_full_data)
+model.sel(Mcap_Resp_LMER, Mcap_Resp_LMER.reef) # model selection function 
+## With tank AIC = 254.4; with tank and reef AIC = 257.6. Just tank chosen 
+
+## summary of the model chosen from above
+## plot(Mcap_Resp_LMER) in console to view diagnostic plots
+summary(Mcap_Resp_LMER)
+qqPlot(residuals(Mcap_Resp_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_Resp_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap_full_data$Rdark_umol.cm2.hr ~ mcap_full_data$Timepoint*mcap_full_data$Temperature*mcap_full_data$CO2)
+
+## Type III Wald chisquare tests
+Anova(Mcap_Resp_LMER, ddf="lme4", type='III') 
+
+## Type III Analysis of Variance Table with Satterthwaite's method
+anova(Mcap_Resp_LMER, ddf="Satterthwaite", type='III')
+
+## Effect of temp close but not significant at 2 weeks 
+tp <- mcap_full_data %>% subset(Timepoint == "1 week")
+tp.model <- lmer(log(Rdarkplus1) ~ Temperature*CO2 + (1|Tank), na.action=na.omit, data=tp)
+Anova(tp.model, ddf="lme4", type='III')
+```
+
 
 
 

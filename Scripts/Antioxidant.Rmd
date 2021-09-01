@@ -226,5 +226,77 @@ tac.plot <- ggplot(tac.means, aes(x=Timepoint, y = cre.umol.mgprot, group = Trea
 ggsave(file="Output/Final_Figures/Antioxidant.pdf", tac.plot, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Final_Figures/Antioxidant.png", tac.plot, width = 11, height = 6, units = c("in"))
 ```
+# Statistics 
+
+### Host Total Antioxidant Capacity
+
+Raw distribution view. 
+```{r}
+hist(pacuta_full_data$cre.umol.mgprot) 
+hist(mcap_full_data$cre.umol.mgprot) 
+# both very right skewed positively 
+```
+
+Mixed effect modeling  
+
+*P. acuta*
+```{r}
+## Pacuta 
+Pacuta_TAC_LMER <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) 
+Pacuta_TAC_LMER.reef <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=pacuta_full_data)
+model.sel(Pacuta_TAC_LMER, Pacuta_TAC_LMER.reef) # model selection function 
+## Model with tank AIC = 54.4; with tank and reef AIC = 57.6 
+
+isSingular(Pacuta_TAC_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
+
+## summary of the model chosen from above
+## plot(Mcap_prot_LMER) in console to view diagnostic plots
+summary(Pacuta_TAC_LMER)
+qqPlot(residuals(Pacuta_TAC_LMER)) # qqplot and histogram 
+hist(residuals(Pacuta_TAC_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(pacuta_full_data$cre.umol.mgprot ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2) 
+
+## Type III Wald chisquare tests
+Anova(Pacuta_TAC_LMER.reef, ddf="lme4", type='III')
+
+## Type III Analysis of Variance Table with Satterthwaite's method
+anova(Pacuta_TAC_LMER.reef, ddf="Satterthwaite", type='III') 
+
+## Effects of temperature  never significant
+tp <- pacuta_full_data %>% subset(Timepoint == "8 week")
+tp.model <- lmer(log(cre.umol.mgprot) ~ Temperature*CO2 + (1|Tank), na.action=na.omit, data=tp)
+Anova(tp.model, ddf="lme4", type='III')
+```
+
+*M. capitata*
+```{r}
+## Mcapitata
+Mcap_TAC_LMER <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) 
+Mcap_TAC_LMER.reef <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=mcap_full_data)
+model.sel(Mcap_TAC_LMER, Mcap_TAC_LMER.reef) # model selection function 
+
+isSingular(Mcap_TAC_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
+
+## summary of the model chosen from above
+## plot(Mcap_TAC_LMER) in console to view diagnostic plots
+summary(Mcap_TAC_LMER)
+qqPlot(residuals(Mcap_TAC_LMER)) # qqplot and histogram 
+hist(residuals(Mcap_TAC_LMER)) 
+## checking homogeneity of variance using levene test (can also use Bartlett's test function)
+leveneTest(mcap_full_data$cre.umol.mgprot ~ mcap_full_data$Timepoint*mcap_full_data$Temperature*mcap_full_data$CO2) 
+
+## Type III Wald chisquare tests
+Anova(Mcap_TAC_LMER, ddf="lme4", type='III')
+
+## Type III Analysis of Variance Table with Satterthwaite's method
+anova(Mcap_TAC_LMER, ddf="Satterthwaite", type='III') 
+
+## Effects of temperature significant at 12 week only 
+tp <- mcap_full_data %>% subset(Timepoint == "16 week")
+tp.model <- lmer(log(cre.umol.mgprot) ~ Temperature*CO2 + (1|Tank), na.action=na.omit, data=tp)
+Anova(tp.model, ddf="lme4", type='III')
+```
+
 
 
