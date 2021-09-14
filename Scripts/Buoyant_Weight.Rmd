@@ -28,10 +28,10 @@ if (!require("nlme")) install.packages("nlme")
 if (!require("lsmeans")) install.packages("lsmeans")
 if (!require("gridExtra")) install.packages("gridExtra")
 
+library(plyr)
 library(dplyr)
 library(ggplot2)
 library(tidyverse)
-library(plyr)
 library(ggpubr)
 library(sciplot)
 library(plotrix)
@@ -40,6 +40,9 @@ library(nlme) #mixed model, repeated measures ANOVA
 library(lsmeans) #mixed model posthoc  statistical comparisons
 library(gridExtra)
 library(Rmisc)
+library(lme4)
+library(lmerTest)
+library(car)
 ```
 
 ### Buoyant Weight Standard Curve 
@@ -316,43 +319,57 @@ All.Means <- summarySE(data.long, measurevar="mg.d.cm2", groupvars=c("Species", 
 #All.Means$Group <- paste(All.Means$TimePoint, All.Means$Treatment, All.Means$Species)
 #All.Means$SpGroup <- paste(All.Means$Treatment, All.Means$Species)
 
+All.Means <- All.Means %>% mutate(week = case_when(
+    TimePoint == "T0.g.d.cm2" ~ "Week 1",
+    TimePoint == "T1.g.d.cm2" ~ "Week 2",
+    TimePoint == "T2.g.d.cm2" ~ "Week 4",
+    TimePoint == "T3.g.d.cm2" ~ "Week 6",
+    TimePoint == "T4.g.d.cm2" ~ "Week 8",
+    TimePoint == "T5.g.d.cm2" ~ "Week 10",
+    TimePoint == "T6.g.d.cm2" ~ "Week 12",
+    TimePoint == "T7.g.d.cm2" ~ "Week 14",
+    TimePoint == "T8.g.d.cm2" ~ "Week 16",
+  ))
+
+All.Means$week <- factor(All.Means$week, levels=c("Week 1","Week 2","Week 4","Week 6","Week 8","Week 10","Week 12","Week 14","Week 16"))
+
 Mcap.Means <- subset(All.Means, Species =="Mcapitata")
 Pact.Means <- subset(All.Means, Species =="Pacuta")
 
 filter(Pact.Means, TimePoint=="T5.g.d.cm2" | TimePoint=="T7.g.d.cm2") #these points look almost identical; just double checking values 
+
+Pact.Means <- Pact.Means[-c(23,26),] # removing sample sizes of 2 or less 
 ```
 
-
 ```{r}
-Sp.labs <- c("M. capitata", "P. acuta")
+Sp.labs <- c("Montipora capitata", "Pocillopora acuta")
 names(Sp.labs) <- c("Mcapitata", "Pacuta")
 
 cols <- c("lightblue", "blue", "salmon", "red3")
 
-Calc_plot <- ggplot(All.Means, aes(x=TimePoint, y = mean, group = Treatment, color = Treatment)) +
+Calc_plot <- ggplot(All.Means, aes(x=week, y = mg.d.cm2, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
   facet_grid(~Species, scales = "free", labeller = labeller(Species = Sp.labs)) +
-  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.2) +
+  geom_errorbar(aes(ymin=mg.d.cm2-se, ymax=mg.d.cm2+se), width=.2) +
   scale_color_manual(values = cols) + 
   xlab("Timepoint") + 
   ylab(expression(Growth  ~(mg ~CaCO[3] ~cm^-2 ~d^-1))) + # y-axis label and y axis range
-  theme_bw() + 
+  theme_classic() + 
   ggtitle("Growth") +
   theme(legend.position = "left") +
-  geom_vline(xintercept = c(7.8), colour="black", linetype="dotted") +
+  geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
-  scale_x_discrete(breaks = c("Week1", "Week2", "Week4", "Week6", "Week8", "Week12", "Week16"), labels = c("1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week")) +
+  #scale_x_discrete(breaks = c("Week1", "Week2", "Week4", "Week6", "Week8", "Week12", "Week16"), labels = c("1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week")) +
   theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
-  theme(panel.border = element_blank(),
-  panel.grid.major = element_blank(),
-  panel.grid.minor = element_blank(),
-  strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
+    theme(panel.border = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
   # Change axis line
-  axis.line = element_line(colour = "black"))
-
-Calc_plot
+  axis.line = element_line(colour = "black")); Calc_plot
 
 ggsave(file="Output/Final_Figures/Calacification.pdf", Calc_plot, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Calacification.png", Calc_plot, width = 11, height = 6, units = c("in"))
 ```
 
 
@@ -367,35 +384,13 @@ T6.g.d.cm2 = 12 week
 T7.g.d.cm2 = 14 week  
 T8.g.d.cm2 = 16 week  
 
-Set time info for plotting.
-```{r}
-Mcap.Means$week <- c("Week1", "Week1","Week1","Week1","Week2","Week2","Week2","Week2",
-                    "Week4", "Week4", "Week4", "Week4", "Week6", "Week6", "Week6", "Week6",
-                     "Week8", "Week8", "Week8", "Week8", "Week10", "Week10", "Week10", "Week10",
-                    "Week12", "Week12", "Week12", "Week12", "Week14", "Week14", "Week14", "Week14",
-                    "Week16", "Week16", "Week16", "Week16")
-Mcap.Means$week <- factor(Mcap.Means$week, levels=c("Week1","Week2","Week4","Week6","Week8","Week10","Week12","Week14","Week16"))
-```
-
-Remove sample sizes of 2 or less.
-```{r}
-Pact.Means <- Pact.Means[-c(23,26),]
-
-Pact.Means$week <- c("Week1", "Week1","Week1","Week1","Week2","Week2","Week2","Week2",
-                     "Week4", "Week4", "Week4", "Week4", "Week6", "Week6", "Week6", "Week6",
-                     "Week8", "Week8", "Week8", "Week8", "Week10", "Week10", "Week12", "Week12", 
-                     "Week14", "Week14",  "Week16", "Week16")
-
-Pact.Means$week <- factor(Pact.Means$week, levels=c("Week1","Week2","Week4","Week6","Week8","Week10","Week12","Week14","Week16"))
-```
-
 Plotting data. 
 ```{r}
 cols <- c("lightblue", "blue", "pink", "red")
 
-Fig.Mcap <- ggplot(Mcap.Means, aes(x=week, y=mean, group=Treatment)) + 
+Fig.Mcap <- ggplot(Mcap.Means, aes(x=week, y=mg.d.cm2, group=Treatment)) + 
   geom_line(aes(colour=Treatment, group=Treatment), position = position_dodge(width = 0.1), alpha=1) + # colour, group both depend on cond2
-  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), colour="darkgray", width=0, size=1, position = position_dodge(width = 0.1)) +
+  geom_errorbar(aes(ymin=mg.d.cm2-se, ymax=mg.d.cm2+se), colour="darkgray", width=0, size=1, position = position_dodge(width = 0.1)) +
   geom_point(aes(colour=Treatment), size = 3, position = position_dodge(width = 0.1)) +
   scale_colour_manual(values=cols) +
   xlab("Timepoint") +
@@ -416,9 +411,9 @@ Fig.Mcap <- ggplot(Mcap.Means, aes(x=week, y=mean, group=Treatment)) +
                                   hjust = 0))
 Fig.Mcap
 
-Fig.Pact <- ggplot(Pact.Means, aes(x=week, y=mean, group=Treatment)) + 
+Fig.Pact <- ggplot(Pact.Means, aes(x=week, y=mg.d.cm2, group=Treatment)) + 
   geom_line(aes(colour=Treatment, group=Treatment), position = position_dodge(width = 0.1), alpha=1) + # colour, group both depend on cond2
-  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), colour="darkgray", width=0, size=1, position = position_dodge(width = 0.1)) +
+  geom_errorbar(aes(ymin=mg.d.cm2-se, ymax=mg.d.cm2+se), colour="darkgray", width=0, size=1, position = position_dodge(width = 0.1)) +
   geom_point(aes(colour=Treatment, shape=Species), size = 3, position = position_dodge(width = 0.1)) +
   scale_colour_manual(values=cols) +
   xlab("Timepoint") +
@@ -521,8 +516,9 @@ ggsave(file="Output/Final_Figures/Growth.png", Growth_facetplot, width = 11, hei
 # Statistics 
 
 ```{r}
-Growth <- read.csv("Physiology_variables/Growth_Buoyant_Weight/Growth_Rates.csv") %>% select(PLUG.ID, T0.g.d.cm2, T1.g.d.cm2, T2.g.d.cm2, T3.g.d.cm2, T4.g.d.cm2, T5.g.d.cm2,
-                                                                                             T6.g.d.cm2, T7.g.d.cm2, T8.g.d.cm2) %>% 
+master <- read.csv("Environmental_data/Master_Fragment.csv") %>% select(Plug_ID, Species, Treatment, Tank, Temperature, CO2, Site.Name, Timepoint) 
+
+Growth <- read.csv("Physiology_variables/Growth_Buoyant_Weight/Growth_Rates.csv") %>% select(PLUG.ID, T0.g.d.cm2, T1.g.d.cm2, T2.g.d.cm2, T3.g.d.cm2, T4.g.d.cm2, T5.g.d.cm2, T6.g.d.cm2, T7.g.d.cm2, T8.g.d.cm2) %>% 
   gather("Growth.Time", "Growth.Rate", 2:10) %>% na.omit(Growth.Rate) %>% dplyr::rename(Plug_ID=PLUG.ID) %>%
   mutate(Growth.Time = case_when(
     Growth.Time == "T0.g.d.cm2" ~ "1 week",
@@ -537,7 +533,7 @@ Growth <- read.csv("Physiology_variables/Growth_Buoyant_Weight/Growth_Rates.csv"
   )
 Growth$Plug_ID <- as.integer(Growth$Plug_ID)
 
-Growth.data <- full_join(Master, Growth, by = "Plug_ID") %>% na.omit() %>%
+Growth.data <- full_join(master, Growth, by = "Plug_ID") %>% filter(!is.na(Growth.Time)) %>%
   write_csv(., file = "Output/results_growth.csv")
 ```
 
@@ -556,7 +552,6 @@ hist(mcap.Growth$Growth.Rate)
 *M. capitata* mixed effect modeling.
 ```{r}
 #  excluded in BW script (6 and 8 week 1210 Mcapitata - ATAC Tank 1)
-
 Mcap_Growth_LMER_tank_plug <- lmer(Growth.Rate ~ Growth.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.Growth) #GLMM
 # GAM 
 # anova(GLMM, GAM) # report AIC values
@@ -571,9 +566,9 @@ leveneTest(mcap.Growth$Growth.Rate ~ mcap.Growth$Timepoint*mcap.Growth$Temperatu
 
 ## significance of model
 anova(Mcap_Growth_LMER_tank_plug, ddf="lme4", type='III')
-Anova(Mcap_Growth_LMER_tank_plug, ddf="lme4", type='III') # Type III Wald chisquare tests
+mcap_anova_growth <- Anova(Mcap_Growth_LMER_tank_plug, ddf="lme4", type='III') # Type III Wald chisquare tests
 
-anova(Mcap_Growth_LMER_tank_plug, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+#anova(Mcap_Growth_LMER_tank_plug, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
 ```
 
 *P. acuta* mixed effect modeling.
