@@ -535,14 +535,26 @@ Growth$Plug_ID <- as.integer(Growth$Plug_ID)
 
 Growth.data <- full_join(master, Growth, by = "Plug_ID") %>% filter(!is.na(Growth.Time)) %>%
   write_csv(., file = "Output/results_growth.csv")
+
+Growth.data$Plug_ID <- as.character(Growth.data$Plug_ID)
+Growth.data$Growth.Time <- as.factor(Growth.data$Growth.Time)
+
+Stress.period <- Growth.data %>% subset(Growth.Time == "1 week" | Growth.Time == "2 week" | Growth.Time == "4 week" | Growth.Time == "6 week" | Growth.Time == "8 week")
+Recovery.period <- Growth.data %>% subset(Growth.Time == "10 week" | Growth.Time == "12 week" | Growth.Time == "14 week" | Growth.Time == "16 week")
 ```
 
 Raw distribution score.
+
+Excluded in BW script (6 and 8 week 1210 Mcapitata - ATAC Tank 1)
 ```{r}
-Growth.data$Plug_ID <- as.character(Growth.data$Plug_ID)
-Growth.data$Growth.Time <- as.factor(Growth.data$Growth.Time)
 mcap.Growth <- Growth.data %>% subset(Species == "Mcapitata")
 pacuta.Growth <- Growth.data %>% subset(Species == "Pacuta")
+
+mcap.stress <- Stress.period %>% subset(Species == "Mcapitata")
+pacuta.stress <- Stress.period %>% subset(Species == "Pacuta")
+
+mcap.recovery <- Recovery.period %>% subset(Species == "Mcapitata")
+pacuta.recovery <- Recovery.period %>% subset(Species == "Pacuta") %>% subset(Treatment == "ATAC" | Treatment == "ATHC")
 
 hist(pacuta.Growth$Growth.Rate) 
 hist(mcap.Growth$Growth.Rate) 
@@ -551,46 +563,63 @@ hist(mcap.Growth$Growth.Rate)
 
 *M. capitata* mixed effect modeling.
 ```{r}
-#  excluded in BW script (6 and 8 week 1210 Mcapitata - ATAC Tank 1)
-Mcap_Growth_LMER_tank_plug <- lmer(Growth.Rate ~ Growth.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.Growth) #GLMM
-# GAM 
-# anova(GLMM, GAM) # report AIC values
+Mcap_Growth_LMER_tank_plug <- lmer(Growth.Rate ~ Growth.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.Growth) 
+Mcap_Growth_LMER_tank_plug_stress <- lmer(Growth.Rate ~ Growth.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.stress)  
+Mcap_Growth_LMER_tank_plug_recovery <- lmer(Growth.Rate ~ Growth.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.recovery)
 
-## summary of the model chosen from above
-## plot(Mcap_TAC_LMER) in console to view diagnostic plots
-summary(Mcap_Growth_LMER_tank_plug)
-qqPlot(residuals(Mcap_Growth_LMER_tank_plug)) # qqplot and histogram 
+qqPlot(residuals(Mcap_Growth_LMER_tank_plug))
+qqPlot(residuals(Mcap_Growth_LMER_tank_plug_stress))
+qqPlot(residuals(Mcap_Growth_LMER_tank_plug_recovery))
+
 hist(residuals(Mcap_Growth_LMER_tank_plug)) 
+hist(residuals(Mcap_Growth_LMER_tank_plug_stress)) 
+hist(residuals(Mcap_Growth_LMER_tank_plug_recovery)) 
+
 ## checking homogeneity of variance using levene test (can also use Bartlett's test function)
 leveneTest(mcap.Growth$Growth.Rate ~ mcap.Growth$Timepoint*mcap.Growth$Temperature*mcap.Growth$CO2)
 
 ## significance of model
-anova(Mcap_Growth_LMER_tank_plug, ddf="lme4", type='III')
 mcap_anova_growth <- Anova(Mcap_Growth_LMER_tank_plug, ddf="lme4", type='III') # Type III Wald chisquare tests
+mcap_anova_growth_stress <- Anova(Mcap_Growth_LMER_tank_plug_stress, ddf="lme4", type='III')
+mcap_anova_growth_recovery <- Anova(Mcap_Growth_LMER_tank_plug_recovery, ddf="lme4", type='III')
 
-#anova(Mcap_Growth_LMER_tank_plug, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+mcap_anova_growth
+mcap_anova_growth_stress
+mcap_anova_growth_recovery
+
+capture.output(mcap_anova_growth, file = "Output/Statistics/BW_stats_mcap.txt")
+capture.output(mcap_anova_growth_stress, file = "Output/Statistics/BW_stats_mcap_stress.txt")
+capture.output(mcap_anova_growth_recovery, file = "Output/Statistics/BW_stats_mcap_recovery.txt")
 ```
 
 *P. acuta* mixed effect modeling.
 ```{r}
 Pacuta_Growth_LMER_tank_plug <- lmer(log(Growth.Rate) ~ Growth.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=pacuta.Growth) #GLMM
-# GAM 
-# anova(GLMM, GAM) # report AIC values
+Pacuta_Growth_LMER_tank_plug_stress <- lmer(log(Growth.Rate) ~ Growth.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=pacuta.stress)
+Pacuta_Growth_LMER_tank_plug_recovery <- lmer(log(Growth.Rate) ~ Growth.Time*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=pacuta.recovery)
 
-## summary of the model chosen from above
-## plot(Mcap_TAC_LMER) in console to view diagnostic plots
-summary(Pacuta_Growth_LMER_tank_plug)
-qqPlot(residuals(Pacuta_Growth_LMER_tank_plug)) # qqplot and histogram 
+qqPlot(residuals(Pacuta_Growth_LMER_tank_plug)) 
+qqPlot(residuals(Pacuta_Growth_LMER_tank_plug_stress))
+qqPlot(residuals(Pacuta_Growth_LMER_tank_plug_recovery))
+
 hist(residuals(Pacuta_Growth_LMER_tank_plug)) 
+hist(residuals(Pacuta_Growth_LMER_tank_plug_stress)) 
+hist(residuals(Pacuta_Growth_LMER_tank_plug_recovery)) 
+
 ## checking homogeneity of variance using levene test (can also use Bartlett's test function)
 leveneTest(pacuta.Growth$Growth.Rate ~ pacuta.Growth$Timepoint*pacuta.Growth$Temperature*pacuta.Growth$CO2)
 
 ## significance of model
-anova(Pacuta_Growth_LMER_tank_plug, ddf="lme4", type='III')
-Anova(Pacuta_Growth_LMER_tank_plug, ddf="lme4", type='III') # Type III Wald chisquare tests
+pacuta_anova_growth <- Anova(Pacuta_Growth_LMER_tank_plug, ddf="lme4", type='III') # Type III Wald chisquare tests
+pacuta_anova_growth_stress <- Anova(Pacuta_Growth_LMER_tank_plug_stress, ddf="lme4", type='III')
+pacuta_anova_growth_recovery <- Anova(Pacuta_Growth_LMER_tank_plug_recovery, ddf="lme4", type='III')
 
-anova(Pacuta_Growth_LMER_tank_plug, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+pacuta_anova_growth
+pacuta_anova_growth_stress
+pacuta_anova_growth_recovery
+
+capture.output(pacuta_anova_growth, file = "Output/Statistics/BW_stats_pacuta.txt")
+capture.output(pacuta_anova_growth_stress, file = "Output/Statistics/BW_stats_pacuta_stress.txt")
+capture.output(pacuta_anova_growth_recovery, file = "Output/Statistics/BW_stats_pacuta_recovery.txt")
 ```
-
-
 

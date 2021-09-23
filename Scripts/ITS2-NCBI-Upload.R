@@ -1,4 +1,5 @@
 ## NCBI Upload ITS2 
+rm(list=ls())
 
 library(readr)
 library(plyr)
@@ -18,7 +19,9 @@ all.data$Project <- "HoloInt"
 all.data <- all.data %>% unite(NCBI_Sample_Title, NCBI_Sample_Name, Project, sep = "_", remove = FALSE) 
 all.data$NCBI_Sample_Name <- paste(all.data$NCBI_Sample_Name, "ITS2", sep="_")
 
-ncbi <- all.data %>% select(NCBI_Sample_Name, host_subject_id, NCBI_Sample_Title, Species, Sample.Date, Site.Name) %>%
+write_csv(file = "ITS2_seq//NCBI-sample-title-ITS2.csv", all.data)
+
+ncbi <- all.data %>% select(NCBI_Sample_Name, host_subject_id, NCBI_Sample_Title, Species, Sample.Date, Site.Name, Plug_ID, Timepoint, Treatment) %>%
   mutate(Species = case_when(
     Species == "Mcapitata" ~ "Montipora capitata",
     Species == "Pacuta" ~ "Pocillopora acuta"

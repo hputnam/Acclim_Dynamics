@@ -83,6 +83,7 @@ summary(Mc.km_fit)
 mc <- coxme(Surv(lifespan, status) ~ Temperature*CO2 + (1|PLUG.ID), data = Mc.Data)
 ## just print, no summary
 mc
+capture.output(mc, file = "Output/Statistics/survivorship_stats_mcap.txt")
 
 #mc_ph <- coxph(Surv(lifespan, status) ~ Temperature*CO2 + frailty(PLUG.ID, 
    # distribution = "gaussian", sparse = FALSE, method = "reml"), data = Mc.Data)
@@ -101,6 +102,8 @@ autoplot(Pa.km_fit)
 
 pa <- coxme(Surv(lifespan, status) ~ Temperature*CO2 + (1|PLUG.ID), data = Pa.Data)
 pa
+
+capture.output(pa, file = "Output/Statistics/survivorship_stats_pacuta.txt")
 
 jstable:::coxmeTable(pa)
 jstable:::coxme.display(pa, dec = 10)

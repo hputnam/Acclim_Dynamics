@@ -153,174 +153,134 @@ M.AFDW.final <- AFDW.final %>% subset(Species == "Montipora capitata")
 
 # Statistics 
 
-## Raw data distribution view.
+Reading in dataframe so you don't have the run the script every time. 
 ```{r}
-hist(pacuta_full_data$Host) # normal
-hist(pacuta_full_data$Sym) # right/positively skewed 
-hist(pacuta_full_data$Ratio_S.H) # extremely right/positively skewed
+biomass <- read.csv("Output/Tissue_Biomass.csv")
+master <- read.csv("Environmental_data/Master_Fragment.csv") %>% select(Plug_ID, Species, Treatment, Tank, Temperature, CO2, Site.Name, Timepoint) 
 
-hist(mcap_full_data$Host) # right/positively skewed
-hist(mcap_full_data$Sym) # right/positively skewed
-hist(mcap_full_data$Ratio_S.H) # normal 
+biomass <- full_join(biomass, master, by = "Plug_ID")
+
+biomass.pacuta <- biomass %>% subset(Species == "Pacuta")
+biomass.mcap <- biomass %>% subset(Species == "Mcapitata")
+
+mcap.biomass.stress <- biomass.mcap %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
+pacuta.biomass.stress <- biomass.pacuta %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
+
+mcap.biomass.recovery <- biomass.mcap %>% subset(Timepoint == "10 week" | Timepoint == "12 week" | Timepoint == "14 week" | Timepoint == "16 week")
+pacuta.biomass.recovery <- biomass.pacuta %>% subset(Timepoint == "10 week" | Timepoint == "12 week" | Timepoint == "14 week" | Timepoint == "16 week") %>% subset(Treatment == "ATAC" | Treatment == "ATHC")
+
+hist(mcap.biomass.recovery$Host) 
+hist(mcap.biomass.recovery$Sym) 
+hist(mcap.biomass.recovery$Ratio_S.H) 
+
+hist(mcap.biomass.stress$Host) 
+hist(mcap.biomass.stress$Sym) 
+hist(mcap.biomass.stress$Ratio_S.H) 
+
+hist(pacuta.biomass.recovery$Host) 
+hist(pacuta.biomass.recovery$Sym) 
+hist(pacuta.biomass.recovery$Ratio_S.H) 
+
+hist(pacuta.biomass.stress$Host) 
+hist(pacuta.biomass.stress$Sym) 
+hist(pacuta.biomass.stress$Ratio_S.H) 
 ```
 
-## Model selection P.acuta
-
-#### Host AFDW = Model with just tank
+#### Host AFDW 
 
 ```{r}
-#### P acuta -- this needs to be done with Pacuta_stress_data b/c recovery timepoints are small or not existent.
-## Host 
-Pacuta_Host_LMER <- lmer(Host ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=P.AFDW.final) 
-Pacuta_Host_LMER.reef <- lmer(Host ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=P.AFDW.final)
-model.sel(Pacuta_Host_LMER, Pacuta_Host_LMER.reef) # model selection function 
-## Model with tank AIC = 420.7; with tank and reef AIC = 421.2 
-## Just tank chosen
+Pacuta_Host_LMER_stress <- lmer(Host ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta.biomass.stress) 
+Pacuta_Host_LMER_recovery <- lmer(Host ~ Timepoint*CO2 + (1|Tank), na.action=na.omit, data=pacuta.biomass.recovery) 
 
-## summary of the model chosen from above
-summary(Pacuta_Host_LMER)
-qqPlot(residuals(Pacuta_Host_LMER)) # qqplot and histogram 
-hist(residuals(Pacuta_Host_LMER)) 
-## checking homogeneity of variance using levene test (can also use Bartlett's test function)
-leveneTest(P.AFDW.final$Host ~ P.AFDW.final$Timepoint*P.AFDW.final$Temperature*P.AFDW.final$CO2)
-```
+Mcap_Host_LMER_stress <- lmer(Host ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.biomass.stress) 
+Mcap_Host_LMER_recovery <- lmer(Host ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.biomass.recovery) 
 
-#### Sym AFDW = Model with tank and reef 
+qqPlot(residuals(Pacuta_Host_LMER_stress)) 
+qqPlot(residuals(Pacuta_Host_LMER_recovery)) 
+qqPlot(residuals(Mcap_Host_LMER_stress)) 
+qqPlot(residuals(Mcap_Host_LMER_recovery)) 
 
-```{r}
-Pacuta_Sym_LMER <- lmer(Sym ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=P.AFDW.final) 
-Pacuta_Sym_LMER.reef <- lmer(Sym ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=P.AFDW.final)
-model.sel(Pacuta_Sym_LMER, Pacuta_Sym_LMER.reef) # model selection function 
-## Tank and reef model AIC = 271.9; just tank AIC = 277.2. Tank and reef model chosen 
-
-## summary of the model chosen from above
-## plot(Mcap_Chl_LMER) in console to view diagnostic plots
-summary(Pacuta_Sym_LMER)
-qqPlot(residuals(Pacuta_Sym_LMER)) # qqplot and histogram 
-hist(residuals(Pacuta_Sym_LMER)) 
-## checking homogeneity of variance using levene test (can also use Bartlett's test function)
-leveneTest(P.AFDW.final$Sym ~ P.AFDW.final$Timepoint*P.AFDW.final$Temperature*P.AFDW.final$CO2)
-```
-
-#### Ratio AFDW = Model with tank 
-
-```{r}
-Pacuta_SHRatio_LMER <- lmer(log(Ratio_S.H) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=P.AFDW.final) #GLMM
-Pacuta_SHRatio_LMER.reef <- lmer(log(Ratio_S.H) ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=P.AFDW.final)
-model.sel(Pacuta_SHRatio_LMER, Pacuta_SHRatio_LMER.reef) # model selection function 
-## Ratio model with tank AIC = 351.7; model with tank and reef AIC = 354.5 
-
-isSingular(Pacuta_SHRatio_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
-
-## summary of the model chosen from above
-## plot(Mcap_Chl_LMER) in console to view diagnostic plots
-summary(Pacuta_SHRatio_LMER)
-qqPlot(residuals(Pacuta_SHRatio_LMER)) # qqplot and histogram 
-hist(residuals(Pacuta_SHRatio_LMER)) 
-## checking homogeneity of variance using levene test (can also use Bartlett's test function)
-leveneTest(P.AFDW.final$Ratio_S.H ~ P.AFDW.final$Timepoint*P.AFDW.final$Temperature*P.AFDW.final$CO2)
-```
-
-## Model selection M.capitata 
-
-#### Host AFDW = Model with tank 
-
-```{r}
-## Host 
-Mcap_Host_LMER <- lmer(Host ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=M.AFDW.final) 
-Mcap_Host_LMER.reef <- lmer(Host ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=M.AFDW.final)
-model.sel(Mcap_Host_LMER, Mcap_Host_LMER.reef) # model selection function 
-## Model with just tank AIC = 584.8; model with tank and reef AIC = 587.9 
-
-isSingular(Mcap_Host_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
-
-## summary of the model chosen from above
-## plot(Mcap_Chl_LMER) in console to view diagnostic plots
-summary(Mcap_Host_LMER)
-qqPlot(residuals(Mcap_Host_LMER)) # qqplot and histogram 
-hist(residuals(Mcap_Host_LMER)) 
-## checking homogeneity of variance using levene test (can also use Bartlett's test function)
-leveneTest(M.AFDW.final$Host ~ M.AFDW.final$Timepoint*M.AFDW.final$Temperature*M.AFDW.final$CO2)
-```
-
-#### Sym AFDW = Model with tank 
-
-```{r}
-Mcap_Sym_LMER <- lmer(Sym ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=M.AFDW.final) 
-Mcap_Sym_LMER.reef <- lmer(Sym ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=M.AFDW.final)
-model.sel(Mcap_Sym_LMER, Mcap_Sym_LMER.reef) # model selection function 
-## Model with tank AIC = 540.2; model with tank and reef AIC = 543.2 
-
-## summary of the model chosen from above
-## plot(Mcap_Chl_LMER) in console to view diagnostic plots
-summary(Mcap_Sym_LMER)
-qqPlot(residuals(Mcap_Sym_LMER)) # qqplot and histogram 
-hist(residuals(Mcap_Sym_LMER)) 
-## checking homogeneity of variance using levene test (can also use Bartlett's test function)
-leveneTest(M.AFDW.final$Sym ~ M.AFDW.final$Timepoint*M.AFDW.final$Temperature*M.AFDW.final$CO2)
+hist(residuals(Pacuta_Host_LMER_stress)) 
+hist(residuals(Pacuta_Host_LMER_recovery)) 
+hist(residuals(Mcap_Host_LMER_stress)) 
+hist(residuals(Mcap_Host_LMER_recovery)) 
 
 ## Type III Wald chisquare tests
-Anova(Mcap_Sym_LMER, ddf="lme4", type='III') 
+pacuta.host.stress.anova <- Anova(Pacuta_Host_LMER_stress, ddf="lme4", type='III') 
+pacuta.host.recovery.anova <- Anova(Pacuta_Host_LMER_recovery, ddf="lme4", type='III') 
+
+mcap.host.stress.anova <- Anova(Mcap_Host_LMER_stress, ddf="lme4", type='III') 
+mcap.host.recovery.anova <- Anova(Mcap_Host_LMER_recovery, ddf="lme4", type='III') 
+
+capture.output(pacuta.host.stress.anova, file = "Output/Statistics/TB_host_stress_pacuta.txt")
+capture.output(pacuta.host.recovery.anova, file = "Output/Statistics/TB_host_recovery_pacuta.txt")
+capture.output(mcap.host.stress.anova, file = "Output/Statistics/TB_host_stress_mcap.txt")
+capture.output(mcap.host.recovery.anova, file = "Output/Statistics/TB_host_recovery_mcap.txt")
 ```
 
-
-#### Ratio AFDW = Model with tank 
+#### Sym AFDW  
 
 ```{r}
-Mcap_SHRatio_LMER <- lmer(Ratio_S.H ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=M.AFDW.final) 
-Mcap_SHRatio_LMER.reef <- lmer(Ratio_S.H ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=M.AFDW.final)
-model.sel(Mcap_SHRatio_LMER, Mcap_SHRatio_LMER.reef) # model selection function 
-## Model with tank AIC = 250.1; model with tank and reef AIC = 253.3 
+Pacuta_Sym_LMER_stress <- lmer(Sym ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta.biomass.stress) 
+Pacuta_Sym_LMER_recovery <- lmer(log(Sym) ~ Timepoint*CO2 + (1|Tank), na.action=na.omit, data=pacuta.biomass.recovery) 
 
-isSingular(Mcap_SHRatio_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
+Mcap_Sym_LMER_stress <- lmer(Sym ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.biomass.stress) 
+Mcap_Sym_LMER_recovery <- lmer(Sym ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.biomass.recovery) 
 
-## summary of the model chosen from above
-## plot(Mcap_Chl_LMER) in console to view diagnostic plots
-summary(Mcap_SHRatio_LMER)
-qqPlot(residuals(Mcap_SHRatio_LMER)) # qqplot and histogram 
-hist(residuals(Mcap_SHRatio_LMER)) 
-## checking homogeneity of variance using levene test (can also use Bartlett's test function)
-leveneTest(M.AFDW.final$Ratio_S.H ~ M.AFDW.final$Timepoint*M.AFDW.final$Temperature*M.AFDW.final$CO2)
+qqPlot(residuals(Pacuta_Sym_LMER_stress)) 
+qqPlot(residuals(Pacuta_Sym_LMER_recovery)) 
+qqPlot(residuals(Mcap_Sym_LMER_stress)) 
+qqPlot(residuals(Mcap_Sym_LMER_recovery)) 
+
+hist(residuals(Pacuta_Sym_LMER_stress)) 
+hist(residuals(Pacuta_Sym_LMER_recovery)) 
+hist(residuals(Mcap_Sym_LMER_stress)) 
+hist(residuals(Mcap_Sym_LMER_recovery)) 
 
 ## Type III Wald chisquare tests
-Anova(Mcap_SHRatio_LMER, ddf="lme4", type='III') 
+pacuta.sym.stress.anova <- Anova(Pacuta_Sym_LMER_stress, ddf="lme4", type='III') 
+pacuta.sym.recovery.anova <- Anova(Pacuta_Sym_LMER_recovery, ddf="lme4", type='III') 
+
+mcap.sym.stress.anova <- Anova(Mcap_Sym_LMER_stress, ddf="lme4", type='III') 
+mcap.sym.recovery.anova <- Anova(Mcap_Sym_LMER_recovery, ddf="lme4", type='III') 
+
+capture.output(pacuta.sym.stress.anova, file = "Output/Statistics/TB_sym_stress_pacuta.txt")
+capture.output(pacuta.sym.recovery.anova, file = "Output/Statistics/TB_sym_recovery_pacuta.txt")
+capture.output(mcap.sym.stress.anova, file = "Output/Statistics/TB_sym_stress_mcap.txt")
+capture.output(mcap.sym.recovery.anova, file = "Output/Statistics/TB_sym_recovery_mcap.txt")
 ```
 
-## ANOVA & Tukey Post Hoc Test
-
-Type III Wald chi square tests chosen for now. 
-
-Type III Analysis of Variance Table with Satterthwaite's method
-anova(Pacuta_Host_LMER, ddf="Satterthwaite", type='III')
-
-### P. acuta 
+#### Ratio AFDW
 
 ```{r}
-Host.AFDW.aov.pacuta <- Anova(Pacuta_Host_LMER, ddf="lme4", type='III') 
-Sym.AFDW.aov.pacuta <- Anova(Pacuta_Sym_LMER.reef, ddf="lme4", type='III') 
-Ratio.AFDW.aov.pacuta <- Anova(Pacuta_SHRatio_LMER, ddf="lme4", type='III') 
+Pacuta_Ratio_LMER_stress <- lmer(log(Ratio_S.H) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta.biomass.stress) 
+Pacuta_Ratio_LMER_recovery <- lmer((Ratio_S.H^(1/2)) ~ Timepoint*CO2 + (1|Tank), na.action=na.omit, data=pacuta.biomass.recovery) 
+
+Mcap_Ratio_LMER_stress <- lmer(Ratio_S.H ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.biomass.stress) 
+Mcap_Ratio_LMER_recovery <- lmer(Ratio_S.H ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.biomass.recovery) 
+
+qqPlot(residuals(Pacuta_Ratio_LMER_stress)) 
+qqPlot(residuals(Pacuta_Ratio_LMER_recovery)) 
+qqPlot(residuals(Mcap_Ratio_LMER_stress)) 
+qqPlot(residuals(Mcap_Ratio_LMER_recovery)) 
+
+hist(residuals(Pacuta_Ratio_LMER_stress)) 
+hist(residuals(Pacuta_Ratio_LMER_recovery)) 
+hist(residuals(Mcap_Ratio_LMER_stress)) 
+hist(residuals(Mcap_Ratio_LMER_recovery)) 
+
+## Type III Wald chisquare tests
+pacuta.ratio.stress.anova <- Anova(Pacuta_Ratio_LMER_stress, ddf="lme4", type='III') 
+pacuta.ratio.recovery.anova <- Anova(Pacuta_Ratio_LMER_recovery, ddf="lme4", type='III') 
+
+mcap.ratio.stress.anova <- Anova(Mcap_Ratio_LMER_stress, ddf="lme4", type='III') 
+mcap.ratio.recovery.anova <- Anova(Mcap_Ratio_LMER_recovery, ddf="lme4", type='III') 
+
+capture.output(pacuta.ratio.stress.anova, file = "Output/Statistics/TB_ratio_stress_pacuta.txt")
+capture.output(pacuta.ratio.recovery.anova, file = "Output/Statistics/TB_ratio_recovery_pacuta.txt")
+capture.output(mcap.ratio.stress.anova, file = "Output/Statistics/TB_ratio_stress_mcap.txt")
+capture.output(mcap.ratio.recovery.anova, file = "Output/Statistics/TB_ratio_recovery_mcap.txt")
 ```
-
-```{r}
-host.tukey <- TukeyHSD(x=Host.AFDW.aov.pacuta, conf.level = 0.95)
-
-HSD.test(Host.AFDW.aov.pacuta, 'P.AFDW.final$Temperature')
-
-```
-
-### M. capitata
-
-```{r}
-Host.AFDW.aov.mcap <- Anova(Mcap_Host_LMER, ddf="lme4", type='III') 
-Sym.AFDW.aov.mcap <- Anova(Mcap_Sym_LMER, ddf="lme4", type='III') 
-Ratio.AFDW.aov.mcap <- Anova(Mcap_SHRatio_LMER, ddf="lme4", type='III') 
-```
-
-```{r}
-
-
-```
-
 
 
 # Graphing data

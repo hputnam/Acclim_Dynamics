@@ -1,4 +1,5 @@
 ## NCBI 16S Upload 
+rm(list=ls())
 
 library(readr)
 library(plyr)
@@ -16,7 +17,9 @@ all.data$Project <- "HoloInt"
 
 all.data <- all.data %>% unite(NCBI_Sample_Title, NCBI_Sample_Name, Project, sep = "_", remove = FALSE) 
 
-ncbi <- all.data %>% select(NCBI_Sample_Name, host_subject_id, NCBI_Sample_Title, Species, Sample.Date, Site.Name) %>%
+write_csv(file = "16S_seq/NCBI-sample-title.csv", all.data)
+
+ncbi <- all.data %>% select(NCBI_Sample_Name, host_subject_id, NCBI_Sample_Title, Species, Sample.Date, Site.Name, Plug_ID) %>%
   mutate(Species = case_when(
     Species == "Mcapitata" ~ "Montipora capitata",
     Species == "Pacuta" ~ "Pocillopora acuta"

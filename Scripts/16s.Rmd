@@ -27,8 +27,8 @@ library(ggplot2)
 
 Sample manifest creation based on Hollie's that she had made prior. This will be used in the QIIME2 pathway. 
 ```{r}
-sample.manifest <- read.csv("16S_seq/HoloInt_sample-manifest.csv") %>% rename("sample-id" = sample.id) %>%
-  rename(`absolute-filepath` = absolute.filepath) # renaming two columns to the verbiage QIIME2 wants 
+sample.manifest <- read.csv("16S_seq/HoloInt_sample-manifest.csv") %>% dplyr::rename("sample-id" = sample.id) %>%
+  dplyr::rename(`absolute-filepath` = absolute.filepath) # renaming two columns to the verbiage QIIME2 wants 
 sample.manifest$`absolute-filepath` <- substr(sample.manifest$`absolute-filepath`, 55, 86) # only keep the sequence file name
 sample.manifest$path <- "/data/putnamlab/estrand/HoloInt_16s/raw-data/" # adding this verbiage to each row in a new column
 sample.manifest <- sample.manifest %>% unite(`absolute-filepath`, path, `absolute-filepath`, sep = "") # merging the two columns so it is the absolute filepath 
@@ -45,7 +45,7 @@ head(sample.manifest) # double check this is the correct format of final file
 
 The output will be feature tables that will be used in the following section. 
 
-### Deciding on denoising paramters for DADA2 plug-in
+## Deciding on denoising paramters for DADA2 plug-in
 
 See notebook post link above to the parameters chosen for this comparison.
 ```{r}
@@ -72,6 +72,9 @@ denoising.stats <- union(red_short, green_short) %>% union(green_long) %>% union
 Transforming dataframe to be easier to plot.
 ```{r}
 denoising.stats.gathered <- denoising.stats[, c(1,2,3,5,6,8,10,4,7,9)] #rearranging column order for the gather command so that all three desired columns are at the end
+
+denoise.reads <- denoising.stats.gathered %>% gather(statistic, value, 3:5)
+
 denoising.stats.gathered <- denoising.stats.gathered %>% gather(statistic, value, 8:10)
 denoising.stats.gathered$statistic <- factor(denoising.stats.gathered$statistic, levels=c("percentage.of.input.passed.filter","percentage.of.input.merged","percentage.of.input.non.chimeric"))
 ```
@@ -88,8 +91,20 @@ DADA2 <- ggplot(data = denoising.stats.gathered, aes(x = parameter, y = value, g
   ylab("Percentage (%)") + 
   theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)); DADA2 #Set the text angle
 
+DADA2.reads <- ggplot(data = denoise.reads, aes(x = parameter, y = value, group = parameter, color = parameter)) +
+  theme_classic() + geom_boxplot() +
+  facet_grid(~statistic, scales = "free") +
+  theme(legend.position = "none") +
+  scale_color_manual(values = cols) + 
+  ylab("# reads") + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)); DADA2.reads #Set the text angle
+
 ggsave(file="Output/denoising-statistics-DADA2.png", DADA2, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/denoising-statistics-DADA2-reads.png", DADA2, width = 11, height = 6, units = c("in"))
 ```
+
+## Searching what 
+
 
 # Phyloseq 
 

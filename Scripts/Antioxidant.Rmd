@@ -230,11 +230,24 @@ ggsave(file="Output/Final_Figures/Antioxidant.png", tac.plot, width = 11, height
 
 ### Host Total Antioxidant Capacity
 
-Raw distribution view. 
+Read in TAC data file so that you don't have to re-run the entire script to do the statistics. 
 ```{r}
-hist(pacuta_full_data$cre.umol.mgprot) 
-hist(mcap_full_data$cre.umol.mgprot) 
-# both very right skewed positively 
+antioxidant <- read.csv("Output/antioxidant.csv")
+
+mcap.antiox <- antioxidant %>% subset(Species == "Mcapitata")
+pacuta.antiox <- antioxidant %>% subset(Species == "Pacuta")
+
+mcap.tac.stress <- mcap.antiox %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
+pacuta.tac.stress <- pacuta.antiox %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
+
+mcap.tac.recovery <- mcap.antiox %>% subset(Timepoint == "10 week" | Timepoint == "12 week" | Timepoint == "14 week" | Timepoint == "16 week")
+pacuta.tac.recovery <- pacuta.antiox %>% subset(Timepoint == "10 week" | Timepoint == "12 week" | Timepoint == "14 week" | Timepoint == "16 week") %>% subset(Treatment == "ATAC" | Treatment == "ATHC")
+
+hist(mcap.tac.stress$cre.umol.mgprot) 
+hist(pacuta.tac.stress$cre.umol.mgprot) 
+
+hist(mcap.tac.recovery$cre.umol.mgprot) 
+hist(pacuta.tac.recovery$cre.umol.mgprot) 
 ```
 
 Mixed effect modeling  
@@ -242,60 +255,51 @@ Mixed effect modeling
 *P. acuta*
 ```{r}
 ## Pacuta 
-Pacuta_TAC_LMER <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) 
-Pacuta_TAC_LMER.reef <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=pacuta_full_data)
-model.sel(Pacuta_TAC_LMER, Pacuta_TAC_LMER.reef) # model selection function 
-## Model with tank AIC = 54.4; with tank and reef AIC = 57.6 
+Pacuta_TAC_LMER <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta.antiox) 
+Pacuta_TAC_LMER_stress <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta.tac.stress) 
+Pacuta_TAC_LMER_recovery <- lmer(log(cre.umol.mgprot) ~ Timepoint*CO2 + (1|Tank), na.action=na.omit, data=pacuta.tac.recovery) 
 
-isSingular(Pacuta_TAC_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
+qqPlot(residuals(Pacuta_TAC_LMER)) 
+qqPlot(residuals(Pacuta_TAC_LMER_stress)) 
+qqPlot(residuals(Pacuta_TAC_LMER_recovery)) 
 
-## summary of the model chosen from above
-## plot(Mcap_prot_LMER) in console to view diagnostic plots
-summary(Pacuta_TAC_LMER)
-qqPlot(residuals(Pacuta_TAC_LMER)) # qqplot and histogram 
 hist(residuals(Pacuta_TAC_LMER)) 
-## checking homogeneity of variance using levene test (can also use Bartlett's test function)
-leveneTest(pacuta_full_data$cre.umol.mgprot ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2) 
+hist(residuals(Pacuta_TAC_LMER_stress)) 
+hist(residuals(Pacuta_TAC_LMER_recovery)) 
 
 ## Type III Wald chisquare tests
-Anova(Pacuta_TAC_LMER.reef, ddf="lme4", type='III')
+pacuta.tac.anova <- Anova(Pacuta_TAC_LMER, ddf="lme4", type='III')
+pacuta.tac.anova.stress <- Anova(Pacuta_TAC_LMER_stress, ddf="lme4", type='III')
+pacuta.tac.anova.recovery <- Anova(Pacuta_TAC_LMER_recovery, ddf="lme4", type='III')
 
-## Type III Analysis of Variance Table with Satterthwaite's method
-anova(Pacuta_TAC_LMER.reef, ddf="Satterthwaite", type='III') 
-
-## Effects of temperature  never significant
-tp <- pacuta_full_data %>% subset(Timepoint == "8 week")
-tp.model <- lmer(log(cre.umol.mgprot) ~ Temperature*CO2 + (1|Tank), na.action=na.omit, data=tp)
-Anova(tp.model, ddf="lme4", type='III')
+capture.output(pacuta.tac.anova, file = "Output/Statistics/tac_stats_pacuta.txt")
+capture.output(pacuta.tac.anova.stress, file = "Output/Statistics/tac_stats_pacuta_stress.txt")
+capture.output(pacuta.tac.anova.recovery, file = "Output/Statistics/tac_stats_pacuta_recovery.txt")
 ```
 
 *M. capitata*
 ```{r}
 ## Mcapitata
-Mcap_TAC_LMER <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data) 
-Mcap_TAC_LMER.reef <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=mcap_full_data)
-model.sel(Mcap_TAC_LMER, Mcap_TAC_LMER.reef) # model selection function 
+Mcap_TAC_LMER <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.antiox) 
+Mcap_TAC_LMER_stress <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.tac.stress) 
+Mcap_TAC_LMER_recovery <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.tac.recovery) 
 
-isSingular(Mcap_TAC_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
+qqPlot(residuals(Mcap_TAC_LMER))
+qqPlot(residuals(Mcap_TAC_LMER_stress))
+qqPlot(residuals(Mcap_TAC_LMER_recovery))
 
-## summary of the model chosen from above
-## plot(Mcap_TAC_LMER) in console to view diagnostic plots
-summary(Mcap_TAC_LMER)
-qqPlot(residuals(Mcap_TAC_LMER)) # qqplot and histogram 
 hist(residuals(Mcap_TAC_LMER)) 
-## checking homogeneity of variance using levene test (can also use Bartlett's test function)
-leveneTest(mcap_full_data$cre.umol.mgprot ~ mcap_full_data$Timepoint*mcap_full_data$Temperature*mcap_full_data$CO2) 
+hist(residuals(Mcap_TAC_LMER_stress)) 
+hist(residuals(Mcap_TAC_LMER_recovery)) 
 
 ## Type III Wald chisquare tests
-Anova(Mcap_TAC_LMER, ddf="lme4", type='III')
+mcap.tac.anova <- Anova(Mcap_TAC_LMER, ddf="lme4", type='III')
+mcap.tac.anova.stress <- Anova(Mcap_TAC_LMER_stress, ddf="lme4", type='III')
+mcap.tac.anova.recovery <- Anova(Mcap_TAC_LMER_recovery, ddf="lme4", type='III')
 
-## Type III Analysis of Variance Table with Satterthwaite's method
-anova(Mcap_TAC_LMER, ddf="Satterthwaite", type='III') 
-
-## Effects of temperature significant at 12 week only 
-tp <- mcap_full_data %>% subset(Timepoint == "16 week")
-tp.model <- lmer(log(cre.umol.mgprot) ~ Temperature*CO2 + (1|Tank), na.action=na.omit, data=tp)
-Anova(tp.model, ddf="lme4", type='III')
+capture.output(mcap.tac.anova, file = "Output/Statistics/tac_stats_mcap.txt")
+capture.output(mcap.tac.anova.stress, file = "Output/Statistics/tac_stats_mcap_stress.txt")
+capture.output(mcap.tac.anova.recovery, file = "Output/Statistics/tac_stats_mcap_recovery.txt")
 ```
 
 

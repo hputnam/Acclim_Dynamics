@@ -232,21 +232,6 @@ Mcap_Color_sq_reef = 33668.3
 
 Therefore the `Mcap_Color_sq` model was chosen. Results of ANOVA below:  
 
-Analysis of Deviance Table (Type III Wald chisquare tests)
-
-Response: (Color.Transformed^2)
-                              Chisq Df Pr(>Chisq)    
-(Intercept)               2558.8746  1  < 2.2e-16 ***
-Blch.Time                    7.1054 15   0.954658    
-Temperature                  0.0001  1   0.993883    
-CO2                          0.0004  1   0.984995    
-Blch.Time:Temperature      239.9058 15  < 2.2e-16 ***
-Blch.Time:CO2                9.8222 15   0.830771    
-Temperature:CO2              0.0533  1   0.817434    
-Blch.Time:Temperature:CO2   33.6348 15   0.003831 ** 
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-
 ```{r}
 Mcap_Color_sq <- lmer((Color.Transformed^2) ~ Blch.Time*Temperature*CO2 + (1|Plug_ID), na.action=na.omit, data=mcap.color)
 #Mcap_Color_sq_reef <- lmer((Color.Transformed^2) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID) + (1|Site.Name), na.action=na.omit, data=mcap.color)
@@ -255,8 +240,10 @@ Mcap_Color_sq <- lmer((Color.Transformed^2) ~ Blch.Time*Temperature*CO2 + (1|Plu
 ## move forward with Pacuta_Color_sq_reef model 
 
 ## significance of model
-Anova(Mcap_Color_sq, ddf="lme4", type='III') # Type III Wald chisquare tests
+mcap_anova_color_score <- Anova(Mcap_Color_sq, ddf="lme4", type='III') # Type III Wald chisquare tests
 #anova(Mcap_Color_sq, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+
+capture.output(mcap_anova_color_score, file = "Output/Statistics/Colorscore_mcap_stats.txt")
 ```
 
 
@@ -270,21 +257,6 @@ Pacuta_Color_sq = 24921.4.
 
 Therefore the `Pacuta_Color_sq_reef` model was chosen because it had a lower AIC value. Results of ANOVA below:  
 
-Analysis of Deviance Table (Type III Wald chisquare tests)
-
-Response: (Color.Transformed^2)
-                              Chisq Df Pr(>Chisq)    
-(Intercept)               1173.2832  1  < 2.2e-16 ***
-Blch.Time                   70.6594 15  3.408e-09 ***
-Temperature                  0.0244  1     0.8758    
-CO2                          0.2205  1     0.6387    
-Blch.Time:Temperature      205.6289 11  < 2.2e-16 ***
-Blch.Time:CO2              126.5100 15  < 2.2e-16 ***
-Temperature:CO2              0.1262  1     0.7225    
-Blch.Time:Temperature:CO2   49.9893 11  6.287e-07 ***
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-
 ```{r}
 Pacuta_Color_sq <- lmer((Color.Transformed^2) ~ Blch.Time*Temperature*CO2 + (1|Plug_ID), na.action=na.omit, data=pacuta.color)
 Pacuta_Color_sq_reef <- lmer((Color.Transformed^2) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID) + (1|Site.Name), na.action=na.omit, data=pacuta.color)
@@ -293,10 +265,16 @@ model.sel(Pacuta_Color_sq, Pacuta_Color_sq_reef) # model selection test
 ## move forward with Pacuta_Color_sq_reef model 
 
 ## significance of model
-Anova(Pacuta_Color_sq, ddf="lme4", type='III') # Type III Wald chisquare tests
+pacuta_anova_color_score <- Anova(Pacuta_Color_sq, ddf="lme4", type='III') # Type III Wald chisquare tests
 anova(Pacuta_Color_sq_reef, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
+
+capture.output(pacuta_anova_color_score, file = "Output/Statistics/Colorscore_pacuta_stats.txt")
 ```
 
+```{r}
+mcap_anova_color_score
+pacuta_anova_color_score
+```
 
 # Plotting 
 

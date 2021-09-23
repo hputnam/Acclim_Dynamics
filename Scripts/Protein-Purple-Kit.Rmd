@@ -216,12 +216,24 @@ ggsave(file="Output/Final_Figures/Host-Soluble-Protein.png", purple.prot, width 
 
 # Statistics 
 
+Use `prot` dataframe for the following statistics. Separating into stress and recovery periods and removing Day 1 and Day 2 because of sample size issues. 
 
 Raw distribution view. 
 ```{r}
-hist(pacuta_full_data$prot_mg.cm2) 
-hist(mcap_full_data$prot_mg.cm2) 
-# both slightly right skewed positively 
+prot.pacuta <- prot %>% subset(Species == "Pacuta")
+prot.mcap <- prot %>% subset(Species == "Mcapitata")
+
+mcap.prot.stress <- prot.mcap %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
+pacuta.prot.stress <- prot.pacuta %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
+
+mcap.prot.recovery <- prot.mcap %>% subset(Timepoint == "10 week" | Timepoint == "12 week" | Timepoint == "14 week" | Timepoint == "16 week")
+pacuta.prot.recovery <- prot.pacuta %>% subset(Timepoint == "10 week" | Timepoint == "12 week" | Timepoint == "14 week" | Timepoint == "16 week") %>% subset(Treatment == "ATAC" | Treatment == "ATHC")
+
+hist(mcap.prot.recovery$prot_mg.cm2) 
+hist(mcap.prot.stress$prot_mg.cm2) 
+
+hist(pacuta.prot.recovery$prot_mg.cm2) 
+hist(pacuta.prot.stress$prot_mg.cm2) 
 ```
 
 Mixed effect modeling. 
@@ -229,63 +241,54 @@ Mixed effect modeling.
 *P. acuta*
 ```{r}
 ## Pacuta 
-Pacuta_prot_LMER <- lmer(prot_mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data)  
-Pacuta_prot_LMER.reef <- lmer(prot_mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=pacuta_full_data)
-model.sel(Pacuta_prot_LMER, Pacuta_prot_LMER.reef) # model selection function 
-## Model with tank AIC = 67.8; model with tank and reef AIC = 64.8. Go with model with reef. 
+Pacuta_prot_LMER <- lmer(prot_mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=prot.pacuta)  
+Pacuta_prot_LMER_stress <- lmer(prot_mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta.prot.stress)  
+Pacuta_prot_LMER_recovery <- lmer(prot_mg.cm2 ~ Timepoint*CO2 + (1|Tank), na.action=na.omit, data=pacuta.prot.recovery) 
 
-## summary of the model chosen from above
-## plot(Mcap_Chl_LMER) in console to view diagnostic plots
-summary(Pacuta_prot_LMER)
-qqPlot(residuals(Pacuta_prot_LMER)) # qqplot and histogram 
+qqPlot(residuals(Pacuta_prot_LMER))
+qqPlot(residuals(Pacuta_prot_LMER_stress)) 
+qqPlot(residuals(Pacuta_prot_LMER_recovery))
+
 hist(residuals(Pacuta_prot_LMER)) 
+hist(residuals(Pacuta_prot_LMER_stress)) 
+hist(residuals(Pacuta_prot_LMER_recovery)) 
+
 ## checking homogeneity of variance using levene test (can also use Bartlett's test function)
-leveneTest(pacuta_full_data$prot_mg.cm2 ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
+#leveneTest(pacuta_full_data$prot_mg.cm2 ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
 
 ## Type III Wald chisquare tests
-Anova(Pacuta_prot_LMER, ddf="lme4", type='III') 
-Anova(Pacuta_prot_LMER.reef, ddf="lme4", type='III') 
+pacuta.prot.anova <- Anova(Pacuta_prot_LMER, ddf="lme4", type='III') 
+pacuta.prot.anova.stress <- Anova(Pacuta_prot_LMER_stress, ddf="lme4", type='III') 
+pacuta.prot.anova.recovery <- Anova(Pacuta_prot_LMER_recovery, ddf="lme4", type='III') 
 
-## Type III Analysis of Variance Table with Satterthwaite's method
-anova(Pacuta_prot_LMER, ddf="Satterthwaite", type='III') 
-anova(Pacuta_prot_LMER.reef, ddf="Satterthwaite", type='III') 
-
-## Effects of temperature/pco2/both at 4 weeks 
-tp <- pacuta_full_data %>% subset(Timepoint == "4 week")
-tp.model <- lmer(prot_mg.cm2 ~ Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=tp)
-Anova(tp.model, ddf="lme4", type='III')
+capture.output(pacuta.prot.anova, file = "Output/Statistics/prot_stats_pacuta.txt")
+capture.output(pacuta.prot.anova.stress, file = "Output/Statistics/prot_stats_pacuta_stress.txt")
+capture.output(pacuta.prot.anova.recovery, file = "Output/Statistics/prot_stats_pacuta_recovery.txt")
 ```
 
 *M. capitata* 
 ```{r}
 ## Mcap
-Mcap_prot_LMER <- lmer(prot_mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_full_data)  
-Mcap_prot_LMER.reef <- lmer(prot_mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=mcap_full_data)
-model.sel(Mcap_prot_LMER, Mcap_prot_LMER.reef) # model selection function 
-## With reef AIC = 118.7; without reef AIC = 118.8 
+Mcap_prot_LMER <- lmer(prot_mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=prot.mcap)  
+Mcap_prot_LMER_stress <- lmer(prot_mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.prot.stress)  
+Mcap_prot_LMER_recovery <- lmer(prot_mg.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.prot.recovery)  
 
-isSingular(Mcap_prot_LMER, tol = 1e-4) # this produced TRUE, the GLMM is overfitting the model
+qqPlot(residuals(Mcap_prot_LMER)) 
+qqPlot(residuals(Mcap_prot_LMER_stress)) 
+qqPlot(residuals(Mcap_prot_LMER_recovery)) 
 
-## summary of the model chosen from above
-## plot(Mcap_prot_LMER) in console to view diagnostic plots
-summary(Mcap_prot_LMER)
-qqPlot(residuals(Mcap_prot_LMER)) # qqplot and histogram 
 hist(residuals(Mcap_prot_LMER)) 
-## checking homogeneity of variance using levene test (can also use Bartlett's test function)
-leveneTest(mcap_full_data$prot_mg.cm2 ~ mcap_full_data$Timepoint*mcap_full_data$Temperature*mcap_full_data$CO2)
+hist(residuals(Mcap_prot_LMER_stress)) 
+hist(residuals(Mcap_prot_LMER_recovery)) 
 
 ## Type III Wald chisquare tests
-Anova(Mcap_prot_LMER, ddf="lme4", type='III')
-Anova(Mcap_prot_LMER.reef, ddf="lme4", type='III')
+mcap.prot.anova <- Anova(Mcap_prot_LMER, ddf="lme4", type='III')
+mcap.prot.anova.stress <- Anova(Mcap_prot_LMER_stress, ddf="lme4", type='III')
+mcap.prot.anova.recovery <- Anova(Mcap_prot_LMER_recovery, ddf="lme4", type='III')
 
-## Type III Analysis of Variance Table with Satterthwaite's method
-anova(Mcap_prot_LMER, ddf="Satterthwaite", type='III') 
-anova(Mcap_prot_LMER.reef, ddf="Satterthwaite", type='III') 
-
-## Effects of temperature starts at 2 weeks only and pCO2 at 6 weeks
-tp <- mcap_full_data %>% subset(Timepoint == "16 week")
-tp.model <- lmer(prot_mg.cm2 ~ Temperature*CO2 + (1|Tank), na.action=na.omit, data=tp)
-Anova(tp.model, ddf="lme4", type='III')
+capture.output(mcap.prot.anova, file = "Output/Statistics/prot_stats_mcap.txt")
+capture.output(mcap.prot.anova.stress, file = "Output/Statistics/prot_stats_mcap_stress.txt")
+capture.output(mcap.prot.anova.recovery, file = "Output/Statistics/prot_stats_mcap_recovery.txt")
 ```
 
 
