@@ -17,6 +17,7 @@ library(dplyr)
 library(tidyr)
 library(readr)
 library(ggplot2)
+
 ```
 
 # 16S Lab protocol from the putnam lab 
@@ -103,7 +104,14 @@ ggsave(file="Output/denoising-statistics-DADA2.png", DADA2, width = 11, height =
 ggsave(file="Output/denoising-statistics-DADA2-reads.png", DADA2, width = 11, height = 6, units = c("in"))
 ```
 
-## Searching what 
+## Filtering the "yellow-short" category to just "d_Bacteria"
+
+```{r}
+dbact <- read.table("16S_seq/ES-run/yellow-short-primer/yellow-short-metadata.tsv", sep="\t", header=TRUE) %>%
+  filter(Taxon == "d__Bacteria")
+
+write.table(dbact, file='16S_seq/ES-run/yellow-short-primer/yellow-short-metadata-dBact.tsv', quote=FALSE, sep='\t', col.names = NA)
+```
 
 
 # Phyloseq 

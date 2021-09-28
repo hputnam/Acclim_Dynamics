@@ -27,6 +27,8 @@ library(ggfortify)
 
 ```
 
+# ITS2 Type Profiles 
+
 Sample 192 and 193 were switched in 'ITS2 Profiles' csv. 
 Take out 2153 
 
@@ -259,5 +261,28 @@ ggplot(data = tp5, mapping = aes(x = Group, y = rel.abun, fill = Profile)) +
 
 ggsave("Output/Final_Figures/CSP-rel.abund.its2.pdf")
 ggsave("Output/Final_Figures/CSP-rel.abund.its2.png")
+```
+
+# DIV Analysis 
+
+```{r}
+div <- read.table("ITS2_seq/Output/SymPortal/FULL_ITS2/post_med_seqs/3_first_analysis_2020-04-01_12-26-53.145538.seqs.absolute.abund_only.txt", sep = "\t", header = TRUE)
+sample.uid <- read.csv("ITS2_seq/R_Input/Sample_variables.csv") %>% select(sample_uid, Plug_ID)
+meta <- merge(sample.uid, meta, by = "Plug_ID")
+
+div <- merge(div, meta, by = "sample_uid") # combine meta and ITS2 type profile data
+
+div.data <- div[,1:229]
+rownames(div.data) <- div.data$sample_uid
+div.data <- as.matrix(div.data[,2:229])
+
+DIV.Rel.Sym.Data <- div.data/rowSums(div.data) # calculate the Relative Abundance
+DIV.N <- rowSums(DIV.Rel.Sym.Data) # calculate row sums of the relative abundances, should sum to 1
+DIV.N #Display Row Sums, should all be 1
+
+
+
+## PCA 
+## PERMANOVA analysis 
 ```
 
