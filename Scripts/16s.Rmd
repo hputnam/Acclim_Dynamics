@@ -78,6 +78,18 @@ denoise.reads <- denoising.stats.gathered %>% gather(statistic, value, 3:5)
 
 denoising.stats.gathered <- denoising.stats.gathered %>% gather(statistic, value, 8:10)
 denoising.stats.gathered$statistic <- factor(denoising.stats.gathered$statistic, levels=c("percentage.of.input.passed.filter","percentage.of.input.merged","percentage.of.input.non.chimeric"))
+
+
+## average stats for yellow short 
+yellow.short.avg.denoise.stats <- denoising.stats %>% subset(parameter == "yellow_short") %>%
+  mutate(avg.input = mean(input),
+         avg.filtered = mean(filtered),
+         avg.filter.perc = mean(percentage.of.input.passed.filter),
+         avg.denoised = mean(denoised),
+         avg.merged = mean(merged),
+         avg.merged.perc = mean(percentage.of.input.merged),
+         avg.non.chimeric = mean(non.chimeric),
+         avg.nc.perc = mean(percentage.of.input.non.chimeric))
 ```
 
 Plotting denoising statistics.
