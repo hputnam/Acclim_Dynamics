@@ -19,7 +19,7 @@ library(ggforce)
 set.seed(54321)
 
 # import data; results physiology csv is from 'Statistics' Rmd. 
-data <- read.csv("Output/results_physiology.csv") %>% #read in file
+data <- read.csv("Output/results_physiology.csv") %>%  #read in file
   select(-Pnet_umol.cm2.hr, -Rdark_umol.cm2.hr, -Pgross_umol.cm2.hr, -chla.ug.cm2) %>% na.omit() %>%
   filter(Timepoint=="Day 2"| Timepoint== "2 week"| Timepoint== "4 week" | Timepoint== "8 week" | Timepoint== "12 week")
 data$Timepoint <- factor(data$Timepoint, levels = c("Day 2", "2 week", "4 week", "8 week", "12 week"))

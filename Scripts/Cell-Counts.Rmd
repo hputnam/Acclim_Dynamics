@@ -22,7 +22,10 @@ library(tidyverse)
 library(ggpubr)
 library(purrr)
 library(Rmisc)
+library(lme4)
+library(car)
 ```
+
 
 # Holobiont Integration sample processing 
 
@@ -59,9 +62,7 @@ haemo.raw <- read_csv("Physiology_variables/cell-counts/cell_counts.csv")
    haemo.raw$Plug_ID <- as.character(haemo.raw$Plug_ID)
 ```
 
-## Calculate mean counts for both haemocytometer and cellometer.
-
-### Haemocytometer
+## Calculate counts for haemocytometer counts
 
 ```{r}
 # Calculate mean counts for each sample
@@ -82,17 +83,35 @@ haemo <- haemo %>%
 
 haemo <- haemo %>% filter(!is.na(haemo.cells.cm2))
 haemo$Timepoint <- factor(haemo$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
+
+haemo %>%
+  write_csv(., file = "Output/cell_counts.csv")
 ```
 
-Calculate means from each timepoint and group. 
+## Checking distribution and variation.
+```{r}
+cols <- c("lightblue", "blue", "pink", "red")
+
+ggplot(haemo, aes(x=Timepoint, y = haemo.cells.cm2, group = Treatment, color = Treatment)) + 
+  facet_grid(Species ~Treatment) + theme_classic() + geom_point() + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3))
+
+# plug IDs that had above 1 million cells per cm2; double check that these counts and the variation looks OK
+million.above <- haemo %>% filter(haemo.cells.cm2 > 1000000) %>% select(Plug_ID) %>% distinct()
+# 2 more counts on M2867 and M2876
+```
+
+
+
+## Calculate means from each timepoint and group. 
+
 ```{r}
 count.means <- summarySE(haemo, measurevar = c("haemo.cells.cm2"), groupvars = c("Treatment", "Timepoint", "Species"))
 ```
 
+## Visualize data 
 
 ```{r}
-cols <- c("lightblue", "blue", "pink", "red")
-
 cellcounts_plot <- ggplot(count.means, aes(x=Timepoint, y = haemo.cells.cm2, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
   facet_grid(~Species, scales = "free") +
@@ -114,4 +133,57 @@ cellcounts_plot <- ggplot(count.means, aes(x=Timepoint, y = haemo.cells.cm2, gro
 
 ggsave(file="Output/Cell_counts.pdf", cellcounts_plot, width = 15, height = 10, units = c("in"))
 ```
+
+## Statistics 
+
+Subsetting into time points 
+
+```{r}
+mcap.counts <- haemo %>% subset(Species == "Montipora capitata")
+pacuta.counts <- haemo %>% subset(Species == "Pocillopora acuta")
+
+mcap.counts.stress <- mcap.counts %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
+mcap.counts.recovery <- mcap.counts %>% subset(Timepoint == "10 week" | Timepoint == "12 week" | Timepoint == "14 week" | Timepoint == "16 week")
+
+pacuta.counts.stress <- pacuta.counts %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
+pacuta.counts.recovery <- pacuta.counts %>% subset(Timepoint == "10 week" | Timepoint == "12 week" | Timepoint == "14 week" | Timepoint == "16 week") %>% subset(Treatment == "ATAC" | Treatment == "ATHC")
+
+hist(mcap.counts.stress$haemo.cells.cm2) 
+hist(mcap.counts.recovery$haemo.cells.cm2) 
+hist(pacuta.counts.stress$haemo.cells.cm2) 
+hist(pacuta.counts.recovery$haemo.cells.cm2) 
+```
+
+Model selection 
+
+```{r}
+Pacuta_counts_LMER_stress <- lmer(log(haemo.cells.cm2) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta.counts.stress) 
+Pacuta_counts_LMER_recovery <- lmer(haemo.cells.cm2 ~ Timepoint*CO2 + (1|Tank), na.action=na.omit, data=pacuta.counts.recovery) 
+
+Mcap_counts_LMER_stress <- lmer(haemo.cells.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.counts.stress) 
+Mcap_counts_LMER_recovery <- lmer(haemo.cells.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.counts.recovery) 
+
+qqPlot(residuals(Pacuta_counts_LMER_stress)) 
+qqPlot(residuals(Pacuta_counts_LMER_recovery)) 
+qqPlot(residuals(Mcap_counts_LMER_stress)) 
+qqPlot(residuals(Mcap_counts_LMER_recovery)) 
+
+hist(residuals(Pacuta_counts_LMER_stress)) 
+hist(residuals(Pacuta_counts_LMER_recovery)) 
+hist(residuals(Mcap_counts_LMER_stress)) 
+hist(residuals(Mcap_counts_LMER_recovery)) 
+
+## Type III Wald chisquare tests
+pacuta.counts.stress.anova <- Anova(Pacuta_counts_LMER_stress, ddf="lme4", type='III') 
+pacuta.counts.recovery.anova <- Anova(Pacuta_counts_LMER_recovery, ddf="lme4", type='III') 
+
+mcap.counts.stress.anova <- Anova(Mcap_counts_LMER_stress, ddf="lme4", type='III') 
+mcap.counts.recovery.anova <- Anova(Mcap_counts_LMER_recovery, ddf="lme4", type='III') 
+
+capture.output(pacuta.counts.stress.anova, file = "Output/Statistics/Counts_stress_pacuta.txt")
+capture.output(pacuta.counts.recovery.anova, file = "Output/Statistics/Counts_recovery_pacuta.txt")
+capture.output(mcap.counts.stress.anova, file = "Output/Statistics/Counts_stress_mcap.txt")
+capture.output(mcap.counts.recovery.anova, file = "Output/Statistics/Counts_recovery_mcap.txt")
+```
+
 
