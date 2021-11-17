@@ -125,6 +125,37 @@ dbact <- read.table("16S_seq/ES-run/yellow-short-primer/yellow-short-metadata.ts
 write.table(dbact, file='16S_seq/ES-run/yellow-short-primer/yellow-short-metadata-dBact.tsv', quote=FALSE, sep='\t', col.names = NA)
 ```
 
+## Checking number of bacterial sequences for a specific sample
+
+```{r}
+unfiltered.counts <- read.csv(file = "16S_seq/ES-run/yellow-short-primer/yellow-short-unfiltered-taxa-bar-plots-level1.csv", sep = ",", header = TRUE)
+sample.ids <- read.csv("16S_seq/16s-sample-ids.csv", sep = ",", header = TRUE) %>% rename(index = 'X16s_ID')
+
+unfiltered.counts <- full_join(unfiltered.counts, sample.ids, by = "index") #%>% filter(Plug_ID == "2410")
+
+unfiltered.counts <- unfiltered.counts %>% 
+  mutate(total = d__Eukaryota+d__Bacteria+Unassigned+d__Archaea) %>%
+  mutate(bact_ratio = d__Bacteria/total) %>%
+  mutate(avg_bact_ratio = mean(bact_ratio))
+
+levelfour.uf.counts <- read.csv(file = "16S_seq/ES-run/yellow-short-primer/yellow-short-unfiltered-taxa-bar-plots.csv", sep = ",", header = TRUE)
+levelfour.uf.counts <- full_join(levelfour.uf.counts, sample.ids, by = "index") 
+
+levelfour.uf.counts <- levelfour.uf.counts %>% select(index:d__Bacteria.p__Firmicutes.c__Bacilli.o__Erysipelotrichales)
+levelfour.uf.counts$total <- unfiltered.counts$total
+
+unfiltered.counts$chloroplast <- levelfour.uf.counts$'d__Bacteria.p__Cyanobacteria.c__Cyanobacteriia.o__Chloroplast'
+
+unfiltered.counts <- unfiltered.counts %>%
+  mutate(chl_ratio = chloroplast/total) %>%
+  mutate(avg_chl_ratio = mean(chl_ratio))
+
+```
+
+
+
+
+
 
 # Phyloseq 
 
