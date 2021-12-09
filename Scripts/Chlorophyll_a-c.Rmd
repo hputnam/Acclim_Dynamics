@@ -121,12 +121,21 @@ homog.vol <- read.csv("Physiology_variables/homogenate_vol.csv") %>%
 homog.vol$Plug_ID <- as.factor(homog.vol$Plug_ID)
 str(homog.vol)
 
-df.chl <- left_join(df.chl, homog.vol)
+df.chl <- left_join(df.chl, homog.vol) 
+
+# Load cell density 
+cell.density <- read.csv("Output/cell_counts.csv") %>% select(Plug_ID, haemo.cells.cm2)
+cell.density$Plug_ID <- as.factor(cell.density$Plug_ID)
+str(cell.density)
+
+df.chl <- left_join(df.chl, cell.density)
 
 # Account for homogenate volume and normalize to surface area
 df.chl <- df.chl %>%
   mutate(chla.ug.cm2 = (chla.ug.ml * vol_mL) / surface.area.cm2,
-         chlc2.ug.cm2 = (chlc2.ug.ml * vol_mL) / surface.area.cm2)
+         chlc2.ug.cm2 = (chlc2.ug.ml * vol_mL) / surface.area.cm2,
+         chla.ug.cells.cm2 = (chla.ug.ml * vol_mL) / haemo.cells.cm2,
+         chlc2.ug.cells.cm2 = (chlc2.ug.ml * vol_mL) / haemo.cells.cm2)
 
 # remove blanks and NAs
 df.chl <- filter(df.chl, !Plug_ID %in% c("NA", "BK"))
@@ -148,7 +157,7 @@ Chl_final <- Chl_final %>% filter(!Plug_ID == "1488")
 filter(Chl_final, Plug_ID == "1488") # checking to see that worked; output should be 0
 
 Chl_final %>%
-  select(Plug_ID, Species, Timepoint, Temperature, Treatment, CO2, chla.ug.cm2, chlc2.ug.cm2) %>%
+  select(Plug_ID, Species, Timepoint, Temperature, Treatment, CO2, chla.ug.cm2, chlc2.ug.cm2, chla.ug.cells.cm2, chlc2.ug.cells.cm2) %>%
   write_csv(path = "Output/chlorophyll.csv")
 ```
 
@@ -228,17 +237,16 @@ Calculating mean values for each timepoint and treatment group.
 #### the above tables aren't calculating this correctly ; sample sizes are off. come back to this. I prefer the below summarySE function instead 
 
 ## use the following 
-Chl_long <- Chl_final %>% select(Plug_ID, surface.area.cm2, vol_mL, chla.ug.cm2, chlc2.ug.cm2, Species, Treatment, Temperature, CO2, Timepoint) %>%
-  gather("Measurement", "Value", 4:5)
+Chl_long <- Chl_final %>% select(Plug_ID, surface.area.cm2, vol_mL, chla.ug.cm2, chlc2.ug.cm2, chla.ug.cells.cm2, chlc2.ug.cells.cm2, Species, Treatment, Temperature, CO2, Timepoint) %>% gather("Measurement", "Value", 4:7)
 Chl_means <- summarySE(Chl_long, measurevar="Value", groupvars=c("Timepoint", "Treatment", "Temperature", "CO2", "Species", "Measurement")) %>% filter(N>2) %>%
   mutate(Species = case_when(
     Species == "Mcapitata" ~ "Montipora capitata",
-    Species == "Pacuta" ~ "Pocillopora acuta"
-  )) %>%
-  mutate(Measurement = case_when(
-    Measurement == "chla.ug.cm2" ~ "Chlorophyll-a",
-    Measurement == "chlc2.ug.cm2" ~ "Chlorophyll-c2"
-  )) 
+    Species == "Pacuta" ~ "Pocillopora acuta"))
+  # )) %>%
+  # mutate(Measurement = case_when(
+  #   Measurement == "chla.ug.cm2" ~ "Chlorophyll-a",
+  #   Measurement == "chlc2.ug.cm2" ~ "Chlorophyll-c2"
+  # )) 
 
 Chlc2_means <- summarySE(Chl_final, measurevar="chlc2.ug.cm2", groupvars=c("Timepoint", "Treatment", "Temperature", "CO2", "Species"))
 Chlc2_means
@@ -292,7 +300,14 @@ export_formattable(Chl.samples.sizes, file = "Output/Chl_means_samplesizes.png")
 ```{r}
 cols <- c("lightblue", "blue", "pink", "red")
 
-CHL <- ggplot(Chl_means, aes(x=Timepoint, y = Value, group = Treatment, color = Treatment)) +
+Chl_means <- Chl_means %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2") %>% 
+  subset(!Timepoint == "12 week" | !Treatment == "HTAC" | !Species == "Pocillopora acuta")
+
+
+Chl_means_cm2 <- Chl_means %>% subset(Measurement == "chla.ug.cm2" | Measurement == "chlc2.ug.cm2")
+Chl_means_cells_cm2 <- Chl_means %>% subset(Measurement == "chla.ug.cells.cm2" | Measurement == "chlc2.ug.cells.cm2")
+
+CHL.cm2 <- ggplot(Chl_means_cm2, aes(x=Timepoint, y = Value, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
   facet_grid(Measurement ~ Species, scales = "free") +
   geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2) +
@@ -302,7 +317,7 @@ CHL <- ggplot(Chl_means, aes(x=Timepoint, y = Value, group = Treatment, color = 
   ylab(expression("Concentration" ~(ug ~cm^-2))) +
   #ggtitle("Chlorophyll a and c2 concentration") +
   theme(legend.position = "left") +
-  geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
+  geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
   theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
   theme(panel.border = element_blank(),
@@ -310,7 +325,27 @@ CHL <- ggplot(Chl_means, aes(x=Timepoint, y = Value, group = Treatment, color = 
   panel.grid.minor = element_blank(),
   strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
   # Change axis line
-  axis.line = element_line(colour = "black")); CHL
+  axis.line = element_line(colour = "black")); CHL.cm2
+
+CHL.cells.cm2 <- ggplot(Chl_means_cells_cm2, aes(x=Timepoint, y = Value, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(Measurement ~ Species, scales = "free") +
+  geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + 
+  theme_classic() + 
+  ylab(expression("Concentration" ~(ug ~cells.cm^-2))) +
+  #ggtitle("Chlorophyll a and c2 concentration") +
+  theme(legend.position = "left") +
+  geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
+  # Change axis line
+  axis.line = element_line(colour = "black")); CHL.cells.cm2
 
 
 CHL.site <- ggplot(Chl_final, aes(x=Timepoint, y = chla.ug.cm2, group = Site.Name, color = Site.Name)) +
@@ -333,8 +368,10 @@ CHL.site <- ggplot(Chl_final, aes(x=Timepoint, y = chla.ug.cm2, group = Site.Nam
   # Change axis line
   axis.line = element_line(colour = "black")); CHL.site
 
-ggsave(file="Output/Final_Figures/Chlorophyll.pdf", CHL, width = 11, height = 6, units = c("in"))
-ggsave(file="Output/Final_Figures/Chlorophyll.png", CHL, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Chlorophyll_SA.pdf", CHL.cm2, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Chlorophyll_SA.png", CHL.cm2, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Chlorophyll_cells.pdf", CHL.cells.cm2, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Chlorophyll_cells.png", CHL.cells.cm2, width = 11, height = 6, units = c("in"))
 ```
 
 ## Statistics 

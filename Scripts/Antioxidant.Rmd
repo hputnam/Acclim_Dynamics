@@ -203,6 +203,8 @@ Figure construction.
 ```{r}
 cols <- c("lightblue", "blue", "pink", "red")
 
+tac.means <- tac.means %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2")
+
 tac.plot <- ggplot(tac.means, aes(x=Timepoint, y = cre.umol.mgprot, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
   facet_grid(~Species) +
@@ -213,7 +215,7 @@ tac.plot <- ggplot(tac.means, aes(x=Timepoint, y = cre.umol.mgprot, group = Trea
   ylab(expression("Copper Reducing Equivalents" ~(umol ~mg^-1))) +
   ggtitle("Total Antioxidant Capacity") +
   theme(legend.position = "left") +
-  geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
+  geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
   theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
   theme(panel.border = element_blank(),
