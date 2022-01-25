@@ -136,7 +136,7 @@ cellcounts_plot <- ggplot(count.means, aes(x=Timepoint, y = haemo.cells.cm2, gro
   # Change axis line
   axis.line = element_line(colour = "black")); cellcounts_plot
 
-ggsave(file="Output/Cell_counts.pdf", cellcounts_plot, width = 15, height = 10, units = c("in"))
+ggsave(file="Output/Final_figures/Cell_counts.png", cellcounts_plot, width = 11, height = 8, units = c("in"))
 ```
 
 ## Statistics 

@@ -54,7 +54,7 @@ Photo.Resp <- read.csv("Physiology_variables/Respirometry/Output/Resp_AllRates.c
   Photo.Resp <- Photo.Resp %>% separate(Plug_ID, c("Plug_ID", "Date")) %>% select(-Date)
 
 Chlorophyll <-  read.csv("Output/chlorophyll.csv") %>% select(Plug_ID, chla.ug.cm2, chlc2.ug.cm2)
-Biomass <- read.csv("Output/Tissue_Biomass.csv")
+Biomass <- read.csv("Output/Tissue_Biomass.csv") %>% spread(partner, value)
 Protein <- read.csv("Output/soluble_protein.csv") %>% select(Plug_ID, prot_mg.cm2)
 Antioxidant <- read.csv("Output/antioxidant.csv") %>% select(Plug_ID, cre.umol.mgprot)
 Counts <- read.csv("Output/cell_counts.csv") %>% select(Plug_ID, haemo.cells.cm2)
@@ -64,26 +64,27 @@ Counts <- read.csv("Output/cell_counts.csv") %>% select(Plug_ID, haemo.cells.cm2
 data <- join_all(list(Master, Photo.Resp, Chlorophyll, Biomass, Protein, Antioxidant, Counts), by='Plug_ID', type='left')
 data$Timepoint <- factor(data$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week", "12 week", "16 week"))
 
-data <- data %>% 
+data <- data %>% distinct() %>%
   write_csv(., file = "Output/results_physiology.csv")
 ```
 
 ### Subsetting data 
 ```{r}
-# Subsetting to the stress timepoints with all variables
-pca_data <- data[complete.cases(data), ] # only taking rows where all samples have data
+## Stress and recovery period (no resp)
+full.data <- data %>% select(-Pnet_umol.cm2.hr, -Rdark_umol.cm2.hr, -Pgross_umol.cm2.hr)
+full.data.pca <- full.data[complete.cases(full.data), ] 
 
-# Removing respiration and photosynthesis to keep the recovery timepoints 
-subsetted.data.noresp <- data %>% select(-Pnet_umol.cm2.hr, -Rdark_umol.cm2.hr, -Pgross_umol.cm2.hr)
-subsetted.data.noresp.pca <- subsetted.data.noresp[complete.cases(subsetted.data.noresp), ] 
+# The above dataframes split Species
+Mcap.full.pca <- full.data.pca %>% subset(Species == "Mcapitata")
+Pacuta.full.pca <- full.data.pca %>% subset(Species == "Pacuta")
 
-# Stress and recovery split by species 
-Mcap.full.pca <- subsetted.data.noresp.pca %>% subset(Species == "Mcapitata")
-Pacuta.full.pca <- subsetted.data.noresp.pca %>% subset(Species == "Pacuta")
+## Full data stress period (resp and photo)
+stress.data <- data %>% subset(!Timepoint == "12 week" & !Timepoint == "16 week")
+stress.data <- stress.data[complete.cases(stress.data), ]  
 
 # Stress time period split by species 
-Mcap.stress.pca <- pca_data %>% subset(Species == "Mcapitata")
-Pacuta.stress.pca <- pca_data %>% subset(Species == "Pacuta")
+Mcap.stress.pca <- stress.data %>% subset(Species == "Mcapitata")
+Pacuta.stress.pca <- stress.data %>% subset(Species == "Pacuta")
 ```
 
 # Multivariate analysis 
@@ -191,13 +192,13 @@ autoplot(Mcap_scaled_full_data, data = Mcap.full.pca, colour = 'Treatment', shap
 line.cols <- c("lightblue", "blue", "salmon", "red3", "lightblue", "blue", "salmon", "red3")
 fill.cols <- c("white", "white", "white", "white", "lightblue", "blue", "salmon", "red3")
 
-Mcap_group <- autoplot(Mcap_scaled_data, data = Mcap_data, colour = 'Group', shape = "Phase",
+Mcap_group <- autoplot(Mcap_scaled_stress_data, data = Mcap.stress.pca, colour = 'Treatment', shape = "Timepoint",
          loadings = TRUE, loadings.colour = 'black', size=1, loadings.label = TRUE, 
          loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1,
          frame=TRUE, frame.type = 'norm') + theme_bw() +
   scale_color_manual(values = line.cols) + scale_fill_manual(values = fill.cols) + ggtitle("M. capitata"); Mcap_group
 
-Pacuta_group <- autoplot(Pacuta_scaled_data, data = Pacuta_data, colour = 'Group', shape = "Phase", frame=TRUE, frame.type = 'norm',
+Pacuta_group <- autoplot(Pacuta_scaled_stress_data, data = Pacuta.stress.pca, colour = 'Treatment', shape = "Timepoint", frame=TRUE, frame.type = 'norm',
          loadings = TRUE, loadings.colour = 'black', size=1, loadings.label = TRUE, 
          loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + 
   theme(legend.position = "top") +

@@ -315,8 +315,8 @@ Calculating means.
 ```{r}
 Missing <- Missing %>% select(Fragment.ID.x, Date.x, Species.x, Treatment, Pnet_umol.cm2.hr, Pgross_umol.cm2.hr, Rdark_umol.cm2.hr) %>%
   gather("Measurement", "Value", 5:7) 
-Means <- summarySE(Missing, measurevar="Value", groupvars=c("Species.x", "Date.x", "Treatment", "Measurement")) %>% 
-  filter(N>2) %>% na.omit() %>% dplyr::rename(Date = Date.x) %>% dplyr::rename(Species = Species.x)
+Means <- summarySE(Present.long, measurevar="value", groupvars=c("Species.x.x", "Date.x.x", "Treatment.x", "Measurement")) %>% 
+  filter(N>2) %>% na.omit() %>% dplyr::rename(Date = Date.x.x) %>% dplyr::rename(Species = Species.x.x) %>% dplyr::rename(Treatment = Treatment.x)
 
 #AllMeans <- ddply(Missing, c('Date.x','Species.x', 'Treatment'), summarize,
                   #pnet
@@ -502,10 +502,10 @@ Facet wrap figure.
 ```{r}
 colors <- c("lightblue", "blue", "salmon", "red3")
 
-Resp_facetplot <- ggplot(Means, aes(x=Timepoint, y = Value, group = Treatment, color = Treatment)) +
+Resp_facetplot <- ggplot(Means, aes(x=Timepoint, y = value, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
   facet_grid(Measurement ~ Species, scales = "free") +
-  geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2) +
+  geom_errorbar(aes(ymin=value-se, ymax=value+se), width=.2) +
   scale_color_manual(values = colors) + 
   xlab("Timepoint") + 
   ylab(bquote('Change in oxygen levels ('*mu~ 'mol' ~cm^-2*~ h^-1*')')) + # y-axis label and y axis range
@@ -523,6 +523,44 @@ Resp_facetplot <- ggplot(Means, aes(x=Timepoint, y = Value, group = Treatment, c
 
 ggsave(file="Output/Final_Figures/Respirometry.pdf", Resp_facetplot, width = 11, height = 10, units = c("in"))
 ggsave(file="Output/Final_Figures/Respirometry.png", Resp_facetplot, width = 11, height = 10, units = c("in"))
+```
+# Standardizing by cell density 
+
+```{r}
+Photo.cells <- read.csv("Physiology_variables/Respirometry/Output/Photosynthesis.rates.csv") %>% select(Plug.ID, umol.sec.corr)
+  Photo.cells$Plug.ID <- as.character(Photo.cells$Plug.ID)
+cell.density <- read.csv("Output/cell_counts.csv") %>% select(Plug_ID, Timepoint, Treatment, Temperature, CO2, Species, cells, haemo.cells.cm2) %>% dplyr::rename(Plug.ID = Plug_ID)
+  cell.density$Plug.ID <- as.character(cell.density$Plug.ID)
+
+Photo.cells <- full_join(Photo.cells, cell.density, by = "Plug.ID") %>% na.omit()
+Photo.cells <- Photo.cells %>% 
+  mutate(umol.cells.cm.hr = umol.sec.corr*3600/haemo.cells.cm2,
+         umol.cells.hr = umol.sec.corr*3600/cells) %>% distinct() %>% gather("Measurement", "value", 10:11)
+
+Photo.cells.mean <- summarySE(Photo.cells, measurevar="value", groupvars=c("Species", "Treatment", "Timepoint", "Measurement")) %>% filter(N>2)
+Photo.cells.mean$Timepoint <- factor(Photo.cells.mean$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week"))
+
+Photo.cells.plot <- ggplot(Photo.cells.mean, aes(x=Timepoint, y = value, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(Measurement ~ Species, scales = "free") +
+  geom_errorbar(aes(ymin=value-se, ymax=value+se), width=.2) +
+  scale_color_manual(values = colors) + 
+  xlab("Timepoint") + 
+  ylab(bquote('Change in oxygen levels ('*mu~ 'mol' ~cm^-2*~ h^-1*')')) + # y-axis label and y axis range
+  theme_classic() + 
+  theme(legend.position = "left") +
+  geom_vline(xintercept = c(7.8), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  #scale_x_discrete(breaks = c("Week1", "Week2", "Week4", "Week6", "Week8", "Week12", "Week16"), labels = c("1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week")) +
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  # Change axis line
+  axis.line = element_line(colour = "black")); Photo.cells.plot
+
+ggsave(file="Output/Final_Figures/Respirometry_photo_cells.pdf", Photo.cells.plot, width = 11, height = 10, units = c("in"))
+ggsave(file="Output/Final_Figures/Respirometry_photo_cells.png", Photo.cells.plot, width = 11, height = 10, units = c("in"))
 ```
 
 

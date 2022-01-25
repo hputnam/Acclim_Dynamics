@@ -30,6 +30,21 @@
                 "type": 1,
                 "is_package_breakpoint": false,
                 "package_name": ""
+            },
+            {
+                "id": 2,
+                "path": "~/MyProjects/HI_Bleaching_Timeseries/scripts/16S_metadata.R",
+                "line_number": 45,
+                "function_steps": "",
+                "function_name": "toplevel",
+                "state": 1,
+                "editor_state": 1,
+                "editor_line_number": 45,
+                "is_pending_debug_completion": false,
+                "needs_updated_steps": true,
+                "type": 1,
+                "is_package_breakpoint": false,
+                "package_name": ""
             }
         ]
     }

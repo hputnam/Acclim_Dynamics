@@ -57,7 +57,7 @@ Master_fragment <- read.csv("Environmental_data/Master_Fragment.csv") %>% subset
   select(Plug_ID, Species, Treatment, Temperature, CO2, Timepoint, Tank, Site.Name) 
   Master_fragment$Plug_ID <- as.character(Master_fragment$Plug_ID)
 
-cell.density <- read.csv("Output/cell_counts.csv") %>% select(Plug_ID, haemo.cells.cm2)
+cell.density <- read.csv("Output/cell_counts.csv") %>% select(Plug_ID, cells, haemo.cells.cm2)
 cell.density$Plug_ID <- as.factor(cell.density$Plug_ID)
 
 AFDW_raw_metadata <- join_all(list(AFDW_raw, Surface_area, Homogenate_volume, Master_fragment, cell.density), by='Plug_ID', type='left')
@@ -107,7 +107,8 @@ AFDW <- AFDW %>%
          burnt.bioimass.g = burnt.pan.mass.g.ml * vol_mL,
          DW.mg.cm2 = ((dry.bioimass.g)*1000) / surface.area.cm2,
          AFDW.mg.cm2 = ((dry.bioimass.g-burnt.bioimass.g)*1000) / surface.area.cm2,
-         AFDW.mg.cells.cm2 = ((dry.bioimass.g-burnt.bioimass.g)*1000) / haemo.cells.cm2)
+         AFDW.mg.cells.cm2 = ((dry.bioimass.g-burnt.bioimass.g)*1000) / haemo.cells.cm2,
+         AFDW.mg.cells = ((dry.bioimass.g-burnt.bioimass.g)*1000) / cells)
 
 ## Removing Day 1 and 2
 ## Setting the order of levels for timepoint so that it is in timepoint order not alphabetical
@@ -115,33 +116,47 @@ AFDW <- AFDW %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2")
 AFDW$Timepoint <- factor(AFDW$Timepoint, levels=c("1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
 
 # Calculating AFDW biomass ratio 
-AFDW.cm2 <- AFDW %>% select(-X) %>% distinct() %>% select(Plug_ID, partner, Species, Treatment, Temperature, CO2, Timepoint, AFDW.mg.cm2) %>% spread(partner, AFDW.mg.cm2) %>% mutate(Ratio_S.H=Sym/Host)
+AFDW.cm2 <- AFDW %>% select(-X) %>% distinct() %>% select(Plug_ID, partner, Species, Treatment, Temperature, CO2, Timepoint, AFDW.mg.cm2) %>% 
+  spread(partner, AFDW.mg.cm2) %>% mutate(Ratio_S.H=Sym/Host) %>% gather("partner", "value", 7:9) %>% na.omit()
 
-AFDW.cells.cm2 <- AFDW %>% select(-X) %>% distinct() %>% select(Plug_ID, partner, Species, Treatment, Temperature, CO2, Timepoint, AFDW.mg.cells.cm2) %>% spread(partner, AFDW.mg.cells.cm2) 
+AFDW.cells.cm2 <- AFDW %>% select(-X) %>% distinct() %>% 
+  select(Plug_ID, partner, Species, Treatment, Temperature, CO2, Timepoint, AFDW.mg.cells.cm2) %>% spread(partner, AFDW.mg.cells.cm2) %>% 
+  gather("partner", "value", 7:8) %>% na.omit()
 
-#### left off at trying to consolidate the above 2 dataframes and make a column for measurement 
+AFDW.cells <- AFDW %>% select(-X) %>% distinct() %>% 
+  select(Plug_ID, partner, Species, Treatment, Temperature, CO2, Timepoint, AFDW.mg.cells) %>% spread(partner, AFDW.mg.cells) %>% 
+  gather("partner", "value", 7:8) %>% na.omit()
 
 # Taking out 1116 because it was an outlier. 
 # filter(AFDW.final, Ratio_S.H>3)
-week4ATHC <- AFDW.final %>% subset(Timepoint == "4 week" & Species == "Pocillopora acuta" & Treatment == "ATHC")
-
-## Calculating AFDW / cells.cm2
-AFDW.final <- AFDW.final %>% mutate(AFDW.mg.cells.cm2 = ((dry.bioimass.g-burnt.bioimass.g)*1000) / haemo.cells.cm2)
-
-
-# Aggregating by Host, Sym, Ratio
-AFDW.final <- AFDW.final %>% gather("partner", "value", 9:11) %>% na.omit()
+week8HTHC <- AFDW.cells.cm2 %>% subset(Timepoint == "8 week" & Species == "Montipora capitata" & Treatment == "HTHC")
 
 # Calculating means for each group and filtering out those groups with sample size less than 3
-AFDW.means <- summarySE(AFDW.final, measurevar = c("value"), groupvars = c("Treatment", "Timepoint", "Species", "partner"))
-AFDW.means <- AFDW.means %>% filter(N > 3) %>%
+AFDW.means.cm2 <- summarySE(AFDW.cm2, measurevar = c("value"), groupvars = c("Treatment", "Timepoint", "Species", "partner"))
+AFDW.means.cm2 <- AFDW.means.cm2 %>% filter(N > 3) %>%
   mutate(partner = case_when(
     partner == "Sym" ~ "Symbiont",
     partner == "Ratio_S.H" ~ "S:H Ratio",
     partner == "Host" ~ "Host" # need to include this otherwise Host changes to NA
   ))
+AFDW.means.cm2$partner <- factor(AFDW.means.cm2$partner, levels=c("Host", "Symbiont", "S:H Ratio"))
 
-AFDW.means$partner <- factor(AFDW.means$partner, levels=c("Host", "Symbiont", "S:H Ratio"))
+AFDW.means.cells.cm2 <- summarySE(AFDW.cells.cm2, measurevar = c("value"), groupvars = c("Treatment", "Timepoint", "Species", "partner"))
+AFDW.means.cells.cm2 <- AFDW.means.cells.cm2 %>% filter(N > 3) %>%
+  mutate(partner = case_when(
+    partner == "Sym" ~ "Symbiont",
+    partner == "Host" ~ "Host" # need to include this otherwise Host changes to NA
+  ))
+AFDW.means.cells.cm2$partner <- factor(AFDW.means.cells.cm2$partner, levels=c("Host", "Symbiont"))
+
+AFDW.means.cells <- summarySE(AFDW.cells, measurevar = c("value"), groupvars = c("Treatment", "Timepoint", "Species", "partner"))
+AFDW.means.cells <- AFDW.means.cells %>% filter(N > 3) %>%
+  mutate(partner = case_when(
+    partner == "Sym" ~ "Symbiont",
+    partner == "Host" ~ "Host" # need to include this otherwise Host changes to NA
+  ))
+AFDW.means.cells$partner <- factor(AFDW.means.cells$partner, levels=c("Host", "Symbiont"))
+
 ```
 
 Quality control.
@@ -178,7 +193,6 @@ AFDW.final %>%
 
 ## Host vs Sym 
 ```{r}
-cols <- c("lightblue", "blue", "salmon", "red3")
 # 
 # HostSym_plot <- ggplot(AFDW_long, aes(x=Treatment, y=Value, fill=partner)) + geom_boxplot(alpha=0.5) +
 #   geom_jitter(color="black", size=0.4, alpha=0.9) + xlab("") + theme_bw() + 
@@ -191,7 +205,9 @@ cols <- c("lightblue", "blue", "salmon", "red3")
 
 ## Plotting
 ```{r}
-AFDW_plot <- ggplot(AFDW.means, aes(x=Timepoint, y = value, group = Treatment, color = Treatment)) +
+cols <- c("lightblue", "blue", "salmon", "red3")
+
+AFDW_plot <- ggplot(AFDW.means.cm2, aes(x=Timepoint, y = value, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
   facet_grid(partner ~ Species, scales = "free") +
   geom_errorbar(aes(ymin=value-se, ymax=value+se), width=.2) +
@@ -211,8 +227,54 @@ AFDW_plot <- ggplot(AFDW.means, aes(x=Timepoint, y = value, group = Treatment, c
   # Change axis line
   axis.line = element_line(colour = "black")); AFDW_plot
 
-ggsave(file="Output/Final_Figures/Tissue_Biomass.pdf", AFDW_plot, width = 11, height = 6, units = c("in"))
-ggsave(file="Output/Final_Figures/Tissue_Biomass.png", AFDW_plot, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Tissue_Biomass_cm2.pdf", AFDW_plot, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Tissue_Biomass_cm2.png", AFDW_plot, width = 11, height = 6, units = c("in"))
+
+AFDW_plot_cellscm2 <- ggplot(AFDW.means.cells.cm2, aes(x=Timepoint, y = value, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(partner ~ Species, scales = "free") +
+  geom_errorbar(aes(ymin=value-se, ymax=value+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + 
+  theme_classic() + 
+  ylab(expression("Ash Free Dry Weight (mg / cells.cm2")) +
+  #ggtitle("Tissue Biomass") +
+  theme(legend.position = "left") +
+  geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
+  # Change axis line
+  axis.line = element_line(colour = "black")); AFDW_plot_cellscm2
+
+ggsave(file="Output/Final_Figures/Tissue_Biomass_cellscm2.pdf", AFDW_plot_cellscm2, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Tissue_Biomass_cellscm2.png", AFDW_plot_cellscm2, width = 11, height = 6, units = c("in"))
+
+AFDW_plot_cells <- ggplot(AFDW.means.cells, aes(x=Timepoint, y = value, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(partner ~ Species, scales = "free") +
+  geom_errorbar(aes(ymin=value-se, ymax=value+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + 
+  theme_classic() + 
+  ylab(expression("Ash Free Dry Weight (mg / cells)")) +
+  #ggtitle("Tissue Biomass") +
+  theme(legend.position = "left") +
+  geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
+  # Change axis line
+  axis.line = element_line(colour = "black")); AFDW_plot_cells 
+
+ggsave(file="Output/Final_Figures/Tissue_Biomass_cells.pdf", AFDW_plot_cells, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Tissue_Biomass_cells.png", AFDW_plot_cells, width = 11, height = 6, units = c("in"))
 ```
 
 ## Ratio 
