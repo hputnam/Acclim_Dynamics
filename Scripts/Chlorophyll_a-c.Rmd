@@ -378,26 +378,16 @@ ggsave(file="Output/Final_Figures/Chlorophyll_cells.png", CHL.cells.cm2, width =
 
 Raw data distribution view.
 ```{r}
-Mcap_chl <- Chl_final %>% subset(Species == "Pacuta")
-Pacuta_chl <- Chl_final %>% subset(Species == "Mcapitata")
+Mcap_chl <- Chl_final %>% subset(Species == "Mcapitata") %>% 
+  subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week" | Timepoint == "12 week" | Timepoint == "16 week" )
 
-mcap.chl.stress <- Mcap_chl %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
-pacuta.chl.stress <- Pacuta_chl %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
+Pacuta_chl <- Chl_final %>% subset(Species == "Pacuta") %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
 
-mcap.chl.recovery <- Mcap_chl %>% subset(Timepoint == "12 week" | Timepoint == "16 week")
-pacuta.chl.recovery <- Pacuta_chl %>% subset(Timepoint == "12 week" | Timepoint == "16 week") %>% subset(Treatment == "ATAC" | Treatment == "ATHC")
+hist(Mcap_chl$chla.ug.cm2) 
+hist(Pacuta_chl$chla.ug.cm2) 
 
-hist(mcap.chl.recovery$chla.ug.cm2) 
-hist(mcap.chl.stress$chla.ug.cm2) 
-
-hist(pacuta.chl.recovery$chla.ug.cm2) 
-hist(pacuta.chl.stress$chla.ug.cm2) 
-
-hist(mcap.chl.recovery$chlc2.ug.cm2) # transform this one 
-hist(mcap.chl.stress$chlc2.ug.cm2) 
-
-hist(pacuta.chl.recovery$chlc2.ug.cm2) # transform this one 
-hist(pacuta.chl.stress$chlc2.ug.cm2) 
+hist(Mcap_chl$chlc2.ug.cm2)  
+hist(Pacuta_chl$chlc2.ug.cm2) 
 ```
 
 ### Linear mixed models 
@@ -406,76 +396,51 @@ hist(pacuta.chl.stress$chlc2.ug.cm2)
 
 ```{r}
 ## Chlorophyll a
-Pacuta_Chl_LMER_stress <- lmer(chla.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta.chl.stress)
-Pacuta_Chl_LMER_recovery <- lmer(chla.ug.cm2 ~ Timepoint*CO2 + (1|Tank), na.action=na.omit, data=pacuta.chl.recovery)
-
-qqPlot(residuals(Pacuta_Chl_LMER_stress)) 
-qqPlot(residuals(Pacuta_Chl_LMER_recovery)) 
-
-hist(residuals(Pacuta_Chl_LMER_stress)) 
-hist(residuals(Pacuta_Chl_LMER_recovery)) 
-
-## Type III Wald chisquare tests
-pacuta.chl.stress.anova <- Anova(Pacuta_Chl_LMER_stress, ddf="lme4", type='III')
-pacuta.chl.recovery.anova <- Anova(Pacuta_Chl_LMER_recovery, ddf="lme4", type='III')
-
-capture.output(pacuta.chl.stress.anova, file = "Output/Statistics/chl_stats_pacuta_stress.txt")
-capture.output(pacuta.chl.recovery.anova, file = "Output/Statistics/chl_stats_pacuta_recovery.txt")
-
+Pacuta_Chl_LMER_a <- lmer(log(chla.ug.cm2) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_chl)
 ## Chlorophyll c2
-Pacuta_Chl_LMER_stress_c2 <- lmer(chlc2.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta.chl.stress)
-Pacuta_Chl_LMER_recovery_c2 <- lmer(log(chlc2.ug.cm2) ~ Timepoint*CO2 + (1|Tank), na.action=na.omit, data=pacuta.chl.recovery)
+Pacuta_Chl_LMER_c2 <- lmer(chlc2.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_chl)
 
-qqPlot(residuals(Pacuta_Chl_LMER_stress_c2)) 
-qqPlot(residuals(Pacuta_Chl_LMER_recovery_c2)) 
+qqPlot(residuals(Pacuta_Chl_LMER_a)) 
+qqPlot(residuals(Pacuta_Chl_LMER_c2)) 
 
-hist(residuals(Pacuta_Chl_LMER_stress_c2)) 
-hist(residuals(Pacuta_Chl_LMER_recovery_c2)) 
+hist(residuals(Pacuta_Chl_LMER_a)) 
+hist(residuals(Pacuta_Chl_LMER_c2)) 
 
 ## Type III Wald chisquare tests
-pacuta.chl.stress.c2.anova <- Anova(Pacuta_Chl_LMER_stress_c2, ddf="lme4", type='III')
-pacuta.chl.recovery.c2.anova <- Anova(Pacuta_Chl_LMER_recovery_c2, ddf="lme4", type='III')
+pacuta.chl.a.anova <- Anova(Pacuta_Chl_LMER_a, ddf="lme4", type='III')
+pacuta.chl.c2.anova <- Anova(Pacuta_Chl_LMER_c2, ddf="lme4", type='III')
 
-capture.output(pacuta.chl.stress.c2.anova, file = "Output/Statistics/chl_c2_stats_pacuta_stress.txt")
-capture.output(pacuta.chl.recovery.c2.anova, file = "Output/Statistics/chl_c2_stats_pacuta_recovery.txt")
+tab_model(Pacuta_Chl_LMER_a, Pacuta_Chl_LMER_c2,
+          dv.labels = c("P.acuta chl-a", "P.acuta chl-c2"), string.ci = "Conf. Int (95%)",
+          string.p = "P-Value", file = "Output/Statistics/Chl_Pacuta.doc")
+
+capture.output(pacuta.chl.a.anova, file = "Output/Statistics/Chla_Pacuta.txt")
+capture.output(pacuta.chl.c2.anova, file = "Output/Statistics/Chlc2_Pacuta.txt")
 ```
 
 **M. capitata** 
 
 ```{r}
 ## Chlorophyll a
-Mcap_Chl_LMER_stress <- lmer(chla.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.chl.stress)
-Mcap_Chl_LMER_recovery <- lmer(chla.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.chl.recovery)
+Mcap_Chl_LMER_a <- lmer(chla.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Mcap_chl)
+Mcap_Chl_LMER_c2 <- lmer(chlc2.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Mcap_chl)
 
-qqPlot(residuals(Mcap_Chl_LMER_stress)) 
-qqPlot(residuals(Mcap_Chl_LMER_recovery)) 
+qqPlot(residuals(Mcap_Chl_LMER_a)) 
+qqPlot(residuals(Mcap_Chl_LMER_c2)) 
 
-hist(residuals(Mcap_Chl_LMER_stress)) 
-hist(residuals(Mcap_Chl_LMER_recovery)) 
-
-## Type III Wald chisquare tests
-mcap.chl.stress.anova <- Anova(Mcap_Chl_LMER_stress, ddf="lme4", type='III')
-mcap.chl.recovery.anova <- Anova(Mcap_Chl_LMER_recovery, ddf="lme4", type='III')
-
-capture.output(pacuta.chl.stress.anova, file = "Output/Statistics/chl_stats_pacuta_stress.txt")
-capture.output(pacuta.chl.recovery.anova, file = "Output/Statistics/chl_stats_pacuta_recovery.txt")
-
-## Chlorophyll c2
-Pacuta_Chl_LMER_stress_c2 <- lmer(chlc2.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta.chl.stress)
-Pacuta_Chl_LMER_recovery_c2 <- lmer(log(chlc2.ug.cm2) ~ Timepoint*CO2 + (1|Tank), na.action=na.omit, data=pacuta.chl.recovery)
-
-qqPlot(residuals(Pacuta_Chl_LMER_stress_c2)) 
-qqPlot(residuals(Pacuta_Chl_LMER_recovery_c2)) 
-
-hist(residuals(Pacuta_Chl_LMER_stress_c2)) 
-hist(residuals(Pacuta_Chl_LMER_recovery_c2)) 
+hist(residuals(Mcap_Chl_LMER_a)) 
+hist(residuals(Mcap_Chl_LMER_c2)) 
 
 ## Type III Wald chisquare tests
-pacuta.chl.stress.c2.anova <- Anova(Pacuta_Chl_LMER_stress_c2, ddf="lme4", type='III')
-pacuta.chl.recovery.c2.anova <- Anova(Pacuta_Chl_LMER_recovery_c2, ddf="lme4", type='III')
+mcap.chl.a.anova <- Anova(Mcap_Chl_LMER_a, ddf="lme4", type='III')
+mcap.chl.c2.anova <- Anova(Mcap_Chl_LMER_c2, ddf="lme4", type='III')
 
-capture.output(pacuta.chl.stress.c2.anova, file = "Output/Statistics/chl_c2_stats_pacuta_stress.txt")
-capture.output(pacuta.chl.recovery.c2.anova, file = "Output/Statistics/chl_c2_stats_pacuta_recovery.txt")
+tab_model(Mcap_Chl_LMER_a, Mcap_Chl_LMER_c2,
+          dv.labels = c("M.capitata chl-a", "M.capitata chl-c2"), string.ci = "Conf. Int (95%)",
+          string.p = "P-Value", file = "Output/Statistics/Chl_Mcap.doc")
+
+capture.output(mcap.chl.a.anova, file = "Output/Statistics/Chla_Mcap.txt")
+capture.output(mcap.chl.c2.anova, file = "Output/Statistics/Chlc2_Mcap.txt")
 ```
 
 

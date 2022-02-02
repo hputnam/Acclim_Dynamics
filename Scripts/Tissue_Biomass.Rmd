@@ -38,6 +38,9 @@ library(data.table)
 library(htmltools)
 library(webshot)
 library(agricolae)
+library(lme4)
+library(car)
+library(sjPlot)
 ```
 
 Dry Weight - organic and inorganic compounds
@@ -166,9 +169,9 @@ ggplot(AFDW, aes(x=partner, y=AFDW.mg.cm2)) + geom_boxplot()
 dplyr::filter(AFDW, AFDW.mg.cm2 > 5) # unusually high values for AFDW; think about re-doing?
 dplyr::filter(AFDW, AFDW.mg.cm2 < 0) # output should be zero since negative values are not possible. 
 
-AFDW.duplicates <- AFDW.final %>% dplyr::group_by(Plug_ID) %>% 
-  dplyr::summarise(n = n()) %>% filter(n > 4)
-AFDW.duplicates # Output should be zero 
+# AFDW.duplicates <- AFDW %>% dplyr::group_by(Plug_ID) %>% 
+#   dplyr::summarise(n = n()) %>% filter(n > 4)
+# AFDW.duplicates # Output should be zero 
 ```
 
 ### Double checking sample sizes. 
@@ -184,8 +187,7 @@ AFDW.duplicates # Output should be zero
 ### Export datafile.
 ```{r}
 # write AFDW data to file
-AFDW.final %>%
-  select(Plug_ID, partner, value) %>%
+AFDW %>%
   write_csv(path = "Output/Tissue_Biomass.csv")
 ```
 
@@ -309,131 +311,95 @@ ggsave(file="Output/Final_Figures/Tissue_Biomass_cells.png", AFDW_plot_cells, wi
 
 Reading in dataframe so you don't have the run the script every time. 
 ```{r}
-biomass <- read.csv("Output/Tissue_Biomass.csv")
-master <- read.csv("Environmental_data/Master_Fragment.csv") %>% select(Plug_ID, Species, Treatment, Tank, Temperature, CO2, Site.Name, Timepoint) 
+biomass <- read.csv("Output/Tissue_Biomass.csv") %>% 
+  select(Plug_ID, partner, Species, Treatment, Temperature, CO2, Timepoint, Tank, AFDW.mg.cm2) %>% distinct() %>%
+  spread(partner, AFDW.mg.cm2) %>%
+  mutate(RatioSH = Sym/Host)
 
-biomass <- full_join(biomass, master, by = "Plug_ID")
+biomass.pacuta <- biomass %>% subset(Species == "Pocillopora acuta") %>% 
+  subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
 
-biomass.pacuta <- biomass %>% subset(Species == "Pacuta")
-biomass.mcap <- biomass %>% subset(Species == "Mcapitata")
+biomass.mcap <- biomass %>% subset(Species == "Montipora capitata") %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week" | Timepoint == "12 week" | Timepoint == "16 week")
 
-mcap.biomass.stress <- biomass.mcap %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
-pacuta.biomass.stress <- biomass.pacuta %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
+hist(biomass.pacuta$Host) 
+hist(biomass.pacuta$Sym) 
+hist(biomass.pacuta$RatioSH) 
 
-mcap.biomass.recovery <- biomass.mcap %>% subset(Timepoint == "10 week" | Timepoint == "12 week" | Timepoint == "14 week" | Timepoint == "16 week")
-pacuta.biomass.recovery <- biomass.pacuta %>% subset(Timepoint == "10 week" | Timepoint == "12 week" | Timepoint == "14 week" | Timepoint == "16 week") %>% subset(Treatment == "ATAC" | Treatment == "ATHC")
-
-hist(mcap.biomass.recovery$Host) 
-hist(mcap.biomass.recovery$Sym) 
-hist(mcap.biomass.recovery$Ratio_S.H) 
-
-hist(mcap.biomass.stress$Host) 
-hist(mcap.biomass.stress$Sym) 
-hist(mcap.biomass.stress$Ratio_S.H) 
-
-hist(pacuta.biomass.recovery$Host) 
-hist(pacuta.biomass.recovery$Sym) 
-hist(pacuta.biomass.recovery$Ratio_S.H) 
-
-hist(pacuta.biomass.stress$Host) 
-hist(pacuta.biomass.stress$Sym) 
-hist(pacuta.biomass.stress$Ratio_S.H) 
+hist(biomass.mcap$Host) 
+hist(biomass.mcap$Sym) 
+hist(biomass.mcap$RatioSH) 
 ```
 
 #### Host AFDW 
 
 ```{r}
-Pacuta_Host_LMER_stress <- lmer(Host ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta.biomass.stress) 
-Pacuta_Host_LMER_recovery <- lmer(Host ~ Timepoint*CO2 + (1|Tank), na.action=na.omit, data=pacuta.biomass.recovery) 
+Pacuta_Host_LMER <- lmer(Host ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=biomass.pacuta) 
+Mcap_Host_LMER <- lmer(Host ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=biomass.mcap) 
 
-Mcap_Host_LMER_stress <- lmer(Host ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.biomass.stress) 
-Mcap_Host_LMER_recovery <- lmer(Host ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.biomass.recovery) 
+qqPlot(residuals(Pacuta_Host_LMER)) 
+qqPlot(residuals(Mcap_Host_LMER)) 
 
-qqPlot(residuals(Pacuta_Host_LMER_stress)) 
-qqPlot(residuals(Pacuta_Host_LMER_recovery)) 
-qqPlot(residuals(Mcap_Host_LMER_stress)) 
-qqPlot(residuals(Mcap_Host_LMER_recovery)) 
-
-hist(residuals(Pacuta_Host_LMER_stress)) 
-hist(residuals(Pacuta_Host_LMER_recovery)) 
-hist(residuals(Mcap_Host_LMER_stress)) 
-hist(residuals(Mcap_Host_LMER_recovery)) 
+hist(residuals(Pacuta_Host_LMER)) 
+hist(residuals(Mcap_Host_LMER)) 
 
 ## Type III Wald chisquare tests
-pacuta.host.stress.anova <- Anova(Pacuta_Host_LMER_stress, ddf="lme4", type='III') 
-pacuta.host.recovery.anova <- Anova(Pacuta_Host_LMER_recovery, ddf="lme4", type='III') 
+pacuta.host.anova <- Anova(Pacuta_Host_LMER, ddf="lme4", type='III') 
+mcap.host.anova <- Anova(Mcap_Host_LMER, ddf="lme4", type='III') 
 
-mcap.host.stress.anova <- Anova(Mcap_Host_LMER_stress, ddf="lme4", type='III') 
-mcap.host.recovery.anova <- Anova(Mcap_Host_LMER_recovery, ddf="lme4", type='III') 
+tab_model(Pacuta_Host_LMER, Mcap_Host_LMER,
+          dv.labels = c("P.acuta Host", "M.cap Host"), string.ci = "Conf. Int (95%)",
+          string.p = "P-Value", file = "Output/Statistics/AFDW_Host.doc")
 
-capture.output(pacuta.host.stress.anova, file = "Output/Statistics/TB_host_stress_pacuta.txt")
-capture.output(pacuta.host.recovery.anova, file = "Output/Statistics/TB_host_recovery_pacuta.txt")
-capture.output(mcap.host.stress.anova, file = "Output/Statistics/TB_host_stress_mcap.txt")
-capture.output(mcap.host.recovery.anova, file = "Output/Statistics/TB_host_recovery_mcap.txt")
+capture.output(pacuta.host.anova, file = "Output/Statistics/AFDW_Host_Pacuta.txt")
+capture.output(mcap.host.anova, file = "Output/Statistics/AFDW_Host_Mcap.txt")
 ```
 
 #### Sym AFDW  
 
 ```{r}
-Pacuta_Sym_LMER_stress <- lmer(Sym ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta.biomass.stress) 
-Pacuta_Sym_LMER_recovery <- lmer(log(Sym) ~ Timepoint*CO2 + (1|Tank), na.action=na.omit, data=pacuta.biomass.recovery) 
+Pacuta_Sym_LMER <- lmer(Sym ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=biomass.pacuta) 
+Mcap_Sym_LMER <- lmer(Sym ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=biomass.mcap) 
 
-Mcap_Sym_LMER_stress <- lmer(Sym ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.biomass.stress) 
-Mcap_Sym_LMER_recovery <- lmer(Sym ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.biomass.recovery) 
+qqPlot(residuals(Pacuta_Sym_LMER)) 
+qqPlot(residuals(Mcap_Sym_LMER)) 
 
-qqPlot(residuals(Pacuta_Sym_LMER_stress)) 
-qqPlot(residuals(Pacuta_Sym_LMER_recovery)) 
-qqPlot(residuals(Mcap_Sym_LMER_stress)) 
-qqPlot(residuals(Mcap_Sym_LMER_recovery)) 
-
-hist(residuals(Pacuta_Sym_LMER_stress)) 
-hist(residuals(Pacuta_Sym_LMER_recovery)) 
-hist(residuals(Mcap_Sym_LMER_stress)) 
-hist(residuals(Mcap_Sym_LMER_recovery)) 
+hist(residuals(Pacuta_Sym_LMER)) 
+hist(residuals(Mcap_Sym_LMER)) 
 
 ## Type III Wald chisquare tests
-pacuta.sym.stress.anova <- Anova(Pacuta_Sym_LMER_stress, ddf="lme4", type='III') 
-pacuta.sym.recovery.anova <- Anova(Pacuta_Sym_LMER_recovery, ddf="lme4", type='III') 
+pacuta.sym.anova <- Anova(Pacuta_Sym_LMER, ddf="lme4", type='III') 
+mcap.sym.anova <- Anova(Mcap_Sym_LMER, ddf="lme4", type='III') 
 
-mcap.sym.stress.anova <- Anova(Mcap_Sym_LMER_stress, ddf="lme4", type='III') 
-mcap.sym.recovery.anova <- Anova(Mcap_Sym_LMER_recovery, ddf="lme4", type='III') 
+tab_model(Pacuta_Sym_LMER, Mcap_Sym_LMER,
+          dv.labels = c("P.acuta Sym", "M.cap Sym"), string.ci = "Conf. Int (95%)",
+          string.p = "P-Value", file = "Output/Statistics/AFDW_Sym.doc")
 
-capture.output(pacuta.sym.stress.anova, file = "Output/Statistics/TB_sym_stress_pacuta.txt")
-capture.output(pacuta.sym.recovery.anova, file = "Output/Statistics/TB_sym_recovery_pacuta.txt")
-capture.output(mcap.sym.stress.anova, file = "Output/Statistics/TB_sym_stress_mcap.txt")
-capture.output(mcap.sym.recovery.anova, file = "Output/Statistics/TB_sym_recovery_mcap.txt")
+capture.output(pacuta.sym.anova, file = "Output/Statistics/AFDW_Sym_Pacuta.txt")
+capture.output(mcap.sym.anova, file = "Output/Statistics/AFDW_Sym_Mcap.txt")
 ```
 
 #### Ratio AFDW
 
 ```{r}
-Pacuta_Ratio_LMER_stress <- lmer(log(Ratio_S.H) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta.biomass.stress) 
-Pacuta_Ratio_LMER_recovery <- lmer((Ratio_S.H^(1/2)) ~ Timepoint*CO2 + (1|Tank), na.action=na.omit, data=pacuta.biomass.recovery) 
+Pacuta_Ratio_LMER <- lmer(log(RatioSH) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=biomass.pacuta) 
+Mcap_Ratio_LMER <- lmer(RatioSH ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=biomass.mcap) 
 
-Mcap_Ratio_LMER_stress <- lmer(Ratio_S.H ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.biomass.stress) 
-Mcap_Ratio_LMER_recovery <- lmer(Ratio_S.H ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.biomass.recovery) 
+qqPlot(residuals(Pacuta_Ratio_LMER)) 
+qqPlot(residuals(Mcap_Ratio_LMER)) 
 
-qqPlot(residuals(Pacuta_Ratio_LMER_stress)) 
-qqPlot(residuals(Pacuta_Ratio_LMER_recovery)) 
-qqPlot(residuals(Mcap_Ratio_LMER_stress)) 
-qqPlot(residuals(Mcap_Ratio_LMER_recovery)) 
-
-hist(residuals(Pacuta_Ratio_LMER_stress)) 
-hist(residuals(Pacuta_Ratio_LMER_recovery)) 
-hist(residuals(Mcap_Ratio_LMER_stress)) 
-hist(residuals(Mcap_Ratio_LMER_recovery)) 
+hist(residuals(Pacuta_Ratio_LMER)) 
+hist(residuals(Mcap_Ratio_LMER)) 
 
 ## Type III Wald chisquare tests
-pacuta.ratio.stress.anova <- Anova(Pacuta_Ratio_LMER_stress, ddf="lme4", type='III') 
-pacuta.ratio.recovery.anova <- Anova(Pacuta_Ratio_LMER_recovery, ddf="lme4", type='III') 
+pacuta.ratio.anova <- Anova(Pacuta_Ratio_LMER, ddf="lme4", type='III') 
+mcap.ratio.anova <- Anova(Mcap_Ratio_LMER, ddf="lme4", type='III') 
 
-mcap.ratio.stress.anova <- Anova(Mcap_Ratio_LMER_stress, ddf="lme4", type='III') 
-mcap.ratio.recovery.anova <- Anova(Mcap_Ratio_LMER_recovery, ddf="lme4", type='III') 
+tab_model(Pacuta_Ratio_LMER, Mcap_Ratio_LMER,
+          dv.labels = c("P.acuta Ratio", "M.cap Ratio"), string.ci = "Conf. Int (95%)",
+          string.p = "P-Value", file = "Output/Statistics/AFDW_Ratio.doc")
 
-capture.output(pacuta.ratio.stress.anova, file = "Output/Statistics/TB_ratio_stress_pacuta.txt")
-capture.output(pacuta.ratio.recovery.anova, file = "Output/Statistics/TB_ratio_recovery_pacuta.txt")
-capture.output(mcap.ratio.stress.anova, file = "Output/Statistics/TB_ratio_stress_mcap.txt")
-capture.output(mcap.ratio.recovery.anova, file = "Output/Statistics/TB_ratio_recovery_mcap.txt")
+capture.output(pacuta.ratio.anova, file = "Output/Statistics/AFDW_Ratio_Pacuta.txt")
+capture.output(mcap.ratio.anova, file = "Output/Statistics/AFDW_Ratio_Mcap.txt")
 ```
 
 

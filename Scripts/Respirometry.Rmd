@@ -397,6 +397,8 @@ Means <- Means %>%
 
 Means$Timepoint <- factor(Means$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week"))
 
+Means <- Means %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
+
 # Separating by species 
 Pact  <- subset(Means, Species=="Pocillopora")
 Mcap <- subset(Means, Species=="Montipora")
@@ -524,6 +526,7 @@ Resp_facetplot <- ggplot(Means, aes(x=Timepoint, y = value, group = Treatment, c
 ggsave(file="Output/Final_Figures/Respirometry.pdf", Resp_facetplot, width = 11, height = 10, units = c("in"))
 ggsave(file="Output/Final_Figures/Respirometry.png", Resp_facetplot, width = 11, height = 10, units = c("in"))
 ```
+
 # Standardizing by cell density 
 
 ```{r}
@@ -568,7 +571,8 @@ ggsave(file="Output/Final_Figures/Respirometry_photo_cells.png", Photo.cells.plo
 
 ### Photosynthetic Rates and Respiration 
 
-Dataframe 
+Dataframe construction.
+
 ```{r}
 master <- read.csv("Environmental_data/Master_Fragment.csv") %>% select(Plug_ID, Species, Treatment, Tank, Temperature, CO2, Site.Name, Timepoint) 
 master$Plug_ID <- as.factor(master$Plug_ID)
@@ -582,94 +586,91 @@ Photo.Resp <- read.csv("Physiology_variables/Respirometry/Output/Resp_AllRates.c
 Photo.Resp <- full_join(Photo.Resp, master, by = "Plug_ID") 
 Photo.Resp <- Photo.Resp %>% subset(!Timepoint == "Day 1") %>% subset(!Timepoint == "Day 2")
   
-pacuta_full_data <- Photo.Resp %>% subset(Species == "Pacuta")
-mcap_full_data <- Photo.Resp %>% subset(Species == "Mcapitata")
+pacuta_photoresp <- Photo.Resp %>% subset(Species == "Pacuta")
+mcap_photoresp <- Photo.Resp %>% subset(Species == "Mcapitata")
 ```
 
 
 Raw data distribution view.
 ```{r}
-hist(pacuta_full_data$Pnet_umol.cm2.hr)
-hist(pacuta_full_data$Pgross_umol.cm2.hr)
-hist(pacuta_full_data$Rdark_umol.cm2.hr)
+hist(pacuta_photoresp$Pnet_umol.cm2.hr)
+hist(pacuta_photoresp$Pgross_umol.cm2.hr)
+hist(pacuta_photoresp$Rdark_umol.cm2.hr)
 
-hist(mcap_full_data$Pnet_umol.cm2.hr)
-hist(mcap_full_data$Pgross_umol.cm2.hr)
-hist(mcap_full_data$Rdark_umol.cm2.hr)
-# mcap doesn't look normal, the models should account for this but might need to transform post models 
+hist(mcap_photoresp$Pnet_umol.cm2.hr)
+hist(mcap_photoresp$Pgross_umol.cm2.hr)
+hist(mcap_photoresp$Rdark_umol.cm2.hr)
 ```
 
-*P. acuta* linear mixed effect models.  
+
 Net photosynthetic rates. 
+
 ```{r}
-## Pnet model selection
-Pacuta_Pnet_LMER <- lmer(Pnet_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) 
-#Pacuta_Pnet_LMER.reef <- lmer(Pnet_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=pacuta_full_data)
-#model.sel(Pacuta_Pnet_LMER, Pacuta_Pnet_LMER.reef) # model selection function
-## Pacuta Pnet with reef and tank was the best AIC = 215.5 compared to AIC = 216.3 for just tank
+Pacuta_Pnet_LMER <- lmer(sqrt(Pnet_umol.cm2.hr) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_photoresp) 
+Mcap_Pnet_LMER <- lmer(sqrt(Pnet_umol.cm2.hr) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_photoresp) 
 
-#anova(Pacuta_Pnet_LMER, Pacuta_Pnet_LMER.reef) # report AIC values 
+qqPlot(residuals(Pacuta_Pnet_LMER))
+qqPlot(residuals(Mcap_Pnet_LMER))
 
-## summary of the model chosen from above
-## plot(Pacuta_Pnet_LMER) in console to view diagnostic plots
-summary(Pacuta_Pnet_LMER)
-qqPlot(residuals(Pacuta_Pnet_LMER)) # qqplot and histogram 
 hist(residuals(Pacuta_Pnet_LMER)) 
-## checking homogeneity of variance using levene test (can also use Bartlett's test function)
-#leveneTest(residuals(Pacuta_Pnet_LMER))
-leveneTest(pacuta_full_data$Pnet_umol.cm2.hr ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
-#bartlett.test(Pacuta_Pnet_LMER)
+hist(residuals(Mcap_Pnet_LMER)) 
 
-
-## significance of model
 pacuta_pnet_anova <- Anova(Pacuta_Pnet_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
-#Anova(Pacuta_Pnet_LMER.reef, ddf="lme4", type='III') # Type III Wald chisquare tests
+mcap_pnet_anova <- Anova(Mcap_Pnet_LMER, ddf="lme4", type='III') # Type III Wald chisquare tests
 
-capture.output(pacuta_pnet_anova, file = "Output/Statistics/Pnet_pacuta_stats.txt")
+tab_model(Pacuta_Pnet_LMER, Mcap_Pnet_LMER,
+          dv.labels = c("P.acuta Pnet", "M. cap Pnet"), string.ci = "Conf. Int (95%)",
+          string.p = "P-Value", file = "Output/Statistics/Pnet.doc")
+
+capture.output(pacuta_pnet_anova, file = "Output/Statistics/Pnet_Pacuta.txt")
+capture.output(mcap_pnet_anova, file = "Output/Statistics/Pnet_Mcap.txt")
 ```
 
 Gross photosynthetic rates. 
 ```{r}
-## Pgross 
-Pacuta_Pgross_LMER <- lmer(Pgross_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) 
-Pacuta_Pgross_LMER.reef <- lmer(Pgross_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=pacuta_full_data)
-model.sel(Pacuta_Pgross_LMER, Pacuta_Pgross_LMER.reef) # model selection function
-## With reef model chosen AIC = 254.0 vs. without reef AIC = 256.9 
+Pacuta_Pgross_LMER <- lmer((Pgross_umol.cm2.hr) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_photoresp) 
+Mcap_Pgross_LMER <- lmer(log(Pgross_umol.cm2.hr) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_photoresp) 
 
-## summary of the model chosen from above
-## plot(Pacuta_Pgross_LMER) in console to view diagnostic plots
-summary(Pacuta_Pgross_LMER)
-qqPlot(residuals(Pacuta_Pgross_LMER)) # qqplot and histogram 
+qqPlot(residuals(Pacuta_Pgross_LMER)) 
+qqPlot(residuals(Mcap_Pgross_LMER)) 
+
 hist(residuals(Pacuta_Pgross_LMER)) 
-## checking homogeneity of variance using levene test (can also use Bartlett's test function)
-leveneTest(pacuta_full_data$Pgross_umol.cm2.hr ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
+hist(residuals(Mcap_Pgross_LMER)) 
 
 ## Type III Wald chisquare tests
 pacuta_pgross_anova <- Anova(Pacuta_Pgross_LMER, ddf="lme4", type='III') 
-Anova(Pacuta_Pgross_LMER.reef, ddf="lme4", type='III') 
+mcap_pgross_anova <- Anova(Mcap_Pgross_LMER, ddf="lme4", type='III') 
 
-capture.output(pacuta_pgross_anova, file = "Output/Statistics/Pgross_pacuta_stats.txt")
+tab_model(Pacuta_Pgross_LMER, Mcap_Pgross_LMER,
+          dv.labels = c("P.acuta Pgross", "M. cap Pgross"), string.ci = "Conf. Int (95%)",
+          string.p = "P-Value", file = "Output/Statistics/Pgross.doc")
+
+capture.output(pacuta_pgross_anova, file = "Output/Statistics/Pgross_Pacuta.txt")
+capture.output(mcap_pgross_anova, file = "Output/Statistics/Pgross_Mcap.txt")
 ```
 
-```{r}
-## Dark Resp
-Pacuta_Resp_LMER <- lmer(Rdark_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_full_data) #GLMM
-Pacuta_Resp_LMER.reef <- lmer(Rdark_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank) + (1|Site.Name), na.action=na.omit, data=pacuta_full_data)
-model.sel(Pacuta_Resp_LMER, Pacuta_Resp_LMER.reef) # model selection function
-## Model with just tank chosen AIC = -152.2 vs. AIC = -143.7 for both tank and reef 
+Respiration rates. 
 
-## summary of the model chosen from above
-## plot(Pacuta_Resp_LMER) in console to view diagnostic plots
-summary(Pacuta_Resp_LMER)
-qqPlot(residuals(Pacuta_Resp_LMER)) # qqplot and histogram 
+```{r}
+Pacuta_Resp_LMER <- lmer(Rdark_umol.cm2.hr ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta_photoresp) 
+Mcap_Resp_LMER <- lmer((Rdark_umol.cm2.hr) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap_photoresp) 
+
+qqPlot(residuals(Pacuta_Resp_LMER)) 
+qqPlot(residuals(Mcap_Resp_LMER)) 
+
 hist(residuals(Pacuta_Resp_LMER)) 
-## checking homogeneity of variance using levene test (can also use Bartlett's test function)
-leveneTest(pacuta_full_data$Rdark_umol.cm2.hr ~ pacuta_full_data$Timepoint*pacuta_full_data$Temperature*pacuta_full_data$CO2)
+hist(residuals(Mcap_Resp_LMER)) 
 
 # Type III Wald chisquare tests
 pacuta_resp_anova <- Anova(Pacuta_Resp_LMER, ddf="lme4", type='III')
+mcap_resp_anova <- Anova(Mcap_Resp_LMER, ddf="lme4", type='III')
 
-capture.output(pacuta_resp_anova, file = "Output/Statistics/Resp_pacuta_stats.txt")
+tab_model(Pacuta_Resp_LMER, Mcap_Resp_LMER,
+          dv.labels = c("P.acuta Respiration", "M. cap Respiration"), string.ci = "Conf. Int (95%)",
+          string.p = "P-Value", file = "Output/Statistics/Respiration.doc")
+
+capture.output(pacuta_resp_anova, file = "Output/Statistics/Resp_Pacuta.txt")
+capture.output(mcap_resp_anova, file = "Output/Statistics/Resp_Mcap.txt")
 ```
 
 *M.capitata* linear mixed effect models 

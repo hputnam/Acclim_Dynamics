@@ -33,6 +33,7 @@ library(emmeans)
 library(gridExtra)
 library(plotrix)
 library(Rmisc)
+library(kableExtra)
 ```
 
 ### DISCRETE TANK MEASUREMENTS ### 
@@ -64,17 +65,27 @@ F <- 96485.339924 #Faraday constant in coulombs mol-1
 Read in probe measurements of pH, temperature from tanks.
 ```{r}
 daily <- read.csv("Environmental_data/Daily_Temp_pH_Sal.csv", header=TRUE, sep=",", na.strings="NA") #load data with a header, separated by commas, with NA as NA
+daily$Calib.Date <- as.factor(daily$Calib.Date)
+pH.cals$Calib.Date <- as.factor(pH.cals$Calib.Date)
 
 #merge with Seawater chemistry file
-SW.chem <- merge(pH.cals, daily, by="Calib.Date")
+SW.chem <- merge(pH.cals, daily, by="Calib.Date") ## this dataframe is somehow subsetted to every 3 days?
+SW.chem2 <- full_join(daily, pH.cals, by = "Calib.Date") ## this is the full daily dataframe that has multiple measurements a day
 ```
 
 Calculate total pH. 
 ```{r}
+## SW.CHEM TABLE #1 
 mvTris <- SW.chem$Temperature*SW.chem$Slope+SW.chem$Intercept #calculate the mV of the tris standard using the temperature mv relationships in the measured standard curves 
 STris<-35 #salinity of the Tris
 phTris<- (11911.08-18.2499*STris-0.039336*STris^2)*(1/(SW.chem$Temperature+273.15))-366.27059+ 0.53993607*STris+0.00016329*STris^2+(64.52243-0.084041*STris)*log(SW.chem$Temperature+273.15)-0.11149858*(SW.chem$Temperature+273.15) #calculate the pH of the tris (Dickson A. G., Sabine C. L. and Christian J. R., SOP 6a)
 SW.chem$pH.Total<-phTris+(mvTris/1000-SW.chem$pH.MV/1000)/(R*(SW.chem$Temperature+273.15)*log(10)/F) #calculate the pH on the total scale (Dickson A. G., Sabine C. L. and Christian J. R., SOP 6a)
+
+## SW.CHEM TABLE #2
+mvTris2 <- SW.chem2$Temperature*SW.chem2$Slope+SW.chem2$Intercept #calculate the mV of the tris standard using the temperature mv relationships in the measured standard curves 
+STris<-35 #salinity of the Tris
+phTris2<- (11911.08-18.2499*STris-0.039336*STris^2)*(1/(SW.chem2$Temperature+273.15))-366.27059+ 0.53993607*STris+0.00016329*STris^2+(64.52243-0.084041*STris)*log(SW.chem2$Temperature+273.15)-0.11149858*(SW.chem2$Temperature+273.15) #calculate the pH of the tris (Dickson A. G., Sabine C. L. and Christian J. R., SOP 6a)
+SW.chem2$pH.Total<-phTris2+(mvTris2/1000-SW.chem2$pH.MV/1000)/(R*(SW.chem2$Temperature+273.15)*log(10)/F) #calculate the pH on the total scale (Dickson A. G., Sabine C. L. and Christian J. R., SOP 6a)
 ```
 
 Quality check calculated tank conditions. This is helpful to run while the experiment is on-going to catch any typos in the datasheet or mis-typed equations.
@@ -91,7 +102,7 @@ boxplot(SW.chem$Salinity)
 range(na.omit(SW.chem$Salinity))
 ```
 
-Plotting Temperature
+Plotting Temperature SW CHEM TABLE #1
 ```{r}
 SW.chem$Timepoint <- as.Date(SW.chem$Timepoint, format = "%m/%d/%y")
 
@@ -113,7 +124,7 @@ Discrete.Temp <- SW.chem %>%
   geom_jitter(width = 0.1) +
   geom_vline(xintercept = as.numeric(as.Date("2018-11-18")), colour="black", linetype="dotted") +
   theme_classic()+
-  scale_x_continuous(breaks = c(17796, 17803, 17810, 17824, 17838, 17852, 17879, 17906), labels = c("Day1", "1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week"))+
+  #scale_x_continuous(breaks = c(17796, 17803, 17810, 17824, 17838, 17852, 17879, 17906), labels = c("Day1", "1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week"))+
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
 
 ggsave(file="Output/Discrete.Temp.pdf", Discrete.Temp, width = 11, height = 10, units = c("in"))
@@ -128,7 +139,7 @@ Discrete.pH <- SW.chem %>%
   geom_jitter(width = 0.1) +
   geom_vline(xintercept = as.numeric(as.Date("2018-11-18")), colour="black", linetype="dotted") +
   theme_classic()+
-  scale_x_continuous(breaks = c(17796, 17803, 17810, 17824, 17838, 17852, 17879, 17906), labels = c("Day1", "1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week"))+
+  #scale_x_continuous(breaks = c(17796, 17803, 17810, 17824, 17838, 17852, 17879, 17906), labels = c("Day1", "1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week"))+
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
 
 ggsave(file="Output/Discrete.pH.pdf", Discrete.pH, width = 11, height = 10, units = c("in"))
@@ -137,6 +148,44 @@ ggsave(file="Output/Discrete.pH.png", Discrete.pH, width = 11, height = 10, unit
 Discrete.Temp
 Discrete.pH
 ```
+
+Plotting Temperature for SW CHEM TABLE #2. Run the above code first to get the data strings `all.colors` and `annotation`. 
+```{r}
+SW.chem2$Timepoint <- as.Date(SW.chem2$Timepoint, format = "%m/%d/%y")
+
+Discrete.Temp2 <- SW.chem2 %>%
+  filter(Period2 != "Empty") %>%
+  filter(Period2 != "Testing") %>%
+  ggplot(aes(x = Timepoint, y = Temperature, color = Treatment)) +
+  scale_color_manual(values = all.colors) +
+  labs(x = "", y = "Temperature °C") +
+  geom_jitter(width = 0.1) +
+  geom_vline(xintercept = as.numeric(as.Date("2018-11-18")), colour="black", linetype="dotted") +
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+
+ggsave(file="Output/Discrete.Temp2.pdf", Discrete.Temp2, width = 11, height = 10, units = c("in"))
+ggsave(file="Output/Discrete.Temp2.png", Discrete.Temp2, width = 11, height = 10, units = c("in"))
+
+Discrete.pH2 <- SW.chem2 %>%
+  filter(Period2 != "Empty") %>%
+  filter(Period2 != "Testing") %>%
+  ggplot(aes(x = Timepoint, y = pH.Total, color = Treatment)) +
+  scale_color_manual(values = all.colors) +
+  labs(x = "", y = "pH total scale") +
+  geom_jitter(width = 0.1) +
+  geom_vline(xintercept = as.numeric(as.Date("2018-11-18")), colour="black", linetype="dotted") +
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+
+ggsave(file="Output/Discrete.pH2.pdf", Discrete.pH2, width = 11, height = 10, units = c("in"))
+ggsave(file="Output/Discrete.pH2.png", Discrete.pH2, width = 11, height = 10, units = c("in"))
+
+Discrete.Temp2
+Discrete.pH2
+```
+
+
 
 ### DISCRETE TA CALCULATIONS ### 
 
@@ -173,7 +222,6 @@ treatment.stats <- carb.output %>% subset(Period1 == "Treatment") %>%
    gather("Measurement", "Value", 8:10)
 mean.by.treatment <- summarySE(treatment.stats, measurevar = "Value", groupvars=c("Treatment", "Measurement")) 
 ```
-
 
 
 Subsetting to groups we want to visualize. 
@@ -247,7 +295,7 @@ Carb.Chem.Figs <- carb.output.long %>%
   ggplot(aes(x = Timepoint, y = value, color = Treatment)) +
   scale_color_manual(values = all.colors) +
   facet_wrap(Measurement ~ ., scales="free_y") +
-  labs(x = "", y = "Temperature °C") +
+  labs(x = "", y = "") +
   geom_jitter(width = 0.1) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1), 
   panel.border = element_blank(),
@@ -256,7 +304,7 @@ Carb.Chem.Figs <- carb.output.long %>%
   panel.background = element_blank(),
   axis.line = element_line(colour = "black")) +
   geom_vline(xintercept = as.numeric(as.Date("2018-11-18")), colour="black", linetype="dotted")+
-  scale_x_continuous(breaks = c(17796, 17803, 17810, 17824, 17838, 17852, 17879, 17906), labels = c("Day1", "1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week"))+
+  #scale_x_continuous(breaks = c(17796, 17803, 17810, 17824, 17838, 17852, 17879, 17906), labels = c("Day1", "1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week"))+
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
 
 ggsave(file="Output/Carbonate-Chemistry.pdf", Carb.Chem.Figs, width = 11, height = 10, units = c("in"))
@@ -284,3 +332,36 @@ carb.chem.DS <- data.frame(carb.chem.DS)
 write.csv(carb.chem.DS, file="Output/Carbonate-Chemistry.csv")
           
 ```
+
+
+#### Publication Ready Tables 
+
+We want the following information: Treatment vs. Recovery sections, broken down by treatment, carbonate chemistry outputs, and daily measurement outputs.
+
+Data tables made above:    
+- Output/Carbonate-Chemistry.csv (mean and SEM for each component)
+- `carb.output`: Environmental_data/Seawater_chemistry_table_Output_All.csv (all TA and carb chemistry data)  
+- `SW.Chem2` dataframe in R for daily measurements 
+
+Made with the kableExtra package.
+
+Choosing tables and calculating averages. 
+```{r}
+carb.output ## we want pH, CO2, pCO2, HCO3, CO3, DIC, TA, and AragSat for each group
+SW.chem2 ## we want salinity, pH.Total, and Temperature for each group (tank and treatment)
+
+## Carb output is stress treatment only, no recovery
+carb.output.pub.table <- carb.output %>% subset(Period1 == "Treatment") %>% gather("Measurement", "Value", 10:17)
+carb.output.pub.table.means <- summarySE(carb.output.pub.table, measurevar = "Value", groupvars=c("Treatment", "Measurement")) 
+carb.output.pub.table.means <- carb.output.pub.table.means %>% select(Treatment, Measurement, Value, se) %>%
+  unite(Value, Value, se, sep = " +/- ") %>% ##come back to a better way to do this
+  spread(Measurement, Value)
+
+SW.chem2.pub.table <- SW.chem2
+```
+
+Create table. 
+```{r}
+carb.output.pub.table.means %>% kbl() 
+```
+

@@ -173,7 +173,8 @@ Licor_date <- Licor_bytank %>% unite(Date.Time, Date, Time, sep = " ")
 Licor_means <- summarySE(Licor_bytank, measurevar="PAR", groupvars=c("Position", "Tank"))
 
 licor_anova <- aov(PAR ~ Position, data = Licor_bytank)
-summary(licor_anova)
+licor_anova_tank <- aov(PAR ~ Position*Tank, data = Licor_bytank)
+summary(licor_anova_tank)
 ```
 
 Visualizing Licor light data. 

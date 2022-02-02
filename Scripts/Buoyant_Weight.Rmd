@@ -105,7 +105,7 @@ BWCalc <- function(StandardAir= 31.348, Temp, BW, CoralDensity = 2.93){
   # BW is the buoywant weight of the coral
   # CoralDensity <- 2.03 #g cm-3, set aragonite density for Montipora from literature 
   # Montipora Arag = 2.03 g cm-3 average from table 2 in Anthony 2003 Functional Ecology 17:246-259
-  # You can change the density to literatrue values for the specific coral species of interest in the function. 
+  # You can change the density to literature values for the specific coral species of interest in the function. 
   
   #Calculation------------------------------------------------------------
   #Step 1: correct the Standard weights for temperature

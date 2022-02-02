@@ -51,7 +51,8 @@ library(coxme)
 library(jstable)
 ```
 
-Loading dataframes. 
+#### Loading dataframes. 
+
 ```{r}
 Data <- read.csv("Physiology_variables/coral_survivorship_QC.csv", header=T, sep=",", na.string="NA", stringsAsFactors = F) #read in data file
 Tank.Info <- read.csv("Environmental_data/Tank_to_Treatment.csv", header=T, sep=",", na.string="NA") #read in data file 
@@ -63,6 +64,31 @@ Sample.Info <- read.csv("Environmental_data/Master_Fragment.csv", header=T, sep=
 Data.Trt <- merge(Data.Trt, Sample.Info, by = "Tank")
 ```
 
+#### Acclimation Analysis 
+
+Select only end of acclimation period to determine the percent alive in each species at the end of that period. 
+
+```{r}
+acclimation <- Data %>% select(Species, PLUG.ID, Acclimation.End, Tank) 
+acclimation <- full_join(acclimation, Tank.Info, by = "Tank") 
+
+mont.acc <- acclimation %>% subset(Species == "Mcapitata")
+poc.acc <- acclimation %>% subset(Species == "Pacuta")
+
+mont.acc <- mont.acc %>% mutate(alive.count = nrow(subset(mont.acc,Acclimation.End == "alive")),
+                                dead.count = nrow(subset(mont.acc,Acclimation.End == "dead")),
+                                total.count = nrow(mont.acc),
+                                percentage.alive = alive.count/total.count)
+
+poc.acc <- poc.acc %>% mutate(alive.count = nrow(subset(poc.acc,Acclimation.End == "alive")),
+                                dead.count = nrow(subset(poc.acc,Acclimation.End == "dead")),
+                                total.count = nrow(poc.acc),
+                                percentage.alive = alive.count/total.count)
+```
+
+
+
+#### Treatment Analysis
 
 Replace sampled with alive. 
 ```{r}

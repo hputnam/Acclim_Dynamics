@@ -24,6 +24,7 @@ library(purrr)
 library(Rmisc)
 library(lme4)
 library(car)
+library(sjPlot)
 ```
 
 
@@ -144,51 +145,36 @@ ggsave(file="Output/Final_figures/Cell_counts.png", cellcounts_plot, width = 11,
 Subsetting into time points 
 
 ```{r}
-mcap.counts <- haemo %>% subset(Species == "Montipora capitata")
-pacuta.counts <- haemo %>% subset(Species == "Pocillopora acuta")
+mcap.counts <- haemo %>% subset(Species == "Montipora capitata") %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week" | Timepoint == "12 week" | Timepoint == "16 week")
 
-mcap.counts.stress <- mcap.counts %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
-mcap.counts.recovery <- mcap.counts %>% subset(Timepoint == "10 week" | Timepoint == "12 week" | Timepoint == "14 week" | Timepoint == "16 week")
+pacuta.counts <- haemo %>% subset(Species == "Pocillopora acuta") %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
 
-pacuta.counts.stress <- pacuta.counts %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
-pacuta.counts.recovery <- pacuta.counts %>% subset(Timepoint == "10 week" | Timepoint == "12 week" | Timepoint == "14 week" | Timepoint == "16 week") %>% subset(Treatment == "ATAC" | Treatment == "ATHC")
-
-hist(mcap.counts.stress$haemo.cells.cm2) 
-hist(mcap.counts.recovery$haemo.cells.cm2) 
-hist(pacuta.counts.stress$haemo.cells.cm2) 
-hist(pacuta.counts.recovery$haemo.cells.cm2) 
+hist(mcap.counts$haemo.cells.cm2) 
+hist(pacuta.counts$haemo.cells.cm2) 
 ```
 
 Model selection 
 
 ```{r}
-Pacuta_counts_LMER_stress <- lmer(log(haemo.cells.cm2) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta.counts.stress) 
-Pacuta_counts_LMER_recovery <- lmer(haemo.cells.cm2 ~ Timepoint*CO2 + (1|Tank), na.action=na.omit, data=pacuta.counts.recovery) 
+Pacuta_counts_LMER <- lmer(log(haemo.cells.cm2) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta.counts) 
+Mcap_counts_LMER <- lmer(log(haemo.cells.cm2) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.counts) 
 
-Mcap_counts_LMER_stress <- lmer(haemo.cells.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.counts.stress) 
-Mcap_counts_LMER_recovery <- lmer(haemo.cells.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.counts.recovery) 
+qqPlot(residuals(Pacuta_counts_LMER)) 
+qqPlot(residuals(Mcap_counts_LMER)) 
 
-qqPlot(residuals(Pacuta_counts_LMER_stress)) 
-qqPlot(residuals(Pacuta_counts_LMER_recovery)) 
-qqPlot(residuals(Mcap_counts_LMER_stress)) 
-qqPlot(residuals(Mcap_counts_LMER_recovery)) 
-
-hist(residuals(Pacuta_counts_LMER_stress)) 
-hist(residuals(Pacuta_counts_LMER_recovery)) 
-hist(residuals(Mcap_counts_LMER_stress)) 
-hist(residuals(Mcap_counts_LMER_recovery)) 
+hist(residuals(Pacuta_counts_LMER)) 
+hist(residuals(Mcap_counts_LMER)) 
 
 ## Type III Wald chisquare tests
-pacuta.counts.stress.anova <- Anova(Pacuta_counts_LMER_stress, ddf="lme4", type='III') 
-pacuta.counts.recovery.anova <- Anova(Pacuta_counts_LMER_recovery, ddf="lme4", type='III') 
+pacuta.counts.anova <- Anova(Pacuta_counts_LMER, ddf="lme4", type='III') 
+mcap.counts.anova <- Anova(Mcap_counts_LMER, ddf="lme4", type='III') 
 
-mcap.counts.stress.anova <- Anova(Mcap_counts_LMER_stress, ddf="lme4", type='III') 
-mcap.counts.recovery.anova <- Anova(Mcap_counts_LMER_recovery, ddf="lme4", type='III') 
+tab_model(Pacuta_counts_LMER, Mcap_counts_LMER,
+          dv.labels = c("P.acuta cell counts", "M. cap cell counts"), string.ci = "Conf. Int (95%)",
+          string.p = "P-Value", file = "Output/Statistics/Counts.doc")
 
-capture.output(pacuta.counts.stress.anova, file = "Output/Statistics/Counts_stress_pacuta.txt")
-capture.output(pacuta.counts.recovery.anova, file = "Output/Statistics/Counts_recovery_pacuta.txt")
-capture.output(mcap.counts.stress.anova, file = "Output/Statistics/Counts_stress_mcap.txt")
-capture.output(mcap.counts.recovery.anova, file = "Output/Statistics/Counts_recovery_mcap.txt")
+capture.output(pacuta.counts.anova, file = "Output/Statistics/Counts_Pacuta.txt")
+capture.output(mcap.counts.anova, file = "Output/Statistics/Counts_Mcap.txt")
 ```
 
 

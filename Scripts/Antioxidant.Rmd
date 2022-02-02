@@ -9,6 +9,11 @@ Code modified from R. Cunning, H. Putnam, and E5 group; link [here](https://gith
 
 9-10 antioxidant plates with each date containing a standard curve (not each plate will have a standard curve).  
 
+Clears workspace. 
+```{r}
+rm(list=ls())
+```
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
@@ -20,11 +25,9 @@ library(ggplot2)
 library(tidyverse)
 library(broom)
 library(Rmisc)
-```
-
-Clears workspace. 
-```{r}
-rm(list=ls())
+library(lme4)
+library(car)
+library(sjPlot)
 ```
 
 Read in all data files. 
@@ -91,7 +94,7 @@ std_curve <- df %>%
   filter(grepl("Standard", Plug_ID)) %>%
   dplyr::rename(absorbance = '490:490') %>% 
   select(plate, Well, Plug_ID, absorbance, readtime) %>%
-  rename(std = Plug_ID) %>%
+  dplyr::rename(std = Plug_ID) %>%
   mutate(std = as.numeric(str_sub(std, 9, 10))) %>%
   spread(readtime, absorbance) %>%
   mutate(net_abs = final - initial) %>%
@@ -236,72 +239,36 @@ Read in TAC data file so that you don't have to re-run the entire script to do t
 ```{r}
 antioxidant <- read.csv("Output/antioxidant.csv")
 
-mcap.antiox <- antioxidant %>% subset(Species == "Mcapitata")
-pacuta.antiox <- antioxidant %>% subset(Species == "Pacuta")
+mcap.antiox <- antioxidant %>% subset(Species == "Mcapitata") %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week" | Timepoint == "12 week" | Timepoint == "16 week")
 
-mcap.tac.stress <- mcap.antiox %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
-pacuta.tac.stress <- pacuta.antiox %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
+pacuta.antiox <- antioxidant %>% subset(Species == "Pacuta") %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
 
-mcap.tac.recovery <- mcap.antiox %>% subset(Timepoint == "10 week" | Timepoint == "12 week" | Timepoint == "14 week" | Timepoint == "16 week")
-pacuta.tac.recovery <- pacuta.antiox %>% subset(Timepoint == "10 week" | Timepoint == "12 week" | Timepoint == "14 week" | Timepoint == "16 week") %>% subset(Treatment == "ATAC" | Treatment == "ATHC")
-
-hist(mcap.tac.stress$cre.umol.mgprot) 
-hist(pacuta.tac.stress$cre.umol.mgprot) 
-
-hist(mcap.tac.recovery$cre.umol.mgprot) 
-hist(pacuta.tac.recovery$cre.umol.mgprot) 
+hist(mcap.antiox$cre.umol.mgprot) 
+hist(pacuta.antiox$cre.umol.mgprot) 
 ```
 
 Mixed effect modeling  
 
-*P. acuta*
 ```{r}
-## Pacuta 
 Pacuta_TAC_LMER <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta.antiox) 
-Pacuta_TAC_LMER_stress <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta.tac.stress) 
-Pacuta_TAC_LMER_recovery <- lmer(log(cre.umol.mgprot) ~ Timepoint*CO2 + (1|Tank), na.action=na.omit, data=pacuta.tac.recovery) 
+Mcap_TAC_LMER <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.antiox) 
 
 qqPlot(residuals(Pacuta_TAC_LMER)) 
-qqPlot(residuals(Pacuta_TAC_LMER_stress)) 
-qqPlot(residuals(Pacuta_TAC_LMER_recovery)) 
+qqPlot(residuals(Mcap_TAC_LMER)) 
 
 hist(residuals(Pacuta_TAC_LMER)) 
-hist(residuals(Pacuta_TAC_LMER_stress)) 
-hist(residuals(Pacuta_TAC_LMER_recovery)) 
+hist(residuals(Mcap_TAC_LMER)) 
 
 ## Type III Wald chisquare tests
 pacuta.tac.anova <- Anova(Pacuta_TAC_LMER, ddf="lme4", type='III')
-pacuta.tac.anova.stress <- Anova(Pacuta_TAC_LMER_stress, ddf="lme4", type='III')
-pacuta.tac.anova.recovery <- Anova(Pacuta_TAC_LMER_recovery, ddf="lme4", type='III')
-
-capture.output(pacuta.tac.anova, file = "Output/Statistics/tac_stats_pacuta.txt")
-capture.output(pacuta.tac.anova.stress, file = "Output/Statistics/tac_stats_pacuta_stress.txt")
-capture.output(pacuta.tac.anova.recovery, file = "Output/Statistics/tac_stats_pacuta_recovery.txt")
-```
-
-*M. capitata*
-```{r}
-## Mcapitata
-Mcap_TAC_LMER <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.antiox) 
-Mcap_TAC_LMER_stress <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.tac.stress) 
-Mcap_TAC_LMER_recovery <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.tac.recovery) 
-
-qqPlot(residuals(Mcap_TAC_LMER))
-qqPlot(residuals(Mcap_TAC_LMER_stress))
-qqPlot(residuals(Mcap_TAC_LMER_recovery))
-
-hist(residuals(Mcap_TAC_LMER)) 
-hist(residuals(Mcap_TAC_LMER_stress)) 
-hist(residuals(Mcap_TAC_LMER_recovery)) 
-
-## Type III Wald chisquare tests
 mcap.tac.anova <- Anova(Mcap_TAC_LMER, ddf="lme4", type='III')
-mcap.tac.anova.stress <- Anova(Mcap_TAC_LMER_stress, ddf="lme4", type='III')
-mcap.tac.anova.recovery <- Anova(Mcap_TAC_LMER_recovery, ddf="lme4", type='III')
 
-capture.output(mcap.tac.anova, file = "Output/Statistics/tac_stats_mcap.txt")
-capture.output(mcap.tac.anova.stress, file = "Output/Statistics/tac_stats_mcap_stress.txt")
-capture.output(mcap.tac.anova.recovery, file = "Output/Statistics/tac_stats_mcap_recovery.txt")
+tab_model(Pacuta_TAC_LMER, Mcap_TAC_LMER,
+          dv.labels = c("P.acuta TAC", "M. capitata TAC"), string.ci = "Conf. Int (95%)",
+          string.p = "P-Value", file = "Output/Statistics/TAC.doc")
+
+capture.output(pacuta.tac.anova, file = "Output/Statistics/TAC_Pacuta.txt")
+capture.output(mcap.tac.anova, file = "Output/Statistics/TAC_Mcap.txt")
 ```
 
 
