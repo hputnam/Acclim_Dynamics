@@ -116,6 +116,25 @@ ggsave(file="Output/denoising-statistics-DADA2.png", DADA2, width = 11, height =
 ggsave(file="Output/denoising-statistics-DADA2-reads.png", DADA2, width = 11, height = 6, units = c("in"))
 ```
 
+## Denoise stats on final QIIME2 run 
+
+```{r}
+denoise.final <- read.table("16S_seq/QIIME2_20220228/denoising-stats.tsv", sep="\t", header=TRUE) 
+
+denoise.final.reads <- denoise.final %>% select(sample.id, input, filtered, denoised, merged, non.chimeric) %>% gather(measurement, value, 2:6)
+denoise.final.reads$measurement <- factor(denoise.final.reads$measurement, levels=c("input", "filtered", "denoised", "merged", "non.chimeric"))
+ 
+denoise.final.percent <- denoise.final %>% select(
+sample.id, percentage.of.input.passed.filter, percentage.of.input.merged, percentage.of.input.non.chimeric) %>% gather(measurement, value, 2:4)
+denoise.final.percent$measurement <- factor(denoise.final.percent$measurement, levels=c("percentage.of.input.passed.filter", "percentage.of.input.merged", "percentage.of.input.non.chimeric"))
+
+ggplot(denoise.final.reads, aes(x=measurement, y=value), group = type) + geom_boxplot() + ylab("# reads") + theme_bw()
+ggplot(denoise.final.percent, aes(x=measurement, y=value), group = type) + geom_boxplot() + ylab("% reads") + theme_bw()
+```
+
+
+
+
 ## Filtering the "yellow-short" category to just "d_Bacteria"
 
 ```{r}

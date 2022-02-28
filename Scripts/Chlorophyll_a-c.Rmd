@@ -3,6 +3,8 @@ title: "Chlorophyll_a-c"
 author: "EL Strand"
 date: "7/17/2020"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 Clears workspace. 
@@ -124,7 +126,7 @@ str(homog.vol)
 df.chl <- left_join(df.chl, homog.vol) 
 
 # Load cell density 
-cell.density <- read.csv("Output/cell_counts.csv") %>% select(Plug_ID, haemo.cells.cm2)
+cell.density <- read.csv("Output/cell_counts.csv") %>% select(Plug_ID, haemo.cells.cm2, cells)
 cell.density$Plug_ID <- as.factor(cell.density$Plug_ID)
 str(cell.density)
 
@@ -134,8 +136,8 @@ df.chl <- left_join(df.chl, cell.density)
 df.chl <- df.chl %>%
   mutate(chla.ug.cm2 = (chla.ug.ml * vol_mL) / surface.area.cm2,
          chlc2.ug.cm2 = (chlc2.ug.ml * vol_mL) / surface.area.cm2,
-         chla.ug.cells.cm2 = (chla.ug.ml * vol_mL) / haemo.cells.cm2,
-         chlc2.ug.cells.cm2 = (chlc2.ug.ml * vol_mL) / haemo.cells.cm2)
+         chla.ug.cells = (chla.ug.ml * vol_mL) / cells,
+         chlc2.ug.cells = (chlc2.ug.ml * vol_mL) / cells)
 
 # remove blanks and NAs
 df.chl <- filter(df.chl, !Plug_ID %in% c("NA", "BK"))
@@ -157,7 +159,7 @@ Chl_final <- Chl_final %>% filter(!Plug_ID == "1488")
 filter(Chl_final, Plug_ID == "1488") # checking to see that worked; output should be 0
 
 Chl_final %>%
-  select(Plug_ID, Species, Timepoint, Temperature, Treatment, CO2, chla.ug.cm2, chlc2.ug.cm2, chla.ug.cells.cm2, chlc2.ug.cells.cm2) %>%
+  select(Plug_ID, Species, Timepoint, Temperature, Treatment, CO2, chla.ug.cm2, chlc2.ug.cm2, chla.ug.cells, chlc2.ug.cells) %>%
   write_csv(path = "Output/chlorophyll.csv")
 ```
 
@@ -237,7 +239,7 @@ Calculating mean values for each timepoint and treatment group.
 #### the above tables aren't calculating this correctly ; sample sizes are off. come back to this. I prefer the below summarySE function instead 
 
 ## use the following 
-Chl_long <- Chl_final %>% select(Plug_ID, surface.area.cm2, vol_mL, chla.ug.cm2, chlc2.ug.cm2, chla.ug.cells.cm2, chlc2.ug.cells.cm2, Species, Treatment, Temperature, CO2, Timepoint) %>% gather("Measurement", "Value", 4:7)
+Chl_long <- Chl_final %>% select(Plug_ID, surface.area.cm2, vol_mL, chla.ug.cm2, chlc2.ug.cm2, chla.ug.cells, chlc2.ug.cells, Species, Treatment, Temperature, CO2, Timepoint) %>% gather("Measurement", "Value", 4:7)
 Chl_means <- summarySE(Chl_long, measurevar="Value", groupvars=c("Timepoint", "Treatment", "Temperature", "CO2", "Species", "Measurement")) %>% filter(N>2) %>%
   mutate(Species = case_when(
     Species == "Mcapitata" ~ "Montipora capitata",
@@ -300,24 +302,23 @@ export_formattable(Chl.samples.sizes, file = "Output/Chl_means_samplesizes.png")
 ```{r}
 cols <- c("lightblue", "blue", "pink", "red")
 
-Chl_means <- Chl_means %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2") %>% 
-  subset(!Timepoint == "12 week" | !Treatment == "HTAC" | !Species == "Pocillopora acuta")
+Chl_means <- Chl_means %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2" & !Timepoint == "12 week" & !Timepoint == "16 week") %>%
+  write_csv(path = "Output/chlorophyll_means_figure.csv")
 
-
-Chl_means_cm2 <- Chl_means %>% subset(Measurement == "chla.ug.cm2" | Measurement == "chlc2.ug.cm2")
-Chl_means_cells_cm2 <- Chl_means %>% subset(Measurement == "chla.ug.cells.cm2" | Measurement == "chlc2.ug.cells.cm2")
+Chl_means_cm2 <- Chl_means %>% subset(Measurement == "chla.ug.cm2") # | Measurement == "chlc2.ug.cm2"
+Chl_means_cells <- Chl_means %>% subset(Measurement == "chla.ug.cells")  # | Measurement == "chlc2.ug.cells"
 
 CHL.cm2 <- ggplot(Chl_means_cm2, aes(x=Timepoint, y = Value, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
-  facet_grid(Measurement ~ Species, scales = "free") +
+  facet_grid(~Species, scales = "free") +
   geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2) +
   scale_color_manual(values = cols) + 
-  xlab("Timepoint") + 
+  xlab("") + 
   theme_classic() + 
-  ylab(expression("Concentration" ~(ug ~cm^-2))) +
+  ylab(expression("Chlorophyll a" ~(ug ~cm^-2))) +
   #ggtitle("Chlorophyll a and c2 concentration") +
-  theme(legend.position = "left") +
-  geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
+  theme(legend.position = c(0.1,0.2)) +
+ # geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
   theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
   theme(panel.border = element_blank(),
@@ -327,17 +328,17 @@ CHL.cm2 <- ggplot(Chl_means_cm2, aes(x=Timepoint, y = Value, group = Treatment, 
   # Change axis line
   axis.line = element_line(colour = "black")); CHL.cm2
 
-CHL.cells.cm2 <- ggplot(Chl_means_cells_cm2, aes(x=Timepoint, y = Value, group = Treatment, color = Treatment)) +
+CHL.cells<- ggplot(Chl_means_cells, aes(x=Timepoint, y = Value, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
-  facet_grid(Measurement ~ Species, scales = "free") +
+  facet_grid(~Species, scales = "free") +
   geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2) +
   scale_color_manual(values = cols) + 
-  xlab("Timepoint") + 
+  xlab("") + 
   theme_classic() + 
-  ylab(expression("Concentration" ~(ug ~cells.cm^-2))) +
+  ylab(expression("Chlorophyll a" ~(ug ~cells^-1))) +
   #ggtitle("Chlorophyll a and c2 concentration") +
-  theme(legend.position = "left") +
-  geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
+  theme(legend.position = "none") +
+ # geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
   theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
   theme(panel.border = element_blank(),
@@ -345,33 +346,12 @@ CHL.cells.cm2 <- ggplot(Chl_means_cells_cm2, aes(x=Timepoint, y = Value, group =
   panel.grid.minor = element_blank(),
   strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
   # Change axis line
-  axis.line = element_line(colour = "black")); CHL.cells.cm2
-
-
-CHL.site <- ggplot(Chl_final, aes(x=Timepoint, y = chla.ug.cm2, group = Site.Name, color = Site.Name)) +
-  geom_line() + geom_point() +
-  facet_grid(Treatment ~ Species, scales = "free") +
-  #geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2) +
-  #scale_color_manual(values = cols) + 
-  xlab("Timepoint") + 
-  theme_classic() + 
-  ylab(expression("Concentration" ~(ug ~cm^-2))) +
-  #ggtitle("Chlorophyll a and c2 concentration") +
-  theme(legend.position = "left") +
-  geom_vline(xintercept = c(7.2), colour="black", linetype="dotted") +
-  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
-  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
-  theme(panel.border = element_blank(),
-  panel.grid.major = element_blank(),
-  panel.grid.minor = element_blank(),
-  strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
-  # Change axis line
-  axis.line = element_line(colour = "black")); CHL.site
+  axis.line = element_line(colour = "black")); CHL.cells
 
 ggsave(file="Output/Final_Figures/Chlorophyll_SA.pdf", CHL.cm2, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Final_Figures/Chlorophyll_SA.png", CHL.cm2, width = 11, height = 6, units = c("in"))
-ggsave(file="Output/Final_Figures/Chlorophyll_cells.pdf", CHL.cells.cm2, width = 11, height = 6, units = c("in"))
-ggsave(file="Output/Final_Figures/Chlorophyll_cells.png", CHL.cells.cm2, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Chlorophyll_cells.pdf", CHL.cells, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Chlorophyll_cells.png", CHL.cells, width = 11, height = 6, units = c("in"))
 ```
 
 ## Statistics 
@@ -384,10 +364,14 @@ Mcap_chl <- Chl_final %>% subset(Species == "Mcapitata") %>%
 Pacuta_chl <- Chl_final %>% subset(Species == "Pacuta") %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
 
 hist(Mcap_chl$chla.ug.cm2) 
+hist(Mcap_chl$chla.ug.cells) 
 hist(Pacuta_chl$chla.ug.cm2) 
+hist(Pacuta_chl$chla.ug.cells) 
 
-hist(Mcap_chl$chlc2.ug.cm2)  
+hist(Mcap_chl$chlc2.ug.cm2) 
+hist(Mcap_chl$chlc2.ug.cells) 
 hist(Pacuta_chl$chlc2.ug.cm2) 
+hist(Pacuta_chl$chlc2.ug.cells) 
 ```
 
 ### Linear mixed models 
@@ -397,25 +381,38 @@ hist(Pacuta_chl$chlc2.ug.cm2)
 ```{r}
 ## Chlorophyll a
 Pacuta_Chl_LMER_a <- lmer(log(chla.ug.cm2) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_chl)
+Pacuta_Chl_LMER_a_cells <- lmer(log(chla.ug.cells) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_chl)
 ## Chlorophyll c2
 Pacuta_Chl_LMER_c2 <- lmer(chlc2.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_chl)
+Pacuta_Chl_LMER_c2_cells <- lmer(log(chlc2.ug.cells) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Pacuta_chl)
 
 qqPlot(residuals(Pacuta_Chl_LMER_a)) 
+qqPlot(residuals(Pacuta_Chl_LMER_a_cells)) 
 qqPlot(residuals(Pacuta_Chl_LMER_c2)) 
+qqPlot(residuals(Pacuta_Chl_LMER_c2_cells)) 
 
-hist(residuals(Pacuta_Chl_LMER_a)) 
+hist(residuals(Pacuta_Chl_LMER_a))
+hist(residuals(Pacuta_Chl_LMER_a_cells)) 
 hist(residuals(Pacuta_Chl_LMER_c2)) 
+hist(residuals(Pacuta_Chl_LMER_c2_cells)) 
 
 ## Type III Wald chisquare tests
 pacuta.chl.a.anova <- Anova(Pacuta_Chl_LMER_a, ddf="lme4", type='III')
 pacuta.chl.c2.anova <- Anova(Pacuta_Chl_LMER_c2, ddf="lme4", type='III')
+pacuta.chl.a.cells.anova <- Anova(Pacuta_Chl_LMER_a_cells, ddf="lme4", type='III')
+pacuta.chl.c2.cells.anova <- Anova(Pacuta_Chl_LMER_c2_cells, ddf="lme4", type='III')
 
 tab_model(Pacuta_Chl_LMER_a, Pacuta_Chl_LMER_c2,
           dv.labels = c("P.acuta chl-a", "P.acuta chl-c2"), string.ci = "Conf. Int (95%)",
           string.p = "P-Value", file = "Output/Statistics/Chl_Pacuta.doc")
+tab_model(Pacuta_Chl_LMER_a_cells, Pacuta_Chl_LMER_c2_cells,
+          dv.labels = c("P.acuta chl-a cells", "P.acuta chl-c2 cells"), string.ci = "Conf. Int (95%)",
+          string.p = "P-Value", file = "Output/Statistics/Chl_cells_Pacuta.doc")
 
 capture.output(pacuta.chl.a.anova, file = "Output/Statistics/Chla_Pacuta.txt")
 capture.output(pacuta.chl.c2.anova, file = "Output/Statistics/Chlc2_Pacuta.txt")
+capture.output(pacuta.chl.a.cells.anova, file = "Output/Statistics/Chla_cells_Pacuta.txt")
+capture.output(pacuta.chl.c2.cells.anova, file = "Output/Statistics/Chlc2_cells_Pacuta.txt")
 ```
 
 **M. capitata** 

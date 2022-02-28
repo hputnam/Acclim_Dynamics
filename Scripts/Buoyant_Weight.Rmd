@@ -345,18 +345,21 @@ Pact.Means <- Pact.Means[-c(23,26),] # removing sample sizes of 2 or less
 Sp.labs <- c("Montipora capitata", "Pocillopora acuta")
 names(Sp.labs) <- c("Mcapitata", "Pacuta")
 
-cols <- c("lightblue", "blue", "salmon", "red3")
+cols <- c("blue", "lightblue", "salmon", "red3")
 
-Calc_plot <- ggplot(All.Means, aes(x=week, y = mg.d.cm2, group = Treatment, color = Treatment)) +
+All.Means.m <- All.Means %>% subset(Species == "Mcapitata")
+All.Means.p <- All.Means %>% subset(Species == "Pacuta")
+
+Calc_plot.m <- ggplot(All.Means.m, aes(x=week, y = mg.d.cm2, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
-  facet_grid(~Species, scales = "free", labeller = labeller(Species = Sp.labs)) +
+  #facet_grid(~Species, scales = "free", labeller = labeller(Species = Sp.labs)) +
   geom_errorbar(aes(ymin=mg.d.cm2-se, ymax=mg.d.cm2+se), width=.2) +
   scale_color_manual(values = cols) + 
-  xlab("Timepoint") + 
+  xlab("") + 
   ylab(expression(Growth  ~(mg ~CaCO[3] ~cm^-2 ~d^-1))) + # y-axis label and y axis range
   theme_classic() + 
-  ggtitle("Growth") +
-  theme(legend.position = "left") +
+  #ggtitle("Growth") +
+  theme(legend.position = "none") +
   geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
   #scale_x_discrete(breaks = c("Week1", "Week2", "Week4", "Week6", "Week8", "Week12", "Week16"), labels = c("1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week")) +
@@ -366,10 +369,59 @@ Calc_plot <- ggplot(All.Means, aes(x=week, y = mg.d.cm2, group = Treatment, colo
     panel.grid.minor = element_blank(),
     strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
   # Change axis line
-  axis.line = element_line(colour = "black")); Calc_plot
+  axis.line = element_line(colour = "black")); Calc_plot.m
 
-ggsave(file="Output/Final_Figures/Calacification.pdf", Calc_plot, width = 11, height = 6, units = c("in"))
-ggsave(file="Output/Final_Figures/Calacification.png", Calc_plot, width = 11, height = 6, units = c("in"))
+Calc_plot.p <- ggplot(All.Means.p, aes(x=week, y = mg.d.cm2, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  #facet_grid(~Species, scales = "free", labeller = labeller(Species = Sp.labs)) +
+  geom_errorbar(aes(ymin=mg.d.cm2-se, ymax=mg.d.cm2+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("") + 
+  ylab(expression(Growth  ~(mg ~CaCO[3] ~cm^-2 ~d^-1))) + # y-axis label and y axis range
+  theme_classic() + 
+  #ggtitle("Growth") +
+  theme(legend.position = "none") +
+  geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  #scale_x_discrete(breaks = c("Week1", "Week2", "Week4", "Week6", "Week8", "Week12", "Week16"), labels = c("1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week")) +
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+    theme(panel.border = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
+  # Change axis line
+  axis.line = element_line(colour = "black")); Calc_plot.p
+
+# ggsave(file="Output/Final_Figures/Calacification-full.pdf", Calc_plot, width = 11, height = 6, units = c("in"))
+# ggsave(file="Output/Final_Figures/Calacification-full.png", Calc_plot, width = 11, height = 6, units = c("in"))
+
+ggsave(file="Output/Final_Figures/Calcification-m.png", Calc_plot.m, width = 8, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Calcification-p.png", Calc_plot.p, width = 8, height = 6, units = c("in"))
+
+
+All.Means.stress <- All.Means %>% subset(week == "Week 1" | week == "Week 2" | week == "Week 4" | week == "Week 6" | week == "Week 8")
+
+Calc_plot.stress <- ggplot(All.Means.stress, aes(x=week, y = mg.d.cm2, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(~Species, scales = "free", labeller = labeller(Species = Sp.labs)) +
+  geom_errorbar(aes(ymin=mg.d.cm2-se, ymax=mg.d.cm2+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("") + 
+  ylab(expression(Growth  ~(mg ~CaCO[3] ~cm^-2 ~d^-1))) + # y-axis label and y axis range
+  theme_classic() + 
+  theme(legend.position = "right") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  #scale_x_discrete(breaks = c("Week1", "Week2", "Week4", "Week6", "Week8", "Week12", "Week16"), labels = c("1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week")) +
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+    theme(panel.border = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
+  # Change axis line
+  axis.line = element_line(colour = "black")); Calc_plot.stress
+
+
+ggsave(file="Output/Final_Figures/Calacification-stress.png", Calc_plot.stress, width = 11, height = 6, units = c("in"))
 ```
 
 
@@ -487,11 +539,11 @@ species.names <- list(
   'Pacuta'="Pocillopora acuta")
 
 species_labeller <- function(variable,value){
-  return(species.names[value])}
+  return(species.names[value])
 
-Growth_facetplot <- ggplot(All.Means, aes(x=TimePoint, y = mg.d.cm2, group = Treatment, color = Treatment)) +
+Growth_facetplot.m <- ggplot(All.Means.m, aes(x=TimePoint, y = mg.d.cm2, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
-  facet_grid(~Species, scales = "free", labeller = species_labeller) +
+  #facet_grid(~Species, scales = "free", labeller = species_labeller) +
   geom_errorbar(aes(ymin=mg.d.cm2-se, ymax=mg.d.cm2+se), width=.2) +
   scale_color_manual(values = cols) + 
   xlab("Timepoint") + 
@@ -507,7 +559,10 @@ Growth_facetplot <- ggplot(All.Means, aes(x=TimePoint, y = mg.d.cm2, group = Tre
   panel.grid.major = element_blank(),
   panel.grid.minor = element_blank(),
   # Change axis line
-  axis.line = element_line(colour = "black")); Growth_facetplot
+  axis.line = element_line(colour = "black")); Growth_facetplot.m
+
+
+
 
 ggsave(file="Output/Final_Figures/Growth.pdf", Growth_facetplot, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Final_Figures/Growth.png", Growth_facetplot, width = 11, height = 6, units = c("in"))
@@ -574,9 +629,6 @@ qqPlot(residuals(Mcap_Growth_LMER_tank_plug_recovery))
 hist(residuals(Mcap_Growth_LMER_tank_plug)) 
 hist(residuals(Mcap_Growth_LMER_tank_plug_stress)) 
 hist(residuals(Mcap_Growth_LMER_tank_plug_recovery)) 
-
-## checking homogeneity of variance using levene test (can also use Bartlett's test function)
-leveneTest(mcap.Growth$Growth.Rate ~ mcap.Growth$Timepoint*mcap.Growth$Temperature*mcap.Growth$CO2)
 
 ## significance of model
 mcap_anova_growth <- Anova(Mcap_Growth_LMER_tank_plug, ddf="lme4", type='III') # Type III Wald chisquare tests

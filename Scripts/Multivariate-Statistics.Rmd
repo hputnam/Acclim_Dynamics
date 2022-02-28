@@ -4,7 +4,7 @@ author: "EL Strand"
 date: "2/11/2021"
 output: html_document
 editor_options: 
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -41,26 +41,26 @@ library(MuMIn)
 library(broom)
 ```
 
+# Multivariate analysis 
+
 ### Read in data files to analyze. 
 
 ```{r}
 Master <- read.csv("Environmental_data/Master_Fragment.csv") %>% select(Site.Name, Plug_ID, Species, ANALYSIS, Timepoint, Treatment, Tank, Temperature, CO2) %>%
   filter(ANALYSIS == "Physiology" | ANALYSIS == "Physiology/Molecular")
   
-Photo.Resp <- read.csv("Physiology_variables/Respirometry/Output/Resp_AllRates.csv") %>% select(Fragment.ID.x, Pnet_umol.cm2.hr, Rdark_umol.cm2.hr, Pgross_umol.cm2.hr) %>%
-  dplyr::rename(Plug_ID = Fragment.ID.x)
+Photo.Resp <- read.csv("Physiology_variables/Respirometry/Output/Resp_AllRates.csv") %>% select(Plug.ID, Pnet_umol.cm2.hr, Rdark_umol.cm2.hr, Pgross_umol.cm2.hr) %>%
+  dplyr::rename(Plug_ID = Plug.ID)
   Photo.Resp$Plug_ID <- gsub("P-", "", Photo.Resp$Plug_ID)
   Photo.Resp$Plug_ID <- gsub("M-", "", Photo.Resp$Plug_ID)
   Photo.Resp <- Photo.Resp %>% separate(Plug_ID, c("Plug_ID", "Date")) %>% select(-Date)
 
-Chlorophyll <-  read.csv("Output/chlorophyll.csv") %>% select(Plug_ID, chla.ug.cm2, chlc2.ug.cm2)
-Biomass <- read.csv("Output/Tissue_Biomass.csv") %>% spread(partner, value)
+Chlorophyll <-  read.csv("Output/chlorophyll.csv") %>% select(Plug_ID, chla.ug.cm2, chla.ug.cells)
+Biomass <- read.csv("Output/Tissue_Biomass.csv") %>% select(Plug_ID, partner, value) %>% distinct() %>% spread(partner, value)
 Protein <- read.csv("Output/soluble_protein.csv") %>% select(Plug_ID, prot_mg.cm2)
 Antioxidant <- read.csv("Output/antioxidant.csv") %>% select(Plug_ID, cre.umol.mgprot)
 Counts <- read.csv("Output/cell_counts.csv") %>% select(Plug_ID, haemo.cells.cm2)
 
-# come back to adding Color.Score and Growth back in and subsetting for where all three timepoint columns match 
-# joining all datasets together, reshaping the AFDW partner into columns, renaming those columns, removing an NA column, and calculating S:H AFDW ratio
 data <- join_all(list(Master, Photo.Resp, Chlorophyll, Biomass, Protein, Antioxidant, Counts), by='Plug_ID', type='left')
 data$Timepoint <- factor(data$Timepoint, levels=c("Day 1","Day 2","1 week","2 week","4 week","6 week","8 week", "12 week", "16 week"))
 
@@ -69,169 +69,281 @@ data <- data %>% distinct() %>%
 ```
 
 ### Subsetting data 
+
+We need one dataframe with *M. capitata* week 1-16 and one dataframe of both species week 1-8. We are taking out Day 1 and Day 2 due to sample size issues.
+
 ```{r}
-## Stress and recovery period (no resp)
-full.data <- data %>% select(-Pnet_umol.cm2.hr, -Rdark_umol.cm2.hr, -Pgross_umol.cm2.hr)
-full.data.pca <- full.data[complete.cases(full.data), ] 
-
-# The above dataframes split Species
-Mcap.full.pca <- full.data.pca %>% subset(Species == "Mcapitata")
-Pacuta.full.pca <- full.data.pca %>% subset(Species == "Pacuta")
-
-## Full data stress period (resp and photo)
-stress.data <- data %>% subset(!Timepoint == "12 week" & !Timepoint == "16 week")
-stress.data <- stress.data[complete.cases(stress.data), ]  
-
-# Stress time period split by species 
-Mcap.stress.pca <- stress.data %>% subset(Species == "Mcapitata")
-Pacuta.stress.pca <- stress.data %>% subset(Species == "Pacuta")
+stress <- data %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
+mcap <- data %>% subset(Species == "Mcapitata") %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2") %>% 
+  select(-Pnet_umol.cm2.hr, -Rdark_umol.cm2.hr, -Pgross_umol.cm2.hr)
+  
+# taking only complete cases 
+stress <- stress[complete.cases(stress), ]
+mcap <- mcap[complete.cases(mcap), ]
 ```
 
-# Multivariate analysis 
+### Scaling and centering data 
 
-## PCA dataframes and color choices 
+Columns 10:20 are the data values columns. Columns 1-9 are metadata. 
+
 ```{r}
-## Principal components on each data with center and scaling
-Mcap_scaled_full_data <- prcomp(Mcap.full.pca[c(10:17)], scale=TRUE, center=TRUE) # columns 10-17 are the data values
-Pacuta_scaled_full_data <- prcomp(Pacuta.full.pca[c(10:17)], scale=TRUE, center=TRUE) # columns 10-17 are the data values
+stress_scaled <- prcomp(stress[c(10:20)], scale=TRUE, center=TRUE)
+mcap_scaled <- prcomp(mcap[c(10:17)], scale=TRUE, center=TRUE)
 
-Pacuta_scaled_stress_data <- prcomp(Pacuta.stress.pca[c(10:20)], scale=TRUE, center=TRUE) # columns 10-20 are the data values
-Mcap_scaled_stress_data <- prcomp(Mcap.stress.pca[c(10:20)], scale=TRUE, center=TRUE) # columns 10-20 are the data values
+stress.pca.summary <- summary(stress_scaled)
+mcap.pca.summary <- summary(mcap_scaled)
 
-## Screeplots
-Pacuta_full_cov <- cov(Pacuta.full.pca[,c(10:17)])
-Mcap_full_cov <- cov(Mcap.full.pca[,c(10:17)])
-Pacuta_stress_cov <- cov(Pacuta.stress.pca[c(10:20)])
-Mcap_stress_cov <- cov(Mcap.stress.pca[c(10:20)])
+stress.pca.summary$importance[2,1]
+mcap.pca.summary$importance[2,]
 
-Pacuta_full_eigen <- eigen(Pacuta_full_cov)
-Mcap_full_eigen <- eigen(Mcap_full_cov)
-Pacuta_stress_eigen <- eigen(Pacuta_stress_cov)
-Mcap_stress_eigen <- eigen(Mcap_stress_cov)
-
-plot(Pacuta_full_eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') +   lines(Pacuta_full_eigen$values)
-plot(Mcap_full_eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') +   lines(Mcap_full_eigen$values)
-plot(Pacuta_stress_eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') +   lines(Pacuta_stress_eigen$values)
-plot(Mcap_stress_eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') +   lines(Mcap_stress_eigen$values)
+stress.PC1.value <- (stress.pca.summary$importance[2,1])*100 
+stress.PC2.value <- (stress.pca.summary$importance[2,2])*100 
+mcap.PC1.value <- (mcap.pca.summary$importance[2,1])*100 
+mcap.PC2.value <- (mcap.pca.summary$importance[2,2])*100 
 ```
 
-## Plotting PCAs
+### Visualizing screeplots 
 
-Means of each group's PC1
+These outputs give PC2 - 11 with eigenvalue sizes as 0.. come back to this. Use a different screeplot function
+
 ```{r}
-Mcapitata.full.means <- Mcap_scaled_full_data %>%
-  augment(Mcap.full.pca) %>% # add original dataset back in
-  group_by(Timepoint, Temperature) %>%
-  mutate(PC1.mean = mean(.fittedPC1),
+stress_cov <- cov(stress[,c(10:20)])
+mcap_cov <- cov(mcap[,c(10:17)])
+
+stress_eigen <- eigen(stress_cov)
+mcap_eigen <- eigen(mcap_cov)
+
+plot(stress_eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') +   lines(stress_eigen$values)
+plot(mcap_eigen$values, xlab = 'Eigenvalue Number', ylab = 'Eigenvalue Size', main = 'Scree Graph') +   lines(mcap_eigen$values)
+```
+
+Principal components 1-3 explain most of the variance here. 
+
+### Calculating the mean point of each time point
+
+Mean of each group (Timepoint, treatment, species) is the mean of PC1 and PC2 so there is a mean coordinate pair. 
+
+I've had issues with the group_by function not working - double check these groups are recognized. When I added `dplyr::` before `group_by()` *and* `mutate()` this worked for me. `plyr()` needs to be loaded before `dplyr()` as well.
+
+```{r}
+stress.means <- stress_scaled %>%
+  augment(stress) %>% # add original dataset back in
+  dplyr::group_by(Timepoint, Temperature, Species) %>%
+  dplyr::mutate(PC1.mean = mean(.fittedPC1),
          PC2.mean = mean(.fittedPC2)) %>% select(-.fittedPC4, -.fittedPC5, -.fittedPC6)
 
+mcap.means <- mcap_scaled %>%
+  augment(mcap) %>% # add original dataset back in
+  dplyr::group_by(Timepoint, Temperature) %>%
+  dplyr::mutate(PC1.mean = mean(.fittedPC1),
+         PC2.mean = mean(.fittedPC2)) %>% select(-.fittedPC4, -.fittedPC5, -.fittedPC6)
 ```
 
-Mcap all treatments. 
+Isolating the PC1 and PC2 mean per group in a dataframe.  
+Format of variable will be `Species_Timepoint_PC#.mean`. We will load these values in the figure. 
+
+High temperature segments: 
 ```{r}
+# ending value: `Species_Timepoint_PC#.mean`
+stress.high.segments <- stress.means %>% subset(Temperature == "High") %>%
+  select(Species, Timepoint, Temperature, PC1.mean, PC2.mean) %>%
+  gather(variable, value, -(Species:Temperature)) %>%
+  unite(group, Species, Timepoint) %>%
+  unite(group, group, variable) %>% distinct() %>%
+  spread(group, value)
 
-```
-
-
-
-Mcap just temperature figures. 
-```{r}
-mcap.high.segments <- Mcapitata.full.means %>% subset(Temperature == "High") %>%
+# ending value: `Timepoint_PC#.mean`
+mcap.high.segments <- mcap.means %>% subset(Temperature == "High") %>%
   select(Timepoint, Temperature, PC1.mean, PC2.mean) %>%
   gather(variable, value, -(Timepoint:Temperature)) %>%
   unite(group, Timepoint, variable) %>% distinct() %>%
   spread(group, value)
+```
 
-mcap.amb.segments <- Mcapitata.full.means %>% subset(Temperature == "Ambient") %>%
+Ambient temperature segments: 
+```{r}
+stress.amb.segments <- stress.means %>% subset(Temperature == "Ambient") %>%
+  select(Species, Timepoint, Temperature, PC1.mean, PC2.mean) %>%
+  gather(variable, value, -(Species:Temperature)) %>%
+  unite(group, Species, Timepoint) %>%
+  unite(group, group, variable) %>% distinct() %>%
+  spread(group, value)
+
+mcap.amb.segments <- mcap.means %>% subset(Temperature == "Ambient") %>%
   select(Timepoint, Temperature, PC1.mean, PC2.mean) %>%
   gather(variable, value, -(Timepoint:Temperature)) %>%
   unite(group, Timepoint, variable) %>% distinct() %>%
   spread(group, value)
+```
 
-Mcapitata.all.fig <- ggplot(Mcapitata.full.means, aes(.fittedPC1, .fittedPC2, color = Temperature)) + 
-  geom_segment(aes(x = `Day 1_PC1.mean`, y = `Day 1_PC2.mean`, xend = `Day 2_PC1.mean`, yend = `Day 2_PC2.mean`, colour = Temperature), data = mcap.high.segments, size=1, show.legend=FALSE) + # Day 1 to Day 2 HIGH
-  geom_segment(aes(x = `Day 2_PC1.mean`, y = `Day 2_PC2.mean`, xend = `2 week_PC1.mean`, yend = `2 week_PC2.mean`, colour = Temperature), data = mcap.high.segments, size=1, show.legend=FALSE) + # Day 2 to 2 week HIGH
+### Plotting
+
+#### Stress period means 
+
+`stress.amb.segments` and `stress.high.segments` data frames will be used for the following figure to plot the direction of stress. 
+
+```{r}
+stress.fig <- ggplot(stress.means, aes(.fittedPC1, .fittedPC2, color = Temperature)) + 
+  geom_segment(aes(x = `Mcapitata_1 week_PC1.mean`, y = `Mcapitata_1 week_PC2.mean`, xend = `Mcapitata_2 week_PC1.mean`, yend = `Mcapitata_2 week_PC2.mean`, colour = Temperature), data = stress.high.segments, size=1, show.legend=FALSE) + # 1 week to 2 week HIGH
+  geom_segment(aes(x = `Mcapitata_2 week_PC1.mean`, y = `Mcapitata_2 week_PC2.mean`, xend = `Mcapitata_4 week_PC1.mean`, yend = `Mcapitata_4 week_PC2.mean`, colour = Temperature), data = stress.high.segments, size=1, show.legend=FALSE) + # 2 week to 4 week HIGH
+  geom_segment(aes(x = `Mcapitata_4 week_PC1.mean`, y = `Mcapitata_4 week_PC2.mean`, xend = `Mcapitata_6 week_PC1.mean`, yend = `Mcapitata_6 week_PC2.mean`, colour = Temperature), data = stress.high.segments, size=1, show.legend=FALSE) + # 4 week to 6 week HIGH
+  geom_segment(aes(x = `Mcapitata_6 week_PC1.mean`, y = `Mcapitata_6 week_PC2.mean`, xend = `Mcapitata_8 week_PC1.mean`, yend = `Mcapitata_8 week_PC2.mean`, colour = Temperature), data = stress.high.segments, size=1, show.legend=FALSE, arrow = arrow()) + # 6 week to 8 week HIGH
+  geom_segment(aes(x = `Mcapitata_1 week_PC1.mean`, y = `Mcapitata_1 week_PC2.mean`, xend = `Mcapitata_2 week_PC1.mean`, yend = `Mcapitata_2 week_PC2.mean`, colour = Temperature), data = stress.amb.segments, size=1, show.legend=FALSE) + # 1 week to 2 week HIGH
+  geom_segment(aes(x = `Mcapitata_2 week_PC1.mean`, y = `Mcapitata_2 week_PC2.mean`, xend = `Mcapitata_4 week_PC1.mean`, yend = `Mcapitata_4 week_PC2.mean`, colour = Temperature), data = stress.amb.segments, size=1, show.legend=FALSE) + # 2 week to 4 week HIGH
+  geom_segment(aes(x = `Mcapitata_4 week_PC1.mean`, y = `Mcapitata_4 week_PC2.mean`, xend = `Mcapitata_6 week_PC1.mean`, yend = `Mcapitata_6 week_PC2.mean`, colour = Temperature), data = stress.amb.segments, size=1, show.legend=FALSE) + # 4 week to 6 week HIGH
+  geom_segment(aes(x = `Mcapitata_6 week_PC1.mean`, y = `Mcapitata_6 week_PC2.mean`, xend = `Mcapitata_8 week_PC1.mean`, yend = `Mcapitata_8 week_PC2.mean`, colour = Temperature), data = stress.amb.segments, size=1, show.legend=FALSE, arrow = arrow()) + # 6 week to 8 week HIGH
+    geom_segment(aes(x = `Pacuta_1 week_PC1.mean`, y = `Pacuta_1 week_PC2.mean`, xend = `Pacuta_2 week_PC1.mean`, yend = `Pacuta_2 week_PC2.mean`, colour = Temperature), data = stress.high.segments, size=1, show.legend=FALSE) + # 1 week to 2 week HIGH
+  geom_segment(aes(x = `Pacuta_2 week_PC1.mean`, y = `Pacuta_2 week_PC2.mean`, xend = `Pacuta_4 week_PC1.mean`, yend = `Pacuta_4 week_PC2.mean`, colour = Temperature), data = stress.high.segments, size=1, show.legend=FALSE) + # 2 week to 4 week HIGH
+  geom_segment(aes(x = `Pacuta_4 week_PC1.mean`, y = `Pacuta_4 week_PC2.mean`, xend = `Pacuta_6 week_PC1.mean`, yend = `Pacuta_6 week_PC2.mean`, colour = Temperature), data = stress.high.segments, size=1, show.legend=FALSE) + # 4 week to 6 week HIGH
+  geom_segment(aes(x = `Pacuta_6 week_PC1.mean`, y = `Pacuta_6 week_PC2.mean`, xend = `Pacuta_8 week_PC1.mean`, yend = `Pacuta_8 week_PC2.mean`, colour = Temperature), data = stress.high.segments, size=1, show.legend=FALSE, arrow = arrow()) + # 6 week to 8 week HIGH
+  geom_segment(aes(x = `Pacuta_1 week_PC1.mean`, y = `Pacuta_1 week_PC2.mean`, xend = `Pacuta_2 week_PC1.mean`, yend = `Pacuta_2 week_PC2.mean`, colour = Temperature), data = stress.amb.segments, size=1, show.legend=FALSE) + # 1 week to 2 week HIGH
+  geom_segment(aes(x = `Pacuta_2 week_PC1.mean`, y = `Pacuta_2 week_PC2.mean`, xend = `Pacuta_4 week_PC1.mean`, yend = `Pacuta_4 week_PC2.mean`, colour = Temperature), data = stress.amb.segments, size=1, show.legend=FALSE) + # 2 week to 4 week HIGH
+  geom_segment(aes(x = `Pacuta_4 week_PC1.mean`, y = `Pacuta_4 week_PC2.mean`, xend = `Pacuta_6 week_PC1.mean`, yend = `Pacuta_6 week_PC2.mean`, colour = Temperature), data = stress.amb.segments, size=1, show.legend=FALSE) + # 4 week to 6 week HIGH
+  geom_segment(aes(x = `Pacuta_6 week_PC1.mean`, y = `Pacuta_6 week_PC2.mean`, xend = `Pacuta_8 week_PC1.mean`, yend = `Pacuta_8 week_PC2.mean`, colour = Temperature), data = stress.amb.segments, size=1, show.legend=FALSE, arrow = arrow()) + # 6 week to 8 week HIGH
+  geom_point(size = 1.5, alpha=0.3) +
+  geom_point(aes(x=PC1.mean, y=PC2.mean)) +
+  #geom_text(aes(PC1.mean, PC2.mean, label=Species), vjust=-1.5, color="black") +
+  #theme_half_open(12) + background_grid() +
+  theme_bw() +
+  #ggtitle("Stress period") + 
+  #stat_ellipse(aes(color = Species)) +
+  xlab(stress.PC1.value) +
+  ylab(stress.PC2.value) +
+  theme(legend.position = "none") +  #c(0.85, 0.1)
+  theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) +
+  theme(legend.title = element_text(size=14, face="bold")) +
+  theme(legend.text = element_text(size=14)) +
+  scale_color_manual(values = c("deepskyblue", "firebrick1", "black", "black"), aesthetics = c("colour"))  
+  
+stress.fig 
+
+ggsave(file="Output/Final_figures/Stress_PCA_bothsp.png", stress.fig, width = 7, height = 7, units = c("in"))
+```
+
+#### Biplots 
+
+Principal components output: `stress_scaled` and metadata `stress`.  
+Species kept together for prcomp function for the above figure to directly compare trajectories and then separated for the biplot below. 
+
+```{r}
+pacuta.stress <- stress %>% subset(Species == "Pacuta")
+mcap.stress <- stress %>% subset(Species == "Mcapitata")
+
+pacuta.pca.out <- prcomp(pacuta.stress[c(10:20)], scale=TRUE, center=TRUE)
+mcap.pca.out <- prcomp(mcap.stress[c(10:20)], scale=TRUE, center=TRUE)
+
+
+## Biplots
+m.biplot <- autoplot(mcap.pca.out, data = mcap.stress, colour = 'Temperature', 
+                        loadings = TRUE, loadings.colour = 'black', frame=TRUE, frame.type = 'norm',
+                        loadings.label = TRUE, loadings.label.size = 4, loadings.label.colour = 'black', repel=TRUE,
+                        loadings.label.vjust = 2) +
+  scale_color_manual(values = c("deepskyblue", "firebrick1")) + scale_fill_manual(values = c("transparent", "transparent")) +
+  theme_bw() + ggtitle("Montipora capitata") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) + 
+  theme(legend.title = element_text(size=12, face="bold")) + 
+  theme(legend.text = element_text(size=12)) +
+  theme(legend.position = "none") + 
+  theme(legend.background = element_rect(size=0.1, linetype="solid", colour ="black")); m.biplot
+
+p.biplot <- autoplot(pacuta.pca.out, data = pacuta.stress, colour = 'Temperature', 
+                        loadings = TRUE, loadings.colour = 'black', frame=TRUE, frame.type = 'norm',
+                        loadings.label = TRUE, loadings.label.size = 4, loadings.label.colour = 'black', repel=TRUE,
+                        loadings.label.vjust = 2) +
+  scale_color_manual(values = c("deepskyblue", "firebrick1")) + scale_fill_manual(values = c("transparent", "transparent")) +
+  theme_bw() + ggtitle("Pocillopora acuta") + 
+  theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) + 
+  theme(legend.title = element_text(size=12, face="bold")) + 
+  theme(legend.text = element_text(size=12)) +
+  theme(legend.position = c(0.85, 0.15)) + 
+  theme(legend.background = element_rect(size=0.1, linetype="solid", colour ="black")); p.biplot
+
+ggsave(file="Output/Final_figures/biplot-mcap.png", m.biplot, width = 7, height = 7, units = c("in"))
+ggsave(file="Output/Final_figures/biplot-pacuta.png", p.biplot, width = 7, height = 7, units = c("in"))
+
+### All treatments
+autoplot(mcap.pca.out, data = mcap.stress, colour = 'Treatment', 
+                        loadings = TRUE, loadings.colour = 'black', frame=TRUE, frame.type = 'norm',
+                        loadings.label = TRUE, loadings.label.size = 4, loadings.label.colour = 'black', repel=TRUE,
+                        loadings.label.vjust = 2) +
+  scale_color_manual(values = c("lightblue", "blue", "pink", "red")) + scale_fill_manual(values = c("transparent", "transparent", "transparent", "transparent")) +
+  theme_bw() + ggtitle("Montipora capitata") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) + 
+  theme(legend.title = element_text(size=12, face="bold")) + 
+  theme(legend.text = element_text(size=12)) +
+  theme(legend.position = "none") + 
+  theme(legend.background = element_rect(size=0.1, linetype="solid", colour ="black"))
+
+autoplot(pacuta.pca.out, data = pacuta.stress, colour = 'Treatment', 
+                        loadings = TRUE, loadings.colour = 'black', frame=TRUE, frame.type = 'norm',
+                        loadings.label = TRUE, loadings.label.size = 4, loadings.label.colour = 'black', repel=TRUE,
+                        loadings.label.vjust = 2) +
+  scale_color_manual(values = c("lightblue", "blue", "pink", "red")) + scale_fill_manual(values = c("transparent", "transparent", "transparent", "transparent")) +
+  theme_bw() + ggtitle("Pocillopora acuta") + 
+  theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) + 
+  theme(legend.title = element_text(size=12, face="bold")) + 
+  theme(legend.text = element_text(size=12)) +
+  theme(legend.position = c(0.85, 0.15)) + 
+  theme(legend.background = element_rect(size=0.1, linetype="solid", colour ="black"))
+```
+
+#### M.cap recovery 
+
+`mcap_scaled` is the output of prcomp on the m.cap time series. 
+
+```{r}
+autoplot(mcap_scaled, data = mcap, colour = 'Treatment', 
+                        loadings = TRUE, loadings.colour = 'black', frame=FALSE, frame.type = 'norm',
+                        loadings.label = TRUE, loadings.label.size = 4, loadings.label.colour = 'black', repel=TRUE,
+                        loadings.label.vjust = 2) + stat_ellipse(aes(color=Treatment)) +
+  scale_color_manual(values = c("lightblue", "blue", "pink", "red"))  +
+  theme_bw() + ggtitle("Mcapitata") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) + 
+  theme(legend.title = element_text(size=12, face="bold")) + 
+  theme(legend.text = element_text(size=12)) +
+  theme(legend.position = c(0.9, 0.2)) + 
+  theme(legend.background = element_rect(size=0.1, linetype="solid", colour ="black"))
+
+```
+
+```{r}
+mcap.recovery.fig <- 
+  ggplot(mcap.means, aes(.fittedPC1, .fittedPC2, color = Temperature)) + 
+  geom_segment(aes(x = `1 week_PC1.mean`, y = `1 week_PC2.mean`, xend = `2 week_PC1.mean`, yend = `2 week_PC2.mean`, colour = Temperature), data = mcap.high.segments, size=1, show.legend=FALSE) + # 1 week to 2 week HIGH
   geom_segment(aes(x = `2 week_PC1.mean`, y = `2 week_PC2.mean`, xend = `4 week_PC1.mean`, yend = `4 week_PC2.mean`, colour = Temperature), data = mcap.high.segments, size=1, show.legend=FALSE) + # 2 week to 4 week HIGH
   geom_segment(aes(x = `4 week_PC1.mean`, y = `4 week_PC2.mean`, xend = `6 week_PC1.mean`, yend = `6 week_PC2.mean`, colour = Temperature), data = mcap.high.segments, size=1, show.legend=FALSE) + # 4 week to 6 week HIGH
   geom_segment(aes(x = `6 week_PC1.mean`, y = `6 week_PC2.mean`, xend = `8 week_PC1.mean`, yend = `8 week_PC2.mean`, colour = Temperature), data = mcap.high.segments, size=1, show.legend=FALSE) + # 6 week to 8 week HIGH
-  geom_segment(aes(x = `8 week_PC1.mean`, y = `8 week_PC2.mean`, xend = `12 week_PC1.mean`, yend = `12 week_PC2.mean`, colour = Temperature), data = mcap.high.segments, size=1, show.legend=FALSE, arrow = arrow()) + # 8 week to 12 week HIGH
-  geom_segment(aes(x = `Day 2_PC1.mean`, y = `Day 2_PC2.mean`, xend = `2 week_PC1.mean`, yend = `2 week_PC2.mean`, colour = Temperature), data = mcap.amb.segments, size=1, show.legend=FALSE) + # Day 2 to 2 week AMB
+  geom_segment(aes(x = `8 week_PC1.mean`, y = `8 week_PC2.mean`, xend = `12 week_PC1.mean`, yend = `12 week_PC2.mean`, colour = Temperature), data = mcap.high.segments, size=1, show.legend=FALSE) + # 8 week to 12 week HIGH
+  geom_segment(aes(x = `12 week_PC1.mean`, y = `12 week_PC2.mean`, xend = `16 week_PC1.mean`, yend = `16 week_PC2.mean`, colour = Temperature), data = mcap.high.segments, size=1, show.legend=FALSE, arrow = arrow()) + # 12 week to 16 week HIGH
+  geom_segment(aes(x = `1 week_PC1.mean`, y = `1 week_PC2.mean`, xend = `2 week_PC1.mean`, yend = `2 week_PC2.mean`, colour = Temperature), data = mcap.amb.segments, size=1, show.legend=FALSE) + # 1 week to 2 week AMB
   geom_segment(aes(x = `2 week_PC1.mean`, y = `2 week_PC2.mean`, xend = `4 week_PC1.mean`, yend = `4 week_PC2.mean`, colour = Temperature), data = mcap.amb.segments, size=1, show.legend=FALSE) + # 2 week to 4 week AMB
-  geom_segment(aes(x = `4 week_PC1.mean`, y = `4 week_PC2.mean`, xend = `8 week_PC1.mean`, yend = `8 week_PC2.mean`, colour = Temperature), data = mcap.amb.segments, size=1, show.legend=FALSE) + # 4 week to 8 week AMB
-  geom_segment(aes(x = `8 week_PC1.mean`, y = `8 week_PC2.mean`, xend = `12 week_PC1.mean`, yend = `12 week_PC2.mean`, colour = Temperature), data = mcap.amb.segments, size=1, show.legend=FALSE, arrow = arrow()) + # 8 week to 12 week AMB
+  geom_segment(aes(x = `4 week_PC1.mean`, y = `4 week_PC2.mean`, xend = `6 week_PC1.mean`, yend = `6 week_PC2.mean`, colour = Temperature), data = mcap.amb.segments, size=1, show.legend=FALSE) + # 4 week to 6 week AMB
+  geom_segment(aes(x = `6 week_PC1.mean`, y = `6 week_PC2.mean`, xend = `8 week_PC1.mean`, yend = `8 week_PC2.mean`, colour = Temperature), data = mcap.amb.segments, size=1, show.legend=FALSE) + # 6 week to 8 week AMB
+  geom_segment(aes(x = `8 week_PC1.mean`, y = `8 week_PC2.mean`, xend = `12 week_PC1.mean`, yend = `12 week_PC2.mean`, colour = Temperature), data = mcap.amb.segments, size=1, show.legend=FALSE) + # 8 week to 12 week AMB
+  geom_segment(aes(x = `12 week_PC1.mean`, y = `12 week_PC2.mean`, xend = `16 week_PC1.mean`, yend = `16 week_PC2.mean`, colour = Temperature), data = mcap.amb.segments, size=1, show.legend=FALSE, arrow = arrow()) + # 12 week to 16 week AMB
   geom_point(size = 1.5, alpha=0.3) +
   geom_point(aes(x=PC1.mean, y=PC2.mean)) +
   geom_text(aes(PC1.mean, PC2.mean, label=Timepoint), vjust=-1.5, color="black") +
-  theme_half_open(12) + background_grid() +
-  ggtitle("Montipora capitata") + 
-  theme(legend.position = c(0.8, 0.9)) +
+  #theme_half_open(12) + background_grid() +
+  theme_bw() +
+  ggtitle("M.capitata full timeseries") + 
+  stat_ellipse(aes(color = Temperature)) +
+  xlab(mcap.PC1.value) +
+  ylab(mcap.PC2.value) +
+  theme(legend.position = "none") +  #c(0.85, 0.1)
   theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) +
-  theme(legend.title = element_text(size=12, face="bold")) +
-  scale_color_manual(values = c("deepskyblue", "firebrick1"), aesthetics = c("colour"))  
-  #xlab("PC1 47%") + ylab("PC2 21%"); Mcapitata.all.fig 
-```
-
-
-
-```{r}
-line.cols <- c("lightblue", "blue", "salmon", "red3", "lightblue", "blue", "salmon", "red3")
-fill.cols <- c("white", "white", "white", "white", "lightblue", "blue", "salmon", "red3")
-
-autoplot(Mcap_scaled_full_data, data = Mcap.full.pca, colour = 'Treatment', shape = "Timepoint",
-         loadings = TRUE, loadings.colour = 'black', size=1, loadings.label = TRUE, 
-         loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1,
-         frame=TRUE, frame.type = 'norm') + theme_bw() +
-  scale_color_manual(values = line.cols) + scale_fill_manual(values = fill.cols) + ggtitle("M. capitata")
-```
-
-
-
-## Plotting stress timepoints. 
-```{r}
-# Choosing colors for PCA 
-line.cols <- c("lightblue", "blue", "salmon", "red3", "lightblue", "blue", "salmon", "red3")
-fill.cols <- c("white", "white", "white", "white", "lightblue", "blue", "salmon", "red3")
-
-Mcap_group <- autoplot(Mcap_scaled_stress_data, data = Mcap.stress.pca, colour = 'Treatment', shape = "Timepoint",
-         loadings = TRUE, loadings.colour = 'black', size=1, loadings.label = TRUE, 
-         loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1,
-         frame=TRUE, frame.type = 'norm') + theme_bw() +
-  scale_color_manual(values = line.cols) + scale_fill_manual(values = fill.cols) + ggtitle("M. capitata"); Mcap_group
-
-Pacuta_group <- autoplot(Pacuta_scaled_stress_data, data = Pacuta.stress.pca, colour = 'Treatment', shape = "Timepoint", frame=TRUE, frame.type = 'norm',
-         loadings = TRUE, loadings.colour = 'black', size=1, loadings.label = TRUE, 
-         loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + 
-  theme(legend.position = "top") +
-  theme_bw() + scale_color_manual(values = line.cols) + scale_fill_manual(values = fill.cols) + ggtitle("P. acuta"); Pacuta_group
-
-Stress.PCAs <- arrangeGrob(Mcap_group, Pacuta_group, ncol=1)
-ggsave(file="Output/Final_Figures/PCA-stress.pdf", Stress.PCAs, width = 8, height = 10, units = c("in"))
-ggsave(file="Output/Final_Figures/PCA-stress.png", Stress.PCAs, width = 8, height = 10, units = c("in"))
-```
-
-## Plotting timeseries with recovery timepoints. 
-```{r}
-# Choosing colors for PCA 
-time.line.cols <- c("lightblue", "blue", "salmon", "red3", "lightblue", "blue", "salmon", "red3", "lightblue", "blue", "salmon", "red3")
-time.fill.cols <- c("white", "white", "white", "white", "lightblue", "blue", "salmon", "red3", "dodgerblue2", "navyblue", "firebrick3", "darkred")
-plines.cols <- c("lightblue", "blue", "salmon", "red3", "lightblue", "blue", "salmon", "red3", "lightblue", "blue")
-pfill.cols <- c("white", "white", "white", "white", "lightblue", "blue", "salmon", "red3", "dodgerblue2", "navyblue")
+  theme(legend.title = element_text(size=14, face="bold")) +
+  theme(legend.text = element_text(size=14)) +
+  scale_color_manual(values = c("deepskyblue","firebrick1"), aesthetics = c("colour"))  
   
-Pacuta_timeseries <- autoplot(Pacuta_scaled_timeseriesdata, data = Pacuta_timeseriesdata, colour = 'Group', shape = "Phase",
-         loadings = TRUE, loadings.colour = 'black', size=1, loadings.label = TRUE, frame=TRUE, frame.type = 'norm',
-         loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1) + 
-  theme_bw() + scale_color_manual(values = plines.cols) + scale_fill_manual(values = pfill.cols) + ggtitle("P. acuta"); Pacuta_timeseries
+mcap.recovery.fig
 
-Mcap_timeseries <- autoplot(Mcap_scaled_timeseriesdata, data = Mcap_timeseriesdata, colour = 'Group', shape = "Phase",
-         loadings = TRUE, loadings.colour = 'black', size=1, loadings.label = TRUE, 
-         loadings.label.size = 3, loadings.label.colour = 'black', loadings.label.vjust=-1,
-         frame=TRUE, frame.type = 'norm') + theme_bw() +
-  scale_color_manual(values = time.line.cols) + scale_fill_manual(values = time.fill.cols) + ggtitle("M. capitata"); Mcap_timeseries
-
-Timeseries.PCAs <- arrangeGrob(Mcap_timeseries, Pacuta_timeseries, ncol=1)
-ggsave(file="Output/Final_Figures/PCA-timeseries.pdf", Timeseries.PCAs, width = 8, height = 10, units = c("in"))
-ggsave(file="Output/Final_Figures/PCA-timeseries.png", Timeseries.PCAs, width = 8, height = 10, units = c("in"))
+ggsave(file="Output/Final_figures/PCA_Mcap_Recovery.png", mcap.recovery.fig, width = 7, height = 7, units = c("in"))
 ```
+
+Order of colors: Ambient, ATAC, ATHC, High, HTAC, HTHC   
+c("deepskyblue", "lightblue", "blue", "firebrick1", "pink", "red")
+
 
 
 ## PERMANOVA Analysis 

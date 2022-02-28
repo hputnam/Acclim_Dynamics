@@ -28,6 +28,7 @@ library("Rmisc")
 library("lme4")
 library("car")
 library("MuMIn")
+library(sjPlot)
 ```
 
 ### Reading in quality controlled version of ImageJ data.
@@ -128,6 +129,8 @@ color.data <- full_join(Master, Color.Score, by = "Plug_ID") %>% na.omit()
 ```{r}
 color.data$Plug_ID <- as.character(color.data$Plug_ID)
 color.data$Blch.Time <- as.factor(color.data$Blch.Time)
+
+
 mcap.color <- color.data %>% subset(Species == "Mcapitata")
 pacuta.color <- color.data %>% subset(Species == "Pacuta")
 
@@ -155,7 +158,7 @@ hist(pacuta.color$Color.Transformed)
 
 Data is heavily left skewed and calls for transformation.
 
-### Data transformation for M.capitata
+### M.capitata
 
 Originally, we had our random factors as `(1|Tank/Plug_ID)` because fragments were repeatedly measured and did not move tanks throughout the experiment. However, we got a `boundary (singular) fit: see ?isSingular` warning indicating that our model was over-fitted. **come back to this**. 
 - [Dealing with singular fits in models](https://stats.stackexchange.com/questions/378939/dealing-with-singular-fit-in-mixed-models). This thread suggested using a Bayesian framework if we wanted to keep the random factors.    
@@ -170,7 +173,7 @@ Mcap_Color_qrt <- lmer((Color.Transformed^(1/4)) ~ Blch.Time*Temperature*CO2 + (
 Mcap_Color_log <- lmer(log(Color.Transformed) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.color)
 Mcap_Color_sq <- lmer((Color.Transformed^2) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.color)
 
-Mcap_Color_sq_nt <- lmer((Color.Transformed^2) ~ Blch.Time*Temperature*CO2 + (1|Plug_ID), na.action=na.omit, data=mcap.color)
+Mcap_Color_sq_nt <- lmer((Color.Transformed^2) ~ Blch.Time*Temperature*CO2 + (1|Plug_ID), na.action=na.omit, data=mcap.color) 
 
 ## summary, qqplot, and histogram of model
 summary(Mcap_Color_sq_nt)
@@ -179,18 +182,26 @@ qqPlot(residuals(Mcap_Color_sqrt))
 qqPlot(residuals(Mcap_Color_qrt))
 qqPlot(residuals(Mcap_Color_log)) 
 qqPlot(residuals(Mcap_Color_sq)) 
-
+qqPlot(residuals(Mcap_Color_sq_nt)) 
 
 hist(residuals(Mcap_Color_sqrt))
 hist(residuals(Mcap_Color_qrt))
 hist(residuals(Mcap_Color_log)) 
 hist(residuals(Mcap_Color_sq)) 
+hist(residuals(Mcap_Color_sq_nt)) 
 
-## checking homogeneity of variance using levene test (can also use Bartlett's test function)
-leveneTest(mcap.color$Bleaching.Score ~ mcap.color$Timepoint*mcap.color$Temperature*mcap.color$CO2)
+mcap.sq.color.anova <- Anova(Mcap_Color_sq, ddf="lme4", type='III') 
+mcap.sqnt.color.anova <- Anova(Mcap_Color_sq_nt, ddf="lme4", type='III') 
+
+tab_model(Mcap_Color_sq, Mcap_Color_sq_nt,
+          dv.labels = c("M. cap Tank/Plug_ID", "M. cap Plug ID"), string.ci = "Conf. Int (95%)",
+          string.p = "P-Value", file = "Output/Statistics/ColorScore_Mcap.doc")
+
+capture.output(mcap.sq.color.anova, file = "Output/Statistics/ColorScore_Mcap_sq.txt")
+capture.output(mcap.sqnt.color.anova, file = "Output/Statistics/ColorScore_Mcap_sqnt.txt")
 ```
 
-### Data transformation for P. acuta 
+### P. acuta 
 
 The data transformation that worked the best was the `Color.Transformed` data column squared. 
 
@@ -201,6 +212,8 @@ Pacuta_Color_qrt <- lmer((Color.Transformed^(1/4)) ~ Blch.Time*Temperature*CO2 +
 Pacuta_Color_log <- lmer(log(Color.Transformed) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=pacuta.color)
 Pacuta_Color_sq <- lmer((Color.Transformed^2) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=pacuta.color)
 
+Pacuta_Color_sq_nt <- lmer((Color.Transformed^2) ~ Blch.Time*Temperature*CO2 + (1|Plug_ID), na.action=na.omit, data=pacuta.color) 
+
 # to see which groups are issues and being dropped as columns / coefficients 
 alias(Pacuta_Color_sqrt) 
 
@@ -209,71 +222,23 @@ qqPlot(residuals(Pacuta_Color_sqrt))
 qqPlot(residuals(Pacuta_Color_qrt))
 qqPlot(residuals(Pacuta_Color_log)) 
 qqPlot(residuals(Pacuta_Color_sq)) 
+qqPlot(residuals(Pacuta_Color_sq_nt)) 
 
 hist(residuals(Pacuta_Color_sqrt))
 hist(residuals(Pacuta_Color_qrt))
 hist(residuals(Pacuta_Color_log)) 
 hist(residuals(Pacuta_Color_sq)) 
+hist(residuals(Pacuta_Color_sq_nt)) 
 
-## Pacuta_Color_sq model has the most normal distribution of residuals and seems to be the best transformation  
+pacuta.sq.color.anova <- Anova(Pacuta_Color_sq, ddf="lme4", type='III') 
+pacuta.sqnt.color.anova <- Anova(Pacuta_Color_sq_nt, ddf="lme4", type='III') 
 
-## checking homogeneity of variance using levene test (can also use Bartlett's test function)
-leveneTest(pacuta.color$Color.Transformed ~ pacuta.color$Timepoint*pacuta.color$Temperature*pacuta.color$CO2)
-```
+tab_model(Pacuta_Color_sq, Pacuta_Color_sq_nt,
+          dv.labels = c("P. acuta Tank/Plug_ID", "P. acuta Plug ID"), string.ci = "Conf. Int (95%)",
+          string.p = "P-Value", file = "Output/Statistics/ColorScore_Pacuta.doc")
 
-
-### Model selection for M. capitata
-
-We excluded Site.Name as a random factor because it wasn't controlled for within our experiment and we're not sure we have enough replication to back that up. 
-
-AIC values: 
-Mcap_Color_sq = 33666.2  
-Mcap_Color_sq_reef = 33668.3 
-
-Therefore the `Mcap_Color_sq` model was chosen. Results of ANOVA below:  
-
-```{r}
-Mcap_Color_sq <- lmer((Color.Transformed^2) ~ Blch.Time*Temperature*CO2 + (1|Plug_ID), na.action=na.omit, data=mcap.color)
-#Mcap_Color_sq_reef <- lmer((Color.Transformed^2) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID) + (1|Site.Name), na.action=na.omit, data=mcap.color)
-
-#model.sel(Mcap_Color_sq, Mcap_Color_sq_nt) # model selection test
-## move forward with Pacuta_Color_sq_reef model 
-
-## significance of model
-mcap_anova_color_score <- Anova(Mcap_Color_sq, ddf="lme4", type='III') # Type III Wald chisquare tests
-#anova(Mcap_Color_sq, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
-
-capture.output(mcap_anova_color_score, file = "Output/Statistics/Colorscore_mcap_stats.txt")
-```
-
-
-### Model selection for P. acuta 
-
-Comparing a model with just tank and plug ID as random factors to a model that include reef origin (Site.Name) as a random factor.
-
-AIC values:  
-Pacuta_Color_sq_reef = 24905.9  
-Pacuta_Color_sq = 24921.4. 
-
-Therefore the `Pacuta_Color_sq_reef` model was chosen because it had a lower AIC value. Results of ANOVA below:  
-
-```{r}
-Pacuta_Color_sq <- lmer((Color.Transformed^2) ~ Blch.Time*Temperature*CO2 + (1|Plug_ID), na.action=na.omit, data=pacuta.color)
-Pacuta_Color_sq_reef <- lmer((Color.Transformed^2) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID) + (1|Site.Name), na.action=na.omit, data=pacuta.color)
-
-model.sel(Pacuta_Color_sq, Pacuta_Color_sq_reef) # model selection test
-## move forward with Pacuta_Color_sq_reef model 
-
-## significance of model
-pacuta_anova_color_score <- Anova(Pacuta_Color_sq, ddf="lme4", type='III') # Type III Wald chisquare tests
-anova(Pacuta_Color_sq_reef, ddf="Satterthwaite", type='III') # Type III Analysis of Variance Table with Satterthwaite's method
-
-capture.output(pacuta_anova_color_score, file = "Output/Statistics/Colorscore_pacuta_stats.txt")
-```
-
-```{r}
-mcap_anova_color_score
-pacuta_anova_color_score
+capture.output(pacuta.sq.color.anova, file = "Output/Statistics/ColorScore_Pacuta_sq.txt")
+capture.output(pacuta.sqnt.color.anova, file = "Output/Statistics/ColorScore_Pacuta_sqnt.txt")
 ```
 
 # Plotting 

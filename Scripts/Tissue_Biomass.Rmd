@@ -5,6 +5,8 @@ date: "7/18/2020"
 output:
   html_document: default
   pdf_document: default
+editor_options: 
+  chunk_output_type: console
 ---
 Clears workspace. 
 ```{r}
@@ -119,16 +121,16 @@ AFDW <- AFDW %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2")
 AFDW$Timepoint <- factor(AFDW$Timepoint, levels=c("1 week","2 week","4 week","6 week","8 week","12 week","16 week"))
 
 # Calculating AFDW biomass ratio 
-AFDW.cm2 <- AFDW %>% select(-X) %>% distinct() %>% select(Plug_ID, partner, Species, Treatment, Temperature, CO2, Timepoint, AFDW.mg.cm2) %>% 
-  spread(partner, AFDW.mg.cm2) %>% mutate(Ratio_S.H=Sym/Host) %>% gather("partner", "value", 7:9) %>% na.omit()
+AFDW.cm2 <- AFDW %>% select(-X) %>% distinct() %>% select(Plug_ID, partner, Species, Treatment, Temperature, CO2, Timepoint, Tank, AFDW.mg.cm2) %>% 
+  spread(partner, AFDW.mg.cm2) %>% mutate(Ratio_S.H=Sym/Host) %>% gather("partner", "value", 8:10) %>% na.omit()
 
 AFDW.cells.cm2 <- AFDW %>% select(-X) %>% distinct() %>% 
-  select(Plug_ID, partner, Species, Treatment, Temperature, CO2, Timepoint, AFDW.mg.cells.cm2) %>% spread(partner, AFDW.mg.cells.cm2) %>% 
-  gather("partner", "value", 7:8) %>% na.omit()
+  select(Plug_ID, partner, Species, Treatment, Temperature, CO2, Timepoint, Tank, AFDW.mg.cells.cm2) %>% spread(partner, AFDW.mg.cells.cm2) %>% 
+  gather("partner", "value", 7:9) %>% na.omit()
 
 AFDW.cells <- AFDW %>% select(-X) %>% distinct() %>% 
-  select(Plug_ID, partner, Species, Treatment, Temperature, CO2, Timepoint, AFDW.mg.cells) %>% spread(partner, AFDW.mg.cells) %>% 
-  gather("partner", "value", 7:8) %>% na.omit()
+  select(Plug_ID, partner, Species, Treatment, Temperature, CO2, Timepoint, Tank, AFDW.mg.cells) %>% spread(partner, AFDW.mg.cells) %>% 
+  gather("partner", "value", 7:9) %>% na.omit()
 
 # Taking out 1116 because it was an outlier. 
 # filter(AFDW.final, Ratio_S.H>3)
@@ -187,7 +189,7 @@ dplyr::filter(AFDW, AFDW.mg.cm2 < 0) # output should be zero since negative valu
 ### Export datafile.
 ```{r}
 # write AFDW data to file
-AFDW %>%
+AFDW.cm2 %>%
   write_csv(path = "Output/Tissue_Biomass.csv")
 ```
 
@@ -207,7 +209,11 @@ AFDW %>%
 
 ## Plotting
 ```{r}
-cols <- c("lightblue", "blue", "salmon", "red3")
+cols <- c("blue", "lightblue", "salmon", "red3")
+
+AFDW.means.cm2 <- AFDW.means.cm2 %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
+AFDW.means.cells.cm2 <- AFDW.means.cells.cm2 %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
+AFDW.means.cells <- AFDW.means.cells %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
 
 AFDW_plot <- ggplot(AFDW.means.cm2, aes(x=Timepoint, y = value, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
@@ -216,10 +222,11 @@ AFDW_plot <- ggplot(AFDW.means.cm2, aes(x=Timepoint, y = value, group = Treatmen
   scale_color_manual(values = cols) + 
   xlab("Timepoint") + 
   theme_classic() + 
+  theme(axis.title.y = element_text(hjust=0.9)) +
   ylab(expression("Ash Free Dry Weight" ~(mg ~cm^-2))) +
   #ggtitle("Tissue Biomass") +
-  theme(legend.position = "left") +
-  geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
+  theme(legend.position = "none") +
+  #geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
   theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
   theme(panel.border = element_blank(),
@@ -229,8 +236,8 @@ AFDW_plot <- ggplot(AFDW.means.cm2, aes(x=Timepoint, y = value, group = Treatmen
   # Change axis line
   axis.line = element_line(colour = "black")); AFDW_plot
 
-ggsave(file="Output/Final_Figures/Tissue_Biomass_cm2.pdf", AFDW_plot, width = 11, height = 6, units = c("in"))
-ggsave(file="Output/Final_Figures/Tissue_Biomass_cm2.png", AFDW_plot, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Tissue_Biomass_cm2.pdf", AFDW_plot, width = 8, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Tissue_Biomass_cm2.png", AFDW_plot, width = 8, height = 6, units = c("in"))
 
 AFDW_plot_cellscm2 <- ggplot(AFDW.means.cells.cm2, aes(x=Timepoint, y = value, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
@@ -241,8 +248,8 @@ AFDW_plot_cellscm2 <- ggplot(AFDW.means.cells.cm2, aes(x=Timepoint, y = value, g
   theme_classic() + 
   ylab(expression("Ash Free Dry Weight (mg / cells.cm2")) +
   #ggtitle("Tissue Biomass") +
-  theme(legend.position = "left") +
-  geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
+  theme(legend.position = "none") +
+  #geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
   theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
   theme(panel.border = element_blank(),
@@ -262,10 +269,10 @@ AFDW_plot_cells <- ggplot(AFDW.means.cells, aes(x=Timepoint, y = value, group = 
   scale_color_manual(values = cols) + 
   xlab("Timepoint") + 
   theme_classic() + 
-  ylab(expression("Ash Free Dry Weight (mg / cells)")) +
+  ylab(expression("Ash Free Dry Weight" ~(mg ~cells^-1))) +
   #ggtitle("Tissue Biomass") +
-  theme(legend.position = "left") +
-  geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
+  theme(legend.position = "none") +
+ # geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
   theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
   theme(panel.border = element_blank(),
@@ -277,7 +284,83 @@ AFDW_plot_cells <- ggplot(AFDW.means.cells, aes(x=Timepoint, y = value, group = 
 
 ggsave(file="Output/Final_Figures/Tissue_Biomass_cells.pdf", AFDW_plot_cells, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Final_Figures/Tissue_Biomass_cells.png", AFDW_plot_cells, width = 11, height = 6, units = c("in"))
+
+
+Pact.AFDW.cells <- AFDW.means.cells %>% subset(Species == "Pocillopora acuta" & partner == "Symbiont") %>%
+  subset(!Timepoint == "12 week" & !Timepoint == "16 week") %>%
+  ggplot(aes(x=Timepoint, y = value, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  geom_errorbar(aes(ymin=value-se, ymax=value+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  theme_classic() + 
+  ylab(expression("Symbiont AFDW" ~(mg ~cells^-1))) +
+  theme(legend.position = c(0.15,0.7)) +
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(axis.text = element_text(size = 12)) + 
+  theme(axis.title = element_text(size = 15)) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  theme(legend.text = element_text(size = 13)) +
+  theme(legend.title = element_text(size = 15)) +
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"), # Change axis line
+  axis.line = element_line(colour = "black")); Pact.AFDW.cells
+
+ggsave(file="Output/Tissue_Biomass_cells_Pacuta.png", Pact.AFDW.cells, width = 7, height = 5, units = c("in"))
+
+Pact.AFDW.cm2 <- AFDW.means.cm2 %>% subset(Species == "Pocillopora acuta" & partner == "Symbiont") %>%
+  subset(!Timepoint == "12 week" & !Timepoint == "16 week") %>%
+  ggplot(aes(x=Timepoint, y = value, group = Treatment, color = Treatment)) +
+  facet_grid(~Species) +
+  geom_line() + geom_point() +
+  geom_errorbar(aes(ymin=value-se, ymax=value+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  theme_classic() + 
+   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  ylab(expression("Symbiont AFDW" ~(mg ~cm^-2))) +
+  theme(legend.position = "none") +
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(axis.text = element_text(size = 12)) + 
+  theme(axis.title = element_text(size = 15)) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 35, b = 0, l = 0))) +
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  theme(legend.text = element_text(size = 13)) +
+  theme(legend.title = element_text(size = 15)) +
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  strip.text.x = element_text(size = 17, color = "black", face = "bold.italic"), # Change axis line
+  axis.line = element_line(colour = "black")); Pact.AFDW.cm2
+
+ggsave(file="Output/Tissue_Biomass_cm2_Pacuta.png", Pact.AFDW.cm2, width = 7, height = 5, units = c("in"))
 ```
+
+M.cap and P.acuta ignore treatment, species comparison.
+
+```{r}
+Spp.cm2 <- AFDW.cm2 %>% subset(!Timepoint == "12 week" & !Timepoint == "16 week")
+Spp.means.cm2 <- summarySE(Spp.cm2, measurevar = c("value"), groupvars = c("Species", "partner"))
+
+Spp.cm2.plot <- ggplot(Spp.means.cm2, aes(x=Species, y = value, group = partner, shape = partner)) + geom_point(size=3) + geom_line() +
+  geom_errorbar(aes(ymin=value-se, ymax=value+se), width=.2) +
+  theme_classic() + 
+  expand_limits(y = 0) +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  ylab(expression(AFDW ~mg ~cm^-2)) +
+  theme(legend.position = c(0.95,0.9)) +
+  theme(axis.text = element_text(size = 12)) + 
+  theme(axis.title = element_text(size = 15)) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  theme(legend.text = element_text(size = 13)) +
+  theme(legend.title = element_text(size = 15)) 
+  
+ggsave(file="Output/Tissue_Biomass_cm2.png", Spp.cm2.plot, width = 5, height = 3, units = c("in"))
+```
+
+
 
 ## Ratio 
 
@@ -311,10 +394,7 @@ ggsave(file="Output/Final_Figures/Tissue_Biomass_cells.png", AFDW_plot_cells, wi
 
 Reading in dataframe so you don't have the run the script every time. 
 ```{r}
-biomass <- read.csv("Output/Tissue_Biomass.csv") %>% 
-  select(Plug_ID, partner, Species, Treatment, Temperature, CO2, Timepoint, Tank, AFDW.mg.cm2) %>% distinct() %>%
-  spread(partner, AFDW.mg.cm2) %>%
-  mutate(RatioSH = Sym/Host)
+biomass <- read.csv("Output/Tissue_Biomass.csv") %>% spread(partner, value)
 
 biomass.pacuta <- biomass %>% subset(Species == "Pocillopora acuta") %>% 
   subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
@@ -323,28 +403,32 @@ biomass.mcap <- biomass %>% subset(Species == "Montipora capitata") %>% subset(T
 
 hist(biomass.pacuta$Host) 
 hist(biomass.pacuta$Sym) 
-hist(biomass.pacuta$RatioSH) 
+hist(biomass.pacuta$Ratio_S.H) 
 
 hist(biomass.mcap$Host) 
 hist(biomass.mcap$Sym) 
-hist(biomass.mcap$RatioSH) 
+hist(biomass.mcap$Ratio_S.H) 
 ```
 
 #### Host AFDW 
 
 ```{r}
+HOST_LMER <- lmer(Host ~ Timepoint*Temperature*CO2*Species + (1|Tank), na.action=na.omit, data=biomass)
 Pacuta_Host_LMER <- lmer(Host ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=biomass.pacuta) 
 Mcap_Host_LMER <- lmer(Host ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=biomass.mcap) 
 
 qqPlot(residuals(Pacuta_Host_LMER)) 
 qqPlot(residuals(Mcap_Host_LMER)) 
+qqPlot(residuals(HOST_LMER)) 
 
 hist(residuals(Pacuta_Host_LMER)) 
 hist(residuals(Mcap_Host_LMER)) 
+hist(residuals(HOST_LMER)) 
 
 ## Type III Wald chisquare tests
 pacuta.host.anova <- Anova(Pacuta_Host_LMER, ddf="lme4", type='III') 
 mcap.host.anova <- Anova(Mcap_Host_LMER, ddf="lme4", type='III') 
+spp.host.anova <- Anova(HOST_LMER, ddf="lme4", type='III') 
 
 tab_model(Pacuta_Host_LMER, Mcap_Host_LMER,
           dv.labels = c("P.acuta Host", "M.cap Host"), string.ci = "Conf. Int (95%)",
@@ -352,6 +436,10 @@ tab_model(Pacuta_Host_LMER, Mcap_Host_LMER,
 
 capture.output(pacuta.host.anova, file = "Output/Statistics/AFDW_Host_Pacuta.txt")
 capture.output(mcap.host.anova, file = "Output/Statistics/AFDW_Host_Mcap.txt")
+capture.output(spp.host.anova, file = "Output/Statistics/AFDW_Host.txt")
+
+species.t <- t.test(Host~Species, data = biomass)
+capture.output(species.t, file = "Output/Statistics/AFDW_Host_TTEST.txt")
 ```
 
 #### Sym AFDW  
@@ -376,13 +464,16 @@ tab_model(Pacuta_Sym_LMER, Mcap_Sym_LMER,
 
 capture.output(pacuta.sym.anova, file = "Output/Statistics/AFDW_Sym_Pacuta.txt")
 capture.output(mcap.sym.anova, file = "Output/Statistics/AFDW_Sym_Mcap.txt")
+
+species.t.sym <- t.test(Sym~Species, data = biomass)
+capture.output(species.t.sym, file = "Output/Statistics/AFDW_Sym_TTEST.txt")
 ```
 
 #### Ratio AFDW
 
 ```{r}
-Pacuta_Ratio_LMER <- lmer(log(RatioSH) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=biomass.pacuta) 
-Mcap_Ratio_LMER <- lmer(RatioSH ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=biomass.mcap) 
+Pacuta_Ratio_LMER <- lmer(log(Ratio_S.H) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=biomass.pacuta) 
+Mcap_Ratio_LMER <- lmer(Ratio_S.H ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=biomass.mcap) 
 
 qqPlot(residuals(Pacuta_Ratio_LMER)) 
 qqPlot(residuals(Mcap_Ratio_LMER)) 
@@ -400,6 +491,9 @@ tab_model(Pacuta_Ratio_LMER, Mcap_Ratio_LMER,
 
 capture.output(pacuta.ratio.anova, file = "Output/Statistics/AFDW_Ratio_Pacuta.txt")
 capture.output(mcap.ratio.anova, file = "Output/Statistics/AFDW_Ratio_Mcap.txt")
+
+species.t.ratio <- t.test(`Ratio_S.H`~Species, data = biomass)
+capture.output(species.t.ratio, file = "Output/Statistics/AFDW_Ratio_TTEST.txt")
 ```
 
 

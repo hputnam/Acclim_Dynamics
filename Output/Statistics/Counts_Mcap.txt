@@ -2,13 +2,13 @@ Analysis of Deviance Table (Type III Wald chisquare tests)
 
 Response: log(haemo.cells.cm2)
                               Chisq Df Pr(>Chisq)    
-(Intercept)               8468.0259  1  < 2.2e-16 ***
-Timepoint                   55.0489  8  4.319e-09 ***
-Temperature                  0.1233  1  0.7254572    
-CO2                          0.4068  1  0.5235801    
-Timepoint:Temperature       66.3269  8  2.636e-11 ***
-Timepoint:CO2               30.9935  8  0.0001409 ***
-Temperature:CO2              0.0009  1  0.9757272    
-Timepoint:Temperature:CO2   69.2578  8  6.905e-12 ***
+(Intercept)               9388.7264  1  < 2.2e-16 ***
+Timepoint                   42.1727  6  1.700e-07 ***
+Temperature                  0.7162  1    0.39739    
+CO2                          0.9546  1    0.32856    
+Timepoint:Temperature       57.7898  6  1.264e-10 ***
+Timepoint:CO2               15.6679  6    0.01565 *  
+Temperature:CO2              0.1833  1    0.66851    
+Timepoint:Temperature:CO2   57.3069  6  1.583e-10 ***
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1

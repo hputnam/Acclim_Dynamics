@@ -112,7 +112,7 @@ week4HTAC <- haemo %>% subset(Treatment == "HTAC" & Species == "Montipora capita
 ```{r}
 count.means <- summarySE(haemo, measurevar = c("haemo.cells.cm2"), groupvars = c("Treatment", "Timepoint", "Species"))
 
-count.means <- count.means %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2") %>% filter(N > 12) # N is higher because grouping number of counts in previous dataframe. mean here is still mean of the pop where each individual has an average count of six counts
+count.means <- count.means %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2" & !Timepoint == "12 week" & !Timepoint == "16 week") %>% filter(N > 12) # N is higher because grouping number of counts in previous dataframe. mean here is still mean of the pop where each individual has an average count of six counts
 ```
 
 ## Visualize data 
@@ -123,21 +123,20 @@ cellcounts_plot <- ggplot(count.means, aes(x=Timepoint, y = haemo.cells.cm2, gro
   facet_grid(~Species, scales = "free") +
   geom_errorbar(aes(ymin=haemo.cells.cm2-se, ymax=haemo.cells.cm2+se), width=.2) +
   scale_color_manual(values = cols) + 
-  xlab("Timepoint") + 
+  xlab("") + 
   theme_classic() + 
   ylab(expression("Cell Density" ~(cells ~cm^-2))) +
-  theme(legend.position = "left") +
-  geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
+  theme(legend.position = "none") +
+  #geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
   theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
   theme(panel.border = element_blank(),
   panel.grid.major = element_blank(),
   panel.grid.minor = element_blank(),
   strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
-  # Change axis line
-  axis.line = element_line(colour = "black")); cellcounts_plot
+  axis.line = element_line(colour = "black")); cellcounts_plot # Change axis line
 
-ggsave(file="Output/Final_figures/Cell_counts.png", cellcounts_plot, width = 11, height = 8, units = c("in"))
+ggsave(file="Output/Final_figures/Cell_counts.png", cellcounts_plot, width = 11, height = 6, units = c("in"))
 ```
 
 ## Statistics 

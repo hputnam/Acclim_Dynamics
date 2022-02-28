@@ -7,6 +7,14 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(plyr)
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(janitor)
+library(Rmisc)
+library(scales)
 ```
 
 ### APEX TEMPERATURE AND pH DATA ### 
@@ -24,7 +32,7 @@ Trt.Tanks$Tank <- as.character(Trt.Tanks$Tank)
 APEX.data1 <- list.files(path = 'Environmental_data/Apex_continuous_data/Download1', pattern = ".csv", full.names = TRUE) %>% # list files in directory following a particular pattern
   set_names(.) %>% # get the column names
   map_dfr(read.table, .id = "file.ID", header=FALSE, sep=",") %>% # join all files together in one data frame by file ID
-  group_by(file.ID) %>% # for each file do the following
+  dplyr::group_by(file.ID) %>% # for each file do the following
   select(-V1) %>% 
   row_to_names(row_number=1) %>% rename(file.ID = "Environmental_data/Apex_continuous_data/Download1/Experimental_0922.csv") %>%
   filter(Date.Time != "Date.Time")
@@ -125,6 +133,34 @@ ggsave(filename = "Output/Apex-pH.png", APEX.pH.PLOT, device = "png", width = 11
 ggsave(filename = "Output/Apex-temp.png", APEX.TEMP.PLOT, device = "png", width = 11, height = 8)
 
 ```
+
+Subsetting to one day to demonstrate daily fluctuation.
+
+Starting with `apex.pH.plot` dataframe.
+
+```{r}
+dark.colors <- c("blue", "lightblue", "salmon", "red3")
+
+apex.pH.daily <- apex.pH.plot %>% subset(Date == "2018-10-07")
+apex.pH.daily <- apex.pH.daily %>% separate(Date.Time, c("Date", "Time"), sep = " ", remove = FALSE)
+
+daily.plot <- ggplot(data = apex.pH.daily, aes(x = Time, y = pH, color = Treatment)) +
+  labs(x="", y = "pH total scale") +
+  geom_line() +
+  scale_color_manual(values = dark.colors) + 
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+                     panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
+  #scale_x_datetime(date_breaks = "2 hours", labels = date_format("%h %m")) +
+  theme(axis.text = element_text(size = 15)) + 
+  theme(axis.title = element_text(size = 17)) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  theme(legend.position="none", legend.background = element_blank()); daily.plot
+
+ggsave(filename = "Output/Apex-daily-pH-plot.png", daily.plot, device = "png", width = 5, height = 3)
+```
+
+
+
 
 
 ### LIGHT DATA ### 

@@ -1,0 +1,100 @@
+---
+title: "Figures"
+author: "Emma Strand"
+date: "2/8/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(plyr)
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(gridExtra)
+library(grid)
+```
+
+
+
+# Figure: chlorophyll concentration, cell density 
+
+```{r}
+chlorophyll <- read.csv("Output/chlorophyll_means_figure.csv")
+Master_fragment <- read.csv("Environmental_data/Master_Fragment.csv", header=T, sep=",", na.string="NA") %>% 
+  subset(ANALYSIS=="Physiology" | ANALYSIS=="Physiology/Molecular") %>% # need to keep "Physiology" and "Physiology/Molecular"
+  select(Plug_ID, Site.Name, Species, Treatment, Temperature, CO2, Timepoint, Tank) 
+  Master_fragment$Plug_ID <- as.character(Master_fragment$Plug_ID)
+```
+
+
+```{r}
+cols <- c("lightblue", "blue", "pink", "red")
+
+chlorophyll <- subset(chlorophyll, Measurement == "chla.ug.cm2" | Measurement == "chla.ug.cells") %>%
+  mutate(Measurement = case_when(
+    Measurement == "chla.ug.cm2" ~ "Chl-a ug/cm2",
+    Measurement == "chla.ug.cells" ~ "Chl-a ug/cells"))
+
+p1 <- ggplot(chlorophyll[chlorophyll$Measurement==chla.ug.cm2, ], aes(x=Timepoint, y = Value, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(.~ Species, scales = "free") +
+  geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + 
+  theme_classic() + 
+  ylab(expression("chla" ~(ug ~cm^-2))) +
+  theme(legend.position = "left") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.2)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
+  axis.line = element_line(colour = "black")) # Change axis line
+
+p2 <- ggplot(chlorophyll[chlorophyll$Measurement==chla.ug.cells, ], aes(x=Timepoint, y = Value, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(.~ Species, scales = "free") +
+  geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + 
+  theme_classic() + 
+  ylab(expression("chla" ~(ug ~cells^-1))) +
+  theme(legend.position = "left") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.2)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
+  axis.line = element_line(colour = "black")) # Change axis line
+
+# remove legends from two of the plots
+g1 <- ggplotGrob(p1)
+g1[["grobs"]][[which(g1$layout$name=="guide-box")]][["grobs"]] <- NULL
+
+g3 <- ggplotGrob(p3)
+g3[["grobs"]][[which(g3$layout$name=="guide-box")]][["grobs"]] <- NULL
+
+gridExtra::grid.arrange(g1,p2,g3)
+```
+```{r}
+
+# change the y axis labels manually
+g <- ggplotGrob(p)
+yax <- which(g$layout$name=="ylab")
+
+# define y-axis labels
+#g[["grobs"]][[yax]]$label <- c(expression("Chl-a" ~(ug ~cells^-1)),expression("Chl-a" ~(ug ~cm^-2)))
+g[["grobs"]][[yax]]$label <- c("chl-a cells","chl-a cm2")
+
+# position of labels (ive just manually specified)
+g[["grobs"]][[yax]]$y <- grid::unit(seq(0.15, 0.85, length=3),"npc")
+
+grid::grid.draw(g)
+```
+

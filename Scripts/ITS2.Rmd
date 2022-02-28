@@ -3,6 +3,8 @@ title: "ITS2 analysis"
 author: "HM Putnam"
 date: "2/14/2020"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 Clear workspace. 
@@ -24,7 +26,7 @@ library(tidyverse)
 library(lubridate)
 library(vegan)
 library(ggfortify)
-
+library(phyloseq)
 ```
 
 # ITS2 Type Profiles 
@@ -77,7 +79,7 @@ Trans.Rel.Sym.Data #view data
 sym.pca.res <- prcomp(Trans.Rel.Sym.Data, retx=TRUE) #principal components analysis on sym data
 summary(sym.pca.res) #analysis summary
 
-#use scree diagram to determine break in majority versus minority variation explaination components
+#use scree diagram to determine break in majority versus minority variation explanation components
 screeplot(sym.pca.res, type="lines")
 
 #plot the PCA
@@ -115,6 +117,19 @@ screeplot(sym.pca.res, type="lines")
 #plot the PCA
 autoplot(sym.pca.res)
 autoplot(sym.pca.res, data = Mcap_meta, colour = 'Treatment', shape='Timepoint')
+
+
+autoplot(sym.pca.res, data = Mcap_meta, colour = 'Temperature', 
+                       loadings = TRUE, loadings.colour = 'black', frame=TRUE, frame.type = 'norm',
+                       loadings.label = TRUE, loadings.label.size = 4, loadings.label.colour = 'black', repel=TRUE,
+                       loadings.label.vjust=2, loadings.label.hjust=0.1) +
+  scale_color_manual(values = c("deepskyblue", "firebrick1")) + scale_fill_manual(values = c("white", "white")) +
+  theme_bw() + ggtitle("Montipora capitata") + 
+  theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) + 
+  theme(legend.title = element_text(size=12, face="bold")) + 
+  theme(legend.text = element_text(size=12)) +
+  theme(legend.position = c(0.9, 0.1)) + 
+  theme(legend.background = element_rect(size=0.1, linetype="solid", colour ="black")); Mcap.biplot
 ```
 
 ```{r}
@@ -166,6 +181,16 @@ ggsave("Output/Final_Figures/rel.abund.its2.pdf")
 ggsave("Output/Final_Figures/rel.abund.its2.png")
 
 ```
+
+### NMDS 
+
+```{r}
+
+```
+
+
+
+
 
 Bubble plot.
 
@@ -238,30 +263,14 @@ PA.permanova
 
 ```
 
+# NMDS 
 
-# Subset to 5 TP for CSP paper 
-
-30 hour, 2 wk, 6 wk, 8 wk, 12 wk
 
 ```{r}
-tp5 <- df %>% subset(Timepoint == "30 hour" | Timepoint == "2 week" | Timepoint == "6 week" | Timepoint == "8 week" | Timepoint == "12 week")
 
-ggplot(data = tp5, mapping = aes(x = Group, y = rel.abun, fill = Profile)) +
-    geom_bar(position="fill", stat="identity") +
-    facet_wrap(facets =  vars(Species, Treatment), ncol = 4) +
-    ylab("Relative Abundance (%)") +
-    xlab("Timepoint_Replicate") +
-    theme_classic() +
-    theme(axis.text.x = element_text(size=rel(0.3),angle = 90)) +
-    guides(shape = guide_legend(override.aes = list(size = 0.2))) +
-    guides(color = guide_legend(override.aes = list(size = 0.2))) +
-    theme(legend.title = element_text(size = 6), 
-               legend.text = element_text(size = 4)) +
-    
-
-ggsave("Output/Final_Figures/CSP-rel.abund.its2.pdf")
-ggsave("Output/Final_Figures/CSP-rel.abund.its2.png")
 ```
+
+
 
 # DIV Analysis 
 

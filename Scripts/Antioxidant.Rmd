@@ -3,6 +3,8 @@ title: "Antioxidant.Rmd"
 author: "EL Strand"
 date: "5/27/2021"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 Code modified from R. Cunning, H. Putnam, and E5 group; link [here](https://github.com/urol-e5/timeseries/blob/master/timepoint_1/scripts/antioxidant_capacity.Rmd).
@@ -204,9 +206,10 @@ filter(tac, Timepoint == "6 week" & Species == "Mcapitata" & Treatment == "ATAC"
 ```
 Figure construction.
 ```{r}
-cols <- c("lightblue", "blue", "pink", "red")
+cols <- c("blue", "lightblue", "pink", "red")
 
 tac.means <- tac.means %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2")
+tac.means.stress <- tac.means %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2" & !Timepoint == "12 week" & !Timepoint == "16 week")
 
 tac.plot <- ggplot(tac.means, aes(x=Timepoint, y = cre.umol.mgprot, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
@@ -216,7 +219,7 @@ tac.plot <- ggplot(tac.means, aes(x=Timepoint, y = cre.umol.mgprot, group = Trea
   xlab("Timepoint") + 
   theme_classic() + 
   ylab(expression("Copper Reducing Equivalents" ~(umol ~mg^-1))) +
-  ggtitle("Total Antioxidant Capacity") +
+  #ggtitle("Total Antioxidant Capacity") +
   theme(legend.position = "left") +
   geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
@@ -228,9 +231,64 @@ tac.plot <- ggplot(tac.means, aes(x=Timepoint, y = cre.umol.mgprot, group = Trea
   # Change axis line
   axis.line = element_line(colour = "black")); tac.plot
 
-ggsave(file="Output/Final_Figures/Antioxidant.pdf", tac.plot, width = 11, height = 6, units = c("in"))
-ggsave(file="Output/Final_Figures/Antioxidant.png", tac.plot, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Antioxidant-full.pdf", tac.plot, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Final_Figures/Antioxidant-full.png", tac.plot, width = 11, height = 6, units = c("in"))
+
+
+tac.plot.stress <- ggplot(tac.means.stress, aes(x=Timepoint, y = cre.umol.mgprot, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(~Species) +
+  geom_errorbar(aes(ymin=cre.umol.mgprot-se, ymax=cre.umol.mgprot+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + 
+  theme_classic() + 
+  ylab(expression("CRE" ~(umol ~mg^-1))) +
+  #ggtitle("Total Antioxidant Capacity") +
+  theme(legend.position = "none") +
+  #geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(axis.text = element_text(size = 12)) + 
+  theme(axis.title = element_text(size = 15)) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  theme(legend.text = element_text(size = 13)) +
+  theme(legend.title = element_text(size = 15)) +
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
+  # Change axis line
+  axis.line = element_line(colour = "black")); tac.plot
+
+ggsave(file="Output/Final_Figures/Antioxidant.png", tac.plot.stress, width = 7, height = 4, units = c("in"))
+
 ```
+
+Species comparison
+```{r}
+tac.species <- tac %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2" & !Timepoint == "12 week" & !Timepoint == "16 week")
+tac.species.means <- tac.species %>% summarySE(measurevar="cre.umol.mgprot", groupvars=c("Species"))
+
+Spp.tac.plot <- ggplot(tac.species.means, aes(x=Species, y = cre.umol.mgprot, group = Species)) + geom_point(size=3) + geom_line() +
+  geom_errorbar(aes(ymin=cre.umol.mgprot-se, ymax=cre.umol.mgprot+se), width=.2) +
+  theme_classic() + 
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  ylab(expression("CRE"~(umol ~mg^-1))) +
+  theme(legend.position = "none") +
+  theme(axis.text = element_text(size = 12)) + 
+  theme(axis.title = element_text(size = 12)) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))); Spp.tac.plot
+
+ggsave(file="Output/Final_Figures/Antioxidant_spp.png", Spp.tac.plot, width = 5, height = 3, units = c("in"))
+```
+
+
+
+
+
+
 # Statistics 
 
 ### Host Total Antioxidant Capacity
@@ -239,29 +297,36 @@ Read in TAC data file so that you don't have to re-run the entire script to do t
 ```{r}
 antioxidant <- read.csv("Output/antioxidant.csv")
 
-mcap.antiox <- antioxidant %>% subset(Species == "Mcapitata") %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week" | Timepoint == "12 week" | Timepoint == "16 week")
+spp.antiox <- antioxidant %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
+
+mcap.antiox <- antioxidant %>% subset(Species == "Mcapitata") %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
 
 pacuta.antiox <- antioxidant %>% subset(Species == "Pacuta") %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
 
 hist(mcap.antiox$cre.umol.mgprot) 
 hist(pacuta.antiox$cre.umol.mgprot) 
+hist(spp.antiox$cre.umol.mgprot) 
 ```
 
 Mixed effect modeling  
 
 ```{r}
+TAC_LMER <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2*Species + (1|Tank), na.action=na.omit, data=spp.antiox) 
 Pacuta_TAC_LMER <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta.antiox) 
 Mcap_TAC_LMER <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.antiox) 
 
 qqPlot(residuals(Pacuta_TAC_LMER)) 
 qqPlot(residuals(Mcap_TAC_LMER)) 
+qqPlot(residuals(TAC_LMER)) 
 
 hist(residuals(Pacuta_TAC_LMER)) 
 hist(residuals(Mcap_TAC_LMER)) 
+hist(residuals(TAC_LMER)) 
 
 ## Type III Wald chisquare tests
 pacuta.tac.anova <- Anova(Pacuta_TAC_LMER, ddf="lme4", type='III')
 mcap.tac.anova <- Anova(Mcap_TAC_LMER, ddf="lme4", type='III')
+spp.tac.anova <- Anova(TAC_LMER, ddf="lme4", type='III')
 
 tab_model(Pacuta_TAC_LMER, Mcap_TAC_LMER,
           dv.labels = c("P.acuta TAC", "M. capitata TAC"), string.ci = "Conf. Int (95%)",
@@ -269,6 +334,10 @@ tab_model(Pacuta_TAC_LMER, Mcap_TAC_LMER,
 
 capture.output(pacuta.tac.anova, file = "Output/Statistics/TAC_Pacuta.txt")
 capture.output(mcap.tac.anova, file = "Output/Statistics/TAC_Mcap.txt")
+capture.output(spp.tac.anova, file = "Output/Statistics/TAC.txt")
+
+spp.tac.t <- t.test(cre.umol.mgprot~Species, data = spp.antiox)
+capture.output(spp.tac.t, file = "Output/Statistics/TAC_TTEST.txt")
 ```
 
 
