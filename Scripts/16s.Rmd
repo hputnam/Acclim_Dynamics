@@ -38,6 +38,8 @@ sample.manifest %>% write_csv(file = "16S_seq/ES-run/HoloInt_sample-manifest-ES.
 # use the command `scp /Users/emmastrand/MyProjects/Acclim_Dynamics/16S_seq/ES-run/HoloInt_sample-manifest-ES.csv emma_strand@bluewaves.uri.edu:/data/putnamlab/estrand/HoloInt_16s/metadata` outside of andromeda to copy this file into the server 
 
 head(sample.manifest) # double check this is the correct format of final file 
+
+
 ```
 
 # See 16S bioinformatic protocol for QIIME2 steps 
@@ -153,16 +155,28 @@ mean(denoise.final$percentage.of.input.non.chimeric)
 
 ```{r}
 sample.freq.prefilter <- read.csv("16S_seq/QIIME2_20220228/sample-frequency-detail-prefilter.csv") 
-sample.freq.postfilter <- read.csv("16S_seq/QIIME2_20220228/sample-frequency-detail-postfilter.csv") 
+sample.freq.postfilter <- read.csv("16S_seq/QIIME2_20220228/sample-frequency-detail-postfilter.csv") %>%
+  rename(seq.ID = X)
 
 sample.freq.prefilter %>% ggplot(aes(x=X0)) + geom_histogram(color="darkblue", fill="lightblue") + theme_bw() + xlab("read frequency per sample") +
   ylab("number of samples") + ggtitle("pre-filtering")
 
 sample.freq.postfilter %>% ggplot(aes(x=X0)) + geom_histogram(color="darkblue", fill="lightblue") + theme_bw() + xlab("read frequency per sample") +
   ylab("number of samples") + ggtitle("post-filtering")
+
+filter(sample.freq.postfilter, X0 < 1000)
+filter(sample.freq.postfilter, X0 < 1500)
+
+sample.freq.postfilter.low <- full_join(sample.freq.postfilter, meta, by = "seq.ID") %>%
+  rename(reads = X0) %>%
+  mutate(read.status = case_when(reads <= 1500 ~ "low", 
+                           reads > 1500 ~ "over")) %>% subset(read.status == "low") 
+sample.freq.postfilter.low$Plug_ID <- as.factor(sample.freq.postfilter.low$Plug_ID)
+
+sample.freq.postfilter.low %>% subset(Species == "Pacuta") %>%
+  ggplot(aes(x=Plug_ID, y=reads), color=Treatment, group = Treatment) + geom_point() +
+  facet_grid(Treatment ~ Timepoint)
 ```
-
-
 
 
 ## Filtering the "yellow-short" category to just "d_Bacteria"
