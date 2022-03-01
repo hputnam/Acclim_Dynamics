@@ -1,0 +1,14 @@
+Analysis of Deviance Table (Type III Wald chisquare tests)
+
+Response: chlc2.ug.cm2
+                             Chisq Df            Pr(>Chisq)    
+(Intercept)               126.4345  1 < 0.00000000000000022 ***
+Timepoint                  25.2901  4        0.000043984117 ***
+Temperature                 1.6000  1              0.205905    
+CO2                         4.8591  1              0.027500 *  
+Timepoint:Temperature      17.3470  4              0.001655 ** 
+Timepoint:CO2              33.3033  4        0.000001035319 ***
+Temperature:CO2             0.0615  1              0.804182    
+Timepoint:Temperature:CO2  44.9077  4        0.000000004156 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1

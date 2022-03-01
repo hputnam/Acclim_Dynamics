@@ -292,11 +292,11 @@ autoplot(pacuta.pca.out, data = pacuta.stress, colour = 'Treatment',
 `mcap_scaled` is the output of prcomp on the m.cap time series. 
 
 ```{r}
-autoplot(mcap_scaled, data = mcap, colour = 'Treatment', 
+mcap.recovery.biplot <- autoplot(mcap_scaled, data = mcap, colour = 'Treatment', 
                         loadings = TRUE, loadings.colour = 'black', frame=FALSE, frame.type = 'norm',
                         loadings.label = TRUE, loadings.label.size = 4, loadings.label.colour = 'black', repel=TRUE,
                         loadings.label.vjust = 2) + stat_ellipse(aes(color=Treatment)) +
-  scale_color_manual(values = c("lightblue", "blue", "pink", "red"))  +
+  scale_color_manual(values = c("blue", "lightblue", "pink", "red"))  +
   theme_bw() + ggtitle("Mcapitata") +
   theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) + 
   theme(legend.title = element_text(size=12, face="bold")) + 
@@ -304,6 +304,7 @@ autoplot(mcap_scaled, data = mcap, colour = 'Treatment',
   theme(legend.position = c(0.9, 0.2)) + 
   theme(legend.background = element_rect(size=0.1, linetype="solid", colour ="black"))
 
+ggsave(file="Output/Final_figures/PCA_Mcap_Recovery_biplot.png", mcap.recovery.biplot, width = 7, height = 7, units = c("in"))
 ```
 
 ```{r}

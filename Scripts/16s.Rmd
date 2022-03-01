@@ -153,9 +153,13 @@ mean(denoise.final$percentage.of.input.non.chimeric)
 
 ```{r}
 sample.freq.prefilter <- read.csv("16S_seq/QIIME2_20220228/sample-frequency-detail-prefilter.csv") 
+sample.freq.postfilter <- read.csv("16S_seq/QIIME2_20220228/sample-frequency-detail-postfilter.csv") 
 
 sample.freq.prefilter %>% ggplot(aes(x=X0)) + geom_histogram(color="darkblue", fill="lightblue") + theme_bw() + xlab("read frequency per sample") +
   ylab("number of samples") + ggtitle("pre-filtering")
+
+sample.freq.postfilter %>% ggplot(aes(x=X0)) + geom_histogram(color="darkblue", fill="lightblue") + theme_bw() + xlab("read frequency per sample") +
+  ylab("number of samples") + ggtitle("post-filtering")
 ```
 
 

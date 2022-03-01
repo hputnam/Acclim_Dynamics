@@ -301,11 +301,14 @@ spp.antiox <- antioxidant %>% subset(Timepoint == "1 week" | Timepoint == "2 wee
 
 mcap.antiox <- antioxidant %>% subset(Species == "Mcapitata") %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
 
+mcap.recovery.antiox <- antioxidant %>% subset(Species == "Mcapitata") %>% subset(Timepoint == "12 week" | Timepoint == "16 week")
+
 pacuta.antiox <- antioxidant %>% subset(Species == "Pacuta") %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
 
 hist(mcap.antiox$cre.umol.mgprot) 
 hist(pacuta.antiox$cre.umol.mgprot) 
 hist(spp.antiox$cre.umol.mgprot) 
+hist(mcap.recovery.antiox$cre.umol.mgprot) 
 ```
 
 Mixed effect modeling  
@@ -314,30 +317,35 @@ Mixed effect modeling
 TAC_LMER <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2*Species + (1|Tank), na.action=na.omit, data=spp.antiox) 
 Pacuta_TAC_LMER <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta.antiox) 
 Mcap_TAC_LMER <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.antiox) 
+Mcap_TAC_rec_LMER <- lmer(log(cre.umol.mgprot) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.recovery.antiox) 
 
 qqPlot(residuals(Pacuta_TAC_LMER)) 
 qqPlot(residuals(Mcap_TAC_LMER)) 
 qqPlot(residuals(TAC_LMER)) 
+qqPlot(residuals(Mcap_TAC_rec_LMER)) 
 
 hist(residuals(Pacuta_TAC_LMER)) 
 hist(residuals(Mcap_TAC_LMER)) 
 hist(residuals(TAC_LMER)) 
+hist(residuals(Mcap_TAC_rec_LMER)) 
 
 ## Type III Wald chisquare tests
 pacuta.tac.anova <- Anova(Pacuta_TAC_LMER, ddf="lme4", type='III')
 mcap.tac.anova <- Anova(Mcap_TAC_LMER, ddf="lme4", type='III')
 spp.tac.anova <- Anova(TAC_LMER, ddf="lme4", type='III')
+mcap.tac.rec.anova <- Anova(Mcap_TAC_rec_LMER, ddf="lme4", type='III')
 
-tab_model(Pacuta_TAC_LMER, Mcap_TAC_LMER,
-          dv.labels = c("P.acuta TAC", "M. capitata TAC"), string.ci = "Conf. Int (95%)",
+tab_model(Pacuta_TAC_LMER, Mcap_TAC_LMER, Mcap_TAC_rec_LMER,
+          dv.labels = c("P.acuta TAC", "M. capitata TAC Stress", "Mcap TAC Recovery"), string.ci = "Conf. Int (95%)",
           string.p = "P-Value", file = "Output/Statistics/TAC.doc")
 
-capture.output(pacuta.tac.anova, file = "Output/Statistics/TAC_Pacuta.txt")
-capture.output(mcap.tac.anova, file = "Output/Statistics/TAC_Mcap.txt")
-capture.output(spp.tac.anova, file = "Output/Statistics/TAC.txt")
+capture.output(pacuta.tac.anova, file = "Output/Statistics/Stress_statistics/TAC_Pacuta.txt")
+capture.output(mcap.tac.anova, file = "Output/Statistics/Stress_statistics/TAC_Mcap.txt")
+capture.output(spp.tac.anova, file = "Output/Statistics/Stress_statistics/TAC.txt")
+capture.output(mcap.tac.rec.anova, file = "Output/Statistics/Recovery_statistics/TAC_Mcap_recovery.txt")
 
 spp.tac.t <- t.test(cre.umol.mgprot~Species, data = spp.antiox)
-capture.output(spp.tac.t, file = "Output/Statistics/TAC_TTEST.txt")
+capture.output(spp.tac.t, file = "Output/Statistics/Stress_statistics/TAC_TTEST.txt")
 ```
 
 

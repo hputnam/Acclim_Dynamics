@@ -359,7 +359,10 @@ ggsave(file="Output/Final_Figures/Chlorophyll_cells.png", CHL.cells, width = 11,
 Raw data distribution view.
 ```{r}
 Mcap_chl <- Chl_final %>% subset(Species == "Mcapitata") %>% 
-  subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week" | Timepoint == "12 week" | Timepoint == "16 week" )
+  subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
+
+Mcap_chl_recovery <- Chl_final %>% subset(Species == "Mcapitata") %>% 
+  subset(Timepoint == "12 week" | Timepoint == "16 week" )
 
 Pacuta_chl <- Chl_final %>% subset(Species == "Pacuta") %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
 
@@ -367,16 +370,22 @@ hist(Mcap_chl$chla.ug.cm2)
 hist(Mcap_chl$chla.ug.cells) 
 hist(Pacuta_chl$chla.ug.cm2) 
 hist(Pacuta_chl$chla.ug.cells) 
+hist(Mcap_chl_recovery$chla.ug.cm2) 
+hist(Mcap_chl_recovery$chla.ug.cells) 
 
 hist(Mcap_chl$chlc2.ug.cm2) 
 hist(Mcap_chl$chlc2.ug.cells) 
 hist(Pacuta_chl$chlc2.ug.cm2) 
 hist(Pacuta_chl$chlc2.ug.cells) 
+hist(Mcap_chl_recovery$chlc2.ug.cm2) 
+hist(Mcap_chl_recovery$chlc2.ug.cells) 
+
+chl.ttests <- union(Mcap_chl, Pacuta_chl)
 ```
 
 ### Linear mixed models 
 
-**P.acuta** 
+**P.acuta cm2 and cells-1** 
 
 ```{r}
 ## Chlorophyll a
@@ -409,36 +418,109 @@ tab_model(Pacuta_Chl_LMER_a_cells, Pacuta_Chl_LMER_c2_cells,
           dv.labels = c("P.acuta chl-a cells", "P.acuta chl-c2 cells"), string.ci = "Conf. Int (95%)",
           string.p = "P-Value", file = "Output/Statistics/Chl_cells_Pacuta.doc")
 
-capture.output(pacuta.chl.a.anova, file = "Output/Statistics/Chla_Pacuta.txt")
-capture.output(pacuta.chl.c2.anova, file = "Output/Statistics/Chlc2_Pacuta.txt")
-capture.output(pacuta.chl.a.cells.anova, file = "Output/Statistics/Chla_cells_Pacuta.txt")
-capture.output(pacuta.chl.c2.cells.anova, file = "Output/Statistics/Chlc2_cells_Pacuta.txt")
+capture.output(pacuta.chl.a.anova, file = "Output/Statistics/Stress_statistics/Chla_cm2_Pacuta.txt")
+capture.output(pacuta.chl.c2.anova, file = "Output/Statistics/Stress_statistics/Chlc2_cm2_Pacuta.txt")
+capture.output(pacuta.chl.a.cells.anova, file = "Output/Statistics/Stress_statistics/Chla_cells_Pacuta.txt")
+capture.output(pacuta.chl.c2.cells.anova, file = "Output/Statistics/Stress_statistics/Chlc2_cells_Pacuta.txt")
 ```
 
-**M. capitata** 
+**M. capitata cm-2** 
 
 ```{r}
-## Chlorophyll a
+## Chlorophyll a and c2
 Mcap_Chl_LMER_a <- lmer(chla.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Mcap_chl)
 Mcap_Chl_LMER_c2 <- lmer(chlc2.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Mcap_chl)
 
+Mcap_Chl_LMER_a_recovery <- lmer(chla.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Mcap_chl_recovery)
+Mcap_Chl_LMER_c2_recovery <- lmer(chlc2.ug.cm2 ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Mcap_chl_recovery)
+
 qqPlot(residuals(Mcap_Chl_LMER_a)) 
 qqPlot(residuals(Mcap_Chl_LMER_c2)) 
+qqPlot(residuals(Mcap_Chl_LMER_a_recovery)) 
+qqPlot(residuals(Mcap_Chl_LMER_c2_recovery)) 
 
 hist(residuals(Mcap_Chl_LMER_a)) 
 hist(residuals(Mcap_Chl_LMER_c2)) 
+hist(residuals(Mcap_Chl_LMER_a_recovery)) 
+hist(residuals(Mcap_Chl_LMER_c2_recovery)) 
 
 ## Type III Wald chisquare tests
 mcap.chl.a.anova <- Anova(Mcap_Chl_LMER_a, ddf="lme4", type='III')
 mcap.chl.c2.anova <- Anova(Mcap_Chl_LMER_c2, ddf="lme4", type='III')
+mcap.chl.a.anova.recovery <- Anova(Mcap_Chl_LMER_a_recovery, ddf="lme4", type='III')
+mcap.chl.c2.anova.recovery <- Anova(Mcap_Chl_LMER_c2_recovery, ddf="lme4", type='III')
 
 tab_model(Mcap_Chl_LMER_a, Mcap_Chl_LMER_c2,
           dv.labels = c("M.capitata chl-a", "M.capitata chl-c2"), string.ci = "Conf. Int (95%)",
-          string.p = "P-Value", file = "Output/Statistics/Chl_Mcap.doc")
+          string.p = "P-Value", file = "Output/Statistics/Chl_Mcap_Stress.doc")
 
-capture.output(mcap.chl.a.anova, file = "Output/Statistics/Chla_Mcap.txt")
-capture.output(mcap.chl.c2.anova, file = "Output/Statistics/Chlc2_Mcap.txt")
+tab_model(Mcap_Chl_LMER_a_recovery, Mcap_Chl_LMER_c2_recovery,
+          dv.labels = c("M.capitata chl-a", "M.capitata chl-c2"), string.ci = "Conf. Int (95%)",
+          string.p = "P-Value", file = "Output/Statistics/Chl_Mcap_Recovery.doc")
+
+capture.output(mcap.chl.a.anova, file = "Output/Statistics/Stress_statistics/Chla_cm2_Mcap.txt")
+capture.output(mcap.chl.c2.anova, file = "Output/Statistics/Stress_statistics/Chlc2_cm2_Mcap.txt")
+capture.output(mcap.chl.a.anova.recovery, file = "Output/Statistics/Recovery_statistics/Chla_cm2_Mcap_recovery.txt")
+capture.output(mcap.chl.c2.anova.recovery, file = "Output/Statistics/Recovery_statistics/Chlc2_cm2_Mcap_recovery.txt")
 ```
+
+**M. capitata cells-1** 
+
+```{r}
+## Chlorophyll a
+Mcap_Chl_LMER_a.cells <- lmer(chla.ug.cells ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Mcap_chl)
+Mcap_Chl_LMER_c2.cells <- lmer(chlc2.ug.cells ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Mcap_chl)
+
+Mcap_Chl_LMER_a_cells.recovery <- lmer(chla.ug.cells ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Mcap_chl_recovery)
+Mcap_Chl_LMER_c2_cells.recovery <- lmer(chlc2.ug.cells ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=Mcap_chl_recovery)
+
+qqPlot(residuals(Mcap_Chl_LMER_a.cells)) 
+qqPlot(residuals(Mcap_Chl_LMER_c2.cells)) 
+qqPlot(residuals(Mcap_Chl_LMER_a_cells.recovery)) 
+qqPlot(residuals(Mcap_Chl_LMER_c2_cells.recovery)) 
+
+hist(residuals(Mcap_Chl_LMER_a.cells)) 
+hist(residuals(Mcap_Chl_LMER_c2.cells)) 
+hist(residuals(Mcap_Chl_LMER_a_cells.recovery)) 
+hist(residuals(Mcap_Chl_LMER_c2_cells.recovery)) 
+
+## Type III Wald chisquare tests
+mcap.chl.a.cells.anova <- Anova(Mcap_Chl_LMER_a.cells, ddf="lme4", type='III')
+mcap.chl.c2.cells.anova <- Anova(Mcap_Chl_LMER_c2.cells, ddf="lme4", type='III')
+mcap.chl.a.cells.anova.recovery <- Anova(Mcap_Chl_LMER_a_cells.recovery, ddf="lme4", type='III')
+mcap.chl.c2.cells.anova.recovery <- Anova(Mcap_Chl_LMER_c2_cells.recovery, ddf="lme4", type='III')
+
+tab_model(Mcap_Chl_LMER_a.cells, Mcap_Chl_LMER_c2.cells,
+          dv.labels = c("M.capitata chl-a", "M.capitata chl-c2"), string.ci = "Conf. Int (95%)",
+          string.p = "P-Value", file = "Output/Statistics/Chl_Mcap_Stress.doc")
+
+tab_model(Mcap_Chl_LMER_a_cells.recovery, Mcap_Chl_LMER_c2_cells.recovery,
+          dv.labels = c("M.capitata chl-a", "M.capitata chl-c2"), string.ci = "Conf. Int (95%)",
+          string.p = "P-Value", file = "Output/Statistics/Chl_Mcap_Recovery.doc")
+
+capture.output(mcap.chl.a.cells.anova, file = "Output/Statistics/Stress_statistics/Chla_cells_Mcap.txt")
+capture.output(mcap.chl.c2.cells.anova, file = "Output/Statistics/Stress_statistics/Chlc2_cells_Mcap.txt")
+capture.output(mcap.chl.a.cells.anova.recovery, file = "Output/Statistics/Recovery_statistics/Chla_cells_Mcap_recovery.txt")
+capture.output(mcap.chl.c2.cells.anova.recovery, file = "Output/Statistics/Recovery_statistics/Chlc2_cells_Mcap_recovery.txt")
+```
+
+Species comparison.
+
+```{r}
+chla.ug.cells.T <- t.test(chla.ug.cells~Species, data = chl.ttests)
+capture.output(chla.ug.cells.T, file = "Output/Statistics/Stress_statistics/Chla_cells_TTEST.txt")
+
+chlc2.ug.cells.T <- t.test(chlc2.ug.cells~Species, data = chl.ttests)
+capture.output(chlc2.ug.cells.T, file = "Output/Statistics/Stress_statistics/Chlc2_cells_TTEST.txt")
+
+chla.ug.cm2.T <- t.test(chla.ug.cm2~Species, data = chl.ttests)
+capture.output(chla.ug.cm2.T, file = "Output/Statistics/Stress_statistics/Chla_cm2_TTEST.txt")
+
+chlc2.ug.cm2.T <- t.test(chlc2.ug.cm2~Species, data = chl.ttests)
+capture.output(chlc2.ug.cm2.T, file = "Output/Statistics/Stress_statistics/Chlc2_cm2_TTEST.txt")
+```
+
+
 
 
 

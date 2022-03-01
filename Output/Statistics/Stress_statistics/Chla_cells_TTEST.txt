@@ -1,0 +1,12 @@
+
+	Welch Two Sample t-test
+
+data:  chla.ug.cells by Species
+t = -0.2164, df = 213.82, p-value = 0.8289
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -0.0000008351671  0.0000006699308
+sample estimates:
+mean in group Mcapitata    mean in group Pacuta 
+         0.000004754615          0.000004837233 
+

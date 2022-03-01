@@ -113,6 +113,8 @@ week4HTAC <- haemo %>% subset(Treatment == "HTAC" & Species == "Montipora capita
 count.means <- summarySE(haemo, measurevar = c("haemo.cells.cm2"), groupvars = c("Treatment", "Timepoint", "Species"))
 
 count.means <- count.means %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2" & !Timepoint == "12 week" & !Timepoint == "16 week") %>% filter(N > 12) # N is higher because grouping number of counts in previous dataframe. mean here is still mean of the pop where each individual has an average count of six counts
+
+count.means.full <- count.means %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2") 
 ```
 
 ## Visualize data 
@@ -137,6 +139,26 @@ cellcounts_plot <- ggplot(count.means, aes(x=Timepoint, y = haemo.cells.cm2, gro
   axis.line = element_line(colour = "black")); cellcounts_plot # Change axis line
 
 ggsave(file="Output/Final_figures/Cell_counts.png", cellcounts_plot, width = 11, height = 6, units = c("in"))
+
+cellcounts_plot_full <- ggplot(count.means.full, aes(x=Timepoint, y = haemo.cells.cm2, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(~Species, scales = "free") +
+  geom_errorbar(aes(ymin=haemo.cells.cm2-se, ymax=haemo.cells.cm2+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("") + 
+  theme_classic() + 
+  ylab(expression("Cell Density" ~(cells ~cm^-2))) +
+  theme(legend.position = "none") +
+  #geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
+  axis.line = element_line(colour = "black")); cellcounts_plot # Change axis line
+
+ggsave(file="Output/Final_figures/Cell_counts_full.png", cellcounts_plot_full, width = 11, height = 6, units = c("in"))
 ```
 
 ## Statistics 
@@ -144,12 +166,17 @@ ggsave(file="Output/Final_figures/Cell_counts.png", cellcounts_plot, width = 11,
 Subsetting into time points 
 
 ```{r}
-mcap.counts <- haemo %>% subset(Species == "Montipora capitata") %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week" | Timepoint == "12 week" | Timepoint == "16 week")
+mcap.counts <- haemo %>% subset(Species == "Montipora capitata") %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
+
+mcap.counts.recovery <- haemo %>% subset(Species == "Montipora capitata") %>% subset(Timepoint == "12 week" | Timepoint == "16 week")
 
 pacuta.counts <- haemo %>% subset(Species == "Pocillopora acuta") %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
 
 hist(mcap.counts$haemo.cells.cm2) 
 hist(pacuta.counts$haemo.cells.cm2) 
+hist(mcap.counts.recovery$haemo.cells.cm2) 
+
+counts.ttest <- union(mcap.counts, pacuta.counts)
 ```
 
 Model selection 
@@ -157,23 +184,31 @@ Model selection
 ```{r}
 Pacuta_counts_LMER <- lmer(log(haemo.cells.cm2) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=pacuta.counts) 
 Mcap_counts_LMER <- lmer(log(haemo.cells.cm2) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.counts) 
+Mcap_counts_recovery_LMER <- lmer(log(haemo.cells.cm2) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=mcap.counts.recovery) 
 
 qqPlot(residuals(Pacuta_counts_LMER)) 
 qqPlot(residuals(Mcap_counts_LMER)) 
+qqPlot(residuals(Mcap_counts_recovery_LMER)) 
 
 hist(residuals(Pacuta_counts_LMER)) 
 hist(residuals(Mcap_counts_LMER)) 
+hist(residuals(Mcap_counts_recovery_LMER)) 
 
 ## Type III Wald chisquare tests
 pacuta.counts.anova <- Anova(Pacuta_counts_LMER, ddf="lme4", type='III') 
 mcap.counts.anova <- Anova(Mcap_counts_LMER, ddf="lme4", type='III') 
+mcap.counts.recovery.anova <- Anova(Mcap_counts_recovery_LMER, ddf="lme4", type='III') 
 
-tab_model(Pacuta_counts_LMER, Mcap_counts_LMER,
-          dv.labels = c("P.acuta cell counts", "M. cap cell counts"), string.ci = "Conf. Int (95%)",
+tab_model(Pacuta_counts_LMER, Mcap_counts_LMER, Mcap_counts_recovery_LMER,
+          dv.labels = c("P.acuta cell counts", "M. cap cell counts stress", "Mcap counts recovery"), string.ci = "Conf. Int (95%)",
           string.p = "P-Value", file = "Output/Statistics/Counts.doc")
 
-capture.output(pacuta.counts.anova, file = "Output/Statistics/Counts_Pacuta.txt")
-capture.output(mcap.counts.anova, file = "Output/Statistics/Counts_Mcap.txt")
+capture.output(pacuta.counts.anova, file = "Output/Statistics/Stress_statistics/Counts_Pacuta.txt")
+capture.output(mcap.counts.anova, file = "Output/Statistics/Stress_statistics/Counts_Mcap.txt")
+capture.output(mcap.counts.recovery.anova, file = "Output/Statistics/Recovery_statistics/Counts_Mcap_recovery.txt")
+
+spp.haemo.t <- t.test(haemo.cells.cm2~Species, data = counts.ttest)
+capture.output(spp.haemo.t, file = "Output/Statistics/Stress_statistics/Counts_TTEST.txt")
 ```
 
 

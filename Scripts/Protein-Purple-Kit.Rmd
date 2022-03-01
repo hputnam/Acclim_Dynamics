@@ -272,12 +272,17 @@ Use `prot` dataframe for the following statistics. Separating into stress and re
 
 Raw distribution view. 
 ```{r}
-prot.mcap <- prot %>% subset(Species == "Mcapitata") %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week" | Timepoint == "12 week" | Timepoint == "16 week")
+prot.mcap <- prot %>% subset(Species == "Mcapitata") %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week") 
+
+prot.mcap.recovery <- prot %>% subset(Species == "Mcapitata") %>% subset(Timepoint == "12 week" | Timepoint == "16 week")
 
 prot.pacuta <- prot %>% subset(Species == "Pacuta") %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
 
 hist(prot.mcap$prot_mg.cm2) 
+hist(prot.mcap.recovery$prot_mg.cm2) 
 hist(prot.pacuta$prot_mg.cm2) 
+
+prot.ttests <- union(prot.pacuta, prot.mcap)
 ```
 
 Mixed effect modeling. 
@@ -287,23 +292,31 @@ Both species.
 ```{r}
 Pacuta_prot_LMER <- lmer(log(prot_mg.cm2) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=prot.pacuta)  
 Mcap_prot_LMER <- lmer(log(prot_mg.cm2) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=prot.mcap)  
+Mcap_prot_rec_LMER <- lmer(log(prot_mg.cm2) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=prot.mcap.recovery)  
 
 qqPlot(residuals(Pacuta_prot_LMER))
 qqPlot(residuals(Mcap_prot_LMER)) 
+qqPlot(residuals(Mcap_prot_rec_LMER)) 
 
 hist(residuals(Pacuta_prot_LMER)) 
 hist(residuals(Mcap_prot_LMER)) 
+hist(residuals(Mcap_prot_rec_LMER)) 
 
 ## Type III Wald chisquare tests
 pacuta.prot.anova <- Anova(Pacuta_prot_LMER, ddf="lme4", type='III') 
 mcap.prot.anova <- Anova(Mcap_prot_LMER, ddf="lme4", type='III') 
+mcap.prot.rec.anova <- Anova(Mcap_prot_rec_LMER, ddf="lme4", type='III') 
 
-tab_model(Pacuta_prot_LMER, Mcap_prot_LMER,
-          dv.labels = c("P.acuta protein", "M. capitata protein"), string.ci = "Conf. Int (95%)",
+tab_model(Pacuta_prot_LMER, Mcap_prot_LMER, Mcap_prot_rec_LMER,
+          dv.labels = c("P.acuta protein", "M. capitata protein Stress", "M.cap prot Recovery"), string.ci = "Conf. Int (95%)",
           string.p = "P-Value", file = "Output/Statistics/Protein.doc")
 
-capture.output(pacuta.prot.anova, file = "Output/Statistics/Protein_Pacuta.txt")
-capture.output(mcap.prot.anova, file = "Output/Statistics/Protein_Mcap.txt")
+capture.output(pacuta.prot.anova, file = "Output/Statistics/Stress_statistics/Protein_Pacuta.txt")
+capture.output(mcap.prot.anova, file = "Output/Statistics/Stress_statistics/Protein_Mcap.txt")
+capture.output(mcap.prot.rec.anova, file = "Output/Statistics/Recovery_statistics//Protein_Mcap_recovery.txt")
+
+species.t.prot <- t.test(prot_mg.cm2~Species, data = prot.ttests)
+capture.output(species.t.prot, file = "Output/Statistics/Stress_statistics/Protein_TTEST.txt")
 ```
 
 
