@@ -128,8 +128,25 @@ denoise.final.percent <- denoise.final %>% select(
 sample.id, percentage.of.input.passed.filter, percentage.of.input.merged, percentage.of.input.non.chimeric) %>% gather(measurement, value, 2:4)
 denoise.final.percent$measurement <- factor(denoise.final.percent$measurement, levels=c("percentage.of.input.passed.filter", "percentage.of.input.merged", "percentage.of.input.non.chimeric"))
 
-ggplot(denoise.final.reads, aes(x=measurement, y=value), group = type) + geom_boxplot() + ylab("# reads") + theme_bw()
-ggplot(denoise.final.percent, aes(x=measurement, y=value), group = type) + geom_boxplot() + ylab("% reads") + theme_bw()
+reads.plot <- ggplot(denoise.final.reads, aes(x=measurement, y=value), group = type) + geom_boxplot() + ylab("# reads") + theme_bw()
+percent.plot <- ggplot(denoise.final.percent, aes(x=measurement, y=value), group = type) + geom_boxplot() + ylab("% reads") + theme_bw()
+
+ggsave(file="16S_seq/QIIME2_20220228/denoise.reads.plot.png", reads.plot, width = 11, height = 6, units = c("in"))
+ggsave(file="16S_seq/QIIME2_20220228/denoise.percent.plot.png", percent.plot, width = 11, height = 6, units = c("in"))
+
+sum(denoise.final$input)
+mean(denoise.final$input)
+sum(denoise.final$filtered)
+mean(denoise.final$filtered)
+sum(denoise.final$denoised)
+mean(denoise.final$denoised)
+sum(denoise.final$merged)
+mean(denoise.final$merged)
+sum(denoise.final$non.chimeric)
+mean(denoise.final$non.chimeric)
+mean(denoise.final$percentage.of.input.passed.filter)
+mean(denoise.final$percentage.of.input.merged)
+mean(denoise.final$percentage.of.input.non.chimeric)
 ```
 
 
