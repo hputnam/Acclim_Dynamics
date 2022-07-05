@@ -1,0 +1,162 @@
+---
+title: "PI_curve_plotting"
+author: "Emma Strand"
+date: "6/29/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(plyr)
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(minpack.lm)
+```
+
+## Read in df
+
+```{r}
+df <-
+  list.files(path = 'Physiology_variables/PI_Curves/PI_curve_rates/',pattern = ".csv", full.names = TRUE) %>% 
+  # list files in directory following a particular pattern
+  set_names(.) %>% # get the column names
+  map_dfr(read.csv, .id = "file.ID") # join all files together in one data frame by file ID
+
+df$file.ID <- gsub("Physiology_variables/PI_Curves/PI_curve_rates//", "", df$file.ID)
+df$file.ID <- gsub(".csv", "", df$file.ID)
+```
+
+```{r}
+df$Light_Value <- as.numeric(df$Light_Value)
+df$micromol.cm2.h <- as.numeric(df$micromol.cm2.h)
+df$Date <- as.factor(df$Date)
+
+# Creating separate dataframes to then calculate curve
+Mcap.T1 <- df %>% subset(Species == "Mcapitata" & Date == "20180914")
+Mcap.T2 <- df %>% subset(Species == "Mcapitata" & Date == "20181017")
+Mcap.T3 <- df %>% subset(Species == "Mcapitata" & Date == "20181031")
+Mcap.T4 <- df %>% subset(Species == "Mcapitata" & Date == "20181115")
+Pacuta.T1 <- df %>% subset(Species == "Pacuta" & Date == "20180914")
+Pacuta.T2 <- df %>% subset(Species == "Pacuta" & Date == "20181017")
+Pacuta.T3 <- df %>% subset(Species == "Pacuta" & Date == "20181031")
+Pacuta.T4 <- df %>% subset(Species == "Pacuta" & Date == "20181115")
+
+# Creating PAR and Pc variables
+PAR.McapT1 <- as.numeric(Mcap.T1$Light_Value)
+Pc.McapT1 <- as.numeric(Mcap.T1$micromol.cm2.h)
+
+PAR.McapT2 <- as.numeric(Mcap.T2$Light_Value)
+Pc.McapT2 <- as.numeric(Mcap.T2$micromol.cm2.h)
+```
+
+
+
+
+
+```{r}
+#fit a model using a Nonlinear Least Squares regression of a non-rectangular hyperbola (Marshall & Biscoe, 1980)
+curve.nlslrc = nlsLM(Pc.McapT1 ~ (1/(2*theta))*(AQY*PAR.McapT1+Am-sqrt((AQY*PAR.McapT1+Am)^2-4*AQY*theta*Am*PAR.McapT1))-Rd,
+                      start=list(Am=(max(Pc.McapT1)-min(Pc.McapT1)),
+                                 AQY=0.05,
+                                 Rd=-min(Pc.McapT1),
+                                 theta=.001)) 
+
+my.fit <- summary(curve.nlslrc) #summary of model fit
+
+#Extract the parameters
+
+#Amax (max gross photosytnthetic rate) 
+Pmax.gross <- my.fit$parameters[1]
+
+#AQY (quantum yield) alpha  
+AQY <- my.fit$parameters[2]
+
+#Rd (dark respiration)
+Rd <- my.fit$parameters[3]
+
+# Ik light saturation point
+Ik <- Pmax.gross/AQY
+
+# Ic light compensation point
+Ic <- Rd/AQY
+
+# Net photosynthetic rates
+Pmax.net <- Pmax.gross - Rd
+
+#output parameters into a table
+PI.Output <- as.data.frame(rbind(Pmax.gross, Pmax.net, -Rd, AQY,Ik,Ic))
+PI.Output$variable <- c("Pg.max","Pn.max","Rdark","alpha", "Ik", "Ic")
+
+capture.output(PI.Output, file = "Physiology_variables/PI_Curves/Output/PI_MT1.txt")
+```
+
+
+```{r}
+#draw the curve using the model fit
+curve.fitting.McapT1 <- curve((1/(2*summary(curve.nlslrc.McapT1)$coef[4,1]))*(summary(curve.nlslrc.McapT1)$coef[2,1]*x+summary(curve.nlslrc.McapT1)$coef[1,1]-sqrt((summary(curve.nlslrc.McapT1)$coef[2,1]*x+summary(curve.nlslrc.McapT1)$coef[1,1])^2-4*summary(curve.nlslrc.McapT1)$coef[2,1]*summary(curve.nlslrc.McapT1)$coef[4,1]*summary(curve.nlslrc.McapT1)$coef[1,1]*x))-summary(curve.nlslrc.McapT1)$coef[3,1])
+
+#creating a df
+MT1.df <- as.data.frame(curve.fitting.McapT1)
+```
+
+
+```{r}
+ggplot(df, aes(x=Light_Value, y=micromol.cm2.h)) +
+  geom_point(aes(group=Date, color=Date)) + theme_bw() +
+  facet_wrap(~Species) +
+  ylab(expression(Rate*" ("*mu*"mol "*O[2]*" "*cm^-2*h^-1*")")) + 
+  xlab(expression("Irradiance ("*mu*"mol photons "*m^-2*s^-1*")")) +
+  geom_point(data=MT1.df, aes(x=x, y=y)) 
+```
+
+```{r}
+##### Nonlinear Least Squares regression of a non-rectangular hyperbola (Marshall & Biscoe, 1980) #####
+pdf("Physiology_variables/PI_Curves/PICurve.pdf")
+par(mfrow=c(1,1))
+plot(PAR,Pc,xlab="", ylab="", xlim=c(0,max(PAR)), ylim=c(-1, 2), cex.lab=0.8,cex.axis=0.8,cex=1, main="", adj = 0.05) #set plot info
+mtext(expression("Irradiance ("*mu*"mol photons "*m^-2*s^-1*")"),side=1,line=3.3,cex=1) #add labels
+mtext(expression(Rate*" ("*mu*"mol "*O[2]*" "*cm^-2*h^-1*")"),side=2,line=2,cex=1) #add labels
+
+#fit a model using a Nonlinear Least Squares regression of a non-rectangular hyperbola (Marshall & Biscoe, 1980)
+curve.nlslrc.McapT1 = nlsLM(Pc.McapT1 ~ (1/(2*theta))*(AQY*PAR.McapT1+Am-sqrt((AQY*PAR.McapT1+Am)^2-4*AQY*theta*Am*PAR.McapT1))-Rd,
+                      start=list(Am=(max(Pc.McapT1)-min(Pc.McapT1)),
+                                 AQY=0.05,
+                                 Rd=-min(Pc.McapT1),
+                                 theta=.001)) 
+
+my.fit.McapT1 <- summary(curve.nlslrc.McapT1) #summary of model fit
+
+#draw the curve using the model fit
+curve.fitting.McapT1 <- curve((1/(2*summary(curve.nlslrc.McapT1)$coef[4,1]))*(summary(curve.nlslrc.McapT1)$coef[2,1]*x+summary(curve.nlslrc.McapT1)$coef[1,1]-sqrt((summary(curve.nlslrc.McapT1)$coef[2,1]*x+summary(curve.nlslrc.McapT1)$coef[1,1])^2-4*summary(curve.nlslrc.McapT1)$coef[2,1]*summary(curve.nlslrc.McapT1)$coef[4,1]*summary(curve.nlslrc.McapT1)$coef[1,1]*x))-summary(curve.nlslrc.McapT1)$coef[3,1])
+
+#Extract the parameters
+
+#Amax (max gross photosytnthetic rate) 
+Pmax.gross <- my.fit.McapT1$parameters[1]
+
+#AQY (quantum yield) alpha  
+AQY <- my.fit.McapT1$parameters[2]
+
+#Rd (dark respiration)
+Rd <- my.fit.McapT1$parameters[3]
+
+# Ik light saturation point
+Ik <- Pmax.gross/AQY
+
+# Ic light compensation point
+Ic <- Rd/AQY
+
+# Net photosynthetic rates
+Pmax.net <- Pmax.gross - Rd
+
+#output parameters into a table
+PI.Output <- as.data.frame(rbind(Pmax.gross, Pmax.net, -Rd, AQY,Ik,Ic))
+row.names(PI.Output) <- c("Pg.max","Pn.max","Rdark","alpha", "Ik", "Ic")
+
+text(x=500, y=-0.25, labels="AQY =  0.015\nIk = 122.445\nIc = 56.892")
+
+dev.off()
+```
+

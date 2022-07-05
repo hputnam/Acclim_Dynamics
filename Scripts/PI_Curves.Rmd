@@ -52,7 +52,7 @@ colnames(Photo.R) <- c("Fragment.ID","Intercept", "µmol.L.sec", "Temp")
 file.names.full <- list.files(path = path.p, pattern = "csv$", recursive = TRUE) #list all csv file names in the folder and subfolders
 
 #Load Sample meta info Info
-Sample.Info <- read.csv(file="Physiology_variables/PI_Curves/PI_Curve_Sample_Info.csv", header=T) #read sample.info data
+Sample.Info <- read.csv(file="Physiology_variables/PI_Curves/PI_Curve_Sample_Info_metadata.csv", header=T) #read sample.info data
 Sample.Info$Fragment.ID <- paste(Sample.Info$Fragment.ID,"_",Sample.Info$Light_Level,sep = "")
 ```
 
@@ -318,8 +318,9 @@ write.csv(PI.Output.Values,"Physiology_variables/PI_Curves/Output/PI_Curve_Outpu
 ```
 
 
+E5 model: nls(Pc ~ (Am*((AQY*PAR)/(sqrt(Am^2 + (AQY*PAR)^2)))-Rd), data=., start=list(Am=(max(.$Pc)-min(.$Pc)),  AQY=0.001, Rd=-min(.$Pc))). 
 
-
+nls(Pc ~ (1/(2*theta))*(AQY*PAR+Am-sqrt((AQY*PAR+Am)^2-4*AQY*theta*Am*PAR))-Rd,start=list(Am=(max(Pc)-min(Pc)),AQY=0.05,Rd=-min(Pc),theta=0.6)) 
 
 
 

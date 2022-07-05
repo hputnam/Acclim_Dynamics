@@ -1,0 +1,9 @@
+Analysis of Deviance Table (Type III tests)
+
+Response: Surv(lifespan, status)
+                Df   Chisq Pr(>Chisq)    
+Temperature      1 21.0040  4.583e-06 ***
+CO2              1 11.4891     0.0007 ***
+Temperature:CO2  1  0.2914     0.5893    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1

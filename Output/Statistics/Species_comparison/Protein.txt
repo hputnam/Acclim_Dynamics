@@ -1,0 +1,12 @@
+
+	Welch Two Sample t-test
+
+data:  prot_mg.cm2 by Species
+t = -1.0843, df = 37.811, p-value = 0.2851
+alternative hypothesis: true difference in means between group Mcapitata and group Pacuta is not equal to 0
+95 percent confidence interval:
+ -0.19133450  0.05787863
+sample estimates:
+mean in group Mcapitata    mean in group Pacuta 
+              0.6671496               0.7338776 
+

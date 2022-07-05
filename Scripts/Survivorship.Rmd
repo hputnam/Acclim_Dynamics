@@ -41,7 +41,6 @@ library(stringr)
 library(survival)
 library(ranger)
 library(ggplot2)
-library(dplyr)
 library(ggfortify)
 library(gridExtra)
 library(survminer)
@@ -49,6 +48,7 @@ library(graphics)
 library(grid)
 library(coxme)
 library(jstable)
+library(GGally)
 ```
 
 #### Loading dataframes. 
@@ -106,17 +106,23 @@ Mc.km <- with(Mc.Data, Surv(lifespan, status))
 Mc.km_fit <- survfit(Surv(lifespan, status) ~ Treatment, data=Mc.Data)
 summary(Mc.km_fit)
 
-mc <- coxme(Surv(lifespan, status) ~ Temperature*CO2 + (1|PLUG.ID), data = Mc.Data)
+mc <- coxme(Surv(lifespan, status) ~ Temperature*CO2 + (1|Tank/PLUG.ID), data = Mc.Data)
+mc.anova <- Anova(mc, type = "III") 
+
 ## just print, no summary
 mc
-capture.output(mc, file = "Output/Statistics/survivorship_stats_mcap.txt")
+mc.anova
+
+## export statistics 
+capture.output(mc, file = "Output/Statistics/survivorship_coxme_mcap.txt")
+capture.output(mc.anova, file = "Output/Statistics/survivorship_anova_mcap.txt")
 
 #mc_ph <- coxph(Surv(lifespan, status) ~ Temperature*CO2 + frailty(PLUG.ID, 
    # distribution = "gaussian", sparse = FALSE, method = "reml"), data = Mc.Data)
 
-cols <- c("lightblue", "blue", "salmon", "red3")
+cols <- c("blue", "lightblue", "salmon", "red3")
 MC.sur <- summary(Mc.km_fit, times = c(1:58))
-Mc.km_fit <- survfit(Surv(lifespan, status) ~ Treatment, data=Mc.Data)
+
 autoplot(Mc.km_fit)
 
 ### Pocillopora acuta
@@ -125,39 +131,13 @@ Pa.km <- with(Pa.Data, Surv(lifespan, status))
 Pa.km_fit <- survfit(Surv(lifespan, status) ~ Treatment, data=Pa.Data) #*Origin
 Pa.sur <- summary(Pa.km_fit, times = c(1:58))
 autoplot(Pa.km_fit)
+summary(Pa.km_fit)
 
-pa <- coxme(Surv(lifespan, status) ~ Temperature*CO2 + (1|PLUG.ID), data = Pa.Data)
-pa
+pa <- coxme(Surv(lifespan, status) ~ Temperature*CO2 + (1|Tank/PLUG.ID), data = Pa.Data)
+pa.anova <- Anova(pa, type = "III") 
 
-capture.output(pa, file = "Output/Statistics/survivorship_stats_pacuta.txt")
-
-jstable:::coxmeTable(pa)
-jstable:::coxme.display(pa, dec = 10)
-coxme:::print.coxme(pa)
-
-extract_coxme_table <- function (mod){
-    beta <- mod$coefficients$fixed
-    nvar <- length(beta)
-    nfrail <- nrow(mod$var) - nvar
-    se <- sqrt(diag(mod$var)[nfrail + 1:nvar])
-    z<- round(beta/se, 2)
-    p<- signif(1 - pchisq((beta/se)^2, 1), 2)
-    table=data.frame(cbind(beta,se,z,p))
-    return(table)
-}
-
-extract_coxme_table(pa)
-
-print(pa, digits=max(getOption("digits") - 10, 20),
-  signif.stars = getOption("show.signif.stars"), expand=FALSE)
-
-print(coef(summary(pa))[, "p"], digits = 16)
-
-summary(pa)$coefficients
-
-str(summary(pa))
-
-summary(pa)$coefficients[5]
+capture.output(pa, file = "Output/Statistics/survivorship_coxme_pacuta.txt")
+capture.output(pa.anova, file = "Output/Statistics/survivorship_anova_pacuta.txt")
 ```
 
 
@@ -167,10 +147,10 @@ Plotting survivorship analysis.
 
 splots <- list()
 
-splots[[1]] <- ggsurvplot(Mc.km_fit, data=Mc.Data, size = 1,  # change line size
+splots[[1]] <- ggsurvplot(MC.sur, data=Mc.Data, size = 1,  # change line size
            linetype = "strata", # change line type by groups
            break.time.by = 7, # break time axis
-           palette = c("lightblue", "blue", "salmon", "red3"), # custom color palette
+           palette = c("blue", "lightblue", "salmon", "red3"), # custom color palette
            conf.int = TRUE, # Add confidence interval
            legend.title = "", # remove legend title
            title = "Montipora capitata",
@@ -178,19 +158,23 @@ splots[[1]] <- ggsurvplot(Mc.km_fit, data=Mc.Data, size = 1,  # change line size
            font.title = c(14, "bold.italic", "black"), #title italicized
            font.tickslab = c(8, "black"),
            legend.labs = c("ATAC", "ATHC","HTAC", "HTHC"), pval = TRUE, # Add p-value and change legend labels
-           legend=c(0.115, 0.5))
+           legend=c(0.15, 0.5))
   
 splots[[1]]$plot <- splots[[1]]$plot +
-  scale_x_continuous(breaks = sort(c(1,2,8,15,29,43,57,85,112)), labels = c("Day 1", "Day 2", "1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week")) + 
-  geom_vline(xintercept = 61, linetype = "dotted") + 
-  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3))
+  #scale_x_continuous(breaks = sort(c( 8,15,29,43,57,85,112)), labels = c("1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week")) + 
+  geom_vline(xintercept = 61, linetype = "dotted", size=2) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3, size=12)) +
+  theme(axis.text.y = element_text(size=12)) +
+  theme(legend.text = element_text(size = 13)) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)))
 
 
 ## Pocillopora acuta
 splots[[2]] <- ggsurvplot(Pa.km_fit, data=Pa.Data, size = 1,  # change line size
            linetype = "strata", # change line type by groups
            break.time.by = 7, # break time axis
-           palette = c("lightblue", "blue", "salmon", "red3"), # custom color palette
+           palette = c("blue", "lightblue", "salmon", "red3"), # custom color palette
            conf.int = TRUE, # Add confidence interval
            legend.title = "", # remove legend title
            title = "Pocillopora acuta",
@@ -201,13 +185,16 @@ splots[[2]] <- ggsurvplot(Pa.km_fit, data=Pa.Data, size = 1,  # change line size
            legend = "none")
 
 splots[[2]]$plot <- splots[[2]]$plot +
-  scale_x_continuous(breaks = sort(c(1,2,8,15,29,43,57,85,112)), labels = c("Day 1", "Day 2", "1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week")) + 
-  geom_vline(xintercept = 61, linetype = "dotted") + 
-  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) 
-  # theme(axis.text.x = element_text(vjust = grid::unit(c(-2,0,0,0,0,0,0,0,0)), "points"))
+  scale_x_continuous(breaks = sort(c(8,15,29,43,57,85,112)), labels = c("1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week")) + 
+  geom_vline(xintercept = 61, linetype = "dotted", size=2) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3, size=12)) +
+  theme(axis.text.y = element_text(size=12)) +
+  theme(legend.text = element_text(size = 13)) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)))
 
 surv <- arrange_ggsurvplots(splots, print = FALSE, ncol = 2, nrow = 1)
-ggsave("Output/Final_Figures/All_survivorship.pdf", surv, width = 12, height = 6)
+ggsave("Output/Final_Figures/All_survivorship.png", surv, width = 12, height = 6)
 
 # ggsave("Output/All_survivorship.png", surv, width = 6, height = 10)
 ```

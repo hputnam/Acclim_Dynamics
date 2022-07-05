@@ -1,0 +1,14 @@
+Analysis of Deviance Table (Type III Wald chisquare tests)
+
+Response: log(Growth.Rate)
+                                Chisq Df Pr(>Chisq)    
+(Intercept)                 1750.9133  1  < 2.2e-16 ***
+Growth.Time                   32.8150  4  1.303e-06 ***
+Temperature                    0.2465  1  0.6195454    
+CO2                            0.0469  1  0.8285397    
+Growth.Time:Temperature       14.5160  4  0.0058180 ** 
+Growth.Time:CO2               21.1175  4  0.0003001 ***
+Temperature:CO2                0.0220  1  0.8819851    
+Growth.Time:Temperature:CO2   32.3638  4  1.612e-06 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1

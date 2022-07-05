@@ -1,8 +1,8 @@
 {
-    "cursorPosition": "341,20",
-    "last_setup_crc32": "142B12FEbb338d19",
-    "scrollLine": "323",
+    "cursorPosition": "445,0",
+    "last_setup_crc32": "830E1EE8bb338d19",
+    "scrollLine": "420",
     "working_dir": "project",
     "Source": "Source",
-    "chunk_output_type": "console"
+    "chunk_output_type": "inline"
 }

@@ -27,6 +27,8 @@ library(lubridate)
 library(vegan)
 library(ggfortify)
 library(phyloseq)
+library(ggvegan)
+library(ggforce)
 ```
 
 # ITS2 Type Profiles 
@@ -54,7 +56,83 @@ samples <- read.csv("ITS2_seq/R_Input/Sample_variables.csv") %>% select(Plug_ID,
 samples$Plug_ID <- as.character(samples$Plug_ID)
 
 meta <- full_join(meta, samples, by = "Plug_ID") %>% na.omit()
+
+data <- full_join(meta, data, by = "sample_name")
+data$Timepoint <- as.character(data$Timepoint)
 ```
+
+
+
+### Both species 
+
+```{r}
+# Create matrix, calculate relative abundance, and transform that matrix
+rownames(data) <- data$sample_name
+matrix <- as.matrix(data[,8:19])
+pc.meta <- data[,1:7]
+
+rel <- matrix/rowSums(matrix)
+  rowSums(rel) # sanity check; should all be equal to 1
+rel.T <- sqrt(rel) # square root transform df 
+
+# Principal components analysis 
+pc <- prcomp(rel.T, retx=TRUE)
+summary(pc)
+screeplot(pc, type="lines")
+
+sp.plot <- autoplot(pc, data = pc.meta, groups = 'Species', 
+                       loadings = TRUE, loadings.colour = 'black', frame=FALSE, frame.type = 'norm',
+                       loadings.label = FALSE, loadings.label.size = 4, loadings.label.colour = 'black', repel=TRUE,
+                       loadings.label.vjust=2, loadings.label.hjust=0.1) +
+  scale_color_manual(values = c("blue", "lightblue", "salmon", "red3")) + scale_fill_manual(values = c("white", "white", "white", "white")) +
+  theme_bw() + #ggtitle("Montipora capitata") 
+  geom_point(size = 3, aes(shape = Species, colour = Treatment))+ 
+  xlim(-0.11,0.16) + ylim(-0.2,0.21) +
+  theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) + 
+  theme(legend.title = element_text(size = 12, face="bold")) + 
+  theme(legend.text = element_text(size = 12)) +
+  theme(legend.position = "none") + 
+  #stat_ellipse(aes(fill = Species), lwd = 0.8) +
+  theme(legend.background = element_rect(size=0.1, linetype="solid", colour ="black"))
+
+ggsave(filename = "Output/ITS2-biplot2.png", sp.plot, device = "png", width = 7, height = 7)
+```
+
+NMDS ran on 'matrix' which is raw abundance counts. PCA above ran on relative abundance 
+```{r}
+nmds <- metaMDS(matrix, distance = "bray")
+nmds.scrs <- as.data.frame(scores(nmds)) #save NMDS results into dataframe
+nmds.scrs$Species <- pc.meta$Species
+nmds.scrs$Treatment <- pc.meta$Treatment
+
+ano = anosim(rel, pc.meta$Treatment, distance = "bray", permutations = 9999)
+
+nmds.scrs %>% ggplot(aes(x=NMDS1, y=NMDS2)) + theme_bw() +
+  geom_point(size = 2, aes(shape = Species, colour = Treatment))+ 
+  scale_color_manual(values = c("blue", "lightblue", "salmon", "red3"), aesthetics = c("colour"))
+
+
+
+NMDS.autoplot <- autoplot(mds.scrs, data = pc.meta, colour = 'Treatment', 
+                        loadings = FALSE, loadings.colour = 'black', frame=TRUE, frame.type = 'norm',
+                        loadings.label = FALSE, loadings.label.size = 4, loadings.label.colour = 'black', repel=TRUE,
+                        loadings.label.vjust = 2, alpha=0.5) +
+  scale_color_manual(values = c("blue", "lightblue", "salmon", "red3"), aesthetics = c("colour")) + scale_fill_manual(values = c("transparent", "transparent")) +
+  theme_bw() + ggtitle("Montipora capitata") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) + 
+  theme(legend.title = element_text(size=12, face="bold")) + 
+  theme(legend.text = element_text(size=12)) +
+  theme(legend.position = "none") + 
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  theme(legend.background = element_rect(size=0.1, linetype="solid", colour ="black")); NMDS.autoplot
+
+autoplot(mds)
+```
+
+
+
+
 
 ```{r}
 #Pacuta
@@ -66,13 +144,13 @@ Pact_meta$Timepoint <- as.factor(Pact_meta$Timepoint)
 rownames(Pact) <- Pact$sample_name
 Pact <- as.matrix(Pact[,2:13])
 
-Rel.Sym.Data <- Pact/rowSums(Pact) # calculate the Relative Abundance
-N <- rowSums(Rel.Sym.Data) # calculate row sums of the relative abundances, should sum to 1
+Rel.Sym.Data.Pacuta <- Pact/rowSums(Pact) # calculate the Relative Abundance
+N <- rowSums(Rel.Sym.Data.Pacuta) # calculate row sums of the relative abundances, should sum to 1
 N #Display Row Sums, should all be 1
 
 # Transform Relative Abundance Matrix using sqrt
-Trans.Rel.Sym.Data <- sqrt(Rel.Sym.Data) #sqrt transform the matrix
-Trans.Rel.Sym.Data #view data
+Trans.Rel.Sym.Data.Pacuta <- sqrt(Rel.Sym.Data.Pacuta) #sqrt transform the matrix
+Trans.Rel.Sym.Data.Pacuta #view data
 
 ##### PCA #####
 
@@ -182,10 +260,14 @@ ggsave("Output/Final_Figures/rel.abund.its2.png")
 
 ```
 
-### NMDS 
+### Phyloseq 
 
+https://joey711.github.io/phyloseq/plot_ordination-examples.html
 ```{r}
+theme_set(theme_bw())
 
+GP1 <- rel
+GP.ord <- ordinate(GP1, "NMDS", "bray")
 ```
 
 
@@ -260,13 +342,6 @@ PA.info %>% group_by(Treatment, Timepoint) %>% count("Rep") # checking sample si
 
 PA.permanova <- adonis(PA.mat ~ Temperature*CO2*Timepoint, data=PA.info, method = "bray", permutations=999)
 PA.permanova
-
-```
-
-# NMDS 
-
-
-```{r}
 
 ```
 

@@ -438,7 +438,7 @@ T8.g.d.cm2 = 16 week
 
 Plotting data. 
 ```{r}
-cols <- c("lightblue", "blue", "pink", "red")
+cols <- c("lightblue", "blue", "salmon", "red")
 
 Fig.Mcap <- ggplot(Mcap.Means, aes(x=week, y=mg.d.cm2, group=Treatment)) + 
   geom_line(aes(colour=Treatment, group=Treatment), position = position_dodge(width = 0.1), alpha=1) + # colour, group both depend on cond2
@@ -532,7 +532,7 @@ BW.Figs <- arrangeGrob(Mcap.BW, Pacuta.BW, ncol=2)
 
 Facet wrap figure. 
 ```{r}
-cols <- c("lightblue", "blue", "salmon", "red3")
+cols <- c("blue", "lightblue", "salmon", "red3")
 
 species.names <- list(
   'Mcapitata'="Montipora capitata",
@@ -541,9 +541,9 @@ species.names <- list(
 species_labeller <- function(variable,value){
   return(species.names[value])
 
-Growth_facetplot.m <- ggplot(All.Means.m, aes(x=TimePoint, y = mg.d.cm2, group = Treatment, color = Treatment)) +
+Growth_facetplot.m <- ggplot(All.Means, aes(x=TimePoint, y = mg.d.cm2, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
-  #facet_grid(~Species, scales = "free", labeller = species_labeller) +
+  facet_grid(~Species, scales = "free", labeller = species_labeller) +
   geom_errorbar(aes(ymin=mg.d.cm2-se, ymax=mg.d.cm2+se), width=.2) +
   scale_color_manual(values = cols) + 
   xlab("Timepoint") + 
@@ -561,11 +561,31 @@ Growth_facetplot.m <- ggplot(All.Means.m, aes(x=TimePoint, y = mg.d.cm2, group =
   # Change axis line
   axis.line = element_line(colour = "black")); Growth_facetplot.m
 
+growth_full <- ggplot(All.Means, aes(x=TimePoint, y = mg.d.cm2, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(~Species, scales = "free") +
+  geom_errorbar(aes(ymin=mg.d.cm2-se, ymax=mg.d.cm2+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + 
+  theme_classic() + 
+  ylab(expression(Growth  ~(mg ~CaCO[3] ~cm^-2 ~d^-1))) +
+  theme(legend.position = "none") +
+  geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  strip.text.x = element_text(size = 18, color = "black", face = "bold.italic"), # Change axis line
+  axis.line = element_line(colour = "black")) + theme(axis.text = element_text(size = 12)) + 
+  theme(axis.title = element_text(size = 15)) +
+  theme(legend.text = element_text(size = 10)) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  theme(legend.title = element_text(size = 12)); growth_full # Change axis line
 
-
-
-ggsave(file="Output/Final_Figures/Growth.pdf", Growth_facetplot, width = 11, height = 6, units = c("in"))
-ggsave(file="Output/Final_Figures/Growth.png", Growth_facetplot, width = 11, height = 6, units = c("in"))
+#ggsave(file="Output/Supplemental_figures/Growth.pdf", Growth_facetplot, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Supplemental_figures/Growth.png", growth_full, width = 11, height = 6, units = c("in"))
 ```
 
 # Statistics 
@@ -611,19 +631,29 @@ pacuta.stress <- Stress.period %>% subset(Species == "Pacuta")
 mcap.recovery <- Recovery.period %>% subset(Species == "Mcapitata")
 pacuta.recovery <- Recovery.period %>% subset(Species == "Pacuta") %>% subset(Treatment == "ATAC" | Treatment == "ATHC")
 
-hist(pacuta.Growth$Growth.Rate) 
-hist(mcap.Growth$Growth.Rate) 
+hist(mcap.stress$Growth.Rate) 
+hist(pacuta.stress$Growth.Rate) 
+hist(mcap.recovery$Growth.Rate) 
+hist(pacuta.recovery$Growth.Rate) 
 # both very heavy tailed distribution
 ```
 
 *M. capitata* mixed effect modeling.
 ```{r}
 Mcap_Growth_LMER_tank_plug <- lmer(Growth.Rate ~ Growth.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.Growth) 
-Mcap_Growth_LMER_tank_plug_stress <- lmer(Growth.Rate ~ Growth.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.stress)  
+
+Mcap_Growth_LMER_tank_plug_stress.log <- lmer(log(Growth.Rate) ~ Growth.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.stress)  
+Mcap_Growth_LMER_tank_plug_stress <- lmer((Growth.Rate) ~ Growth.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.stress)  
+Mcap_Growth_LMER_tank_plug_stress.sqrt <- lmer(sqrt(Growth.Rate) ~ Growth.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.stress)   
+
 Mcap_Growth_LMER_tank_plug_recovery <- lmer(Growth.Rate ~ Growth.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.recovery)
 
 qqPlot(residuals(Mcap_Growth_LMER_tank_plug))
+
 qqPlot(residuals(Mcap_Growth_LMER_tank_plug_stress))
+qqPlot(residuals(Mcap_Growth_LMER_tank_plug_stress.log))
+qqPlot(residuals(Mcap_Growth_LMER_tank_plug_stress.sqrt))
+
 qqPlot(residuals(Mcap_Growth_LMER_tank_plug_recovery))
 
 hist(residuals(Mcap_Growth_LMER_tank_plug)) 
@@ -632,7 +662,7 @@ hist(residuals(Mcap_Growth_LMER_tank_plug_recovery))
 
 ## significance of model
 mcap_anova_growth <- Anova(Mcap_Growth_LMER_tank_plug, ddf="lme4", type='III') # Type III Wald chisquare tests
-mcap_anova_growth_stress <- Anova(Mcap_Growth_LMER_tank_plug_stress, ddf="lme4", type='III')
+mcap_anova_growth_stress.log <- Anova(Mcap_Growth_LMER_tank_plug_stress.log, ddf="lme4", type='III')
 mcap_anova_growth_recovery <- Anova(Mcap_Growth_LMER_tank_plug_recovery, ddf="lme4", type='III')
 
 mcap_anova_growth
@@ -640,7 +670,7 @@ mcap_anova_growth_stress
 mcap_anova_growth_recovery
 
 capture.output(mcap_anova_growth, file = "Output/Statistics/BW_stats_mcap.txt")
-capture.output(mcap_anova_growth_stress, file = "Output/Statistics/BW_stats_mcap_stress.txt")
+capture.output(mcap_anova_growth_stress.log, file = "Output/Statistics/BW_stats_mcap_stress.txt")
 capture.output(mcap_anova_growth_recovery, file = "Output/Statistics/BW_stats_mcap_recovery.txt")
 ```
 

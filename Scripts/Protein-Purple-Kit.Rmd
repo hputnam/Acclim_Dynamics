@@ -24,6 +24,7 @@ if (!require("Rmisc")) install.packages("Rmisc")
 # load packages
 library(plyr)
 library(dplyr)
+library(tidyverse)
 library(ggplot2)
 library(tidyverse)
 library(Rmisc)
@@ -31,7 +32,6 @@ library(broom)
 library(lme4)
 library(car)
 library(sjPlot)
-## always load plyr before dplyr
 ```
 
 Read in all data files. 
@@ -173,9 +173,9 @@ prot.means <- prot %>% summarySE(measurevar="prot_mg.cm2", groupvars=c("Timepoin
   mutate(Species = case_when(
     Species == "Mcapitata" ~ "Montipora capitata",
     Species == "Pacuta" ~ "Pocillopora acuta"
-  )) %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2" & !Timepoint == "12 week" & !Timepoint == "16 week")
+  )) %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2")
 
-prot.means$Timepoint <- factor(prot.means$Timepoint, levels=c("1 week","2 week","4 week","6 week","8 week"))
+prot.means$Timepoint <- factor(prot.means$Timepoint, levels=c("1 week","2 week","4 week","6 week","8 week", "12 week", "16 week"))
 
 # Looking at sample sizes 
 dplyr::filter(prot.means, N > 6) # this output should be zero b/c the biggest sample size is 6
@@ -190,7 +190,7 @@ filter(prot, Timepoint == "Day 2" & Species == "Pacuta" & Treatment == "ATAC")
 
 Plot by treatment and time. 
 ```{r}
-cols <- c("blue", "lightblue", "pink", "red")
+cols <- c("blue", "lightblue", "salmon", "red3")
 
 purple.prot <- ggplot(prot.means, aes(x=Timepoint, y = prot_mg.cm2, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
@@ -266,6 +266,37 @@ ggsave(file="Output/Final_Figures/Host-Soluble-Protein-Mcap.png", m, width = 8, 
 ggsave(file="Output/Final_Figures/Host-Soluble-Protein-Pacuta.png", p, width = 8, height = 6, units = c("in"))
 ```
 
+### Manuscript figure
+
+```{r}
+protein_plot_full <- ggplot(prot.means, aes(x=Timepoint, y = prot_mg.cm2, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(~Species, scales = "free") +
+  geom_errorbar(aes(ymin=prot_mg.cm2-se, ymax=prot_mg.cm2+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + 
+  theme_classic() + 
+  ylab(expression("host soluble protein" ~(mg ~cm^-2))) +
+  theme(legend.position = c(0.1,0.17)) +
+  geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  strip.text.x = element_text(size = 20, color = "black", face = "bold.italic"), # Change axis line
+  axis.line = element_line(colour = "black")) + theme(axis.text = element_text(size = 12)) + 
+  theme(axis.title = element_text(size = 15)) +
+  theme(legend.text = element_text(size = 13)) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  theme(legend.title = element_text(size = 15)); protein_plot_full # Change axis line
+
+ggsave(file="Output/Supplemental_figures/fullprotein.png", protein_plot_full, width = 11, height = 6, units = c("in"))
+```
+
+
+
 # Statistics 
 
 Use `prot` dataframe for the following statistics. Separating into stress and recovery periods and removing Day 1 and Day 2 because of sample size issues. 
@@ -290,35 +321,73 @@ Mixed effect modeling.
 Both species. 
 
 ```{r}
-Pacuta_prot_LMER <- lmer(log(prot_mg.cm2) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=prot.pacuta)  
-Mcap_prot_LMER <- lmer(log(prot_mg.cm2) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=prot.mcap)  
-Mcap_prot_rec_LMER <- lmer(log(prot_mg.cm2) ~ Timepoint*Temperature*CO2 + (1|Tank), na.action=na.omit, data=prot.mcap.recovery)  
+Pacuta_prot_LMER <- lmer(log(prot_mg.cm2) ~ Timepoint*Temperature*CO2 + (1|Tank:Temperature:Timepoint) + (1|Tank:CO2:Timepoint), na.action=na.omit, data=prot.pacuta)  
+Pacuta_prot_LMER2 <- lmer(log(prot_mg.cm2) ~ Timepoint*Temperature*CO2 + (1|Tank:Temperature:Timepoint) + (1|Tank:CO2:Timepoint), na.action=na.omit, data=prot.pacuta, contrasts = list(Timepoint = "contr.sum", Temperature = "contr.sum", CO2 = "contr.sum"))  
+
+Mcap_prot_LMER <- lmer(log(prot_mg.cm2) ~ Timepoint*Temperature*CO2 + (1|Tank:Temperature:Timepoint) + (1|Tank:CO2:Timepoint), na.action=na.omit, data=prot.mcap) 
+Mcap_prot_LMER2 <- lmer(log(prot_mg.cm2) ~ Timepoint*Temperature*CO2 + (1|Tank:Temperature:Timepoint) + (1|Tank:CO2:Timepoint), na.action=na.omit, data=prot.mcap, contrasts = list(Timepoint = "contr.sum", Temperature = "contr.sum", CO2 = "contr.sum")) 
+
+Mcap_prot_rec_LMER <- lmer(log(prot_mg.cm2) ~ Timepoint*Temperature*CO2 + (1|Tank:Temperature:Timepoint) + (1|Tank:CO2:Timepoint), na.action=na.omit, data=prot.mcap.recovery) 
+Mcap_prot_rec_LMER2 <- lmer(log(prot_mg.cm2) ~ Timepoint*Temperature*CO2 + (1|Tank:Temperature:Timepoint) + (1|Tank:CO2:Timepoint), na.action=na.omit, data=prot.mcap.recovery, contrasts = list(Timepoint = "contr.sum", Temperature = "contr.sum", CO2 = "contr.sum")) 
 
 qqPlot(residuals(Pacuta_prot_LMER))
+qqPlot(residuals(Pacuta_prot_LMER2)) 
 qqPlot(residuals(Mcap_prot_LMER)) 
+qqPlot(residuals(Mcap_prot_LMER2))
 qqPlot(residuals(Mcap_prot_rec_LMER)) 
+qqPlot(residuals(Mcap_prot_rec_LMER2)) 
 
-hist(residuals(Pacuta_prot_LMER)) 
+hist(residuals(Pacuta_prot_LMER))
+hist(residuals(Pacuta_prot_LMER2)) 
 hist(residuals(Mcap_prot_LMER)) 
+hist(residuals(Mcap_prot_LMER2))
 hist(residuals(Mcap_prot_rec_LMER)) 
+hist(residuals(Mcap_prot_rec_LMER2)) 
 
 ## Type III Wald chisquare tests
 pacuta.prot.anova <- Anova(Pacuta_prot_LMER, ddf="lme4", type='III') 
+pacuta.prot.anova2 <- Anova(Pacuta_prot_LMER2, ddf="lme4", type='III') 
+
 mcap.prot.anova <- Anova(Mcap_prot_LMER, ddf="lme4", type='III') 
+mcap.prot.anova2 <- Anova(Mcap_prot_LMER2, ddf="lme4", type='III') 
+
 mcap.prot.rec.anova <- Anova(Mcap_prot_rec_LMER, ddf="lme4", type='III') 
+mcap.prot.rec.anova2 <- Anova(Mcap_prot_rec_LMER2, ddf="lme4", type='III') 
 
-tab_model(Pacuta_prot_LMER, Mcap_prot_LMER, Mcap_prot_rec_LMER,
-          dv.labels = c("P.acuta protein", "M. capitata protein Stress", "M.cap prot Recovery"), string.ci = "Conf. Int (95%)",
-          string.p = "P-Value", file = "Output/Statistics/Protein.doc")
+pacuta.prot.anova
+pacuta.prot.anova2
+mcap.prot.anova
+mcap.prot.anova2
+mcap.prot.rec.anova
+mcap.prot.rec.anova2
 
-capture.output(pacuta.prot.anova, file = "Output/Statistics/Stress_statistics/Protein_Pacuta.txt")
-capture.output(mcap.prot.anova, file = "Output/Statistics/Stress_statistics/Protein_Mcap.txt")
-capture.output(mcap.prot.rec.anova, file = "Output/Statistics/Recovery_statistics//Protein_Mcap_recovery.txt")
+capture.output(pacuta.prot.anova2, file = "Output/Statistics/Stress_statistics/Protein/Protein_Pacuta_sums.txt")
+capture.output(mcap.prot.anova2, file = "Output/Statistics/Stress_statistics/Protein/Protein_Mcap_sums.txt")
+capture.output(mcap.prot.rec.anova2, file = "Output/Statistics/Recovery_statistics/Protein_Mcap_recovery_sums.txt")
 
 species.t.prot <- t.test(prot_mg.cm2~Species, data = prot.ttests)
 capture.output(species.t.prot, file = "Output/Statistics/Stress_statistics/Protein_TTEST.txt")
 ```
 
+#### Species comparison 
+
+```{r}
+spp.prot <- prot %>% subset(Timepoint == "1 week")
+
+spp.prot.t <- t.test(prot_mg.cm2~Species, data = spp.prot)
+
+capture.output(spp.prot.t, file = "Output/Statistics/Species_comparison/Protein.txt")
+
+Spp.prot.plot <- ggplot(spp.prot, aes(x=Species, y = prot_mg.cm2, group = Species)) + geom_point(size=3) + geom_boxplot() +
+  theme_classic() + 
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  ylab(expression("host soluble protein"~(mg ~cm^-2))) +
+  theme(legend.position = "none") +
+  theme(axis.text = element_text(size = 12)) + 
+  theme(axis.title = element_text(size = 12)) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) 
+```
 
 
 

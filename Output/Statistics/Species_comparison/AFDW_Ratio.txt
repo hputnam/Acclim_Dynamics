@@ -1,0 +1,12 @@
+
+	Welch Two Sample t-test
+
+data:  Ratio_S.H by Species
+t = 2.5909, df = 30.642, p-value = 0.01452
+alternative hypothesis: true difference in means between group Montipora capitata and group Pocillopora acuta is not equal to 0
+95 percent confidence interval:
+ 0.05896331 0.49610920
+sample estimates:
+mean in group Montipora capitata  mean in group Pocillopora acuta 
+                       0.9537603                        0.6762240 
+

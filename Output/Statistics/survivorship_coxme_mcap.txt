@@ -1,0 +1,22 @@
+Cox mixed-effects model fit by maximum likelihood
+  Data: Mc.Data
+  events, n = 866, 5344 (21360 observations deleted due to missingness)
+  Iterations= 36 189 
+                    NULL Integrated   Fitted
+Log-likelihood -7359.299  -5183.304 -4472.52
+
+                    Chisq    df p     AIC     BIC
+Integrated loglik 4351.99  5.00 0 4341.99 4318.17
+ Penalized loglik 5773.56 46.35 0 5680.85 5460.03
+
+Model:  Surv(lifespan, status) ~ Temperature * CO2 + (1 | PLUG.ID/Tank) 
+Fixed coefficients
+                             coef exp(coef)  se(coef)    z       p
+TemperatureHigh         1.1421189  3.133401 0.2492068 4.58 4.6e-06
+CO2High                 0.7981529  2.221434 0.2354737 3.39 7.0e-04
+TemperatureHigh:CO2High 0.1732892  1.189210 0.3210069 0.54 5.9e-01
+
+Random effects
+ Group        Variable    Std Dev    Variance  
+ PLUG.ID/Tank (Intercept) 0.10464763 0.01095113
+ PLUG.ID      (Intercept) 0.51912174 0.26948738

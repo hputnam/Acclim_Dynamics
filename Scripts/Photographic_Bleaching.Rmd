@@ -19,8 +19,7 @@ rm(list=ls())
 library("vegan")
 library("ggpubr")
 library("gridExtra")
-library("plyr") 
-library("dplyr")
+library(tidyverse)
 library("emmeans")
 library("multcompView")
 library("rstatix")
@@ -88,7 +87,9 @@ boxplot(Bleaching.Score ~ Group, data = x, lwd = 1, ylab = 'PC1Color', las=2, ce
 
 ### Calculating means, sample size, and standard error for timepoint, species, and treatment groups. 
 ```{r}
-All.Means <- summarySE(Color.Score, measurevar="Bleaching.Score", groupvars=c("Species", "Timepoint", "Treatment", "Temperature", "CO2")) %>% 
+# color.data defined in stats section 
+
+All.Means <- summarySE(Blch, measurevar="Bleaching.Score", groupvars=c("Species", "Timepoint", "Treatment", "Temperature", "CO2")) %>% 
   filter(N>2) %>% na.omit()
 
 #All.Means <- ddply(Color.Score, c('Timepoint','Species','Treatment'), summarize,
@@ -130,9 +131,29 @@ color.data <- full_join(Master, Color.Score, by = "Plug_ID") %>% na.omit()
 color.data$Plug_ID <- as.character(color.data$Plug_ID)
 color.data$Blch.Time <- as.factor(color.data$Blch.Time)
 
+## Mcapitata 
+mcap.color.stress <- color.data %>% subset(Species == "Mcapitata") %>% 
+  subset(Blch.Time == "1 week" | Blch.Time == "2 week" |
+         Blch.Time == "3 week" | Blch.Time == "4 week" |
+         Blch.Time == "5 week" | Blch.Time == "6 week" |
+         Blch.Time == "7 week" | Blch.Time == "8 week")
 
-mcap.color <- color.data %>% subset(Species == "Mcapitata")
-pacuta.color <- color.data %>% subset(Species == "Pacuta")
+mcap.color.recovery <- color.data %>% subset(Species == "Mcapitata") %>% 
+  subset(Blch.Time == "9 week" | Blch.Time == "10 week" |
+         Blch.Time == "11 week" | Blch.Time == "12 week" |
+         Blch.Time == "13 week" | Blch.Time == "14 week" |
+         Blch.Time == "15 week" | Blch.Time == "16 week")
+
+## Pacuta 
+pacuta.color.stress <- color.data %>% subset(Species == "Pacuta") %>% 
+  subset(Blch.Time == "1 week" | Blch.Time == "2 week" |
+         Blch.Time == "3 week" | Blch.Time == "4 week" |
+         Blch.Time == "5 week" | Blch.Time == "6 week" |
+         Blch.Time == "7 week" | Blch.Time == "8 week")
+
+pacuta.color.recovery <- color.data %>% subset(Species == "Pacuta") %>% 
+  subset(Blch.Time == "9 week" | Blch.Time == "10 week" |
+         Blch.Time == "11 week" | Blch.Time == "12 week")
 
 hist(pacuta.color$Bleaching.Score) 
 hist(mcap.color$Bleaching.Score) 
@@ -146,14 +167,22 @@ hist(mcap.color$Bleaching.Score)
 
 ```{r}
 ## Mcap 
-mcap.color$Color.Transformed <- mcap.color$Bleaching.Score+100
-range(mcap.color$Color.Transformed)
-hist(mcap.color$Color.Transformed)
+mcap.color.stress$Color.Transformed <- mcap.color.stress$Bleaching.Score+100
+range(mcap.color.stress$Color.Transformed)
+hist(mcap.color.stress$Color.Transformed)
+
+mcap.color.recovery$Color.Transformed <- mcap.color.recovery$Bleaching.Score+100
+range(mcap.color.recovery$Color.Transformed)
+hist(mcap.color.recovery$Color.Transformed)
 
 ## Pacuta 
-pacuta.color$Color.Transformed <- pacuta.color$Bleaching.Score+120
-range(pacuta.color$Color.Transformed)
-hist(pacuta.color$Color.Transformed)
+pacuta.color.stress$Color.Transformed <- pacuta.color.stress$Bleaching.Score+120
+range(pacuta.color.stress$Color.Transformed)
+hist(pacuta.color.stress$Color.Transformed)
+
+pacuta.color.recovery$Color.Transformed <- pacuta.color.recovery$Bleaching.Score+120
+range(pacuta.color.recovery$Color.Transformed)
+hist(pacuta.color.recovery$Color.Transformed)
 ```
 
 Data is heavily left skewed and calls for transformation.
@@ -167,38 +196,23 @@ Originally, we had our random factors as `(1|Tank/Plug_ID)` because fragments we
 The data transformation that worked the best was the `Color.Transformed` data column squared. 
 
 ```{r}
-# Transforming the data 
-Mcap_Color_sqrt <- lmer((Color.Transformed^(1/2)) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.color) 
-Mcap_Color_qrt <- lmer((Color.Transformed^(1/4)) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.color) 
-Mcap_Color_log <- lmer(log(Color.Transformed) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.color)
-Mcap_Color_sq <- lmer((Color.Transformed^2) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.color)
+## Stress 
+Mcap_stress_sq <- lmer((Color.Transformed^(2)) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.color.stress)
 
-Mcap_Color_sq_nt <- lmer((Color.Transformed^2) ~ Blch.Time*Temperature*CO2 + (1|Plug_ID), na.action=na.omit, data=mcap.color) 
+## Recovery 
+Mcap_recovery_sq <- lmer((Color.Transformed^2) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=mcap.color.recovery)
 
-## summary, qqplot, and histogram of model
-summary(Mcap_Color_sq_nt)
+qqPlot(residuals(Mcap_stress_sq)) 
+qqPlot(residuals(Mcap_recovery_sq)) 
 
-qqPlot(residuals(Mcap_Color_sqrt))
-qqPlot(residuals(Mcap_Color_qrt))
-qqPlot(residuals(Mcap_Color_log)) 
-qqPlot(residuals(Mcap_Color_sq)) 
-qqPlot(residuals(Mcap_Color_sq_nt)) 
+hist(residuals(Mcap_stress_sq))
+hist(residuals(Mcap_recovery_sq))
 
-hist(residuals(Mcap_Color_sqrt))
-hist(residuals(Mcap_Color_qrt))
-hist(residuals(Mcap_Color_log)) 
-hist(residuals(Mcap_Color_sq)) 
-hist(residuals(Mcap_Color_sq_nt)) 
+mcap.sq.stress.anova <- Anova(Mcap_stress_sq, ddf="lme4", type='III') 
+mcap.sq.recovery.anova <- Anova(Mcap_recovery_sq, ddf="lme4", type='III') 
 
-mcap.sq.color.anova <- Anova(Mcap_Color_sq, ddf="lme4", type='III') 
-mcap.sqnt.color.anova <- Anova(Mcap_Color_sq_nt, ddf="lme4", type='III') 
-
-tab_model(Mcap_Color_sq, Mcap_Color_sq_nt,
-          dv.labels = c("M. cap Tank/Plug_ID", "M. cap Plug ID"), string.ci = "Conf. Int (95%)",
-          string.p = "P-Value", file = "Output/Statistics/ColorScore_Mcap.doc")
-
-capture.output(mcap.sq.color.anova, file = "Output/Statistics/ColorScore_Mcap_sq.txt")
-capture.output(mcap.sqnt.color.anova, file = "Output/Statistics/ColorScore_Mcap_sqnt.txt")
+capture.output(mcap.sq.stress.anova, file = "Output/Statistics/Stress_statistics/ColorScore_Mcap_sq.txt")
+capture.output(mcap.sq.recovery.anova, file = "Output/Statistics/Recovery_statistics/ColorScore_Mcap_sq.txt")
 ```
 
 ### P. acuta 
@@ -206,39 +220,23 @@ capture.output(mcap.sqnt.color.anova, file = "Output/Statistics/ColorScore_Mcap_
 The data transformation that worked the best was the `Color.Transformed` data column squared. 
 
 ```{r}
-# Transforming the data 
-Pacuta_Color_sqrt <- lmer((Color.Transformed^(1/2)) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=pacuta.color) 
-Pacuta_Color_qrt <- lmer((Color.Transformed^(1/4)) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=pacuta.color) 
-Pacuta_Color_log <- lmer(log(Color.Transformed) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=pacuta.color)
-Pacuta_Color_sq <- lmer((Color.Transformed^2) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=pacuta.color)
+## Stress 
+Pacuta_stress_sq <- lmer((Color.Transformed^(2)) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=pacuta.color.stress)
 
-Pacuta_Color_sq_nt <- lmer((Color.Transformed^2) ~ Blch.Time*Temperature*CO2 + (1|Plug_ID), na.action=na.omit, data=pacuta.color) 
+## Recovery 
+Pacuta_recovery_sq <- lmer((Color.Transformed^2) ~ Blch.Time*Temperature*CO2 + (1|Tank/Plug_ID), na.action=na.omit, data=pacuta.color.recovery)
 
-# to see which groups are issues and being dropped as columns / coefficients 
-alias(Pacuta_Color_sqrt) 
+qqPlot(residuals(Pacuta_stress_sq)) 
+qqPlot(residuals(Pacuta_recovery_sq)) 
 
-## summary of the model chosen from above
-qqPlot(residuals(Pacuta_Color_sqrt))
-qqPlot(residuals(Pacuta_Color_qrt))
-qqPlot(residuals(Pacuta_Color_log)) 
-qqPlot(residuals(Pacuta_Color_sq)) 
-qqPlot(residuals(Pacuta_Color_sq_nt)) 
+hist(residuals(Pacuta_stress_sq))
+hist(residuals(Pacuta_recovery_sq))
 
-hist(residuals(Pacuta_Color_sqrt))
-hist(residuals(Pacuta_Color_qrt))
-hist(residuals(Pacuta_Color_log)) 
-hist(residuals(Pacuta_Color_sq)) 
-hist(residuals(Pacuta_Color_sq_nt)) 
+pacuta.sq.stress.anova <- Anova(Pacuta_stress_sq, ddf="lme4", type='III') 
+pacuta.sq.recovery.anova <- Anova(Pacuta_recovery_sq, ddf="lme4", type='III') 
 
-pacuta.sq.color.anova <- Anova(Pacuta_Color_sq, ddf="lme4", type='III') 
-pacuta.sqnt.color.anova <- Anova(Pacuta_Color_sq_nt, ddf="lme4", type='III') 
-
-tab_model(Pacuta_Color_sq, Pacuta_Color_sq_nt,
-          dv.labels = c("P. acuta Tank/Plug_ID", "P. acuta Plug ID"), string.ci = "Conf. Int (95%)",
-          string.p = "P-Value", file = "Output/Statistics/ColorScore_Pacuta.doc")
-
-capture.output(pacuta.sq.color.anova, file = "Output/Statistics/ColorScore_Pacuta_sq.txt")
-capture.output(pacuta.sqnt.color.anova, file = "Output/Statistics/ColorScore_Pacuta_sqnt.txt")
+capture.output(pacuta.sq.stress.anova, file = "Output/Statistics/Stress_statistics/ColorScore_Pacuta_sq.txt")
+capture.output(pacuta.sq.recovery.anova, file = "Output/Statistics/Recovery_statistics/ColorScore_Pacuta_sq.txt")
 ```
 
 # Plotting 
@@ -252,19 +250,23 @@ species.names <- list(
 species_labeller <- function(variable,value){
   return(species.names[value])}
 
-cols <- c("lightblue", "blue", "salmon", "red3")
+cols <- c("blue", "lightblue", "salmon", "red3")
 
 Blch_plot <- ggplot(All.Means, aes(x=Timepoint, y = Bleaching.Score, group = Treatment, color = Treatment)) +
-  geom_line() + geom_point() +
-  facet_grid(~Species, scales = "free", labeller = species_labeller) +
+  geom_line() + geom_point(size=3) +
+  #facet_grid(~Species, scales = "free", labeller = species_labeller) +
   geom_errorbar(aes(ymin=Bleaching.Score-se, ymax=Bleaching.Score+se), width=.2) +
   scale_color_manual(values = cols) + 
   xlab("Timepoint") + 
   ylab("Color Score") + # y-axis label and y axis range
   theme_classic() + 
   theme(legend.position = c(0.1,0.3)) +
-  theme(legend.text = element_text(size = 7)) +
-  theme(legend.title = element_text(size = 9)) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(legend.text = element_text(size = 12)) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(legend.title = element_text(size = 13)) +
   geom_vline(xintercept = c(7.8), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
   scale_x_discrete(breaks = c("Week1", "Week2", "Week4", "Week6", "Week8", "Week12", "Week16"), labels = c("1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week")) +
@@ -277,6 +279,35 @@ Blch_plot <- ggplot(All.Means, aes(x=Timepoint, y = Bleaching.Score, group = Tre
 
 ggsave(file="Output/Final_Figures/Photographic_Bleaching.pdf", Blch_plot, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Final_Figures/Photographic_Bleaching.png", Blch_plot, width = 11, height = 6, units = c("in"))
+```
+
+Pub figure 
+
+```{r}
+color_pub<- ggplot(All.Means, aes(x=Timepoint, y = Bleaching.Score, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(~Species, scales = "free") +
+  geom_errorbar(aes(ymin=Bleaching.Score-se, ymax=Bleaching.Score+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + 
+  theme_classic() + 
+  ylab("Color Score") + # y-axis label and y axis range
+  theme(legend.position = c(0.6,0.3)) +
+  #geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  strip.text.x = element_text(size = 18, color = "black", face = "bold.italic"), # Change axis line
+  axis.line = element_line(colour = "black")) + theme(axis.text = element_text(size = 12)) + 
+  theme(axis.title = element_text(size = 15)) +
+  theme(legend.text = element_text(size = 10)) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  theme(legend.title = element_text(size = 12)); color_pub # Change axis line
+
+ggsave(file="Output/Final_figures/Supplemental_figures/fullrespcm2.png", Resp_plot_full, width = 9, height = 9, units = c("in"))
 ```
 
 For Coral Stress Phenome Paper

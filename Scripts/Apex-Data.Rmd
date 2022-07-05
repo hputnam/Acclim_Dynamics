@@ -141,12 +141,13 @@ Starting with `apex.pH.plot` dataframe.
 ```{r}
 dark.colors <- c("blue", "lightblue", "salmon", "red3")
 
-apex.pH.daily <- apex.pH.plot %>% subset(Date == "2018-10-07")
-apex.pH.daily <- apex.pH.daily %>% separate(Date.Time, c("Date", "Time"), sep = " ", remove = FALSE)
+apex.pH.daily <- apex.pH.plot #%>% subset(Date == "2018-10-07")
+apex.pH.daily <- apex.pH.daily %>% separate(Date.Time, c("Date", "Time"), sep = " ", remove = FALSE) 
+apex.pH.daily.mean <- summarySE(apex.pH.daily, measurevar = c("pH"), groupvars = c("Time", "Treatment"))
 
-daily.plot <- ggplot(data = apex.pH.daily, aes(x = Time, y = pH, color = Treatment)) +
-  labs(x="", y = "pH total scale") +
-  geom_line() +
+daily.plot <- ggplot(data = apex.pH.daily.mean, aes(x = Time, y = pH, color = Treatment)) +
+  labs(x="", y = "pH NBS scale") +
+  geom_point() +
   scale_color_manual(values = dark.colors) + 
   theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
                      panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
@@ -156,11 +157,8 @@ daily.plot <- ggplot(data = apex.pH.daily, aes(x = Time, y = pH, color = Treatme
   theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
   theme(legend.position="none", legend.background = element_blank()); daily.plot
 
-ggsave(filename = "Output/Apex-daily-pH-plot.png", daily.plot, device = "png", width = 5, height = 3)
+ggsave(filename = "Output/Apex-daily-pH-plot-mean.png", daily.plot, device = "png", width = 5, height = 3)
 ```
-
-
-
 
 
 ### LIGHT DATA ### 
