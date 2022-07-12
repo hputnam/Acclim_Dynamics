@@ -145,7 +145,7 @@ adonis2(mcap.scaled ~ Timepoint*Temperature*CO2, data = mcap, method='eu')
 
 ### PCA with centered and scaled data 
 
-Columns 10:21 are the data values columns. Columns 1-9 are metadata. 
+Columns 10:22 are the data values columns. Columns 1-9 are metadata. 
 
 ```{r}
 stress_scaled <- prcomp(stress[c(10:22)], scale=TRUE, center=TRUE)
@@ -577,7 +577,7 @@ stress.fig.trt.pacuta <- ggplot(stress.pacuta.means.trt, aes(.fittedPC1, .fitted
   theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) +
   theme(legend.title = element_text(size=11, face="bold")) +
   theme(legend.text = element_text(size=9)) +
-  scale_color_manual(values = c("blue", "lightblue", "salmon", "red"), aesthetics = c("colour")) 
+  scale_color_manual(values = c("blue", "lightblue", "salmon", "red3"), aesthetics = c("colour")) 
 
 stress.fig.trt.mcap <- ggplot(stress.mcap.means.trt, aes(.fittedPC1, .fittedPC2, group = Treatment)) + 
   #geom_polygon(data = hulls_mcap, alpha = 0.1, aes(color = Treatment, fill = Treatment, lty = Timepoint)) +
@@ -607,11 +607,11 @@ stress.fig.trt.mcap <- ggplot(stress.mcap.means.trt, aes(.fittedPC1, .fittedPC2,
   theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) +
   theme(legend.title = element_text(size=11, face="bold")) +
   theme(legend.text = element_text(size=9)) +
-  scale_color_manual(values = c("blue", "lightblue", "salmon", "red"), aesthetics = c("colour")) +
-  scale_fill_manual(values = c("blue", "lightblue", "salmon", "red"), aesthetics = c("colour2")) 
+  scale_color_manual(values = c("blue", "lightblue", "salmon", "red3"), aesthetics = c("colour")) +
+  scale_fill_manual(values = c("blue", "lightblue", "salmon", "red3"), aesthetics = c("colour2")) 
 
-ggsave(file="Output/Supplemental_figures/PCA-trt-timearrows-Mcap.png", stress.fig.trt.mcap, width = 7, height = 7, units = c("in"))
-ggsave(file="Output/Supplemental_figures/PCA-trt-timearrows-Pacuta.png", stress.fig.trt.pacuta, width = 7, height = 7, units = c("in"))
+ggsave(file="Output/Manuscript_figures/PCA-trt-timearrows-Mcap.png", stress.fig.trt.mcap, width = 7, height = 7, units = c("in"))
+ggsave(file="Output/Manuscript_figures/PCA-trt-timearrows-Pacuta.png", stress.fig.trt.pacuta, width = 7, height = 7, units = c("in"))
 ```
 
 
@@ -656,10 +656,10 @@ ggsave(file="Output/Final_figures/biplot-pacuta2-nolabels.png", p.biplot, width 
 ### All treatments
 biplot.trt.mcap <- autoplot(stress_mcap_scaled, data = stress.mcap.means.trt, colour = 'Treatment', 
                         loadings = TRUE, loadings.colour = 'black', frame=FALSE, frame.type = 'norm',
-                        loadings.label = TRUE, loadings.label.size = 4, loadings.label.colour = 'black', repel=TRUE,
+                        loadings.label = FALSE, loadings.label.size = 4, loadings.label.colour = 'black', repel=TRUE,
                         loadings.label.vjust = 2) +
   geom_point(aes(color=Treatment)) +
-  scale_color_manual(values = c("blue", "lightblue", "salmon", "red")) + 
+  scale_color_manual(values = c("blue", "lightblue", "salmon", "red3")) + 
   #scale_fill_manual(values = alpha(c("transparent", "transparent", "transparent", "transparent"), 0.01)) +
   theme_bw() + ggtitle("Montipora capitata") +
   theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) + 
@@ -668,15 +668,15 @@ biplot.trt.mcap <- autoplot(stress_mcap_scaled, data = stress.mcap.means.trt, co
   theme(legend.position = "none") + 
   theme(legend.background = element_rect(size=0.1, linetype="solid", colour ="black"))
 
-ggsave(file="Output/Supplemental_figures/PCA-biplot-trt-Mcap.png", biplot.trt.mcap, width = 7, height = 7, units = c("in"))
+ggsave(file="Output/Manuscript_figures/PCA-biplot-trt-Mcap.png", biplot.trt.mcap, width = 7, height = 7, units = c("in"))
 
 biplot.trt.pacuta <- autoplot(stress_pacuta_scaled, data = stress.pacuta.means.trt, shape = 'Species', colour = 'Treatment', 
                         loadings = TRUE, loadings.colour = 'black', frame=FALSE, frame.type = 'norm',
-                        loadings.label = TRUE, loadings.label.size = 4, loadings.label.colour = 'black', repel=TRUE,
+                        loadings.label = FALSE, loadings.label.size = 4, loadings.label.colour = 'black', repel=TRUE,
                         loadings.label.vjust = 2) +
   geom_point(aes(color=Treatment), shape = 'triangle') +
   scale_shape_manual(values=2) +
-  scale_color_manual(values = c("blue", "lightblue", "salmon", "red")) + 
+  scale_color_manual(values = c("blue", "lightblue", "salmon", "red3")) + 
   #scale_fill_manual(values = alpha(c("transparent", "transparent", "transparent", "transparent"), 0.01)) +
   theme_bw() + ggtitle("Pocillopora acuta") +
   theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) + 
@@ -685,7 +685,7 @@ biplot.trt.pacuta <- autoplot(stress_pacuta_scaled, data = stress.pacuta.means.t
   theme(legend.position = "none") + 
   theme(legend.background = element_rect(size=0.1, linetype="solid", colour ="black"))
 
-ggsave(file="Output/Supplemental_figures/PCA-biplot-trt-Pacuta.png", biplot.trt.pacuta, width = 7, height = 7, units = c("in"))
+ggsave(file="Output/Manuscript_figures/PCA-biplot-trt-Pacuta.png", biplot.trt.pacuta, width = 7, height = 7, units = c("in"))
 ```
 
 #### M.cap recovery 
@@ -695,9 +695,9 @@ ggsave(file="Output/Supplemental_figures/PCA-biplot-trt-Pacuta.png", biplot.trt.
 ```{r}
 mcap.recovery.biplot <- autoplot(mcap_scaled, data = mcap, colour = 'Treatment', 
                         loadings = TRUE, loadings.colour = 'black', frame=FALSE, frame.type = 'norm',
-                        loadings.label = TRUE, loadings.label.size = 4, loadings.label.colour = 'black', repel=TRUE,
+                        loadings.label = FALSE, loadings.label.size = 4, loadings.label.colour = 'black', repel=TRUE,
                         loadings.label.vjust = 2) +
-  scale_color_manual(values = c("blue", "lightblue", "salmon", "red")) + 
+  scale_color_manual(values = c("blue", "lightblue", "salmon", "red3")) + 
   scale_fill_manual(aes(alpha=0), values = c("transparent", "transparent", "transparent", "transparent")) +
   theme_bw() +  
   theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) + 
@@ -730,7 +730,7 @@ mcap.recovery.fig <- ggplot(mcap.means, aes(.fittedPC1, .fittedPC2, color = Trea
   theme(legend.position = "none") +  
   theme(legend.title = element_text(size=14, face="bold")) +
   theme(legend.text = element_text(size=14)) +
-  scale_color_manual(values = c("blue", "lightblue", "salmon", "red")) 
+  scale_color_manual(values = c("blue", "lightblue", "salmon", "red3")) 
   
 mcap.recovery.fig
 

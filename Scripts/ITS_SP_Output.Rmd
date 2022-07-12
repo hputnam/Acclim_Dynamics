@@ -1,0 +1,368 @@
+---
+title: "ITS2 Analysis of SymPortal Andromeda 2022 output"
+author: "EL Strand"
+output:
+  github_document: default
+  pdf_document:
+    keep_tex: yes
+  html_document:
+    toc: yes
+    toc_depth: 6
+    toc_float: yes
+editor_options: 
+  chunk_output_type: inline
+---
+
+## References 
+
+- https://github.com/kevinhwong1/Porites_Rim_Bleaching_2019/blob/master/scripts/ITS2/ITS2_Analysis.R  
+- https://github.com/hputnam/Cvir_Nut_Int/blob/master/scripts/16S_QIIME2_Gut_Analysis.Rmd  
+
+# **Setup**
+
+Set up workspace, set options, and load required packages.    
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Load libraries 
+
+```{r}
+#install_github("pmartinezarbizu/pairwiseAdonis/pairwiseAdonis")
+p1 <- c("plyr", "dplyr", "tidyverse", "vegan", "BiocManager", "ggpubr", "janitor", "funrar", "AMR", "ggbiplot", "stats",
+        "devtools", "pairwiseAdonis")
+p2 <- c("phyloseq", "ANCOMBC", "DESeq2", "ComplexHeatmap","microbiomeMarker")
+load_package <- function(p) {
+  if (!requireNamespace(p, quietly = TRUE)) {
+    ifelse(p %in% p1, 
+           install.packages(p, repos = "http://cran.us.r-project.org/"), 
+           BiocManager::install(p))
+  }
+  library(p, character.only = TRUE, quietly = TRUE)
+}
+invisible(lapply(c(p1,p2), load_package))
+```
+
+## Read in all dataframes 
+
+```{r readdata}
+# read in otu and taxonomic outputs from QIIME2 
+otu <- read.delim(file = "ITS2_seq/SymPortal_Andromeda_2022_Output/20220706T084046/its2_type_profiles/6_HoloInt1_20220706T084046.profiles.absolute.abund_and_meta.txt", sep = "\t", header = T, skip = 5)
+
+otu <- otu[-c(257:258), ] #removing unncessary rows
+
+otu <- otu %>% 
+  select(-ITS2.profile.abundance.DB) %>% 
+  row_to_names(row_number = 1) # Making a new column header
+
+colnames(otu)[1] <- "sample_name" # renaming column 1
+rownames(otu) <- otu[,1] #making the fragment ids the row names 
+otu <- otu[-c(1)] # Removing first column
+
+otu[1:10] <- sapply(otu[1:10],as.numeric) # making all columns numeric
+
+### stats on symportal output
+otu %>% mutate(count1=sum(`C1d/C42.2-C1-C3cg`),
+               count2=sum(`3290_C/C17d-C21-C31-C21ac-C31a-C17e`),
+               count3=sum(`3290_C/C17d-C21-C31-C21ac-C31.9`),
+               count4=sum(`C17d/3290_C-C21-C21ac-C17e-C17f`),
+               count5=sum(`C1d-5523-C42.2-C1-5524`),
+               count6=sum(`3290-C17d-C31.1-C31-C21-C31a-1373`),
+               count7=sum(`C1d-C42.2-C1`),
+               count8=sum(`C1d-5527-C42.2-C1`),
+               count9=sum(`C1d-3290-1444`),
+               count10=sum(`D1/D4-D6-D1ab`))
+
+count1=sum(otu$`C1d/C42.2-C1-C3cg`)
+count2=sum(otu$`3290_C/C17d-C21-C31-C21ac-C31a-C17e`)
+count3=sum(otu$`3290_C/C17d-C21-C31-C21ac-C31.9`)
+count4=sum(otu$`C17d/3290_C-C21-C21ac-C17e-C17f`)
+count5=sum(otu$`C1d-5523-C42.2-C1-5524`)
+count6=sum(otu$`3290-C17d-C31.1-C31-C21-C31a-1373`)
+count7=sum(otu$`C1d-C42.2-C1`)
+count8=sum(otu$`C1d-5527-C42.2-C1`)
+count9=sum(otu$`C1d-3290-1444`)
+count10=sum(otu$`D1/D4-D6-D1ab`)
+
+count=count1+count2+count3+count4+count5+count6+count7+count8+count9+count10
+```
+
+```{r}
+# read in metadata files 
+meta <- read.csv("ITS2_seq/R_Input/Sample_variables.csv") %>% dplyr::rename(sample_name = sample)
+meta2 <- read.csv("Environmental_data/Master_Fragment.csv", header=T) %>%
+  select(Plug_ID, Species, Timepoint, Temperature, Treatment, CO2)
+
+# changing metadata to be correct time point 
+meta$Timepoint[which(meta$Plug_ID == "2153")] <- "4"
+
+# flip sample 192 and 193 b/c of lab mix-up
+meta$sample_name[which(meta$Plug_ID == "1755")] <- "HP193"
+meta$sample_name[which(meta$Plug_ID == "1246")] <- "HP192"
+```
+
+## Making relative abundance dataframe 
+
+```{r}
+otu_matrix <- data.matrix(otu) # turning into data matrix 
+rel_its2 <- make_relative(otu_matrix) # making relative abundance 
+rel_its2 <- as.data.frame(rel_its2) # turning this back into a dataframe 
+
+rel_its2 <- tibble::rownames_to_column(rel_its2, "sample_name")
+```
+
+## Adding metadata back in  
+
+```{r}
+# Gathering data 
+rel_its2 <- rel_its2 %>%
+  gather(key=Clade, value=relabund, 2:11)
+
+# Merging metadata
+rel_its2_meta <- merge(rel_its2, meta, by = "sample_name")
+
+# removing those without a species ID and subsetting to treatments
+rel_its2_meta <- rel_its2_meta %>% subset(!Plug_ID == "AllMont" & !Plug_ID == "None" & !Plug_ID == "AllPoc" & !Plug_ID == "All")
+
+rel_its2_meta$Timepoint <- factor(rel_its2_meta$Timepoint, levels = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12")) 
+```
+
+
+## Plotting
+
+```{r}
+rel_abund <- rel_its2_meta %>%
+  ggplot(., aes(x = Timepoint, y = Clade)) + 
+  geom_tile(aes(fill = relabund), color = "grey") +
+  scale_fill_distiller(palette = "Greys", direction=100, labels = scales::label_percent(scale=1)) + 
+  theme_classic() +
+  theme(axis.text.x.bottom = element_text(angle = 60),
+        axis.text.y = element_text(colour = 'black', size = 10, face = 'italic'),) + 
+  facet_grid(Host_species~Treatment, scales = "free",) +
+  labs(x="Timepoint", fill="Relative Abundance", y="Clade") 
+
+ggsave(file="Output/Supplemental_figures/ITS2-RelAb.png", rel_abund, width = 11, height = 5, units = c("in"))
+
+relbar <- rel_its2_meta %>% ggplot(., aes(x = Plug_ID, y = relabund, fill = Clade)) + 
+  geom_bar(stat = "identity", aes(fill=Clade)) + 
+  labs(x="", y="Relative Abundance") +
+  scale_fill_brewer(palette="Spectral") +
+  facet_wrap(Host_species~Treatment, scales= "free_x", nrow=2) +
+  theme_bw() + 
+  theme(panel.border = element_rect(color="black", fill=NA, size=0.75), panel.grid.major = element_blank(), #Makes background theme white
+                     panel.grid.minor = element_blank(), axis.line = element_blank(), axis.text.x.bottom = element_text(angle = -90))
+
+ggsave(file="Output/Supplemental_figures/ITS2-Barplot.png", relbar, width = 11, height = 8, units = c("in"))
+```
+
+
+### SymPortal 2020
+
+```{r readdata}
+# read in otu and taxonomic outputs from QIIME2 
+otu_2020 <- read.delim(file = "ITS2_seq/SymPortal_Local_Computer_2020_Output/SymPortal/FULL_ITS2/its2_type_profiles/3_first_analysis_2020-04-01_12-26-53.145538.profiles.absolute.abund_and_meta.txt", sep = "\t", header = T, skip = 5)
+
+otu_2020 <- otu_2020[-c(257:258), ] #removing unncessary rows
+
+otu_2020 <- otu_2020 %>% 
+  select(-ITS2.profile.abundance.DB) %>% 
+  row_to_names(row_number = 1) # Making a new column header
+
+colnames(otu_2020)[1] <- "sample_name" # renaming column 1
+rownames(otu_2020) <- otu_2020[,1] #making the fragment ids the row names 
+otu_2020 <- otu_2020[-c(1)] # Removing first column
+
+otu_2020[1:12] <- sapply(otu_2020[1:12],as.numeric) # making all columns numeric
+ 
+otu2020_matrix <- data.matrix(otu_2020) # turning into data matrix 
+rel_its2_2020 <- make_relative(otu2020_matrix) # making relative abundance 
+rel_its2_2020 <- as.data.frame(rel_its2_2020) # turning this back into a dataframe 
+
+rel_its2_2020 <- tibble::rownames_to_column(rel_its2_2020, "sample_name")
+
+# Gathering data 
+rel_its2_2020 <- rel_its2_2020 %>%
+  gather(key=Clade, value=relabund, 2:13)
+
+# Merging metadata
+rel_its2_2020_meta <- merge(rel_its2_2020, meta, by = "sample_name")
+
+# removing those without a species ID and subsetting to treatments
+rel_its2_2020_meta <- rel_its2_2020_meta %>% subset(!Plug_ID == "AllMont" & !Plug_ID == "None" & !Plug_ID == "AllPoc" & !Plug_ID == "All")
+
+rel_its2_2020_meta$Timepoint <- factor(rel_its2_2020_meta$Timepoint, levels = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12")) 
+ 
+rel_abund2020 <- rel_its2_2020_meta %>%
+  ggplot(., aes(x = Timepoint, y = reorder(Clade, relabund))) + 
+  geom_tile(aes(fill = relabund), color = "grey") +
+  scale_fill_distiller(palette = "Purples", direction=100, labels = scales::label_percent(scale=1)) + 
+  theme_classic() +
+  theme(axis.text.x.bottom = element_text(angle = 60),
+        axis.text.y = element_text(colour = 'black', size = 10, face = 'italic'),) + 
+  facet_grid(Host_species~Treatment, scales = "free") +
+  labs(x="Timepoint", fill="Relative Abundance", y="Clade") 
+
+ggsave(file="Output/Figures/ITS2-RelAb2020.png", rel_abund2020, width = 11, height = 8, units = c("in"))
+
+relbar2020 <- rel_its2_2020_meta %>% ggplot(., aes(x = Plug_ID, y = relabund, fill = Clade)) + 
+  geom_bar(stat = "identity", aes(fill=Clade)) + 
+  labs(x="", y="Relative Abundance") +
+  scale_fill_brewer(palette="Spectral") +
+  facet_wrap(Host_species~Treatment, scales= "free_x", nrow=2) +
+  theme_bw() + 
+  theme(panel.border = element_rect(color="black", fill=NA, size=0.75), panel.grid.major = element_blank(), #Makes background theme white
+                     panel.grid.minor = element_blank(), axis.line = element_blank(), axis.text.x.bottom = element_text(angle = -90))
+
+ggsave(file="Output/Figures/ITS2-Barplot2020.png", relbar2020, width = 11, height = 8, units = c("in"))
+```
+
+PERMANOVA  
+
+```{r}
+pca_meta <- meta2 %>% select(Plug_ID, Temperature, CO2)
+pca_meta$Plug_ID <- as.character(pca_meta$Plug_ID)
+rel_its2_meta <- full_join(rel_its2_meta, pca_meta, by = "Plug_ID") %>% filter(!is.na(Treatment))
+
+its2_pca <- rel_its2_meta %>% spread(Clade, relabund)
+mcap_its2_pca <- its2_pca %>% subset(Host_species == "Montipora capitata")
+pacuta_its2_pca <- its2_pca %>% subset(Host_species == "Pocillopora acuta")
+
+its2.scaled <- scale(its2_pca[ ,11:20])
+its2.mcap.scaled <- scale(mcap_its2_pca[ ,11:20])
+its2.pacuta.scaled <- scale(pacuta_its2_pca[ ,11:20])
+
+# PERMANOVA
+adonis2(its2.scaled ~ Timepoint*Temperature*CO2*Host_species, data = its2_pca, method='eu')
+# only doing timepoint below because timepoint alone was significant
+pairwise.results <- pairwise.adonis(its2.scaled,factors=its2_pca$Timepoint)
+pairwise.results <- pairwise.results %>% filter(p.value < 0.05)
+
+adonis2(its2.mcap.scaled ~ Timepoint*Temperature*CO2, data = mcap_its2_pca, method='eu', na.rm=TRUE)
+adonis2(its2.pacuta.scaled ~ Timepoint*Temperature*CO2, data = pacuta_its2_pca, method='eu', na.rm=TRUE)
+```
+
+PCA on relative abundance 
+
+```{r}
+relab_pca <- rel_its2_meta %>% select(1:3) %>% spread(Clade, relabund)
+rownames(relab_pca) <- relab_pca[,1] #making the fragment ids the row names 
+relab_pca <- relab_pca %>% select(-sample_name)
+
+pca.relabundance.results <- prcomp(relab_pca, retx=TRUE) # principal components analysis on sym data
+summary(pca.relabundance.results)
+
+pca.out <- prcomp(relab_pca, center=TRUE)
+screeplot(pca.out, type = "line", main = "Scree plot")
+
+var_explained <- pca.relabundance.results$sdev^2/sum(pca.relabundance.results$sdev^2)
+
+relab_pca_output <- pca.relabundance.results$x %>% as.data.frame
+relab_pca_output$sample_name <- rownames(relab_pca_output)
+relab_pca_output <- full_join(relab_pca_output, rel_its2_meta, by = "sample_name")
+
+pc_data_matrix <- pca.relabundance.results$x %>% as.data.frame
+pc_meta_matrix <- relab_pca_output[,11:22]
+pc_meta_matrix <- pc_meta_matrix %>% select(-Clade, -relabund)
+
+# Mcap outside polygons 
+find_hull_mcap_pca <- function(relab_pca_output) relab_pca_output[chull(relab_pca_output$PC1, relab_pca_output$PC2), ]
+hulls_mcap_pca <- ddply(relab_pca_output, "Host_species", find_hull_mcap_pca)
+
+pca_save <- relab_pca_output %>%
+  ggplot(., aes(x=PC1,y=PC2)) + 
+  stat_ellipse(aes(lty = Host_species), lwd = 0.5) +
+  geom_point(aes(color=Treatment, shape = Host_species)) +
+  theme_classic() +
+  theme(legend.position = "none") +
+  #geom_polygon(data = hulls_mcap_pca, aes(lty = Host_species), lwd = 0.8) +
+  scale_color_manual(values = c("blue", "lightblue", "salmon", "red3")) + 
+  labs(x=paste0("PC1: ",round(var_explained[1]*100,1),"%"),
+       y=paste0("PC2: ",round(var_explained[2]*100,1),"%"))
+
+biplot.pca <- ggbiplot(pca.out, choices = 1:2, pc.biplot = TRUE, labels = row.names(pca.out), 
+         labels.size = 3, alpha = 1, var.axes = TRUE, varname.size = 3,
+         varname.adjust = -1, varname.abbrev = FALSE) + 
+  theme_classic()
+ggsave(file="Output/Manuscript_figures/ITS2-PCA-biplotarrows.png", biplot.pca, width = 9, height = 6, units = c("in"))
+
+sp.plot <- autoplot(pca.out, data = pc_meta_matrix, groups = 'Host_species', 
+                       loadings = TRUE, loadings.colour = 'black', frame=FALSE, frame.type = 'norm',
+                       loadings.label = FALSE, loadings.label.size = 4, loadings.label.colour = 'black', repel=TRUE,
+                       loadings.label.vjust=2, loadings.label.hjust=0.1) +
+ # scale_color_manual(values = c("blue", "lightblue", "salmon", "red3")) + 
+  #scale_fill_manual(values = c("white", "white", "white", "white")) +
+  theme_bw() + #ggtitle("Montipora capitata") 
+  #geom_point(size = 3, aes(shape = Host_species, colour = Treatment))+ 
+  #xlim(-0.11,0.16) + ylim(-0.2,0.21) +
+  theme(plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0)) + 
+  theme(legend.title = element_text(size = 12, face="bold")) + 
+  theme(legend.text = element_text(size = 12)) +
+  theme(legend.position = "none") + 
+  #stat_ellipse(aes(fill = Species), lwd = 0.8) +
+  theme(legend.background = element_rect(size=0.1, linetype="solid", colour ="black"))
+
+ggsave(file="Output/Manuscript_figures/ITS2-PCA.png", pca_save, width = 7, height = 6, units = c("in"))
+```
+
+
+NMDS
+
+```{r}
+# NMDS
+## All 
+nmds_its2 <- metaMDS(otu, distance = "bray")
+nmds_its2
+
+data.scores <- as.data.frame(scores(nmds_its2, "sites"))  # Using the scores function from vegan to extract sample scores and convert to a data.frame
+data.scores$sample_name <- rownames(data.scores)  # create a column of site names, from the rownames of data.scores
+
+nmds_its2_df <- full_join(its2_pca, data.scores, by = "sample_name")
+
+NMDS_its2_plot <- nmds_its2_df %>% filter(!is.na(Treatment)) %>%
+  ggplot(., aes(x=NMDS1, y=NMDS2)) + 
+  stat_ellipse(aes(lty = Host_species)) +
+  geom_point(aes(shape=Host_species, color=Treatment)) + theme_classic() +
+  scale_color_manual(values = c("blue", "lightblue", "salmon", "red3"), aesthetics = c("colour")) 
+
+ggsave(file="Output/Manuscript_figures/ITS2-NMDS.png", NMDS_its2_plot, width = 7, height = 6, units = c("in"))
+
+## Mcap 
+otu_mcap <- otu 
+otu_mcap$sample_name <- rownames(otu)
+otu_mcap <- merge(otu_mcap, meta, by = "sample_name")
+otu_mcap <- otu_mcap %>% subset(Host_species == "Montipora capitata")
+rownames(otu_mcap) <- otu_mcap[,1] #making the fragment ids the row names 
+otu_mcap_matrix <- otu_mcap[,2:11]
+
+nmds_mcap <- metaMDS(otu_mcap_matrix, distance = "bray")
+scores.mcap <- as.data.frame(scores(nmds_mcap, "sites"))
+scores.mcap$sample_name <- rownames(scores.mcap)  # create a column of site names, from the rownames of data.scores
+
+nmds_mcap_df <- full_join(otu_mcap, scores.mcap, by = "sample_name")
+nmds_mcap_df$Sample_Date <- as.character(nmds_mcap_df$Sample_Date)
+
+# Mcap outside polygons 
+nmds_mcap_df$Timepoint.Group <- paste(nmds_mcap_df$Sample_Date, nmds_mcap_df$Treatment)
+find_hull_mcap <- function(nmds_mcap_df) nmds_mcap_df[chull(nmds_mcap_df$NMDS1, nmds_mcap_df$NMDS2), ]
+hulls_mcap <- ddply(nmds_mcap_df, "Timepoint.Group", find_hull_mcap)
+#hulls_mcap <- hulls_mcap %>% subset(Timepoint == "1 week" | Timepoint == "8 week")
+
+nmds_mcap_df %>% filter(!is.na(Treatment)) %>% filter(!is.na(Sample_Date)) %>%
+  ggplot(., aes(x=NMDS1, y=NMDS2)) + 
+  #geom_polygon(data = hulls_mcap, alpha = 0.1, aes(color = Treatment, fill = Treatment, lty = Sample_Date)) +
+  geom_point(aes(shape = Treatment, color=Timepoint)) + theme_classic() +
+  scale_color_manual(values = c("pink", "red", "orange", "yellow","lightgreen", "green", "lightblue", "blue", "purple", "grey", "black"), aesthetics = c("colour")) 
+```
+
+
+## PCoA unifrac distances between C profiles
+
+```{r}
+c_pcoa <- read.csv(file = "ITS2_seq/SymPortal_Andromeda_2022_Output/20220706T084046/between_profile_distances//C/20220706T084046_unifrac_profiles_PCoA_coords_C_no_sqrt.csv", sep = ",", header = T) %>% subset(!sample == "proportion_explained")
+
+c_pcoa %>%
+  ggplot(., aes(x=PC1, y=PC2)) + geom_point() + theme_classic()
+```
+
+
+
