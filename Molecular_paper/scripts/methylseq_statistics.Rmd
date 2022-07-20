@@ -1,0 +1,189 @@
+---
+title: "Methylseq statistics"
+author: "EL Strand"
+output:
+  github_document: default
+  pdf_document:
+    keep_tex: yes
+  html_document:
+    toc: yes
+    toc_depth: 6
+    toc_float: yes
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Based on Kevin Wong's methylseq analysis scripts. 
+
+```{r, installation, message=FALSE, warning=FALSE}
+# Read in required libraries
+library("reshape")
+#library(plyr)
+library("dplyr")
+library("tidyverse")
+library("Rmisc")
+library(gridExtra)
+library(ggpubr)
+library(tidyverse)
+library(ggplot2)
+library(RColorBrewer)
+library(lme4)
+library(lmerTest)
+library(car)
+library(effects)
+library(ggfortify)
+library(cowplot)
+library(vegan)
+library(corrr)
+library(ggcorrplot)
+library(GGally)
+library(broom)
+library(cowplot)
+library(arsenal)
+library(patchwork)
+library(tidyr)
+library(ggrepel)
+```
+
+Read in data 
+
+```{r}
+# load data
+data <- read.csv("Molecular_paper/WGBS/output/methylseq_stats.csv") %>% na.omit() %>%
+  dplyr::rename(., percent_dups2 = percent_dups.1) %>%
+  dplyr::rename(., percent_GC2 = percent_GC.1) 
+
+# Removing characters in columns and turning the values numeric
+data$percent_GC <- as.numeric(sub("%","",data$percent_GC))
+data$above_30X <- as.numeric(sub("%","",data$above_30X))
+data$percent_aligned <- as.numeric(sub("%","",data$percent_aligned))
+data$percent_mCpG <- as.numeric(sub("%","",data$percent_mCpG))
+data$percent_mCHG <- as.numeric(sub("%","",data$percent_mCHG))
+data$percent_mCHH <- as.numeric(sub("%","",data$percent_mCHH))
+data$percent_dups <- as.numeric(sub("%","",data$percent_dups))
+data$percent_aligned2 <- as.numeric(sub("%","",data$percent_aligned2))
+data$percent_dups2 <- as.numeric(sub("%","",data$percent_dups2))
+data$percent_GC2 <- as.numeric(sub("%","",data$percent_GC2))
+data$R1_percent_bptrimmed <- as.numeric(sub("%","",data$R1_percent_bptrimmed))
+data$R1_percent_dups <- as.numeric(sub("%","",data$R1_percent_dups))
+data$R1_percent_GC <- as.numeric(sub("%","",data$R1_percent_GC))
+data$R2_percent_bptrimmed <- as.numeric(sub("%","",data$R2_percent_bptrimmed))
+data$R2_percent_dups <- as.numeric(sub("%","",data$R2_percent_dups))
+data$R2_percent_GC <- as.numeric(sub("%","",data$R2_percent_GC))
+
+data$Mean_cov <- as.numeric(sub("X","",data$Mean_cov))
+data$Median_cov <- as.numeric(sub("X","",data$Median_cov))
+data$length <- as.numeric(sub(" bp","",data$length))
+data$R1_length <- as.numeric(sub(" bp","",data$R1_length))
+data$R2_length <- as.numeric(sub(" bp","",data$R2_length))
+
+data$EXT_Date <- as.character(data$EXT_Date)
+data$PMS_Date <- as.character(data$PMS_Date)
+data$PlugID <- as.character(data$PlugID)
+```
+
+Plotting 
+
+```{r}
+# for each plug ID x Trimming
+data %>% select(1:23) %>%
+  gather(measurement, value, 8:23) %>%
+  ggplot(., aes(x=PlugID, y=value, color=Trimming)) +
+  geom_boxplot(width=.5, outlier.shape= NA, position = position_dodge(width = 0.5), alpha = 0.7) +
+  geom_point(pch = 21) +
+  xlab("Plug ID") +  
+  ylab("Value") + #Axis titles
+  theme_classic() + 
+  theme(panel.border = element_rect(color="black", fill=NA, size=0.75), 
+        panel.grid.major = element_blank(), #Makes background theme white
+        panel.grid.minor = element_blank(), 
+        axis.line = element_blank()) +
+  facet_wrap(~ measurement, scales = "free_y")
+
+# EXT date x trimming
+data %>% select(1:23) %>%
+  gather(measurement, value, 8:23) %>%
+  ggplot(., aes(x=EXT_Date, y=value, color=Trimming)) +
+  geom_boxplot(width=.5, outlier.shape= NA, position = position_dodge(width = 0.5), alpha = 0.7) +
+  geom_point(pch = 21) +
+  xlab("Extraction Date") +  
+  ylab("Value") + #Axis titles
+  theme_classic() + 
+  theme(panel.border = element_rect(color="black", fill=NA, size=0.75), 
+        panel.grid.major = element_blank(), #Makes background theme white
+        panel.grid.minor = element_blank(), 
+        axis.line = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+  facet_wrap(~ measurement, scales = "free_y")
+
+# PMS date x trimming
+data %>% select(1:23) %>%
+  gather(measurement, value, 8:23) %>%
+  ggplot(., aes(x=PMS_Date, y=value, color=Trimming)) +
+  geom_boxplot(width=.5, outlier.shape= NA, position = position_dodge(width = 0.5), alpha = 0.7) +
+  geom_point(pch = 21) +
+  xlab("Pico Methyl Kit Date") +  
+  ylab("Value") + #Axis titles
+  theme_classic() + 
+  theme(panel.border = element_rect(color="black", fill=NA, size=0.75), 
+        panel.grid.major = element_blank(), #Makes background theme white
+        panel.grid.minor = element_blank(), 
+        axis.line = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+  facet_wrap(~ measurement, scales = "free_y")
+```
+
+```{r}
+# for each plug ID x Trimming
+data %>% select(1:10, 24:33) %>%
+  gather(measurement, value, 11:20) %>%
+  ggplot(., aes(x=PlugID, y=value, color=Trimming)) +
+  geom_boxplot(width=.5, outlier.shape= NA, position = position_dodge(width = 0.5), alpha = 0.7) +
+  geom_point(pch = 21) +
+  xlab("Plug ID") +  
+  ylab("Value") + #Axis titles
+  theme_classic() + 
+  theme(panel.border = element_rect(color="black", fill=NA, size=0.75), 
+        panel.grid.major = element_blank(), #Makes background theme white
+        panel.grid.minor = element_blank(), 
+        axis.line = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+  facet_wrap(~ measurement, scales = "free")
+
+# EXT date x trimming
+data %>% select(1:10, 24:33) %>%
+  gather(measurement, value, 11:20) %>%
+  ggplot(., aes(x=EXT_Date, y=value, color=Trimming)) +
+  geom_boxplot(width=.5, outlier.shape= NA, position = position_dodge(width = 0.5), alpha = 0.7) +
+  geom_point(pch = 21) +
+  xlab("Extraction Date") +  
+  ylab("Value") + #Axis titles
+  theme_classic() + 
+  theme(panel.border = element_rect(color="black", fill=NA, size=0.75), 
+        panel.grid.major = element_blank(), #Makes background theme white
+        panel.grid.minor = element_blank(), 
+        axis.line = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+  facet_wrap(~ measurement, scales = "free_y")
+
+# PMS date x trimming
+data %>% select(1:10, 24:33) %>%
+  gather(measurement, value, 11:20) %>%
+    ggplot(., aes(x=PMS_Date, y=value, color=Trimming)) +
+  geom_boxplot(width=.5, outlier.shape= NA, position = position_dodge(width = 0.5), alpha = 0.7) +
+  geom_point(pch = 21) +
+  xlab("Pico Methyl Kit Date") +  
+  ylab("Value") + #Axis titles
+  theme_classic() + 
+  theme(panel.border = element_rect(color="black", fill=NA, size=0.75), 
+        panel.grid.major = element_blank(), #Makes background theme white
+        panel.grid.minor = element_blank(), 
+        axis.line = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+  facet_wrap(~ measurement, scales = "free_y")
+```
+
