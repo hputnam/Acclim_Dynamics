@@ -41,6 +41,8 @@ load_package <- function(p) {
   library(p, character.only = TRUE, quietly = TRUE)
 }
 invisible(lapply(c(p1,p2), load_package))
+
+library(emmeans)
 ```
 
 ## Read in all dataframes 
@@ -110,6 +112,15 @@ rel_its2 <- as.data.frame(rel_its2) # turning this back into a dataframe
 
 rel_its2 <- tibble::rownames_to_column(rel_its2, "sample_name")
 ```
+## Calculating relative abundace 
+
+```{r}
+rel_its2_calc <- otu %>%
+  
+```
+
+
+
 
 ## Adding metadata back in  
 
@@ -131,10 +142,10 @@ rel_its2_meta$Timepoint <- factor(rel_its2_meta$Timepoint, levels = c("1", "2", 
 ## Plotting
 
 ```{r}
-rel_abund <- rel_its2_meta %>%
+rel_abund <- rel_its2_meta %>% replace_with_na_all(condition = ~.x == 0.000000000) %>%
   ggplot(., aes(x = Timepoint, y = Clade)) + 
   geom_tile(aes(fill = relabund), color = "grey") +
-  scale_fill_distiller(palette = "Greys", direction=100, labels = scales::label_percent(scale=1)) + 
+  scale_fill_distiller(palette = "Greys", na.value = "white", direction=100, labels = scales::label_percent(scale=1)) + 
   theme_classic() +
   theme(axis.text.x.bottom = element_text(angle = 60),
         axis.text.y = element_text(colour = 'black', size = 10, face = 'italic'),) + 
@@ -142,6 +153,18 @@ rel_abund <- rel_its2_meta %>%
   labs(x="Timepoint", fill="Relative Abundance", y="Clade") 
 
 ggsave(file="Output/Supplemental_figures/ITS2-RelAb.png", rel_abund, width = 11, height = 5, units = c("in"))
+
+rel_abund2 <- rel_its2_meta %>% replace_with_na_all(condition = ~.x == 0.000000000) %>%
+  ggplot(., aes(x = Timepoint, y = Clade)) + 
+  geom_tile(aes(fill = relabund), color = "grey") +
+  scale_fill_distiller(type = "seq", na.value = "white", palette = "Greys", direction=1, labels = scales::label_percent(scale=100)) + 
+  theme_classic() +
+  theme(axis.text.x.bottom = element_text(angle = 60),
+        axis.text.y = element_text(colour = 'black', size = 10, face = 'italic'),) + 
+  facet_grid(~Host_species, scales = "free",) +
+  labs(x="Timepoint", fill="Relative Abundance", y="Clade") 
+
+ggsave(file="Output/Supplemental_figures/ITS2-RelAb2.png", rel_abund2, width = 11, height = 5, units = c("in"))
 
 relbar <- rel_its2_meta %>% ggplot(., aes(x = Plug_ID, y = relabund, fill = Clade)) + 
   geom_bar(stat = "identity", aes(fill=Clade)) + 
@@ -229,13 +252,16 @@ pacuta_its2_pca <- its2_pca %>% subset(Host_species == "Pocillopora acuta")
 
 its2.scaled <- scale(its2_pca[ ,11:20])
 its2.mcap.scaled <- scale(mcap_its2_pca[ ,11:20])
+its2.mcap.scaled.rm.NaN <- its2.mcap.scaled[,c(1:5,8:10)] ## use this for pairwise and biplot
+  
 its2.pacuta.scaled <- scale(pacuta_its2_pca[ ,11:20])
 
 # PERMANOVA
 adonis2(its2.scaled ~ Timepoint*Temperature*CO2*Host_species, data = its2_pca, method='eu')
-# only doing timepoint below because timepoint alone was significant
-pairwise.results <- pairwise.adonis(its2.scaled,factors=its2_pca$Timepoint)
-pairwise.results <- pairwise.results %>% filter(p.value < 0.05)
+
+# only doing timepoint in mcap below because timepoint alone was significant
+pairwise.results <- pairwise.adonis(its2.mcap.scaled.rm.NaN, factors=mcap_its2_pca$Timepoint)
+pairwise.results.sub <- pairwise.results %>% filter(p.value < 0.05)
 
 adonis2(its2.mcap.scaled ~ Timepoint*Temperature*CO2, data = mcap_its2_pca, method='eu', na.rm=TRUE)
 adonis2(its2.pacuta.scaled ~ Timepoint*Temperature*CO2, data = pacuta_its2_pca, method='eu', na.rm=TRUE)
@@ -244,7 +270,11 @@ adonis2(its2.pacuta.scaled ~ Timepoint*Temperature*CO2, data = pacuta_its2_pca, 
 PCA on relative abundance 
 
 ```{r}
-relab_pca <- rel_its2_meta %>% select(1:3) %>% spread(Clade, relabund)
+rel_its2_meta_mcap <- rel_its2_meta %>% subset(Host_species == "Montipora capitata")
+# to run both species, replace line the df below with rel_its2_meta
+
+relab_pca <- rel_its2_meta_mcap %>%
+  select(1:3) %>% spread(Clade, relabund)
 rownames(relab_pca) <- relab_pca[,1] #making the fragment ids the row names 
 relab_pca <- relab_pca %>% select(-sample_name)
 
@@ -258,38 +288,40 @@ var_explained <- pca.relabundance.results$sdev^2/sum(pca.relabundance.results$sd
 
 relab_pca_output <- pca.relabundance.results$x %>% as.data.frame
 relab_pca_output$sample_name <- rownames(relab_pca_output)
-relab_pca_output <- full_join(relab_pca_output, rel_its2_meta, by = "sample_name")
+relab_pca_output <- full_join(relab_pca_output, rel_its2_meta_mcap, by = "sample_name") # replace this meta df for both species 
 
 pc_data_matrix <- pca.relabundance.results$x %>% as.data.frame
-pc_meta_matrix <- relab_pca_output[,11:22]
-pc_meta_matrix <- pc_meta_matrix %>% select(-Clade, -relabund)
+pc_meta_matrix <- relab_pca_output[,11:20]
+pc_meta_matrix <- pc_meta_matrix %>% select(-Clade, -relabund) %>% distinct()
 
 # Mcap outside polygons 
 find_hull_mcap_pca <- function(relab_pca_output) relab_pca_output[chull(relab_pca_output$PC1, relab_pca_output$PC2), ]
 hulls_mcap_pca <- ddply(relab_pca_output, "Host_species", find_hull_mcap_pca)
 
-pca_save <- relab_pca_output %>%
-  ggplot(., aes(x=PC1,y=PC2)) + 
-  stat_ellipse(aes(lty = Host_species), lwd = 0.5) +
-  geom_point(aes(color=Treatment, shape = Host_species)) +
+pca_save <- 
+  relab_pca_output %>%
+  ggplot(., aes(x=PC1,y=PC2, color=Timepoint)) + 
+  #stat_ellipse(aes(color = Timepoint), alpha = 0.4, lwd = 0.5) +
+  geom_point(size = 3, alpha = .1, stroke = 0) +
+    guides(colour = guide_legend(override.aes = list(alpha = 1))) +
   theme_classic() +
-  theme(legend.position = "none") +
+  theme(legend.position = "right") +
   #geom_polygon(data = hulls_mcap_pca, aes(lty = Host_species), lwd = 0.8) +
-  scale_color_manual(values = c("blue", "lightblue", "salmon", "red3")) + 
+ # scale_color_manual(palette("Blues")) + 
   labs(x=paste0("PC1: ",round(var_explained[1]*100,1),"%"),
        y=paste0("PC2: ",round(var_explained[2]*100,1),"%"))
 
-biplot.pca <- ggbiplot(pca.out, choices = 1:2, pc.biplot = TRUE, labels = row.names(pca.out), 
+biplot.pca <- ggbiplot(relab_pca_output, choices = 1:2, pc.biplot = TRUE, labels = row.names(pca.out), 
          labels.size = 3, alpha = 1, var.axes = TRUE, varname.size = 3,
          varname.adjust = -1, varname.abbrev = FALSE) + 
   theme_classic()
 ggsave(file="Output/Manuscript_figures/ITS2-PCA-biplotarrows.png", biplot.pca, width = 9, height = 6, units = c("in"))
 
-sp.plot <- autoplot(pca.out, data = pc_meta_matrix, groups = 'Host_species', 
-                       loadings = TRUE, loadings.colour = 'black', frame=FALSE, frame.type = 'norm',
+sp.plot <- autoplot(relab_pca_output, data = pc_meta_matrix, groups = 'Timepoint', 
+                       loadings = FALSE, loadings.colour = 'black', frame=FALSE, frame.type = 'norm',
                        loadings.label = FALSE, loadings.label.size = 4, loadings.label.colour = 'black', repel=TRUE,
                        loadings.label.vjust=2, loadings.label.hjust=0.1) +
- # scale_color_manual(values = c("blue", "lightblue", "salmon", "red3")) + 
+  #scale_color_manual(values = c("blue", "lightblue", "salmon", "red3")) + 
   #scale_fill_manual(values = c("white", "white", "white", "white")) +
   theme_bw() + #ggtitle("Montipora capitata") 
   #geom_point(size = 3, aes(shape = Host_species, colour = Treatment))+ 

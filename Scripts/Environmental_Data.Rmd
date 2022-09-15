@@ -3,13 +3,10 @@ title: "Environmental_Data"
 author: "EL Strand"
 date: "5/27/2020"
 output:
-
-Select Knit > Project Directory
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+---
 
 Clear workspace. 
+
 ```{r}
 rm(list=ls()) 
 ```
@@ -234,6 +231,9 @@ Hobo.data.filtered <- Hobo.data %>% na.omit() %>%
 
 Hobo.filtered.means <- summarySE(Hobo.data.filtered, measurevar = "Temperature", groupvars=c("Date.Time", "Treatment")) #N, mean(Temperature), sd, se, ci
 Hobo.means <- summarySE(Hobo.data, measurevar = "Temperature", groupvars=c("Date.Time", "Treatment")) #N, mean(Temperature), sd, se, ci
+
+Hobo.daily <- Hobo.data %>% separate(Date.Time, c("Date", "Time"), sep = " ") %>% filter(!is.na(Temperature))
+Hobo.daily.means <- summarySE(Hobo.daily, measurevar = "Temperature", groupvars=c("Time", "Treatment"))
 ```
 
 ```{r}
@@ -244,8 +244,8 @@ Expt.hobo$Time <- format(Expt.hobo$Date.Time, "%H %M %S")
 Hobo.treatment <- summarySE(Expt.hobo, measurevar = "Temperature", groupvars=c("Treatment")) #N, mean(Temperature), sd, se, ci
 Hobo.date <- summarySE(Expt.hobo, measurevar = "Temperature", groupvars=c("Treatment", "Date")) #N, mean(Temperature), sd, se, ci
 
-write_csv(path = "Environmental_data/HOBO-Temperature-Treatment.csv", Hobo.treatment)
-write_csv(path = "Environmental_data/HOBO-Temperature-Date.csv", Hobo.date)
+write_csv(file = "Environmental_data/HOBO-Temperature-Treatment.csv", Hobo.treatment)
+write_csv(file = "Environmental_data/HOBO-Temperature-Date.csv", Hobo.date)
 ```
 
 #### Parsing `Hobo.data.filtered` into acclimation and treatment dfs 
@@ -267,11 +267,11 @@ means.figure.one <- bind_rows(acc.period.means, treatment.period.means)
 fig1.colors <- c("black", "blue", "lightblue", "salmon", "red3")
 
 fig1 <- ggplot(data = means.figure.one, aes(x = Date.Time, y = Temperature, colour = Treatment)) +
-  #geom_point(size=0.2) +
+  geom_point(size=0.1) +
   scale_color_manual(values = fig1.colors) +
   labs(x = "Date",
        y = "Temperature (°C)") +
-  geom_line(aes(group=Treatment)) +
+  #geom_line(aes(group=Treatment)) +
   theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
                      panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
@@ -286,8 +286,25 @@ fig1 <- ggplot(data = means.figure.one, aes(x = Date.Time, y = Temperature, colo
   theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
   theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
   theme(legend.title = element_text(size = 15))
+
+ggsave(filename = "Output/Manuscript_figures/Hobo-loggers-figure1.png", fig1, device = "png", width = 9, height = 5)
+
+means.figure.one.daily <- means.figure.one %>%
+  separate(Date.Time, c("Date", "Time"), sep = " ") #%>% subset(Date == "2018-10-05")
+
+fig1_subset_daily <- ggplot(data = Hobo.daily.means, aes(x = Time, y = Temperature, color = Treatment)) +
+  labs(x="", y = "Temperature (°C)") +
+  geom_point(size=1) +
+  scale_color_manual(values = c("blue", "lightblue", "salmon", "red3")) + 
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+                     panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
+  #scale_x_datetime(date_breaks = "2 hours", labels = date_format("%h %m")) +
+  theme(axis.text = element_text(size = 15)) + 
+  theme(axis.title = element_text(size = 17)) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  theme(legend.position="none", legend.background = element_blank()); fig1_subset_daily
   
-ggsave(filename = "Output/Hobo-loggers-figure1.png", fig1, device = "png", width = 9, height = 5)
+ggsave(filename = "Output/Manuscript_figures/Hobo-loggers-figure1-daily.png", fig1_subset_daily, device = "png", width = 5, height = 3)
 ```
 
 

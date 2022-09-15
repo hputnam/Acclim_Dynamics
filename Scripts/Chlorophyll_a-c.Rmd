@@ -240,7 +240,13 @@ Calculating mean values for each timepoint and treatment group.
 #### the above tables aren't calculating this correctly ; sample sizes are off. come back to this. I prefer the below summarySE function instead 
 
 ## use the following 
-Chl_long <- Chl_final %>% select(Plug_ID, surface.area.cm2, vol_mL, chla.ug.cm2, chlc2.ug.cm2, chla.ug.cells, chlc2.ug.cells, Species, Treatment, Temperature, CO2, Timepoint) %>% gather("Measurement", "Value", 4:7)
+Chl_final <- Chl_final %>% distinct()
+
+
+Chl_long <- Chl_final %>% 
+  select(Plug_ID, surface.area.cm2, vol_mL, chla.ug.cm2, chlc2.ug.cm2, chla.ug.cells, chlc2.ug.cells, Species, Treatment, Temperature, CO2, Timepoint) %>% 
+  gather("Measurement", "Value", 4:7) %>% distinct()
+
 Chl_means <- summarySE(Chl_long, measurevar="Value", groupvars=c("Timepoint", "Treatment", "Temperature", "CO2", "Species", "Measurement")) %>% filter(N>2) %>%
   mutate(Species = case_when(
     Species == "Mcapitata" ~ "Montipora capitata",
@@ -268,7 +274,8 @@ dplyr::filter(Chla_means, N < 6) # this should be the exact same as above, just 
 ```{r}
 cols <- c("blue", "lightblue", "salmon", "red3")
 
-Chl_means <- Chl_means %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2") %>% filter (N>12) #& !Timepoint == "12 week" & !Timepoint == "16 week")
+Chl_means <- Chl_means %>% 
+  subset(!Timepoint == "Day 1" & !Timepoint == "Day 2") %>% filter (N>3) #& !Timepoint == "12 week" & !Timepoint == "16 week")
   #write_csv(path = "Output/chlorophyll_means_figure.csv")
 
 Chl_means_cm2 <- Chl_means %>% subset(Measurement == "chla.ug.cm2") # | Measurement == "chlc2.ug.cm2"
@@ -276,7 +283,7 @@ Chl_means_cells <- Chl_means %>% subset(Measurement == "chla.ug.cells")  # | Mea
 
 Chl.cm2.stress <- Chl_means_cm2 %>% subset(!Timepoint == "12 week" & !Timepoint == "16 week")
 
-CHL.cm2 <- ggplot(Chl.cm2.stress, aes(x=Timepoint, y = Value, group = Treatment, color = Treatment)) +
+CHL.cm2 <- ggplot(Chl_means_cm2, aes(x=Timepoint, y = Value, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
   facet_grid(~Species, scales = "free") +
   geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2) +
@@ -286,7 +293,7 @@ CHL.cm2 <- ggplot(Chl.cm2.stress, aes(x=Timepoint, y = Value, group = Treatment,
   ylab(expression("Chlorophyll a" ~(ug ~cm^-2))) +
  # theme(legend.position = c(0.1,0.2)) +
   theme(legend.position = "none") +
-  #geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
+  geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
   theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
   theme(panel.border = element_blank(),
@@ -328,6 +335,37 @@ ggsave(file="Output/Manuscript_figures/Chlorophyll_stress.png", CHL.cm2, width =
 
 ggsave(file="Output/Supplemental_figures/Chlorophyll_cm2_full.png", CHL.cm2, width = 11, height = 6, units = c("in"))
 ggsave(file="Output/Supplemental_figures/Chlorophyll_cells_full.png", CHL.cells, width = 11, height = 6, units = c("in"))
+
+
+Chl_means_cm2_recovery <- Chl_means_cm2 %>% 
+  subset(Species == "Montipora capitata") %>%
+  subset(Measurement == "chla.ug.cm2") %>%
+  subset(Timepoint == "8 week" | Timepoint == "12 week" | Timepoint == "16 week")
+
+chl_plot_recovery <- ggplot(Chl_means_cm2_recovery, aes(x=Timepoint, y = Value, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(~Species) +
+  geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + 
+  theme_classic() + 
+  ylab(expression("Chlorophyll a" ~(ug ~cm^-2))) +
+  theme(legend.position = "none") +
+  geom_vline(xintercept = c(1.2), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  strip.text.x = element_text(size = 20, color = "black", face = "bold.italic"), # Change axis line
+  axis.line = element_line(colour = "black")) + theme(axis.text = element_text(size = 12)) + 
+  theme(axis.title = element_text(size = 15)) +
+  theme(legend.text = element_text(size = 13)) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  theme(legend.title = element_text(size = 15))
+
+ggsave(file="Output/Manuscript_figures/chl_recovery.png", chl_plot_recovery, width = 5, height = 4, units = c("in"))
 ```
 
 ## Presentation figures 

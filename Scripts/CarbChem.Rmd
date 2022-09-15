@@ -30,7 +30,7 @@ library(dplyr)
 library(lubridate)
 library(tidyverse)
 library(seacarb) 
-inlibrary(vegan)
+library(vegan)
 library(emmeans)
 library(gridExtra)
 library(plotrix)  
@@ -139,10 +139,10 @@ Discrete.pH <- SW.chem %>%
   filter(Period2 != "Empty") %>%
   filter(Period2 != "Testing") %>%
   ggplot(aes(x = Timepoint, y = pH.Total, color = Treatment)) +
-  scale_color_manual(values = all.colors) +
+  scale_color_manual(values = c("black", "blue", "lightblue", "salmon", "red3")) +
   labs(x = "", y = "pH total scale") +
-  geom_line() +
-  #geom_jitter(width = 0.05) +
+  #geom_line() +
+  geom_point(size=0.9) +
   geom_vline(xintercept = as.numeric(as.Date("2018-11-18")), colour="black", linetype="dotted", size=2) +
   geom_vline(xintercept = as.numeric(as.Date("2018-09-22")), colour="black", linetype="dotted", size=2) +
   theme_classic()+
@@ -156,11 +156,7 @@ Discrete.pH <- SW.chem %>%
   theme(axis.title = element_text(size = 15)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)); Discrete.pH
 
-ggsave(file="Output/Discrete.pH.pdf", Discrete.pH, width = 9, height = 5, units = c("in"))
-ggsave(file="Output/Discrete.pH.png", Discrete.pH, width = 9, height = 5, units = c("in"))
-
-Discrete.Temp
-Discrete.pH
+ggsave(file="Output/Manuscript_figures/discrete-pH.png", Discrete.pH, width = 9, height = 5.5, units = c("in"))
 ```
 
 ### Plotting for Figure 1 in manuscript 
@@ -184,11 +180,11 @@ pH.means.fig1 <- bind_rows(acclimation.pH.means, treatment.pH.means)
 fig1.colors <- c("black", "blue", "lightblue", "salmon", "red3")
 
 fig1.pH <- ggplot(data = pH.means.fig1, aes(x = Timepoint, y = pH.Total, colour = Treatment)) +
-  #geom_point(size=0.2) +
+  geom_point(size=1.5) +
   scale_color_manual(values = fig1.colors) +
   labs(x = "Date",
        y = "pH total scale") +
-  geom_line(aes(group=Treatment)) +
+  #geom_line(aes(group=Treatment)) +
   theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
                      panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
@@ -202,9 +198,9 @@ fig1.pH <- ggplot(data = pH.means.fig1, aes(x = Timepoint, y = pH.Total, colour 
   theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
   theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
   theme(legend.text = element_text(size = 13)) +
-  theme(legend.title = element_text(size = 15))
+  theme(legend.title = element_text(size = 15)); fig1.pH
   
-ggsave(filename = "Output/Total-pH-figure1.png", fig1.pH, device = "png", width = 9, height = 5)
+ggsave(filename = "Output/Manuscript_figures/discrete-pH-means.png", fig1.pH, device = "png", width = 9, height = 5)
 
 ```
 
@@ -314,7 +310,7 @@ carb.output.long %>%
   panel.background = element_blank(),
   axis.line = element_line(colour = "black"))
 
-trt.colors <- c("lightblue", "blue", "salmon", "red3")
+trt.colors <- c("black", "blue", "lightblue", "salmon", "red3")
 
 #Acute Period
 carb.output.long %>%
@@ -364,22 +360,25 @@ carb.output.long %>%
 #All Treatment
 Carb.Chem.Figs <- carb.output.long %>%
   ggplot(aes(x = Timepoint, y = value, color = Treatment)) +
-  scale_color_manual(values = all.colors) +
+  scale_color_manual(values = trt.colors) +
   facet_wrap(Measurement ~ ., scales="free_y") +
-  labs(x = "", y = "") +
-  geom_jitter(width = 0.1) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
-  panel.border = element_blank(),
-  panel.grid.major = element_blank(),
-  panel.grid.minor = element_blank(),
-  panel.background = element_blank(),
-  axis.line = element_line(colour = "black")) +
-  geom_vline(xintercept = as.numeric(as.Date("2018-11-18")), colour="black", linetype="dotted")+
-  #scale_x_continuous(breaks = c(17796, 17803, 17810, 17824, 17838, 17852, 17879, 17906), labels = c("Day1", "1 week", "2 week", "4 week", "6 week", "8 week", "12 week", "16 week"))+
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+  labs(x = "Month", y = "") +
+  geom_jitter(width = 0.2) +
+  theme_bw() +
+  theme(#axis.text.x = element_text(angle = 45, hjust = 1), 
+        panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        plot.title = element_text(face = 'bold.italic', size = 14, hjust = 0),
+        legend.title = element_text(face = 'bold', size = 11, hjust = 0),
+        legend.background = element_rect(size=0.1, linetype="solid", colour ="black")) +
+    theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  geom_vline(xintercept = as.numeric(as.Date("2018-11-18")), colour="black", linetype="dotted") +
+  geom_vline(xintercept = as.numeric(as.Date("2018-09-21")), colour="black", linetype="dotted") 
 
-ggsave(file="Output/Carbonate-Chemistry.pdf", Carb.Chem.Figs, width = 11, height = 10, units = c("in"))
-ggsave(file="Output/Carbonate-Chemistry.png", Carb.Chem.Figs, width = 11, height = 10, units = c("in"))
+ggsave(file="Output/Supplemental_figures/Carbonate-Chemistry.png", Carb.Chem.Figs, width = 11, height = 8, units = c("in"))
 
 ```
 

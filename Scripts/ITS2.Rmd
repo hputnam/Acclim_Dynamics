@@ -22,6 +22,8 @@ if (!require("vegan")) install.packages("vegan")
 if (!require("ggfortify")) install.packages("ggfortify")
 
 # load packages
+library(plyr)
+library(dplyr)
 library(tidyverse)
 library(lubridate)
 library(vegan)

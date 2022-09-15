@@ -708,11 +708,21 @@ mcap.recovery.biplot <- autoplot(mcap_scaled, data = mcap, colour = 'Treatment',
   theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
   theme(legend.background = element_rect(size=0.1, linetype="solid", colour ="black"))
 
-ggsave(file="Output/Manuscript_figures/PCA-Recovery-biplot.png", mcap.recovery.biplot, width = 7, height = 7, units = c("in"))
+ggsave(file="Output/Manuscript_figures/PCA-Recovery-biplot-TEST.png", mcap.recovery.biplot, width = 7, height = 7, units = c("in"))
 ```
 
 ```{r}
-mcap.recovery.fig <- ggplot(mcap.means, aes(.fittedPC1, .fittedPC2, color = Treatment)) + 
+# Mcap outside polygons 
+mcap.means <- mcap.means %>% unite(Group, Treatment, Timepoint, remove = FALSE)
+find_hull_mcap <- function(mcap.means) mcap.means[chull(mcap.means$.fittedPC1, mcap.means$.fittedPC2), ]
+hulls_mcap_recovery <- ddply(mcap.means, "Group", find_hull_mcap)
+hulls_mcap_recovery <- hulls_mcap_recovery %>% subset(Timepoint == "16 week")
+
+mcap.recovery.fig <- mcap.means %>% unite(Group, Treatment, Timepoint, remove = FALSE) %>%
+  ggplot(., aes(.fittedPC1, .fittedPC2, color = Treatment)) + 
+  #stat_ellipse(aes(group = Group), alpha = 0.4, lwd = 0.5) +
+  #geom_polygon(data = hulls_mcap_recovery, aes(color = Treatment, fill = Treatment, alpha = Timepoint), size=0.5) +
+  geom_polygon(data = hulls_mcap_recovery, aes(color = Treatment, fill = Treatment), size=0.2, alpha=0.1) +
   geom_point(aes(shape=Species), size = 1.5, alpha=1, color = 'grey') +
   geom_point(data = mcap.means[mcap.means$Species == "Mcapitata",], aes(x=PC1.mean, y=PC2.mean, shape=Species, color=Treatment), size = 3.5) + 
   scale_size_manual(values=c(0.2)) +
@@ -730,7 +740,9 @@ mcap.recovery.fig <- ggplot(mcap.means, aes(.fittedPC1, .fittedPC2, color = Trea
   theme(legend.position = "none") +  
   theme(legend.title = element_text(size=14, face="bold")) +
   theme(legend.text = element_text(size=14)) +
-  scale_color_manual(values = c("blue", "lightblue", "salmon", "red3")) 
+  scale_color_manual(values = c("blue", "lightblue", "salmon", "red3")) +
+  scale_fill_manual(values = c("blue", "lightblue", "salmon", "red3")) 
+  #scale_alpha_manual(values=c(0.05, 0.2, 0.5))
   
 mcap.recovery.fig
 

@@ -15,6 +15,8 @@ Load packages.
 ```{r}
 rm(list=ls())
 
+library(plyr)
+library(dplyr)
 library(tidyr)
 library(tidyverse)
 library(ggpubr)
@@ -24,6 +26,7 @@ library(lme4)
 library(car)
 library(sjPlot)
 library(ggstatsplot)
+library(emmeans)
 ```
 
 
@@ -33,7 +36,8 @@ library(ggstatsplot)
 
 ```{r}
 # Surface area data
-sa <- read.csv("Physiology_variables/Respirometry/coral_surface_area.csv", sep = ",") %>% dplyr::rename(Plug_ID = Sample_ID) %>% select(Plug_ID, surface.area.cm2)
+sa <- read.csv("Physiology_variables/Respirometry/coral_surface_area.csv", sep = ",") %>% 
+  dplyr::rename(Plug_ID = Sample_ID) %>% select(Plug_ID, surface.area.cm2)
 sa$Plug_ID <- as.character(sa$Plug_ID)
 
 # Tissue homogenate volume data
@@ -58,7 +62,7 @@ metadata <- full_join(metadata, homog_vols) %>% full_join(sa) %>% filter(!is.na(
 
 ```{r}
 ## Haemocytometer data 
-haemo.raw <- read_csv("Physiology_variables/cell-counts/cell_counts.csv")
+haemo.raw <- read.csv("Physiology_variables/cell-counts/cell_counts.csv")
    haemo.raw$Plug_ID <- as.character(haemo.raw$Plug_ID)
 ```
 
@@ -114,19 +118,34 @@ week4HTAC <- haemo %>% subset(Treatment == "HTAC" & Species == "Montipora capita
 ## Calculate means from each timepoint and group. 
 
 ```{r}
-#haemo.means <- haemo %>% filter(haemo.cells.cm2 < 1500000) 
+haemo.means <- haemo %>% filter(haemo.cells.cm2 < 1500000) 
+
+haemo.for.means.calc <- haemo %>%
+  select(Treatment, Species, Timepoint, haemo.cells.cm2) %>% distinct()
 
 count.means <- summarySE(haemo, measurevar = c("haemo.cells.cm2"), groupvars = c("Treatment", "Timepoint", "Species"))
+count.means2 <- summarySE(haemo.means, measurevar = c("haemo.cells.cm2"), groupvars = c("Treatment", "Timepoint", "Species"))
 
-count.means.stress <- count.means %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2" & !Timepoint == "12 week" & !Timepoint == "16 week") %>% filter(N > 12) # N is higher because grouping number of counts in previous dataframe. mean here is still mean of the pop where each individual has an average count of six counts
+count.means.test <- summarySE(haemo.for.means.calc, measurevar = c("haemo.cells.cm2"), groupvars = c("Treatment", "Timepoint", "Species"))
+
+count.means.stress <- count.means %>% 
+  subset(!Timepoint == "Day 1" & !Timepoint == "Day 2" & !Timepoint == "12 week" & !Timepoint == "16 week") %>% filter(N > 12) # N is higher because grouping number of counts in previous dataframe. mean here is still mean of the pop where each individual has an average count of six counts
+
+count.means.stress2 <- count.means2 %>% 
+  subset(!Timepoint == "Day 1" & !Timepoint == "Day 2" & !Timepoint == "12 week" & !Timepoint == "16 week") %>% filter(N > 12) # N is higher because grouping number of counts in previous dataframe. mean here is still mean of the pop where each individual has an average count of six counts
+
+count.means.test.stress <- count.means.test %>%
+  subset(!Timepoint == "Day 1" & !Timepoint == "Day 2" & !Timepoint == "12 week" & !Timepoint == "16 week") %>% filter(N > 3)
+count.means.test.full <- count.means.test %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2") %>% filter(N > 3)
 
 count.means.full <- count.means %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2") %>% filter(N > 12)
+count.means.full2 <- count.means2 %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2") %>% filter(N > 12)
 ```
 
 ## Visualize data 
 
 ```{r}
-cellcounts_plot <- ggplot(count.means.stress, aes(x=Timepoint, y = haemo.cells.cm2, group = Treatment, color = Treatment)) +
+cellcounts_plot <- ggplot(count.means.test.stress, aes(x=Timepoint, y = haemo.cells.cm2, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
   facet_grid(~Species, scales = "free") +
   geom_errorbar(aes(ymin=haemo.cells.cm2-se, ymax=haemo.cells.cm2+se), width=.2) +
@@ -148,7 +167,7 @@ cellcounts_plot <- ggplot(count.means.stress, aes(x=Timepoint, y = haemo.cells.c
 
 ggsave(file="Output/Manuscript_figures/Counts_stress.png", cellcounts_plot, width = 11, height = 6, units = c("in"))
 
-cellcounts_plot_full <- ggplot(count.means.full, aes(x=Timepoint, y = haemo.cells.cm2, group = Treatment, color = Treatment)) +
+cellcounts_plot_full <- ggplot(count.means.test.full, aes(x=Timepoint, y = haemo.cells.cm2, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
   facet_grid(~Species, scales = "free") +
   geom_errorbar(aes(ymin=haemo.cells.cm2-se, ymax=haemo.cells.cm2+se), width=.2) +
@@ -172,6 +191,37 @@ cellcounts_plot_full <- ggplot(count.means.full, aes(x=Timepoint, y = haemo.cell
   theme(legend.title = element_text(size = 15)); cellcounts_plot_full # Change axis line
 
 ggsave(file="Output/Supplemental_figures/full_cellcounts.png", cellcounts_plot_full, width = 11, height = 6, units = c("in"))
+
+
+count.means.test.recovery <- count.means.test.full %>%
+  subset(Species == "Montipora capitata") %>%
+  subset(Timepoint == "8 week" | Timepoint == "12 week" | Timepoint == "16 week")
+  
+
+cellcounts_plot_recovery <- ggplot(count.means.test.recovery, aes(x=Timepoint, y = haemo.cells.cm2, group = Treatment, color = Treatment)) +
+  geom_line() + geom_point() +
+  facet_grid(~Species) +
+  geom_errorbar(aes(ymin=haemo.cells.cm2-se, ymax=haemo.cells.cm2+se), width=.2) +
+  scale_color_manual(values = cols) + 
+  xlab("Timepoint") + 
+  theme_classic() + 
+  ylab(expression("Cell Density" ~(cells ~cm^-2))) +
+  theme(legend.position = "none") +
+  geom_vline(xintercept = c(1.2), colour="black", linetype="dotted") +
+  theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  strip.text.x = element_text(size = 20, color = "black", face = "bold.italic"), # Change axis line
+  axis.line = element_line(colour = "black")) + theme(axis.text = element_text(size = 12)) + 
+  theme(axis.title = element_text(size = 15)) +
+  theme(legend.text = element_text(size = 13)) +
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  theme(legend.title = element_text(size = 15))
+
+ggsave(file="Output/Manuscript_figures/cellcounts_recovery.png", cellcounts_plot_recovery, width = 5, height = 4, units = c("in"))
 ```
 
 ## Presentation figures 
@@ -193,11 +243,14 @@ ggsave(file="Output/Cell_counts_ppt.png", cellcounts_plot.ppt, width = 11, heigh
 Subsetting into time points 
 
 ```{r}
-mcap.counts <- haemo %>% subset(Species == "Montipora capitata") %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
+mcap.counts <- haemo %>% subset(Species == "Montipora capitata") %>% 
+  subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
 
-mcap.counts.recovery <- haemo %>% subset(Species == "Montipora capitata") %>% subset(Timepoint == "12 week" | Timepoint == "16 week")
+mcap.counts.recovery <- haemo %>% subset(Species == "Montipora capitata") %>% 
+  subset(Timepoint == "12 week" | Timepoint == "16 week")
 
-pacuta.counts <- haemo %>% subset(Species == "Pocillopora acuta") %>% subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
+pacuta.counts <- haemo %>% subset(Species == "Pocillopora acuta") %>% 
+  subset(Timepoint == "1 week" | Timepoint == "2 week" | Timepoint == "4 week" | Timepoint == "6 week" | Timepoint == "8 week")
 
 hist(mcap.counts$haemo.cells.cm2) 
 hist(pacuta.counts$haemo.cells.cm2) 
@@ -230,6 +283,21 @@ capture.output(pacuta.counts.anova, file = "Output/Statistics/Stress_statistics/
 capture.output(mcap.counts.anova, file = "Output/Statistics/Stress_statistics/Counts/Counts_Mcap.txt")
 capture.output(mcap.counts.recovery.anova, file = "Output/Statistics/Recovery_statistics/Counts_Mcap_recovery.txt")
 
+# Tukey Pacuta Stress 
+tukey.pacuta.counts <- emmeans(Pacuta_counts_LMER2, list(pairwise ~ Timepoint*Temperature*CO2), adjust = "tukey")
+tukey.pacuta.counts.df <- as.data.frame(tukey.pacuta.counts$`pairwise differences of Timepoint, Temperature, CO2`)
+write_xlsx(tukey.pacuta.counts.df, "Output/Statistics/Stress_statistics/Counts/Counts_Pacuta_TUKEY.xlsx")
+
+# Tukey Mcap Stress
+tukey.mcap.stress.counts <- emmeans(Mcap_counts_LMER2, list(pairwise ~ Timepoint*Temperature*CO2), adjust = "tukey")
+tukey.mcap.stress.counts.df <- as.data.frame(tukey.mcap.stress.counts$`pairwise differences of Timepoint, Temperature, CO2`)
+write_xlsx(tukey.mcap.stress.counts.df, "Output/Statistics/Stress_statistics/Counts/Counts_Mcap_TUKEY.xlsx")
+
+# Tukey Mcap Recovery
+tukey.mcap.rec.counts <- emmeans(Mcap_counts_LMER2, list(pairwise ~ Timepoint*Temperature*CO2), adjust = "tukey")
+tukey.mcap.rec.counts.df <- as.data.frame(tukey.mcap.rec.counts$`pairwise differences of Timepoint, Temperature, CO2`)
+write_xlsx(tukey.mcap.rec.counts.df, "Output/Statistics/Recovery_statistics/Counts_Mcap_recovery_TUKEY.xlsx")
+
 spp.haemo.t <- t.test(haemo.cells.cm2~Species, data = counts.ttest)
 capture.output(spp.haemo.t, file = "Output/Statistics/Stress_statistics/Counts_TTEST.txt")
 ```
@@ -237,7 +305,7 @@ capture.output(spp.haemo.t, file = "Output/Statistics/Stress_statistics/Counts_T
 ### Species comparison 
 
 ```{r}
-species.counts <- haemo %>% subset(Timepoint == "1 week")
+species.counts <- haemo %>% subset(Timepoint == "1 week") 
 spp.counts.t <- t.test(haemo.cells.cm2~Species, data = species.counts)
 
 capture.output(spp.counts.t, file = "Output/Statistics/Species_comparison/Counts.txt")
