@@ -30,7 +30,7 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ```{r}
 #install_github("pmartinezarbizu/pairwiseAdonis/pairwiseAdonis")
 p1 <- c("plyr", "dplyr", "tidyverse", "vegan", "BiocManager", "ggpubr", "janitor", "funrar", "AMR", "ggbiplot", "stats",
-        "devtools", "pairwiseAdonis")
+        "devtools", "pairwiseAdonis", "naniar")
 p2 <- c("phyloseq", "ANCOMBC", "DESeq2", "ComplexHeatmap","microbiomeMarker")
 load_package <- function(p) {
   if (!requireNamespace(p, quietly = TRUE)) {
@@ -112,11 +112,72 @@ rel_its2 <- as.data.frame(rel_its2) # turning this back into a dataframe
 
 rel_its2 <- tibble::rownames_to_column(rel_its2, "sample_name")
 ```
+
 ## Calculating relative abundace 
 
+1.) Calculate relative abundance for each individual.  
+2.) Group by species or treatment.  
+3.) Calculate average value for each Type Profile.  
+4.) Plot 
+
+0.39, 0.61
+0.1, 0.9
+0.4, 0.6 
+
 ```{r}
-rel_its2_calc <- otu %>%
+rel_its2_calc <- otu %>% 
+  mutate(total = rowSums(.)) # calculating the total # of reads for each samples
+
+rel_its2_calc2 <- rel_its2_calc/rel_its2_calc[,11] #diving each cell by the total number column 
+rel_its2_calc2 <- rel_its2_calc2[,1:10] #removing the total column
+rel_its2_calc2 <- tibble::rownames_to_column(rel_its2_calc2, "sample_name") #adding the plug ids back as a column instead of rownames
+
+rel_its2_calc2 <- full_join(rel_its2_calc2, meta, by = "sample_name") %>% filter(!is.na(Treatment)) %>%
+  gather(key=Clade, value=relabund, 2:11)
+
+rel_its2_calc2$Timepoint <- factor(rel_its2_calc2$Timepoint, levels = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12")) 
+
+## Calculate per treatment timepoint and species
+rel_its2_calc3 <- rel_its2_calc2 %>%
+  group_by(Treatment, Host_species, Timepoint, Clade) %>%
+  mutate(mean_relabund = mean(relabund))
+
+## Plot
+p1 <- 
+  rel_its2_calc3 %>% replace_with_na_all(condition = ~.x == 0.000000000) %>%
+  ggplot(., aes(x = Timepoint, y = Clade)) + 
+  geom_tile(aes(fill = mean_relabund), color = "black") +
+  scale_fill_distiller(palette = "Greys", na.value = "white", 
+                       direction=100, labels = scales::label_percent(scale=100),
+                       limits = c(min(rel_its2_calc3$mean_relabund), max(rel_its2_calc3$mean_relabund))) + 
+  theme_classic() +
+  theme(axis.text.x.bottom = element_text(angle = 60),
+        axis.text.y = element_text(colour = 'black', size = 10, face = 'italic'),) + 
+  facet_grid(Host_species~Treatment, scales = "free",) +
+  labs(x="Timepoint", fill="Relative Abundance", y="Clade") 
+
+ggsave(file="Output/Manuscript_figures/ITS2-RelAb-mean.png", p1, width = 11, height = 5, units = c("in"))
+
+## Calculate per Species and timepoint
+rel_its2_calc4 <- rel_its2_calc2 %>%
+  group_by(Host_species, Timepoint, Clade) %>%
+  mutate(mean_relabund = mean(relabund))
   
+## Plot
+p2 <- 
+  rel_its2_calc4 %>% replace_with_na_all(condition = ~.x == 0.000000000) %>%
+  ggplot(., aes(x = Timepoint, y = Clade)) + 
+  geom_tile(aes(fill = mean_relabund), color = "black") +
+  scale_fill_distiller(type = "seq", na.value = "white", 
+                       palette = "YlGn", direction=1, labels = scales::label_percent(scale=100),
+                       limits = c(min(rel_its2_calc4$mean_relabund), max(rel_its2_calc4$mean_relabund))) + 
+  theme_classic() +
+  theme(axis.text.x.bottom = element_text(angle = 60),
+        axis.text.y = element_text(colour = 'black', size = 10, face = 'italic'),) + 
+  facet_grid(~Host_species, scales = "free",) +
+  labs(x="Timepoint", fill="Relative Abundance", y="Clade")
+
+ggsave(file="Output/Manuscript_figures/ITS2-RelAb-Spp-mean.png", p2, width = 11, height = 5, units = c("in"))
 ```
 
 
