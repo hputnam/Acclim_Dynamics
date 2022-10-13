@@ -1,8 +1,16 @@
----
-title: "Cell Counts"
-author: "EL Strand"
-date: "5/24/2021"
-output: html_document
+----
+title: "Endosymbiont Density (cell counts) Analysis"
+author: "Author: Emma Strand; emma_strand@uri.edu"
+output:
+  github_document: default
+  pdf_document:
+    keep_tex: yes
+  html_document:
+    toc: yes
+    toc_depth: 6
+    toc_float: yes
+editor_options: 
+  chunk_output_type: inline
 ---
 
 Code modified from R. Cunning, H. Putnam, and E5 group; link [here](https://github.com/urol-e5/timeseries/blob/master/timepoint_1/scripts/Sym-Density.Rmd).

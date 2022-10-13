@@ -232,7 +232,10 @@ Hobo.data.filtered <- Hobo.data %>% na.omit() %>%
 Hobo.filtered.means <- summarySE(Hobo.data.filtered, measurevar = "Temperature", groupvars=c("Date.Time", "Treatment")) #N, mean(Temperature), sd, se, ci
 Hobo.means <- summarySE(Hobo.data, measurevar = "Temperature", groupvars=c("Date.Time", "Treatment")) #N, mean(Temperature), sd, se, ci
 
-Hobo.daily <- Hobo.data %>% separate(Date.Time, c("Date", "Time"), sep = " ") %>% filter(!is.na(Temperature))
+Hobo.daily <- Hobo.data %>% 
+  separate(Date.Time, c("Date", "Time"), sep = " ", remove=FALSE) %>% 
+  filter(!is.na(Temperature)) %>%
+  filter((Date.Time > as.POSIXct("2018-09-22 06:50:00", tz="UTC") & Date.Time < as.POSIXct("2018-11-17 08:00:00", tz="UTC")))
 Hobo.daily.means <- summarySE(Hobo.daily, measurevar = "Temperature", groupvars=c("Time", "Treatment"))
 ```
 

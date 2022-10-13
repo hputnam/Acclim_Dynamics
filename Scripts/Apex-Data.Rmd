@@ -185,7 +185,7 @@ APEX.PAR <- APEX.data %>% filter((Date.Time > as.POSIXct("2018-09-22 06:50:00", 
 write_csv(path = "Environmental_data/Apex-PAR.csv", APEX.PAR)
 
 PAR.plot <- ggplot(APEX.PAR, aes(x=Date.Time, y = PAR)) + 
-  geom_point(size=0.6) + theme_bw() +
+  geom_point(size=0.2) + theme_bw() +
   scale_y_continuous(limits = c(0, 850), breaks = seq(0, 850, by = 50)) +
   theme_classic() +
   xlab("Date") + theme(axis.text.x = element_text(angle = 60, hjust = 1)) + # x-axis label and rotating text on x axis
@@ -198,17 +198,33 @@ Testing if is there a significant difference between tank positions.
 ```{r} 
 library(lubridate)
 
-Licor_bytank <- Licor_Light %>% subset(Measure_Type=="Six-point") %>% subset(Instrument=="LICOR-193")
+Licor_LICOR193 <- Licor_Light %>% 
+  #subset(Measure_Type=="Six-point") %>% 
+  subset(Instrument=="LICOR-193") %>% 
+  select(-Notes, -Instrument) %>%
+  filter(!is.na(PAR))
 
-# Combining date and time columns
-Licor_date <- Licor_bytank %>% unite(Date.Time, Date, Time, sep = " ")
-#Licor_bytank$Date.Time <- as.POSIXct(Licor_bytank$Date.Time, tz = "UTC")
+Licor_means <- summarySE(Licor_LICOR193, measurevar="PAR", groupvars=c("Treatment"))
 
-Licor_means <- summarySE(Licor_bytank, measurevar="PAR", groupvars=c("Position", "Tank"))
+Treatment_PAR <- aov(PAR ~ Treatment, data = Licor_LICOR193)
+TRT_TK_PAR <- aov(PAR ~ Treatment*Tank, data = Licor_LICOR193)
+summary(TRT_TK_PAR)
 
-licor_anova <- aov(PAR ~ Position, data = Licor_bytank)
-licor_anova_tank <- aov(PAR ~ Position*Tank, data = Licor_bytank)
-summary(licor_anova_tank)
+Light_model <- lmer(log(PAR) ~ Treatment + (1|Date) + (1|Tank), na.action=na.omit, data=Licor_LICOR193) 
+qqPlot(residuals(Light_model)) 
+hist(residuals(Light_model)) 
+Light_model_anova <- Anova(Light_model, ddf="lme4", type='III') 
+
+light.tukey <- emmeans(Light_model, list(pairwise ~ Treatment), adjust = "tukey")
+light.tukey.df <- as.data.frame(light.tukey$`pairwise differences of Treatment`)
+light.tukey.df %>% filter(p.value < 0.05)
+
+### SIX VS ONE POINT
+Licor_LICOR193_six <- Licor_LICOR193 %>%
+  subset(Measure_Type == "Six-point")
+Licor_six_means <- summarySE(Licor_LICOR193_six, measurevar="PAR", groupvars=c("Position", "Tank"))
+
+summary(aov(PAR ~ Position*Tank, data = Licor_LICOR193_six))
 ```
 
 Visualizing Licor light data. 
@@ -218,7 +234,7 @@ treatment_colors <- c("lightblue", "blue", "salmon", "red3")
 tank_colors <- c("lightblue", "red3", "blue", "blue", "red3", "blue", "salmon", "red3", "lightblue", "salmon", "lightblue", "salmon")
 
 ## BY TREATMENT
-ggplot(Licor_Light, aes(x=Treatment, y=PAR, fill=Treatment)) + 
+light1 <- ggplot(Licor_LICOR193, aes(x=Treatment, y=PAR, fill=Treatment)) + 
   geom_boxplot() +
   scale_fill_manual(values = treatment_colors) +
   geom_jitter(color="black", size=0.4, alpha=0.9) + 
@@ -227,8 +243,10 @@ ggplot(Licor_Light, aes(x=Treatment, y=PAR, fill=Treatment)) +
   xlab("Treatment") + 
   ylab("PAR")
 
+ggsave(filename = "Output/LICOR-PAR.png", light1, device = "png", width = 9, height = 7)
+
 ## BY TREATMENT AND TANK
-ggplot(Licor_Light, aes(x=Tank, y=PAR, fill=Tank)) + 
+ggplot(Licor_LICOR193, aes(x=Tank, y=PAR, fill=Tank)) + 
   geom_boxplot() +
   scale_fill_manual(values = tank_colors) +
   scale_x_discrete(limits=c("1","6","8", "3", "11", "12", "4", "7", "9", "2", "5", "10")) + 

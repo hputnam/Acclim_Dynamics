@@ -36,6 +36,8 @@ library(gridExtra)
 library(plotrix)  
 library(Rmisc)
 library(kableExtra)
+library(lme4)
+library(car)
 ```
 
 ### DISCRETE TANK MEASUREMENTS ### 
@@ -286,9 +288,20 @@ write.table(carb.output, "Environmental_data/Seawater_chemistry_table_Output_All
 
 ```{r}
 treatment.stats <- carb.output %>% subset(Period1 == "Treatment") %>% 
-   gather("Measurement", "Value", 8:10)
+   gather("Measurement", "Value", 8:17)
 mean.by.treatment <- summarySE(treatment.stats, measurevar = "Value", groupvars=c("Treatment", "Measurement")) 
+
+TA_df <- carb.output %>% subset(Period1 == "Treatment")
+TA_df$Timepoint <- as.character(TA_df$Timepoint)
+
+TA_model <- lmer(TA ~ Timepoint*Treatment + (1|Tank), na.action=na.omit, data=TA_df) 
+qqPlot(residuals(TA_model)) 
+hist(residuals(TA_model)) 
+TA_model.anova <- Anova(TA_model, ddf="lme4", type='III') 
+
 ```
+
+
 
 
 Subsetting to groups we want to visualize. 
