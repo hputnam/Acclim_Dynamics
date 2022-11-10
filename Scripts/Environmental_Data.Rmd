@@ -52,7 +52,7 @@ May 2018 - Feb 2019
 ```{r}
 #bind all CRIMP logger data sets together
 CRIMP2.data <-
-  list.files(path = 'Environmental_data/CRIMP2-buoy', pattern = ".csv", full.names = TRUE) %>% # list files in directory following a particular pattern
+  list.files(path = 'data/Environmental/CRIMP2-buoy', pattern = ".csv", full.names = TRUE) %>% # list files in directory following a particular pattern
   set_names(.) %>% # get the column names
   map_dfr(read.table, .id = "file.ID", header=FALSE, skip=5, sep=",") %>% # join all files together in one data frame by file ID
   group_by(file.ID) %>% # for each file do the following
@@ -75,16 +75,26 @@ EXPT.temp <- Hobo.means %>% select(Date.Time, Treatment, Temperature) %>% dplyr:
 EXPT.temp$file.ID <- "EXPT"
 CRIMP2.EXPT.temp <- bind_rows(CRIMP2.temp, EXPT.temp) #combining both dataframes 
 
-# generate all combinations of year/group
-d <- expand.grid(min(CRIMP2.EXPT.temp$Date):max(CRIMP2.EXPT.temp$Date), unique(CRIMP2.EXPT.temp$Date.Source))
-# fill NA if combination is missing
-d$val <- apply(d, 1,
-               function(x) if (nrow(subset(CRIMP2.EXPT.temp, Date.Time == x[1] & Data.Source == x[2]))) 0 else NA)
-# modify the original dataset
-names(d) <- c("year", "group", "value")
-data <- rbind(data, d[is.na(d$val), ])
-ggplot(data, aes(x=year, y=value,
-                 group=as.factor(group), colour=as.factor(group))) + geom_line()
+CRIMP2.EXPT.temp.df2 <- CRIMP2.EXPT.temp %>%
+  separate(Date.Time, sep=" ", c("Date", "Time")) %>%
+  filter(!is.na(Temp)) %>%
+  group_by(Date) %>%
+  mutate(min = min(Temp),
+         max = max(Temp),
+         range = max-min)
+
+CRIMP2.EXPT.temp.df2.stats <- summarySE(CRIMP2.EXPT.temp.df2, measurevar = "range")
+
+# # generate all combinations of year/group
+# d <- expand.grid(min(CRIMP2.EXPT.temp$Date):max(CRIMP2.EXPT.temp$Date), unique(CRIMP2.EXPT.temp$Date.Source))
+# # fill NA if combination is missing
+# d$val <- apply(d, 1,
+#                function(x) if (nrow(subset(CRIMP2.EXPT.temp, Date.Time == x[1] & Data.Source == x[2]))) 0 else NA)
+# # modify the original dataset
+# names(d) <- c("year", "group", "value")
+# data <- rbind(data, d[is.na(d$val), ])
+# ggplot(data, aes(x=year, y=value,
+#                  group=as.factor(group), colour=as.factor(group))) + geom_line()
 
 
 CRIMP.TEMP.PLOT <- ggplot(data = CRIMP2.EXPT.temp, aes(x = Date.Time, y = Temp, color = Data.Source)) +
@@ -98,7 +108,7 @@ CRIMP.TEMP.PLOT <- ggplot(data = CRIMP2.EXPT.temp, aes(x = Date.Time, y = Temp, 
   geom_hline(aes(yintercept = 29.5), col = "red", linetype="dotted") +
   theme(legend.position="right", legend.background = element_blank()); CRIMP.TEMP.PLOT 
 
-ggsave(file="Output/CRIMP2-Temperature.png", CRIMP.TEMP.PLOT, width = 11, height = 6, units = c("in"))
+ggsave(file="output/Figures/CRIMP2-Temperature.png", CRIMP.TEMP.PLOT, width = 11, height = 6, units = c("in"))
 
 #### pCO2
 CRIMP2.pCO2 <- CRIMP2.data %>% select(-Temp) %>% filter(pCO2>0)
@@ -129,12 +139,12 @@ ggsave(file="Output/CRIMP2-pCO2.png", CRIMP.pCO2.PLOT, width = 11, height = 6, u
 
 Reading in and transforming hobo logger data. 
 ```{r}
-tankIDs <- read.csv('Environmental_data/Tank_to_Treatment.csv')
+tankIDs <- read.csv('data/Environmental/Tank_to_Treatment.csv')
 tankIDs$Tank <- as.character(tankIDs$Tank)
   
 #bind all hobo logger data sets together
 Hobo.data <-
-  list.files(path = 'Environmental_data/Temp_Hobo_Loggers', pattern = ".csv", full.names = TRUE) %>% # list files in directory following a particular pattern
+  list.files(path = 'data/Environmental/Temp_Hobo_Loggers', pattern = ".csv", full.names = TRUE) %>% # list files in directory following a particular pattern
   set_names(.) %>% # get the column names
   map_dfr(read.table, .id = "file.ID", header=FALSE, skip=1, sep=",") %>% # join all files together in one data frame by file ID
   group_by(file.ID) %>% # for each file do the following
@@ -142,18 +152,18 @@ Hobo.data <-
 
 Hobo.data$Date.Time <- mdy_hm(Hobo.data$Date.Time, quiet=FALSE, tz="UTC", truncated=0) #format date and time 
 
-file.name <- c("Environmental_data/Temp_Hobo_Loggers/20190117_Tank1.csv", 
-               "Environmental_data/Temp_Hobo_Loggers/20190117_Tank2.csv",
-               "Environmental_data/Temp_Hobo_Loggers/20190117_Tank3.csv",
-               "Environmental_data/Temp_Hobo_Loggers/20190117_Tank4.csv",
-               "Environmental_data/Temp_Hobo_Loggers/20190117_Tank5.csv",
-               "Environmental_data/Temp_Hobo_Loggers/20190117_Tank6.csv",
-               "Environmental_data/Temp_Hobo_Loggers/20190117_Tank7.csv",
-               "Environmental_data/Temp_Hobo_Loggers/20190117_Tank8.csv",
-               "Environmental_data/Temp_Hobo_Loggers/20190117_Tank9.csv",
-               "Environmental_data/Temp_Hobo_Loggers/20190117_Tank10.csv",
-               "Environmental_data/Temp_Hobo_Loggers/20190117_Tank11.csv",
-               "Environmental_data/Temp_Hobo_Loggers/20190117_Tank12.csv")
+file.name <- c("data/Environmental/Temp_Hobo_Loggers/20190117_Tank1.csv", 
+               "data/Environmental/Temp_Hobo_Loggers/20190117_Tank2.csv",
+               "data/Environmental/Temp_Hobo_Loggers/20190117_Tank3.csv",
+               "data/Environmental/Temp_Hobo_Loggers/20190117_Tank4.csv",
+               "data/Environmental/Temp_Hobo_Loggers/20190117_Tank5.csv",
+               "data/Environmental/Temp_Hobo_Loggers/20190117_Tank6.csv",
+               "data/Environmental/Temp_Hobo_Loggers/20190117_Tank7.csv",
+               "data/Environmental/Temp_Hobo_Loggers/20190117_Tank8.csv",
+               "data/Environmental/Temp_Hobo_Loggers/20190117_Tank9.csv",
+               "data/Environmental/Temp_Hobo_Loggers/20190117_Tank10.csv",
+               "data/Environmental/Temp_Hobo_Loggers/20190117_Tank11.csv",
+               "data/Environmental/Temp_Hobo_Loggers/20190117_Tank12.csv")
 tank.ID <- c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12")
 Hobo.data$Tank <- tank.ID[match(Hobo.data$file.ID, file.name)] #adding a tank number column based on the file.ID column 
 Hobo.data$Tank <- as.character(Hobo.data$Tank) 
