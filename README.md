@@ -1,8 +1,8 @@
 ## Coral species loss and physiological legacy effects are elicited by extended marine heatwave and projected ocean acidification conditions
 
-### Abstract 
+Emma Strand, Kevin Wong, Alexa Farraj, Sierra Gray, Ana McMenamin, and Hollie Putnam. [Putnam Lab, University of Rhode Island]. 
 
-Marine heatwaves are increasing in frequency and intensity, with potentially catastrophic consequences for marine taxa and ecosystems such as coral reefs. Environmentally realistic, extended heat wave and recovery time-series in a multi-stressor experimental framework can therefore provide enhanced predictive capacity for the performance of such systems under climate change. We exposed two common reef-building corals in Hawaiʻi, Montipora capitata and Pocillopora acuta, to a two-month period of high temperature and high pCO2 conditions (29.5 °C, ~1100 ppm) or ambient conditions (27.5 °C, ~500 ppm) in a factorial design, followed by two months of return to ambient conditions. In response to high temperature, but not high pCO2, multivariate physiology shifted through time in both species, driven by decreases in respiration rates and endosymbiont density. P. acuta exhibited more significantly altered physiology, and substantially higher bleaching and mortality than M. capitata. The species specific sensitivity appears to be driven by higher inherent rates of photosynthesis and lower initial host antioxidant capacity in P. acuta, resulting in a heightened generation of and sensitivity to reactive oxygen species under thermal stress. Thermal tolerance may be due in part to M. capitata harboring a mixture of Cladocopium and Durusdinium spp., while P. acuta was dominated by other distinct Cladocopium spp., but there was no evidence of Symbiodiniaceae shuffling due to treatment or time. Only M. capitata survived the exposure and recovery period, but physiological state in heatwave-exposed corals remained significantly diverged at the end of the recovery period relative to corals that experienced ambient conditions. In extended heatwave and climate change stressor scenarios, our results suggest a species-specific loss of corals that are driven by inherent differences in both host and symbiont physiology. Notably, the corals that survive these projected conditions exhibit lasting physiological legacies that are likely to influence future stress responses.
+This repository contains data, scripts, protocols, and analyses for physiological responses and Symbiodiniaceae community compositions of *Montipora capitata* and *Pocillopora acuta* during a simulated extended heatwave and ocean acidification stress and recovery time-series. This work was conducted in 2018 at the Hawaii Institute of Marine Biology. 
 
 ### Figure 1
 
@@ -10,5 +10,27 @@ Marine heatwaves are increasing in frequency and intensity, with potentially cat
 
 ### Data Organization 
 
+This repository is organized by `Output`, `Protocols`, `Scripts`, `data`, and `metadata`. 
+
+`data` is categorized into subfolders: `Environmental`, `ITS2_seq`, and `Physiological_variables`. `Environmental` includes all temperature, pH, light, flow rate data, and total alkalinity measurements of experimental tanks. 
+
+`Physiological_variables` folder include data for the following:  
+- Survivorship   
+- Color Score   
+- Growth Rates (via Buoyant Weight)  
+- Respiration rates  
+- Photosynthetic rates and photosynthetic irradiance curves   
+- Host soluble protein  
+- Host total antioxidant capacity  
+- Endosymbiont densities  
+- Chlorophyll content   
+- Host and symbiont tissue biomass
+
+`ITS2_seq` folder includes all data for Symbiodiniaceae communities analyzed by ITS2 Sequencing. All raw sequences are uploaded to NCBI under [PRJNA761780](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA761780). 
+
+`Output` includes all physiological and Symbiodiniaceae community analyses conducted with R markdown scripts organized in `Scripts` and figures produced. 
 
 
+### Contact
+
+Any questions about this project and the contents of this repository can be directed to Emma Strand at emma_strand (at) uri.edu.
