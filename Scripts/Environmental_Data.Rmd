@@ -66,12 +66,13 @@ CRIMP2.data <-
 CRIMP2.data$Date.Time <- mdy_hm(CRIMP2.data$Date.Time, quiet=FALSE, tz="UTC", truncated=0) #format date and time 
 CRIMP2.data$Data.Source <- "CRIMP2"
 
-crimp.colors <- c("lightblue", "blue", "black", "salmon", "red3")
+crimp.colors <- c("blue", "lightblue", "black", "salmon", "red3")
 
 #### Temperature
 CRIMP2.temp <- CRIMP2.data %>% select(-pCO2) %>% filter(Temp>0)
 ## need to run HOBO logger section prior to overlaying experimental data on CRIMP2's data
-EXPT.temp <- Hobo.means %>% select(Date.Time, Treatment, Temperature) %>% dplyr::rename(Data.Source = Treatment, Temp = Temperature)
+EXPT.temp <- Hobo.means %>% select(Date.Time, Treatment, Temperature) %>% 
+  dplyr::rename(Data.Source = Treatment, Temp = Temperature)
 EXPT.temp$file.ID <- "EXPT"
 CRIMP2.EXPT.temp <- bind_rows(CRIMP2.temp, EXPT.temp) #combining both dataframes 
 
@@ -113,7 +114,7 @@ ggsave(file="output/Figures/CRIMP2-Temperature.png", CRIMP.TEMP.PLOT, width = 11
 #### pCO2
 CRIMP2.pCO2 <- CRIMP2.data %>% select(-Temp) %>% filter(pCO2>0)
 ## need to run Carb Chem script to get output to overlay experimental data on CRIMP'S data 
-EXPT.pCO2 <- read.csv("Environmental_data/Seawater_chemistry_table_Output_All.csv") %>% select(Timepoint, Treatment, pCO2) %>% 
+EXPT.pCO2 <- read.csv("data/Environmental/Seawater_chemistry_table_Output_All.csv") %>% select(Timepoint, Treatment, pCO2) %>% 
   dplyr::rename(Data.Source = Treatment, Date = Timepoint) %>% filter(Data.Source != "Acclimation")
 EXPT.pCO2$file.ID <- "EXPT"
 EXPT.pCO2$Time <- "11:00"
@@ -132,7 +133,7 @@ CRIMP.pCO2.PLOT <- ggplot(data = CRIMP2.EXPT.pCO2, aes(x = Date.Time, y = pCO2, 
   scale_x_datetime(date_breaks = "60 days", labels = date_format("%b %y")) +
   theme(legend.position="right", legend.background = element_blank()); CRIMP.pCO2.PLOT 
 
-ggsave(file="Output/CRIMP2-pCO2.png", CRIMP.pCO2.PLOT, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Figures/CRIMP2-pCO2.png", CRIMP.pCO2.PLOT, width = 11, height = 6, units = c("in"))
 ```
 
 ### HOBO LOGGER TEMPERATURE DATA ###  

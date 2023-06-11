@@ -168,9 +168,9 @@ Decide if want to visualize/statistically analyze the positions the readings wer
 Reading in both light data files. 
 The PAR sensor was only in one tank so we only need to subset our Apex_data frame to one tank. 
 ```{r}
-Licor_Light <- read.csv('Environmental_data/Discrete_Light_Licor193.csv', sep=",")
+Licor_Light <- read.csv('data/Environmental/Discrete_Light_Licor193.csv', sep=",")
 
-Light_tank_info <-read.csv('Environmental_data/Tank_to_Treatment.csv', header=T, sep=",") %>% select(-Tank.Name)
+Light_tank_info <-read.csv('data/Environmental/Tank_to_Treatment.csv', header=T, sep=",") %>% select(-Tank.Name)
 Licor_Light <- merge(Licor_Light, Light_tank_info, by="Tank") 
 Licor_Light$Tank <- as.character(Licor_Light$Tank) # changing Tank values to character instead of numeric
 ```
@@ -230,7 +230,7 @@ summary(aov(PAR ~ Position*Tank, data = Licor_LICOR193_six))
 Visualizing Licor light data. 
 This includes six-point and one-point measurements, and both hand-held apogee and LICOR-193 instruments. 
 ```{r}
-treatment_colors <- c("lightblue", "blue", "salmon", "red3")
+treatment_colors <- c("blue", "lightblue", "salmon", "red3")
 tank_colors <- c("lightblue", "red3", "blue", "blue", "red3", "blue", "salmon", "red3", "lightblue", "salmon", "lightblue", "salmon")
 
 ## BY TREATMENT
@@ -243,7 +243,7 @@ light1 <- ggplot(Licor_LICOR193, aes(x=Treatment, y=PAR, fill=Treatment)) +
   xlab("Treatment") + 
   ylab("PAR")
 
-ggsave(filename = "Output/LICOR-PAR.png", light1, device = "png", width = 9, height = 7)
+ggsave(filename = "output/Figures/LICOR-PAR.png", light1, device = "png", width = 9, height = 7)
 
 ## BY TREATMENT AND TANK
 ggplot(Licor_LICOR193, aes(x=Tank, y=PAR, fill=Tank)) + 

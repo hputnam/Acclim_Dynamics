@@ -1,4 +1,0 @@
-Vial,coral.id,Species,timepoint,life.stage,metric,Dilution.Factor,Count.1,Count.2,Count.3,Count.4,Count.5,Count.6,Avg.Cells,CV,Sum.Counts,squares.count,Total#Squares,Counter.Initials,Date.Counted,Notes,homo.vol,Mass.g,Surface.Area
-11,R1,Porites asteroides,Post-Treatment,Adult,Zoox,0,208,202,255,228,230,212,223,8.723038611,1335,6,36,EC,8/19/01,Vortexed,24,0.0505,11.27216724
-469,R7,Porites asteroides,Pre-Treatment,Adult,Zoox,0,793,817,705,798,873,762,791,7.078769695,4748,6,36,MS,2/15/19,Vortexed,17,0.046966667,10.49305206
-622,P10,Porites asteroides,Post-Treatment,Adult,Zoox,0,361,358,363,336,322,390,355,6.646932374,2130,6,36,EC,2/18/19,Vortexed,13,0.031133333,7.001733578

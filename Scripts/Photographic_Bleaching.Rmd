@@ -33,10 +33,10 @@ library(sjPlot)
 ### Reading in quality controlled version of ImageJ data.
 Protocol for ImageJ Bleaching Score Analysis found [here](https://emmastrand.github.io/EmmaStrand_Notebook/ImageJ-Analysis-Protocols/).  
 ```{r}
-Data <- read.csv("Physiology_variables/Bleaching_ImageJ_QC.csv", header=T, sep=",", na.string="NA") #read in data file
-Sample.Info <- read.csv("Environmental_data/Master_Fragment.csv", header=T, sep=",", na.string="NA") #read in data file 
+Data <- read.csv("data/Physiology_variables/Bleaching_ImageJ_QC.csv", header=T, sep=",", na.string="NA") #read in data file
+Sample.Info <- read.csv("data/Environmental/Master_Fragment.csv", header=T, sep=",", na.string="NA") #read in data file 
 Sample.Info <- Sample.Info[,c(7,5,9)]
-Tank.Info <- read.csv("Environmental_data/Tank_to_Treatment.csv", header=T, sep=",", na.string="NA") #read in data file 
+Tank.Info <- read.csv("data/Environmental/Tank_to_Treatment.csv", header=T, sep=",", na.string="NA") #read in data file 
 
 # Double checking the Plug IDs are associated with the correct tanks. 
 A <- Sample.Info$PLUG.ID
@@ -61,7 +61,8 @@ rownames(blch.scor) <- Data$PLUG.ID #name columns in dataframe
 dist <- vegdist(blch.scor, method="euclidean") #calculate distance matrix of color scores
 
 PCA.color <- princomp(dist) #run principal components Analysis
-summary(PCA.color) # view variance explained by PCs
+print(summary(PCA.color)) # view variance explained by PCs
+screeplot(PCA.color, type = "line", main = "Scree plot")
 
 Blch <- as.data.frame(-PCA.color$scores[,1]) #extract PC1
 Blch$PLUG.ID <- rownames(blch.scor)

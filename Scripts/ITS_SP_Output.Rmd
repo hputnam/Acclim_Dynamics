@@ -29,7 +29,8 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
 ```{r}
 #install_github("pmartinezarbizu/pairwiseAdonis/pairwiseAdonis")
-p1 <- c("plyr", "dplyr", "tidyverse", "vegan", "BiocManager", "ggpubr", "janitor", "funrar", "AMR", "ggbiplot", "stats",
+p1 <- c("plyr", "dplyr", "tidyverse", "vegan", "BiocManager", "ggpubr", "janitor", 
+        "funrar", "AMR", "ggbiplot", "stats",
         "devtools", "pairwiseAdonis", "naniar")
 p2 <- c("phyloseq", "ANCOMBC", "DESeq2", "ComplexHeatmap","microbiomeMarker")
 load_package <- function(p) {
@@ -49,7 +50,20 @@ library(emmeans)
 
 ```{r readdata}
 # read in otu and taxonomic outputs from QIIME2 
-otu <- read.delim(file = "ITS2_seq/SymPortal_Andromeda_2022_Output/20220706T084046/its2_type_profiles/6_HoloInt1_20220706T084046.profiles.absolute.abund_and_meta.txt", sep = "\t", header = T, skip = 5)
+otu <- read.delim(file = "data/ITS2_seq/SymPortal_Andromeda_2022_Output/20220706T084046/its2_type_profiles/6_HoloInt1_20220706T084046.profiles.absolute.abund_and_meta.txt", sep = "\t", header = T, skip = 5)
+
+test <- read.csv(file = "data/ITS2_seq/SymPortal_Local_Computer_2020_Output/SymPortal/FULL_ITS2/pre_med_seqs/pre_med_absolute_abundance_df.csv")
+test <- test %>%
+  mutate(Total = rowSums(select_if(., is.numeric), na.rm = TRUE))
+mean(test$Total)
+sum(test$Total)
+
+# test2 <- test %>% select_if(is.numeric) %>%
+#     map_dbl(sum)
+# test2 <- as.data.frame(test2)
+# test3 <- test2[-1,]
+# test3 <- as.data.frame(test3)
+# sum(test3$test3)
 
 otu <- otu[-c(257:258), ] #removing unncessary rows
 
@@ -91,8 +105,8 @@ count=count1+count2+count3+count4+count5+count6+count7+count8+count9+count10
 
 ```{r}
 # read in metadata files 
-meta <- read.csv("ITS2_seq/R_Input/Sample_variables.csv") %>% dplyr::rename(sample_name = sample)
-meta2 <- read.csv("Environmental_data/Master_Fragment.csv", header=T) %>%
+meta <- read.csv("data/ITS2_seq/R_Input/Sample_variables.csv") %>% dplyr::rename(sample_name = sample)
+meta2 <- read.csv("data/Environmental/Master_Fragment.csv", header=T) %>%
   select(Plug_ID, Species, Timepoint, Temperature, Treatment, CO2)
 
 # changing metadata to be correct time point 
@@ -156,7 +170,7 @@ p1 <-
   facet_grid(Host_species~Treatment, scales = "free",) +
   labs(x="Timepoint", fill="Relative Abundance", y="Clade") 
 
-ggsave(file="Output/Manuscript_figures/ITS2-RelAb-mean.png", p1, width = 11, height = 5, units = c("in"))
+#ggsave(file="Output/Manuscript_figures/ITS2-RelAb-mean.png", p1, width = 11, height = 5, units = c("in"))
 
 ## Calculate per Species and timepoint
 rel_its2_calc4 <- rel_its2_calc2 %>%
@@ -177,7 +191,7 @@ p2 <-
   facet_grid(~Host_species, scales = "free",) +
   labs(x="Timepoint", fill="Relative Abundance", y="Clade")
 
-ggsave(file="Output/Manuscript_figures/ITS2-RelAb-Spp-mean.png", p2, width = 11, height = 5, units = c("in"))
+#ggsave(file="Output/Manuscript_figures/ITS2-RelAb-Spp-mean.png", p2, width = 11, height = 5, units = c("in"))
 ```
 
 
@@ -211,7 +225,7 @@ rel_abund <- rel_its2_meta %>% replace_with_na_all(condition = ~.x == 0.00000000
   facet_grid(Host_species~Treatment, scales = "free",) +
   labs(x="Timepoint", fill="Relative Abundance", y="Clade") 
 
-ggsave(file="Output/Supplemental_figures/ITS2-RelAb.png", rel_abund, width = 11, height = 5, units = c("in"))
+#ggsave(file="Output/Supplemental_figures/ITS2-RelAb.png", rel_abund, width = 11, height = 5, units = c("in"))
 
 rel_abund2 <- rel_its2_meta %>% replace_with_na_all(condition = ~.x == 0.000000000) %>%
   ggplot(., aes(x = Timepoint, y = Clade)) + 
@@ -223,7 +237,7 @@ rel_abund2 <- rel_its2_meta %>% replace_with_na_all(condition = ~.x == 0.0000000
   facet_grid(~Host_species, scales = "free",) +
   labs(x="Timepoint", fill="Relative Abundance", y="Clade") 
 
-ggsave(file="Output/Supplemental_figures/ITS2-RelAb2.png", rel_abund2, width = 11, height = 5, units = c("in"))
+#ggsave(file="Output/Supplemental_figures/ITS2-RelAb2.png", rel_abund2, width = 11, height = 5, units = c("in"))
 
 relbar <- rel_its2_meta %>% ggplot(., aes(x = Plug_ID, y = relabund, fill = Clade)) + 
   geom_bar(stat = "identity", aes(fill=Clade)) + 
@@ -234,7 +248,7 @@ relbar <- rel_its2_meta %>% ggplot(., aes(x = Plug_ID, y = relabund, fill = Clad
   theme(panel.border = element_rect(color="black", fill=NA, size=0.75), panel.grid.major = element_blank(), #Makes background theme white
                      panel.grid.minor = element_blank(), axis.line = element_blank(), axis.text.x.bottom = element_text(angle = -90))
 
-ggsave(file="Output/Supplemental_figures/ITS2-Barplot.png", relbar, width = 11, height = 8, units = c("in"))
+#ggsave(file="Output/Supplemental_figures/ITS2-Barplot.png", relbar, width = 11, height = 8, units = c("in"))
 ```
 
 
@@ -329,10 +343,10 @@ adonis2(its2.pacuta.scaled ~ Timepoint*Temperature*CO2, data = pacuta_its2_pca, 
 PCA on relative abundance 
 
 ```{r}
-rel_its2_meta_mcap <- rel_its2_meta %>% subset(Host_species == "Montipora capitata")
+rel_its2_meta_pacuta <- rel_its2_meta %>% subset(Host_species == "Pocillopora acuta")
 # to run both species, replace line the df below with rel_its2_meta
 
-relab_pca <- rel_its2_meta_mcap %>%
+relab_pca <- rel_its2_meta_pacuta %>%
   select(1:3) %>% spread(Clade, relabund)
 rownames(relab_pca) <- relab_pca[,1] #making the fragment ids the row names 
 relab_pca <- relab_pca %>% select(-sample_name)
@@ -409,13 +423,56 @@ data.scores$sample_name <- rownames(data.scores)  # create a column of site name
 
 nmds_its2_df <- full_join(its2_pca, data.scores, by = "sample_name")
 
-NMDS_its2_plot <- nmds_its2_df %>% filter(!is.na(Treatment)) %>%
-  ggplot(., aes(x=NMDS1, y=NMDS2)) + 
-  stat_ellipse(aes(lty = Host_species)) +
-  geom_point(aes(shape=Host_species, color=Treatment)) + theme_classic() +
-  scale_color_manual(values = c("blue", "lightblue", "salmon", "red3"), aesthetics = c("colour")) 
+cladeinfo <- read.delim2("~/MyProjects/Acclim_Dynamics_molecular/data/samples_Pacuta.annotations.txt", 
+                         header=TRUE, sep="\t", na.strings=c("","NA")) %>% dplyr::rename(., Plug_ID = plugid) %>% 
+  mutate_if(., is.integer, as.character) %>% 
+  dplyr::select(., Plug_ID, ploidy, group, treesplit) %>%
+  dplyr::mutate(., treesplit = coalesce(treesplit, "D")) #changing NA values to "D" in treesplit -- this is just so triploidy is split in 2 groups and diploidy is altogether 
 
-ggsave(file="Output/Manuscript_figures/ITS2-NMDS.png", NMDS_its2_plot, width = 7, height = 6, units = c("in"))
+pacuta_clade <- read.delim2("~/MyProjects/Acclim_Dynamics_molecular/data/clade_annotations_Pacuta.txt", 
+                            header = TRUE, sep="\t") %>%
+  separate(., Sample, c("Species", "Treatment", "Timepoint", "Plug_ID")) %>% 
+  select(-Treatment, -Timepoint)
+
+cladeinfo <- full_join(cladeinfo, pacuta_clade, by="Plug_ID")
+
+mcapclade <- read.delim2("~/MyProjects/Acclim_Dynamics_molecular/data/clade_annotations_Mcapitata.txt", 
+                            header = TRUE, sep="\t") %>%
+  separate(., Sample, c("Species", "Treatment", "Timepoint", "Plug_ID")) %>% 
+  select(-Treatment, -Timepoint)
+
+NMDS_its2_plot2 <- nmds_its2_df %>% 
+  filter(!is.na(Treatment)) %>%
+  subset(Host_species == "Pocillopora acuta") %>%
+  left_join(., cladeinfo, by="Plug_ID") %>%
+  filter(!is.na(treesplit)) %>%
+  ggplot(., aes(x=NMDS1, y=NMDS2, shape=treesplit, color=treesplit, fill=treesplit)) + 
+  geom_point(size=2) + 
+  theme_classic() +
+  scale_shape_manual(values=c(21, 22, 24)) +
+  scale_color_manual(values = c("black", "black", "black")) +
+  scale_fill_manual(values = c("skyblue3", "olivedrab4", "darkgreen"))
+  # scale_fill_manual(values = c("aquamarine3", "cyan4", "blueviolet", "darkorange",
+  #                                "darkturquoise", "deepskyblue2", "deeppink2", "darkblue", "deeppink4"))
+
+ggsave(file="~/MyProjects/Acclim_Dynamics_molecular/data/ITS2/ITS2-NMDS-Mcap.png", NMDS_its2_plot2, width = 5, height = 4, units = c("in"))
+
+
+NMDS_its2_plot <- nmds_its2_df %>% 
+  filter(!is.na(Treatment)) %>%
+  subset(Host_species == "Montipora capitata") %>%
+  left_join(., mcapclade, by="Plug_ID") %>%
+  filter(!is.na(Clade)) %>%
+  ggplot(., aes(x=NMDS1, y=NMDS2, shape=Clade, color=Clade, fill=Clade)) + 
+  geom_point(size=2) + 
+  theme_classic() #+
+  # scale_shape_manual(values=c(21, 22, 24)) +
+  # scale_color_manual(values = c("black", "black", "black")) +
+  # scale_fill_manual(values = c("skyblue3", "olivedrab4", "darkgreen"))
+  # # scale_fill_manual(values = c("aquamarine3", "cyan4", "blueviolet", "darkorange",
+  #                                "darkturquoise", "deepskyblue2", "deeppink2", "darkblue", "deeppink4"))
+
+ggsave(file="~/MyProjects/Acclim_Dynamics_molecular/data/ITS2/ITS2-NMDS.png", NMDS_its2_plot, width = 5, height = 4, units = c("in"))
 
 ## Mcap 
 otu_mcap <- otu 
@@ -444,16 +501,66 @@ nmds_mcap_df %>% filter(!is.na(Treatment)) %>% filter(!is.na(Sample_Date)) %>%
   geom_point(aes(shape = Treatment, color=Timepoint)) + theme_classic() +
   scale_color_manual(values = c("pink", "red", "orange", "yellow","lightgreen", "green", "lightblue", "blue", "purple", "grey", "black"), aesthetics = c("colour")) 
 ```
-
-
-## PCoA unifrac distances between C profiles
+## Ploidy 
 
 ```{r}
-c_pcoa <- read.csv(file = "ITS2_seq/SymPortal_Andromeda_2022_Output/20220706T084046/between_profile_distances//C/20220706T084046_unifrac_profiles_PCoA_coords_C_no_sqrt.csv", sep = ",", header = T) %>% subset(!sample == "proportion_explained")
+cladeinfo <- cladeinfo %>% dplyr::rename(Coralclade = Clade)
 
-c_pcoa %>%
-  ggplot(., aes(x=PC1, y=PC2)) + geom_point() + theme_classic()
+ITS2_ploidy <- rel_its2_calc2 %>% 
+  left_join(., cladeinfo, by = "Plug_ID") %>%
+  subset(Host_species == "Pocillopora acuta")
+
+ITS2_ploidy_plot <- ITS2_ploidy %>%
+  group_by(Clade) %>%
+  filter(., !sum(relabund) == 0) %>%
+  ggplot(., aes(x = Plug_ID, y = relabund, fill = Clade)) + 
+  geom_bar(stat = "identity", aes(fill=Clade)) + 
+  labs(x="", y="Relative Abundance") +
+  scale_fill_brewer(palette="Spectral") +
+  facet_wrap(~treesplit, scales= "free_x") +
+  theme_bw() + 
+  scale_fill_manual(values = c("cornflowerblue", "blue3", 
+                               "coral1", "hotpink2", "darkorchid2")) +
+  theme(panel.border = element_rect(color="black", fill=NA, size=0.75), 
+        panel.grid.major = element_blank(), #Makes background theme white
+        panel.grid.minor = element_blank(), 
+        axis.line = element_blank(), 
+        axis.text.x.bottom = element_text(angle = -90, size=5)) +
+  theme(strip.text.x = element_text(size = 12, color = "black", face = "bold")) +
+  theme(strip.background = element_rect(color="black", fill="white", linewidth=0.5, linetype="solid"))
+
+ggsave(file="~/MyProjects/Acclim_Dynamics_molecular/data/ITS2/ITS2-barchart.png", ITS2_ploidy_plot, width = 8, height = 3, units = c("in"))
+
+ITS2_ploidy_indivplot <- ITS2_ploidy %>%
+  group_by(Clade) %>%
+  filter(., !sum(relabund) == 0) %>% 
+  replace_with_na_all(condition = ~.x == 0.000000000) %>%
+  ggplot(., aes(x = Plug_ID, y = Clade)) + 
+  geom_tile(aes(fill = relabund), color = "darkgrey") +
+  scale_fill_distiller(palette = "YlGn", na.value = "white", 
+                       direction=100, labels = scales::label_percent(scale=100),
+                       limits = c(min(ITS2_ploidy$relabund), max(ITS2_ploidy$relabund))) + 
+  theme_classic() +
+  theme(axis.text.x.bottom = element_text(angle = 60, hjust=1),
+        axis.text.y = element_text(colour = 'black', size = 7, face = 'italic'),
+        legend.text = element_text(size=10), legend.position="none",
+        legend.title = element_text(size=12)) + 
+  facet_grid(~treesplit, scales = "free",) +
+  labs(x="Plug_ID", fill="Relative Abundance", y="Clade") 
+
+ggsave(file="~/MyProjects/Acclim_Dynamics_molecular/data/ITS2/ITS2-individual.png", 
+       ITS2_ploidy_indivplot,  dpi=300, width = 6, height = 3.5, units = c("in"))
+
+
+ITS2_ploidy_permanova <- ITS2_ploidy %>% spread(Clade, relabund)
+ITS2_ploidy_permanova.scaled <- scale(ITS2_ploidy_permanova[ ,15:23])
+
+# PERMANOVA
+adonis2(ITS2_ploidy_permanova.scaled ~ treesplit, data = ITS2_ploidy_permanova, method='eu',
+        na.rm=TRUE)
 ```
+
+
 
 
 
