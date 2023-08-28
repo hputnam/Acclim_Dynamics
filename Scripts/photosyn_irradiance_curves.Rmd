@@ -390,11 +390,13 @@ df <- left_join(pars, md, by = c("Species", "Plug_ID"))
 
 ```{r}
 df_stats <- df %>%
-  gather("measurement", "value", 11:15)
+  gather("measurement", "value", 11:15) %>% 
+  dplyr::select(colony_id, measurement, value, Date, Species) %>% distinct()
 
 #library(Rmisc) ## in case need to load again after detach
 
 df_stats <- summarySE(df_stats, measurevar = c("value"), groupvars = c("Date", "Species", "measurement"))
+df_stats %>% write_csv(., "output/PI_curves/pi_curve_pars_nls_summary.csv")
 
 df_stats  %>%
   ggplot(., aes(x=Date, y = value, group = Species, color = Species)) + 
