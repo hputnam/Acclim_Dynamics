@@ -34,7 +34,7 @@ library(xts)
 library(graphics)
 library(janitor)
 
-colors <- c("lightblue", "blue", "salmon", "red3")
+colors <- c("blue", "lightblue", "salmon", "red3")
 ```
 
 ### NOAA BUOY DATA ###
@@ -55,7 +55,7 @@ CRIMP2.data <-
   list.files(path = 'data/Environmental/CRIMP2-buoy', pattern = ".csv", full.names = TRUE) %>% # list files in directory following a particular pattern
   set_names(.) %>% # get the column names
   map_dfr(read.table, .id = "file.ID", header=FALSE, skip=5, sep=",") %>% # join all files together in one data frame by file ID
-  group_by(file.ID) %>% # for each file do the following
+  dplyr::group_by(file.ID) %>% # for each file do the following
   select(V4, V5, V15, V22) %>% # I ran lines 58-62 first to view the column names and decide which ones I wanted to keep and then changed skip=4 to skip=5
   dplyr::rename(Date=`V4`, # Date
                 Time=`V5`, # Time
@@ -70,8 +70,9 @@ crimp.colors <- c("blue", "lightblue", "black", "salmon", "red3")
 
 #### Temperature
 CRIMP2.temp <- CRIMP2.data %>% select(-pCO2) %>% filter(Temp>0)
+
 ## need to run HOBO logger section prior to overlaying experimental data on CRIMP2's data
-EXPT.temp <- Hobo.means %>% select(Date.Time, Treatment, Temperature) %>% 
+EXPT.temp <- Hobo.means %>% dplyr::select(Date.Time, Treatment, Temperature) %>% 
   dplyr::rename(Data.Source = Treatment, Temp = Temperature)
 EXPT.temp$file.ID <- "EXPT"
 CRIMP2.EXPT.temp <- bind_rows(CRIMP2.temp, EXPT.temp) #combining both dataframes 
@@ -140,7 +141,7 @@ ggsave(file="Output/Figures/CRIMP2-pCO2.png", CRIMP.pCO2.PLOT, width = 11, heigh
 
 Reading in and transforming hobo logger data. 
 ```{r}
-tankIDs <- read.csv('data/Environmental/Tank_to_Treatment.csv')
+tankIDs <- read.csv('metadata/Tank_to_Treatment.csv')
 tankIDs$Tank <- as.character(tankIDs$Tank)
   
 #bind all hobo logger data sets together
@@ -258,8 +259,8 @@ Expt.hobo$Time <- format(Expt.hobo$Date.Time, "%H %M %S")
 Hobo.treatment <- summarySE(Expt.hobo, measurevar = "Temperature", groupvars=c("Treatment")) #N, mean(Temperature), sd, se, ci
 Hobo.date <- summarySE(Expt.hobo, measurevar = "Temperature", groupvars=c("Treatment", "Date")) #N, mean(Temperature), sd, se, ci
 
-write_csv(file = "Environmental_data/HOBO-Temperature-Treatment.csv", Hobo.treatment)
-write_csv(file = "Environmental_data/HOBO-Temperature-Date.csv", Hobo.date)
+write_csv(file = "data/Environmental/HOBO-Temperature-Treatment.csv", Hobo.treatment)
+write_csv(file = "data/Environmental/HOBO-Temperature-Date.csv", Hobo.date)
 ```
 
 #### Parsing `Hobo.data.filtered` into acclimation and treatment dfs 
@@ -379,8 +380,8 @@ dt.date.avg.hobo <- summarySE(dt, measurevar = "Temperature", groupvars=c("Date"
 dt.trt.avg.hobo <- summarySE(dt.treatment, measurevar = "Temperature", groupvars=c("Treatment")) 
 
 # Exporting hobo logger tables
-write_csv(path = "Environmental_data/Hobologger-Treatment.csv", dt.trt.avg.hobo)
-write_csv(path = "Environmental_data/Hobologger-Date.csv", dt.date.avg.hobo)
+write_csv(path = "data/Environmental/Hobologger-Treatment.csv", dt.trt.avg.hobo)
+write_csv(path = "data/Environmental/Hobologger-Date.csv", dt.date.avg.hobo)
 ```
 
 
@@ -451,8 +452,21 @@ APEX.dt.temp.trt <- read.csv("Environmental_data/Apex-Temperature-Treatment.csv"
 
 APEX.dt.pH.date <- read.csv("Environmental_data/Apex-pH-Date.csv")
 APEX.dt.pH.trt <- read.csv("Environmental_data/Apex-pH-Treatment.csv")
+```
 
 
+```{r}
+dt.date.avg.hobo %>% dplyr::select(-sd, -ci) %>%
+  filter(Date > "2018-09-21") %>%
+  mutate(across(where(is.numeric), ~ round(., 3))) %>%
+  unite(., "Value", Temperature, se, sep = " ± ", remove = TRUE) %>%
+  unite(., "Value", Value, N, sep = ", n=", remove=TRUE) %>%
+  spread(Treatment, Value) %>%
+  write_csv(path = "data/Environmental/Summary_HOBO_temperature.csv")
 
 ```
+
+
+
+
 

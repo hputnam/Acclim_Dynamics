@@ -44,7 +44,7 @@ library(car)
 
 Discrete pH calculations from Tris calibrations.
 ```{r}
-path <-("Environmental_data/Calibration_Files/Tris_calibrations") #set path to calibration files
+path <-("data/Environmental/Calibration_Files/Tris_calibrations") #set path to calibration files
 file.names<-list.files(path = path, pattern = "csv$") #list all the file names in the folder to get only get the csv files
 pH.cals <- data.frame(matrix(NA, nrow=length(file.names), ncol=3, dimnames=list(file.names,c("Date", "Intercept", "Slope")))) #generate a 3 column dataframe with specific column names
 
@@ -68,7 +68,7 @@ F <- 96485.339924 #Faraday constant in coulombs mol-1
 
 Read in probe measurements of pH, temperature from tanks.
 ```{r}
-daily <- read.csv("Environmental_data/Daily_Temp_pH_Sal.csv", header=TRUE, sep=",", na.strings="NA") #load data with a header, separated by commas, with NA as NA
+daily <- read.csv("data/Environmental/Daily_Temp_pH_Sal.csv", header=TRUE, sep=",", na.strings="NA") #load data with a header, separated by commas, with NA as NA
 daily$Calib.Date <- as.factor(daily$Calib.Date)
 pH.cals$Calib.Date <- as.factor(pH.cals$Calib.Date)
 
@@ -206,17 +206,6 @@ ggsave(filename = "Output/Manuscript_figures/discrete-pH-means.png", fig1.pH, de
 
 ```
 
-<!-- Plotting inset of daily pH fluctuation -->
-
-<!-- ```{r} -->
-<!-- daily.fluct.raw <- read.csv("Environmental_data/Apex_continuous_data/Download2/Experimental_0929.csv") %>% select (-X) %>% spread -->
-<!-- ``` -->
-
-
-
-
-
-
 
 Plotting Temperature for SW CHEM TABLE #2. Run the above code first to get the data strings `all.colors` and `annotation`. 
 ```{r}
@@ -260,7 +249,7 @@ Discrete.pH2
 
 Reading in TA cumulative file. 
 ```{r}
-TA <- read.csv("Environmental_data/Total_Alkalinity/Cumulative_TA_Output.csv", header=TRUE, sep=",", na.strings="NA")  #read in  TA results
+TA <- read.csv("data/Environmental/Total_Alkalinity/Cumulative_TA_Output.csv", header=TRUE, sep=",", na.strings="NA")  #read in  TA results
 TA <- subset(TA , Type =="Tank")
 
 ##### SEAWATER CHEMISTRY ANALYSIS FOR DISCRETE MEASUREMENTS#####
@@ -283,7 +272,7 @@ colnames(carb.output) <- c("Date",  "Sample.ID",  "Treatment", "Timepoint","Peri
 carb.output$Tank <- substring(carb.output$Sample.ID, 10)
 carb.output$Tank <- factor(carb.output$Tank)
 
-write.table(carb.output, "Environmental_data/Seawater_chemistry_table_Output_All.csv", sep=",", row.names = FALSE) #save data
+write.table(carb.output, "data/Environmental/Seawater_chemistry_table_Output_All.csv", sep=",", row.names = FALSE) #save data
 ```
 
 ```{r}
@@ -403,14 +392,15 @@ carb.output.long <- carb.output.long %>%
   filter(Period2 != "Testing")
 
 carb.chem.DS <-  carb.output.long %>%
-                group_by(Measurement, Period2, Treatment) %>%
+                group_by(Measurement, Treatment, Date) %>%
                 dplyr::summarize(mean=mean(value),
                           sem=(sd(value)/sqrt(n())),
-                          .groups = "keep")
-
-carb.chem.DS <- na.omit(carb.chem.DS)
-
-carb.chem.DS <- data.frame(carb.chem.DS)
+                          .groups = "keep") %>%
+  mutate(across(where(is.numeric), ~ round(., 3))) %>%
+  unite(., "Value", mean, sem, sep = " ± ", remove = TRUE) %>%
+  spread(Measurement, Value) %>%
+  subset(!Treatment == "Acclimation") %>%
+  arrange(Date)
   
 write.csv(carb.chem.DS, file="Output/Carbonate-Chemistry.csv")
           
