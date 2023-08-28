@@ -1,13 +1,17 @@
 ---
-title: "photosynthetic_irradiance_curves.Rmd"
-author: "Emma Strand"
-date: "2023-07-20"
-output: html_document
+title: "Photosynthetic Irradiance Curves"  
+author: "Author: Emma Strand; emma_strand@uri.edu"  
+output:
+  github_document: default
+  pdf_document:
+    keep_tex: yes
+  html_document:
+    toc: yes
+    toc_depth: 6
+    toc_float: yes
+editor_options: 
+  chunk_output_type: inline
 ---
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
 
 # Photosynthetic Irradiance Curves 
 
@@ -30,23 +34,22 @@ if ("devtools" %in% rownames(installed.packages()) == 'FALSE') install.packages(
 if ("segmented" %in% rownames(installed.packages()) == 'FALSE') install.packages('segmented') 
 #if ("phytotools" %in% rownames(installed.packages()) == 'FALSE') install.packages('phytotools') 
 
-## load libraries
-library(devtools)
-library(LoLinR)
-library(tidyverse)
-library(lubridate)
-library(cowplot)
+library("devtools")
+library(Rmisc)
 library("ggplot2")
+library(Hmisc)
 library("segmented")
 library("plotrix")
 library("gridExtra")
+library("LoLinR")
+library("lubridate")
 library("chron")
-library('plyr')
-library('dplyr')
-# not available on cran anymore: library('phytotools')
+library("tidyverse")
+# library('plyr')
+# library('dplyr')
+#library('phytotools')
 library("broom")
-library(Hmisc)
-library(Rmisc)
+library(cowplot)
 
 ## libraries for parallel processing
 library(future)
@@ -77,12 +80,12 @@ metadata <- run.info %>%
 
 # Select only certain columnns
 metadata <- metadata %>%
-  select(colony_id, Species, Run, Chamber.Vol.L, Date, Start.time, Stop.time, Light_Value)
+  dplyr::select(colony_id, Species, Run, Chamber.Vol.L, Date, Start.time, Stop.time, Light_Value)
 
 # Read in all data files
 df <- tibble(file.name = file.names) %>%
    # Get colony_id from filename
-  mutate(colony_id = gsub(".csv", "", file.name),                             
+  mutate(., colony_id = gsub(".csv", "", file.name),                             
          # Get associated sample info
          info = map(colony_id, ~filter(metadata, colony_id == .)),           
          # Get associated O2 data
@@ -91,7 +94,7 @@ df <- tibble(file.name = file.names) %>%
 
 # Select only Time, Value, and Temp columns from O2 data
 df <- df %>%
-  mutate(data0 = map(data0, ~select(., Time, Value, Temp)))%>%
+  mutate(data0 = map(data0, ~dplyr::select(., Time, Value, Temp)))%>%
   mutate(data0 = map(data0, ~(.x %>% filter(complete.cases(.))))) #remove NAs 
 ```
 
@@ -179,6 +182,7 @@ plot_rankLcRg <- function(colony_id, interval_number) {
 
 
 #### The diagnostics for any regression can be plotted like this, specifying a colony_id and the number of the light curve interval:
+
 ```
 plot_rankLcRg("MC-1128_20180914", 1)
 ```
@@ -196,22 +200,24 @@ df.out <- df %>%
 ```{r}
 ### Merge rates with sample info
 pr <- left_join(
-  select(df.out, colony_id, Light_Value, micromol.L.s),
+  dplyr::select(df.out, colony_id, Light_Value, micromol.L.s),
   distinct(metadata, colony_id, Run, Chamber.Vol.L)
 )
 
 ### Correct for chamber volume and blanks
 pr <- pr %>%
-  mutate(micromol.s = micromol.L.s * Chamber.Vol.L)
+  mutate(micromol.s = micromol.L.s * Chamber.Vol.L) %>%
+  separate(., colony_id, c("id", "Date"), sep = "_", remove = FALSE) 
 
 # Get blank values -- average for each run and light value in case multiple blanks
 blanks <- pr %>%
-  filter(grepl("BK", colony_id)) %>%
-  group_by(Run, Light_Value) %>%
-  summarise(micromol.s.blank = mean(micromol.s))
+  filter(grepl("BK", colony_id))
+
+blanks <- summarySE(blanks, measurevar = c("micromol.s"), groupvars = c("Light_Value", "Date")) %>%
+  dplyr::select(Date, Light_Value, micromol.s) %>% dplyr::rename(micromol.s.blank = micromol.s)
 
 # Join blank values with rest of data and subtract values from samples for same run and light value
-pr <- left_join(pr, blanks) %>%
+pr <- left_join(pr, blanks, by=c("Light_Value", "Date")) %>%
   mutate(micromol.s.adj = micromol.s - micromol.s.blank) %>%
   # After correcting for blank values, remove blanks from data
   filter(!grepl("BK", colony_id))
@@ -221,7 +227,7 @@ sa <- run.info %>% dplyr::select(colony_id, Surf.Area.cm2) %>%
   dplyr::rename(surface.area.cm2 = Surf.Area.cm2) %>% distinct()
 
 # Join surface area with rest of data
-pr <- left_join(pr, select(sa, colony_id, surface.area.cm2))
+pr <- left_join(pr, dplyr::select(sa, colony_id, surface.area.cm2))
 
 # Normalize rates by surface area
 pr <- pr %>%
@@ -234,7 +240,7 @@ pr <- pr %>%
 ```{r}
 # Select variables to write to file
 pr.out <- pr %>% 
-  select(colony_id, Light_Value, Run, micromol.cm2.s, micromol.cm2.h) 
+  dplyr::select(colony_id, Light_Value, Run, micromol.cm2.s, micromol.cm2.h) 
   
 # Write to output file
 pr.out %>%
@@ -259,7 +265,8 @@ ggsave("output/PI_curves/curves.pdf", plot = last_plot(), width = 15, height = 8
 
 ```{r}
 # Define data  
-Data <- pr.out #read.csv("output/PI_curves/pi_curve_rates.csv", sep = ",")
+Data <- pr.out 
+#Data <- read.csv("output/PI_curves/pi_curve_rates.csv", sep = ",")
 
 #specify data
 Data$PAR <- as.numeric(Data$Light_Value)
@@ -285,10 +292,11 @@ Using flexible initial values based on input data:
 
 ```{r}
 #detach(package:plyr) ## group by doesn't work if plyr is loaded after dplyr; don't need to run this otherwise 
+#detach(package:Rmisc)
 
 nls_data <- Data %>% 
    dplyr::group_by(colony_id) %>%
-   nest(-colony_id) %>%
+   nest(data = -colony_id) %>%
    mutate(model1 = map(data, ~ nls(Pc ~ (Am*((AQY*PAR)/(sqrt(Am^2 + (AQY*PAR)^2)))-Rd), 
                                    data=., start=list(Am=(max(.$Pc)-min(.$Pc)),  AQY=0.001, Rd=-min(.$Pc))) %>%
                               tidy %>%
@@ -296,8 +304,12 @@ nls_data <- Data %>%
                               spread(term, estimate))) %>%
   unnest(model1) %>%
   unnest(data) %>%
-  #dplyr::group_by(colony_id) %>%
-  summarise(Am=mean(Am), AQY=mean(AQY), Rd=mean(Rd)) %>%
+  group_by(colony_id) %>%
+  mutate(Ik=Am/AQY)%>%
+  mutate(Ic=(Am*Rd)/(AQY*(sqrt(Am^2-Rd^2)))) 
+
+nls_data %>% dplyr::select(colony_id, Am, AQY, Rd, Ik, Ic) %>% 
+  distinct() %>%
   write_csv(., "output/PI_curves/pi_curve_pars_nls.csv")
 ```
 
@@ -305,31 +317,44 @@ nls_data <- Data %>%
 
 ```{r}
 augmented <- Data %>% 
-  #filter(Pc>-2)%>%
-  nest(-colony_id) %>% 
-  mutate(
-    fit = map(data, ~ nls(Pc ~ (Am*((AQY*PAR)/(sqrt(Am^2 + (AQY*PAR)^2)))-Rd), data=., start=list(Am=0.7,  AQY=0.001, Rd=.4))),
-    augmented = map(fit, augment),
-  ) %>% 
+  filter(Pc>-2)%>%
+  nest(data = -colony_id) %>% 
+  mutate(.,
+    fit = map(data, ~ nls(Pc ~ (Am*((AQY*PAR)/(sqrt(Am^2 + (AQY*PAR)^2)))-Rd), 
+                          data=., start=list(Am=0.7,  AQY=0.002, Rd=.4))),
+    augmented = map(fit, augment)) %>% 
   unnest(augmented)
 
 
 #all colonies together
-augmented %>%
+allsamplepoints <- augmented %>%
   separate(colony_id, c("colony_id", "Date"), sep = "_", remove = FALSE) %>%
   separate(colony_id, c("Species", "Plug_ID"), sep = "-", remove = FALSE) %>%
-  group_by(colony_id, Date, Species) %>%
-  ggplot(., aes(x=PAR, y=Pc))
+  group_by(colony_id, Date, Species) 
 
-### left off here 
-  qplot(PAR, Pc, data = ., geom = 'point', group = colony_id) +
-  geom_line(aes(y=.fitted)) + facet_grid(Date~Species) + theme_bw() +
-  scale_shape_manual(21) + 
-  theme(legend.position="right")  
+allsamplepoints %>%
+  ggplot(., aes(x=PAR, y=Pc, group=colony_id)) + 
+  geom_line(aes(y=.fitted)) +
+  geom_point(size=2, alpha=0.3) +
+  ylab(expression(paste(Rate*" ("*mu*"mol "*O[2]*" "*cm^-2*h^-1*")"))) +
+  facet_grid(Date~Species, scales = "free_x",
+             labeller = as_labeller(c(MC = "Montipora capitata", PA = "Pocillopora acuta",
+                                      `20180914` = "Sept 14 2018", `20181031` = "Oct 31 2018",
+                                      `20181115` = "Nov 15 2018", `20181017` = "Oct 17 2018"))) + 
+  theme_bw() +
+  theme(legend.position="right",
+        strip.placement='outside',
+        #strip.background = element_blank(),
+        strip.background = element_rect(fill = 'white', color = 'black'),
+        strip.text.x = element_text(face = "italic", size=12),
+        strip.text.y = element_text(size=10),
+        axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0), size=12, face="bold"),
+        axis.text.x = element_text(color="black"))
+```
 
-ggsave("output/PI_Curves/curves_aggregated.pdf", plot = last_plot(), width = 12, height = 8, units ="in")
 
 
+```{r}
 #view individual plots
 by(augmented,augmented$colony_id, function(i) {
   plot = ggplot(i) +
@@ -347,7 +372,7 @@ by(augmented,augmented$colony_id, function(i) {
 Import PI curve fitted parameters for each individual
 
 ```{r}
-pars <- nls_data %>% #read_csv("output/2_pi_curve_pars_nls.csv") 
+pars <- nls_data %>% 
   separate(colony_id, c("Species", "Date"), sep = "_", remove = FALSE) %>%
   separate(Species, c("Species", "Plug_ID"), sep = "-", remove = TRUE) %>%
   mutate(Species = case_when(
@@ -365,7 +390,9 @@ df <- left_join(pars, md, by = c("Species", "Plug_ID"))
 
 ```{r}
 df_stats <- df %>%
-  gather("measurement", "value", 5:7)
+  gather("measurement", "value", 11:15)
+
+#library(Rmisc) ## in case need to load again after detach
 
 df_stats <- summarySE(df_stats, measurevar = c("value"), groupvars = c("Date", "Species", "measurement"))
 
@@ -378,47 +405,57 @@ df_stats  %>%
   geom_errorbar(aes(x=Date, ymin=value-se, ymax=value+se), width=.2) + 
   geom_line()  
 
-ggsave("output/PI_Curves/Metrics.png", plot = last_plot(), width = 12, height = 5, units ="in")
+ggsave("output/PI_Curves/Metrics.png", plot = last_plot(), width = 10, height = 7, units ="in")
 ```
 
-## 15. Plot PI curves together 
+### Plot 
 
 ```{r}
-Data <- Data %>%
-  separate(colony_id, c("Species", "Date"), sep = "_", remove = FALSE) %>%
-  separate(Species, c("Species", "Plug_ID"), sep = "-", remove = TRUE) %>%
+meanpars <- df_stats %>% dplyr::select(Date, Species, measurement, value) %>%
+  spread(measurement, value) %>%
   mutate(Species = case_when(
-    Species == "MC" ~ "Mcapitata",
-    Species == "PA" ~ "Pacuta"
-  )) %>% left_join(., md, by = c("Plug_ID", "Species"))
-
-Data$PAR <- as.numeric(Data$Light_Value)
-
-PA <- Data %>% subset(Species == "Pacuta")
-MC <- Data %>% subset(Species == "Mcapitata")
+    Species == "Mcapitata" ~ "MC",
+    Species == "Pacuta" ~ "PA"
+  ))
   
-plot(PA$PAR, PA$micromol.cm2.h,
-     xlab="", ylab="", 
-     xlim=c(0,max(PA$PAR)), cex.lab=0.8,cex.axis=0.8,cex=1, main="A) P. acuta", adj = 0.05) #set plot info
-mtext(expression("Irradiance ("*mu*"mol photons "*m^-2*s^-1*")"),side=1,line=3.3,cex=1) #add labels
-mtext(expression(Rate*" ("*mu*"mol "*O[2]*" "*cm^-2*h^-1*")"),side=2,line=2,cex=1) #add labels
+# Define PI curve function
+PIfun <- function(I, Am, AQY, Rd) {
+  (Am*((AQY*I)/(sqrt(Am^2 + (AQY*I)^2)))-Rd)
+}
 
-PA.mod <- fitJP(PA$PAR, PA$micromol.cm2.h, 
-                normalize = FALSE, lowerlim = c(0, 1), upperlim = c(100, 1000), fitmethod=c("Nelder-Mead"))
-A.PA <- PA.mod$alpha[1]
-A.PA
-Ik.PA <- PA.mod$ek[1]
-Ik.PA
+# Produce PI curve for each species/site
+curves <- meanpars %>%
+  nest(pars = c(Am, AQY, Rd)) %>%
+  mutate(I = list(1:1000),
+         PIcurve = map2(pars, I, ~ pmap_dfc(.x, .f = PIfun, I = .y)))   # curve for each par set and Irradiance
 
-#Add model fit
-E <- seq(-50,1500,by=1)
-P <- PA.mod$alpha[1]*PA.mod$ek[1]*tanh(E/PA.mod$ek[1])
-lines(E,P)
-lines(cbind(PA.mod$ek[1], P),lwd=2,col="red") #add Ik line
+curves %>% 
+  unnest(cols = c(I, PIcurve)) %>%
+  # mutate(Species = case_when(
+  #   Species == "Mcapitata" ~ "MC",
+  #   Species == "Pacuta" ~ "PA"
+  # )) %>%
+  ggplot(aes(x = I, y = `...1`)) + ## I here is irridance (PAR)
+  geom_point(data=allsamplepoints, aes(x=PAR, y=Pc), size=2, alpha=0.5, shape=21, color="black") +
+  geom_line(size=1, color = "black") +
+  geom_vline(data=meanpars, aes(xintercept=Ik)) +
+  facet_grid(Date~Species, scales = "free_x",
+             labeller = as_labeller(c(MC = "Montipora capitata", PA = "Pocillopora acuta",
+                                      `20180914` = "Sept 14 2018", `20181031` = "Oct 31 2018",
+                                      `20181115` = "Nov 15 2018", `20181017` = "Oct 17 2018")))+
+  theme_bw()+
+  labs(x = expression(paste('PAR (', mu, "mol photons m"^-2, 's'^-1,")")),
+       y = expression(paste('Photosynthetic rate (', mu, "mol O2 cm"^-2, 'h'^-1,")"))) +
+  theme(legend.position="right",
+        strip.placement='outside',
+        #strip.background = element_blank(),
+        strip.background = element_rect(fill = 'white', color = 'black'),
+        strip.text.x = element_text(face = "italic", size=12),
+        strip.text.y = element_text(size=10),
+        axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0), size=12, face="bold"),
+        axis.text.x = element_text(color="black"))
 
+ggsave("output/PI_Curves/curves_aggregated.png", plot = last_plot(), width = 10, height = 8, units ="in")
 ```
-
-
-
 
 
