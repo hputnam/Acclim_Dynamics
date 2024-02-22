@@ -16,14 +16,14 @@ rm(list=ls())
 
 Load in required libraries.
 ```{r}
-if("lubridate" %in% rownames(installed.packages()) == 'FALSE') install.packages('lubridate') 
-if("tidyverse" %in% rownames(installed.packages()) == 'FALSE') install.packages('tidyverse') 
-if("seacarb" %in% rownames(installed.packages()) == 'FALSE') install.packages('seacarb') 
-if("vegan" %in% rownames(installed.packages()) == 'FALSE') install.packages('vegan') 
-if("emmeans" %in% rownames(installed.packages()) == 'FALSE') install.packages('emmeans') 
-if("gridExtra" %in% rownames(installed.packages()) == 'FALSE') install.packages('gridExtra') 
-if("plotrix" %in% rownames(installed.packages()) == 'FALSE') install.packages('plotrix') 
-if("Rmisc" %in% rownames(installed.packages()) == 'FALSE') install.packages('Rmisc') 
+# if("lubridate" %in% rownames(installed.packages()) == 'FALSE') install.packages('lubridate') 
+# if("tidyverse" %in% rownames(installed.packages()) == 'FALSE') install.packages('tidyverse') 
+# if("seacarb" %in% rownames(installed.packages()) == 'FALSE') install.packages('seacarb') 
+# if("vegan" %in% rownames(installed.packages()) == 'FALSE') install.packages('vegan') 
+# if("emmeans" %in% rownames(installed.packages()) == 'FALSE') install.packages('emmeans') 
+# if("gridExtra" %in% rownames(installed.packages()) == 'FALSE') install.packages('gridExtra') 
+# if("plotrix" %in% rownames(installed.packages()) == 'FALSE') install.packages('plotrix') 
+# if("Rmisc" %in% rownames(installed.packages()) == 'FALSE') install.packages('Rmisc') 
 
 library(plyr)
 library(dplyr)
@@ -158,7 +158,7 @@ Discrete.pH <- SW.chem %>%
   theme(axis.title = element_text(size = 15)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)); Discrete.pH
 
-ggsave(file="Output/Manuscript_figures/discrete-pH.png", Discrete.pH, width = 9, height = 5.5, units = c("in"))
+ggsave(file="Output/Figures/Manuscript_figures/discrete-pH.png", Discrete.pH, width = 9, height = 5.5, units = c("in"))
 ```
 
 ### Plotting for Figure 1 in manuscript 
@@ -202,7 +202,7 @@ fig1.pH <- ggplot(data = pH.means.fig1, aes(x = Timepoint, y = pH.Total, colour 
   theme(legend.text = element_text(size = 13)) +
   theme(legend.title = element_text(size = 15)); fig1.pH
   
-ggsave(filename = "Output/Manuscript_figures/discrete-pH-means.png", fig1.pH, device = "png", width = 9, height = 5)
+ggsave(filename = "Output/Figures/Manuscript_figures/discrete-pH-means.png", fig1.pH, device = "png", width = 9, height = 5)
 
 ```
 
@@ -260,7 +260,7 @@ SW.chem <- subset(SW.chem , TA.Run =="Yes")
 SW.chem <- merge(SW.chem,TA, by="Sample.ID", all = FALSE, sort = T) #merge seawater chemistry with total alkalinity
 
 #Calculate CO2 parameters using seacarb
-carb.output <- carb(flag=8, var1=SW.chem$pH.Total, var2=SW.chem$TA/1000000, S= SW.chem$Salinity, T=SW.chem$Temperature, P=0, Pt=0, Sit=0, pHscale="T", kf="pf", k1k2="l", ks="d") #calculate seawater chemistry parameters using seacarb
+carb.output <- carb(flag=8, var1=SW.chem$pH.Total, var2=SW.chem$TA/1000000, S=SW.chem$Salinity, T=SW.chem$Temperature, P=0, Pt=0, Sit=0, pHscale="T", kf="pf", k1k2="l", ks="d") #calculate seawater chemistry parameters using seacarb
 carb.output$ALK <- carb.output$ALK*1000000 #convert to µmol kg-1
 carb.output$CO2 <- carb.output$CO2*1000000 #convert to µmol kg-1
 carb.output$HCO3 <- carb.output$HCO3*1000000 #convert to µmol kg-1
@@ -288,6 +288,41 @@ qqPlot(residuals(TA_model))
 hist(residuals(TA_model)) 
 TA_model.anova <- Anova(TA_model, ddf="lme4", type='III') 
 
+
+AragSat_model <- lmer(log(AragSat) ~ Timepoint*Treatment + (1|Tank), na.action=na.omit, data=TA_df) 
+qqPlot(residuals(AragSat_model)) 
+hist(residuals(AragSat_model)) 
+Anova(AragSat_model, ddf="lme4", type='III')
+
+CO2_model <- lmer((CO2) ~ Timepoint*Treatment + (1|Tank), na.action=na.omit, data=TA_df) 
+qqPlot(residuals(CO2_model)) 
+hist(residuals(CO2_model)) 
+Anova(CO2_model, ddf="lme4", type='III')
+
+CO3_model <- lmer((CO3) ~ Timepoint*Treatment + (1|Tank), na.action=na.omit, data=TA_df) 
+qqPlot(residuals(CO3_model)) 
+hist(residuals(CO3_model)) 
+Anova(CO3_model, ddf="lme4", type='III')
+
+DIC_model <- lmer((DIC) ~ Timepoint*Treatment + (1|Tank), na.action=na.omit, data=TA_df) 
+qqPlot(residuals(DIC_model)) 
+hist(residuals(DIC_model)) 
+Anova(DIC_model, ddf="lme4", type='III')
+
+HCO3_model <- lmer((HCO3) ~ Timepoint*Treatment + (1|Tank), na.action=na.omit, data=TA_df) 
+qqPlot(residuals(HCO3_model)) 
+hist(residuals(HCO3_model)) 
+Anova(HCO3_model, ddf="lme4", type='III')
+
+pCO2_model <- lmer((pCO2) ~ Timepoint*Treatment + (1|Tank), na.action=na.omit, data=TA_df) 
+qqPlot(residuals(pCO2_model)) 
+hist(residuals(pCO2_model)) 
+Anova(pCO2_model, ddf="lme4", type='III')
+
+pH_model <- lmer((pH) ~ Timepoint*Treatment + (1|Tank), na.action=na.omit, data=TA_df) 
+qqPlot(residuals(pH_model)) 
+hist(residuals(pH_model)) 
+Anova(pH_model, ddf="lme4", type='III')
 ```
 
 
@@ -360,12 +395,17 @@ carb.output.long %>%
   axis.line = element_line(colour = "black")) 
 
 #All Treatment
+carb.output.long.means <- carb.output.long %>%
+  group_by(Timepoint, Treatment, Measurement) %>%
+  mutate(avg = mean(value))
+
 Carb.Chem.Figs <- carb.output.long %>%
   ggplot(aes(x = Timepoint, y = value, color = Treatment)) +
   scale_color_manual(values = trt.colors) +
   facet_wrap(Measurement ~ ., scales="free_y") +
   labs(x = "Month", y = "") +
-  geom_jitter(width = 0.2) +
+  geom_jitter(width = 0.1, alpha=0.3) +
+  geom_line(data = carb.output.long.means, aes(x=Timepoint, y=avg, color=Treatment), size=1) + 
   theme_bw() +
   theme(#axis.text.x = element_text(angle = 45, hjust = 1), 
         panel.border = element_blank(),
@@ -380,7 +420,7 @@ Carb.Chem.Figs <- carb.output.long %>%
   geom_vline(xintercept = as.numeric(as.Date("2018-11-18")), colour="black", linetype="dotted") +
   geom_vline(xintercept = as.numeric(as.Date("2018-09-21")), colour="black", linetype="dotted") 
 
-ggsave(file="Output/Supplemental_figures/Carbonate-Chemistry.png", Carb.Chem.Figs, width = 11, height = 8, units = c("in"))
+ggsave(file="Output/Figures/Supplemental_figures/Carbonate-Chemistry.png", Carb.Chem.Figs, width = 11, height = 8, units = c("in"))
 
 ```
 

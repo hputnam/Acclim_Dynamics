@@ -25,24 +25,24 @@ These are kept separately because the files are formatted differently.
 
 ```{r}
 # read in tank to treatment values to bind dataframes together later on 
-Trt.Tanks <- read.csv('Environmental_data/Tank_to_Treatment.csv') %>% select(-Tank.Name)
+Trt.Tanks <- read.csv('metadata/Tank_to_Treatment.csv') %>% select(-Tank.Name)
 Trt.Tanks$Tank <- as.character(Trt.Tanks$Tank)
 
 # binding all apex data files together. see above note about some need to be loaded differently
-APEX.data1 <- list.files(path = 'Environmental_data/Apex_continuous_data/Download1', pattern = ".csv", full.names = TRUE) %>% # list files in directory following a particular pattern
+APEX.data1 <- list.files(path = 'data/Environmental/Apex_continuous_data/Download1', pattern = ".csv", full.names = TRUE) %>% # list files in directory following a particular pattern
   set_names(.) %>% # get the column names
   map_dfr(read.table, .id = "file.ID", header=FALSE, sep=",") %>% # join all files together in one data frame by file ID
   dplyr::group_by(file.ID) %>% # for each file do the following
   select(-V1) %>% 
-  row_to_names(row_number=1) %>% rename(file.ID = "Environmental_data/Apex_continuous_data/Download1/Experimental_0922.csv") %>%
+  row_to_names(row_number=1) %>% rename(file.ID = "data/Environmental/Apex_continuous_data/Download1/Experimental_0922.csv") %>%
   filter(Date.Time != "Date.Time")
 
-APEX.data2 <- list.files(path = 'Environmental_data/Apex_continuous_data/Download2', pattern = ".csv", full.names = TRUE) %>% # list files in directory following a particular pattern
+APEX.data2 <- list.files(path = 'data/Environmental/Apex_continuous_data/Download2', pattern = ".csv", full.names = TRUE) %>% # list files in directory following a particular pattern
   set_names(.) %>% # get the column names
   map_dfr(read.table, .id = "file.ID", header=FALSE, sep=",") %>% # join all files together in one data frame by file ID
   group_by(file.ID) %>% # for each file do the following
   select(-V1) %>%
-  row_to_names(row_number=1) %>% rename(file.ID = "Environmental_data/Apex_continuous_data/Download2/Experimental_0925_0926.csv") %>%
+  row_to_names(row_number=1) %>% rename(file.ID = "data/Environmental/Apex_continuous_data/Download2/Experimental_0925_0926.csv") %>%
   filter(Date.Time != "Date.Time")
 
 # Changing format of the date and time column to be in POSIXct and UTC timezone.  
@@ -94,11 +94,11 @@ apex.pH.avg.trt <- summarySE(apex.pH, measurevar = "pH", groupvars=c("Treatment"
 apex.treatment <- full_join(apex.temp.avg.trt, apex.pH.avg.trt)
 
 # Exporting hobo logger tables
-write_csv(path = "Environmental_data/Apex-Temperature-Treatment.csv", apex.temp.avg.trt)
-write_csv(path = "Environmental_data/Apex-pH-Treatment.csv", apex.pH.avg.trt)
+write_csv(path = "data/Environmental/Apex-Temperature-Treatment.csv", apex.temp.avg.trt)
+write_csv(path = "data/Environmental/Apex-pH-Treatment.csv", apex.pH.avg.trt)
 
-write_csv(path = "Environmental_data/Apex-Temperature-Date.csv", apex.temp.avg.date)
-write_csv(path = "Environmental_data/Apex-pH-Date.csv", apex.pH.avg.date)
+write_csv(path = "data/Environmental/Apex-Temperature-Date.csv", apex.temp.avg.date)
+write_csv(path = "data/Environmental/Apex-pH-Date.csv", apex.pH.avg.date)
 ```
 
 Plotting 
@@ -170,7 +170,7 @@ The PAR sensor was only in one tank so we only need to subset our Apex_data fram
 ```{r}
 Licor_Light <- read.csv('data/Environmental/Discrete_Light_Licor193.csv', sep=",")
 
-Light_tank_info <-read.csv('data/Environmental/Tank_to_Treatment.csv', header=T, sep=",") %>% select(-Tank.Name)
+Light_tank_info <-read.csv('metadata/Tank_to_Treatment.csv', header=T, sep=",") %>% select(-Tank.Name)
 Licor_Light <- merge(Licor_Light, Light_tank_info, by="Tank") 
 Licor_Light$Tank <- as.character(Licor_Light$Tank) # changing Tank values to character instead of numeric
 ```
@@ -182,7 +182,7 @@ Visualizing Apex light data.
 APEX.data$PAR <- as.numeric(APEX.data$PAR)
 APEX.PAR <- APEX.data %>% filter((Date.Time > as.POSIXct("2018-09-22 06:50:00", tz="UTC") & Date.Time < as.POSIXct("2018-11-17 08:00:00", tz="UTC"))) %>% select(Date.Time, PAR)
 
-write_csv(path = "Environmental_data/Apex-PAR.csv", APEX.PAR)
+write_csv(path = "data/Environmental/Apex-PAR.csv", APEX.PAR)
 
 PAR.plot <- ggplot(APEX.PAR, aes(x=Date.Time, y = PAR)) + 
   geom_point(size=0.2) + theme_bw() +
@@ -205,6 +205,7 @@ Licor_LICOR193 <- Licor_Light %>%
   filter(!is.na(PAR))
 
 Licor_means <- summarySE(Licor_LICOR193, measurevar="PAR", groupvars=c("Treatment"))
+summarySE(Licor_LICOR193, measurevar="PAR")
 
 Treatment_PAR <- aov(PAR ~ Treatment, data = Licor_LICOR193)
 TRT_TK_PAR <- aov(PAR ~ Treatment*Tank, data = Licor_LICOR193)
