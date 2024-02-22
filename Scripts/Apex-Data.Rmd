@@ -235,16 +235,16 @@ treatment_colors <- c("blue", "lightblue", "salmon", "red3")
 tank_colors <- c("lightblue", "red3", "blue", "blue", "red3", "blue", "salmon", "red3", "lightblue", "salmon", "lightblue", "salmon")
 
 ## BY TREATMENT
-light1 <- ggplot(Licor_LICOR193, aes(x=Treatment, y=PAR, fill=Treatment)) + 
-  geom_boxplot() +
-  scale_fill_manual(values = treatment_colors) +
-  geom_jitter(color="black", size=0.4, alpha=0.9) + 
-  theme_classic() + 
+light1 <- ggplot(Licor_LICOR193, aes(x=Treatment, y=PAR, color=Treatment)) + 
+  scale_color_manual(values = treatment_colors) +
+  geom_boxplot(size=1) +
+  theme_bw() + 
+  geom_jitter(size=2, width=0.3, alpha=0.3) +
   theme(legend.position="none", plot.title = element_text(size=11)) + 
   xlab("Treatment") + 
-  ylab("PAR")
+  ylab("PAR (nm)")
 
-ggsave(filename = "output/Figures/LICOR-PAR.png", light1, device = "png", width = 9, height = 7)
+ggsave(filename = "output/Figures/LICOR-PAR.png", light1, device = "png", width = 6, height = 4)
 
 ## BY TREATMENT AND TANK
 ggplot(Licor_LICOR193, aes(x=Tank, y=PAR, fill=Tank)) + 

@@ -34,9 +34,9 @@ library(sjPlot)
 Protocol for ImageJ Bleaching Score Analysis found [here](https://emmastrand.github.io/EmmaStrand_Notebook/ImageJ-Analysis-Protocols/).  
 ```{r}
 Data <- read.csv("data/Physiology_variables/Bleaching_ImageJ_QC.csv", header=T, sep=",", na.string="NA") #read in data file
-Sample.Info <- read.csv("data/Environmental/Master_Fragment.csv", header=T, sep=",", na.string="NA") #read in data file 
+Sample.Info <- read.csv("metadata/Master_Fragment.csv", header=T, sep=",", na.string="NA") #read in data file 
 Sample.Info <- Sample.Info[,c(7,5,9)]
-Tank.Info <- read.csv("data/Environmental/Tank_to_Treatment.csv", header=T, sep=",", na.string="NA") #read in data file 
+Tank.Info <- read.csv("metadata/Tank_to_Treatment.csv", header=T, sep=",", na.string="NA") #read in data file 
 
 # Double checking the Plug IDs are associated with the correct tanks. 
 A <- Sample.Info$PLUG.ID
@@ -117,9 +117,9 @@ Pact.Blch <- subset(All.Means, Species=="Pocillopora")
 
 ### Reading in all dataframes. This can be run separately from the above code. 
 ```{r}
-Master <- read.csv("Environmental_data/Master_Fragment.csv") %>% select(Site.Name, Plug_ID, Species, ANALYSIS, Timepoint, Treatment, Tank, Temperature, CO2)
+Master <- read.csv("metadata/Master_Fragment.csv") %>% select(Site.Name, Plug_ID, Species, ANALYSIS, Timepoint, Treatment, Tank, Temperature, CO2)
 
-Color.Score <- read.csv("Physiology_variables/Bleaching_Score_Output.csv") %>% select(PLUG.ID, Bleaching.Score, Timepoint) %>% dplyr::rename(Plug_ID = PLUG.ID) %>% 
+Color.Score <- read.csv("data/Physiology_variables/Bleaching_Score_Output.csv") %>% select(PLUG.ID, Bleaching.Score, Timepoint) %>% dplyr::rename(Plug_ID = PLUG.ID) %>% 
   dplyr::rename(Blch.Time = Timepoint)
 Color.Score$Blch.Time <- gsub("^.{0,4}", "", Color.Score$Blch.Time) # taking out the "Week" in every row
 Color.Score$Blch.Time <- paste(Color.Score$Blch.Time, "week") # adding "week" after each number in every row 
@@ -278,8 +278,8 @@ Blch_plot <- ggplot(All.Means, aes(x=Timepoint, y = Bleaching.Score, group = Tre
   # Change axis line
   axis.line = element_line(colour = "black")); Blch_plot
 
-ggsave(file="Output/Final_Figures/Photographic_Bleaching.pdf", Blch_plot, width = 11, height = 6, units = c("in"))
-ggsave(file="Output/Final_Figures/Photographic_Bleaching.png", Blch_plot, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Figures/Supplemental_figures/Photographic_Bleaching.pdf", Blch_plot, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Figures/Supplemental_figures/Photographic_Bleaching.png", Blch_plot, width = 11, height = 6, units = c("in"))
 ```
 
 Pub figure 
@@ -308,7 +308,7 @@ color_pub<- ggplot(All.Means, aes(x=Timepoint, y = Bleaching.Score, group = Trea
   theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
   theme(legend.title = element_text(size = 12)); color_pub # Change axis line
 
-ggsave(file="Output/Final_figures/Supplemental_figures/fullrespcm2.png", Resp_plot_full, width = 9, height = 9, units = c("in"))
+#ggsave(file="Output/Final_figures/Supplemental_figures/fullrespcm2.png", Resp_plot_full, width = 9, height = 9, units = c("in"))
 ```
 
 For Coral Stress Phenome Paper
