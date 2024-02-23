@@ -44,16 +44,16 @@ library(emmeans)
 
 ```{r}
 # Surface area data
-sa <- read.csv("Physiology_variables/Respirometry/coral_surface_area.csv", sep = ",") %>% 
+sa <- read.csv("data/Physiology_variables/Respirometry/coral_surface_area.csv", sep = ",") %>% 
   dplyr::rename(Plug_ID = Sample_ID) %>% select(Plug_ID, surface.area.cm2)
 sa$Plug_ID <- as.character(sa$Plug_ID)
 
 # Tissue homogenate volume data
-homog_vols <- read.csv("Physiology_variables/homogenate_vol.csv", sep = ",") %>% select(Species, Plug_ID, vol_mL)
+homog_vols <- read.csv("data/Physiology_variables/homogenate_vol.csv", sep = ",") %>% select(Species, Plug_ID, vol_mL)
 homog_vols$Plug_ID <- as.character(homog_vols$Plug_ID)
 
 # Coral sample metadata
-metadata <- read.csv("Environmental_data/Master_Fragment.csv", sep = ",") %>% select(Species, Plug_ID, Tank, Treatment, Temperature, CO2, Timepoint, ANALYSIS, Sample.Date) %>%
+metadata <- read.csv("metadata/Master_Fragment.csv", sep = ",") %>% select(Species, Plug_ID, Tank, Treatment, Temperature, CO2, Timepoint, ANALYSIS, Sample.Date) %>%
   subset(ANALYSIS=="Physiology" | ANALYSIS=="Physiology/Molecular")
 metadata$Plug_ID <- as.character(metadata$Plug_ID)
 
@@ -70,7 +70,7 @@ metadata <- full_join(metadata, homog_vols) %>% full_join(sa) %>% filter(!is.na(
 
 ```{r}
 ## Haemocytometer data 
-haemo.raw <- read.csv("Physiology_variables/cell-counts/cell_counts.csv")
+haemo.raw <- read.csv("data/Physiology_variables/cell-counts/cell_counts.csv")
    haemo.raw$Plug_ID <- as.character(haemo.raw$Plug_ID)
 ```
 
@@ -153,11 +153,17 @@ count.means.full2 <- count.means2 %>% subset(!Timepoint == "Day 1" & !Timepoint 
 ## Visualize data 
 
 ```{r}
+points.stress <- haemo.for.means.calc %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2" & !Timepoint == "12 week" & !Timepoint == "16 week")
+
 cellcounts_plot <- ggplot(count.means.test.stress, aes(x=Timepoint, y = haemo.cells.cm2, group = Treatment, color = Treatment)) +
-  geom_line() + geom_point() +
-  facet_grid(~Species, scales = "free") +
+ geom_jitter(data = points.stress, 
+              aes(x=Timepoint, y=haemo.cells.cm2, group = Treatment, color = Treatment), 
+              size=2, width=0.2, alpha=0.15) + 
+  geom_line(size=1) + 
   geom_errorbar(aes(ymin=haemo.cells.cm2-se, ymax=haemo.cells.cm2+se), width=.2) +
-  scale_color_manual(values = cols) + 
+  geom_point(size=3) +
+  facet_grid(~Species, scales = "free") +
+    scale_color_manual(values = cols) + 
   theme_classic() + 
   ylab(expression("Cell Density" ~(cells ~cm^-2))) +
   theme(legend.position = "none") +
@@ -173,8 +179,10 @@ cellcounts_plot <- ggplot(count.means.test.stress, aes(x=Timepoint, y = haemo.ce
     strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
   axis.line = element_line(colour = "black")); cellcounts_plot
 
-ggsave(file="Output/Manuscript_figures/Counts_stress.png", cellcounts_plot, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Figures/Counts_stress.png", cellcounts_plot, width = 11, height = 6, units = c("in"))
+```
 
+```{r}
 cellcounts_plot_full <- ggplot(count.means.test.full, aes(x=Timepoint, y = haemo.cells.cm2, group = Treatment, color = Treatment)) +
   geom_line() + geom_point() +
   facet_grid(~Species, scales = "free") +

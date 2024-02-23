@@ -16,17 +16,17 @@ rm(list=ls())
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
-## install packages if you dont already have them
-if (!require("tidyverse")) install.packages("tidyverse")
-if (!require("plotrix")) install.packages("plotrix")
-if (!require("dplyr")) install.packages("dplyr")
-if (!require("Rmisc")) install.packages("Rmisc")
-if (!require("ggplot2")) install.packages("ggplot2")
-if (!require("gridExtra")) install.packages("gridExtra")
-if (!require("formattable")) install.packages("formattable")
-if (!require("data.table")) install.packages("data.table")
-if (!require("htmltools")) install.packages("htmltools")
-if (!require("webshot")) install.packages("webshot")
+# ## install packages if you dont already have them
+# if (!require("tidyverse")) install.packages("tidyverse")
+# if (!require("plotrix")) install.packages("plotrix")
+# if (!require("dplyr")) install.packages("dplyr")
+# if (!require("Rmisc")) install.packages("Rmisc")
+# if (!require("ggplot2")) install.packages("ggplot2")
+# if (!require("gridExtra")) install.packages("gridExtra")
+# if (!require("formattable")) install.packages("formattable")
+# if (!require("data.table")) install.packages("data.table")
+# if (!require("htmltools")) install.packages("htmltools")
+# if (!require("webshot")) install.packages("webshot")
 
 # load packages
 library(plyr)
@@ -51,23 +51,23 @@ library(lmerTest)
 # Reading in datafiles and merging into one large dataframe. 
 ```{r}
 df.platemaps <-
-  list.files(path = 'Physiology_variables/Chlorophyll-a_c',pattern = "platemap.csv", full.names = TRUE) %>% 
+  list.files(path = 'data/Physiology_variables/Chlorophyll-a_c',pattern = "platemap.csv", full.names = TRUE) %>% 
   # list files in directory following a particular pattern
   set_names(.) %>% # get the column names
   map_dfr(read.csv, .id = "file.ID") %>% # join all files together in one data frame by file ID
   group_by(file.ID) 
 
-df.platemaps$file.ID <- gsub("Physiology_variables/Chlorophyll-a_c/", "", df.platemaps$file.ID)
+df.platemaps$file.ID <- gsub("data/Physiology_variables/Chlorophyll-a_c/", "", df.platemaps$file.ID)
 df.platemaps$file.ID <- gsub("_platemap.csv", "", df.platemaps$file.ID)
 
 df.data <-
-  list.files(path = 'Physiology_variables/Chlorophyll-a_c',pattern = "data.csv", full.names = TRUE) %>% 
+  list.files(path = 'data/Physiology_variables/Chlorophyll-a_c',pattern = "data.csv", full.names = TRUE) %>% 
   # list files in directory following a particular pattern
   set_names(.) %>% # get the column names
   map_dfr(read.csv, .id = "file.ID") %>% # join all files together in one data frame by file ID
  group_by(file.ID)
 
-df.data$file.ID <- gsub("Physiology_variables/Chlorophyll-a_c/", "", df.data$file.ID)
+df.data$file.ID <- gsub("data/Physiology_variables/Chlorophyll-a_c/", "", df.data$file.ID)
 df.data$file.ID <- gsub("_data.csv", "", df.data$file.ID)
 
 
@@ -111,7 +111,7 @@ df.1 <- df.1 %>%
 ```{r}
 # Load homogenate volume
 # Load surface area
-sa <- read_csv("Physiology_variables/Respirometry/coral_surface_area.csv") %>% dplyr::rename(Plug_ID = Sample_ID) %>%
+sa <- read_csv("data/Physiology_variables/Respirometry/coral_surface_area.csv") %>% dplyr::rename(Plug_ID = Sample_ID) %>%
   select(Plug_ID, surface.area.cm2)
 sa$Plug_ID <- as.factor(sa$Plug_ID)
 str(sa)
@@ -119,7 +119,7 @@ str(sa)
 df.chl <- left_join(sa, df.1)
 
 # Load homogenate volume
-homog.vol <- read.csv("Physiology_variables/homogenate_vol.csv") %>%
+homog.vol <- read.csv("data/Physiology_variables/homogenate_vol.csv") %>%
   select(Plug_ID, vol_mL)
 homog.vol$Plug_ID <- as.factor(homog.vol$Plug_ID)
 str(homog.vol)
@@ -146,7 +146,7 @@ df.chl <- filter(df.chl, !Plug_ID %in% c("NA", "BK"))
 
 ### Reading in master fragment information. Taking out P-1488 (See notes in results markdown). 
 ```{r}
-Master_fragment <- read.csv("Environmental_data/Master_Fragment.csv", header=T, sep=",", na.string="NA") %>% 
+Master_fragment <- read.csv("metadata/Master_Fragment.csv", header=T, sep=",", na.string="NA") %>% 
   subset(ANALYSIS=="Physiology" | ANALYSIS=="Physiology/Molecular") %>% # need to keep "Physiology" and "Physiology/Molecular"
   select(Plug_ID, Site.Name, Species, Treatment, Temperature, CO2, Timepoint, Tank) 
   Master_fragment$Plug_ID <- as.character(Master_fragment$Plug_ID)
@@ -283,11 +283,20 @@ Chl_means_cells <- Chl_means %>% subset(Measurement == "chla.ug.cells")  # | Mea
 
 Chl.cm2.stress <- Chl_means_cm2 %>% subset(!Timepoint == "12 week" & !Timepoint == "16 week")
 
-CHL.cm2 <- ggplot(Chl_means_cm2, aes(x=Timepoint, y = Value, group = Treatment, color = Treatment)) +
-  geom_line() + geom_point() +
+Chl_final_forplot <- Chl_final %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2" & !Timepoint == "12 week" & !Timepoint == "16 week") %>%
+  mutate(Species = case_when(
+    Species == "Mcapitata" ~ "Montipora capitata",
+    Species == "Pacuta" ~ "Pocillopora acuta"))
+
+CHL.cm2 <- ggplot(Chl.cm2.stress, aes(x=Timepoint, y = Value, group = Treatment, color = Treatment)) +
+  geom_jitter(data = Chl_final_forplot, 
+              aes(x=Timepoint, y=chla.ug.cm2, group = Treatment, color = Treatment), 
+              size=2, width=0.2, alpha=0.15) + 
+  geom_line(size=1) + 
+  geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2, size=1) +
+  geom_point(size=3) +
   facet_grid(~Species, scales = "free") +
-  geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2) +
-  scale_color_manual(values = cols) + 
+    scale_color_manual(values = cols) + 
   xlab("") + 
   theme_classic() + 
   ylab(expression("Chlorophyll a" ~(ug ~cm^-2))) +
@@ -331,10 +340,10 @@ CHL.cells<- ggplot(Chl_means_cells, aes(x=Timepoint, y = Value, group = Treatmen
   theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
   theme(legend.title = element_text(size = 15))
 
-ggsave(file="Output/Manuscript_figures/Chlorophyll_stress.png", CHL.cm2, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Figures/Chlorophyll_stress.png", CHL.cm2, width = 11, height = 6, units = c("in"))
 
-ggsave(file="Output/Supplemental_figures/Chlorophyll_cm2_full.png", CHL.cm2, width = 11, height = 6, units = c("in"))
-ggsave(file="Output/Supplemental_figures/Chlorophyll_cells_full.png", CHL.cells, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Figures/Supplemental_figures/Chlorophyll_cm2_full.png", CHL.cm2, width = 11, height = 6, units = c("in"))
+ggsave(file="Output/Figures/Supplemental_figures/Chlorophyll_cells_full.png", CHL.cells, width = 11, height = 6, units = c("in"))
 
 
 Chl_means_cm2_recovery <- Chl_means_cm2 %>% 
