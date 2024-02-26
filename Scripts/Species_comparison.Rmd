@@ -30,11 +30,14 @@ phys_subset <- phys %>% dplyr::select(Plug_ID, Species, PR, Pnet.cell, AFDW.mg.c
 ```
 
 ```{r}
-fig2 <- phys_subset %>% 
+phys_subset_plot <- phys_subset %>% 
   mutate(Pnet.cell.10 = Pnet.cell*100000,
          AFDW.ug.cells_Sym = AFDW.mg.cells_Sym*1000) %>% 
   dplyr::select(-Pnet.cell, -AFDW.mg.cells_Sym) %>%
-  gather(., "measurement", "value", 3:7) %>%
+  gather(., "measurement", "value", 3:7)
+phys_subset_plot$measurement <- factor(phys_subset_plot$measurement, levels = c("Ratio_S.H", "PR", "cre.umol.mgprot", "AFDW.ug.cells_Sym", "Pnet.cell.10"))
+
+fig2 <- phys_subset_plot %>%
   ggplot(., aes(x=Species, y=value, shape=Species)) + 
   geom_boxplot(outlier.shape = NA) + 
   geom_jitter(aes(shape=Species), width = 0.15, color="black", size=2, alpha=0.7) + 
