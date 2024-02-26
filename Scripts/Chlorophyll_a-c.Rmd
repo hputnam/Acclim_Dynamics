@@ -297,7 +297,7 @@ CHL.cm2 <- ggplot(Chl.cm2.stress, aes(x=Timepoint, y = Value, group = Treatment,
   geom_point(size=3) +
   facet_grid(~Species, scales = "free") +
     scale_color_manual(values = cols) + 
-  xlab("") + 
+  xlab("Time point") + 
   theme_classic() + 
   ylab(expression("Chlorophyll a" ~(ug ~cm^-2))) +
  # theme(legend.position = c(0.1,0.2)) +
@@ -351,16 +351,27 @@ Chl_means_cm2_recovery <- Chl_means_cm2 %>%
   subset(Measurement == "chla.ug.cm2") %>%
   subset(Timepoint == "8 week" | Timepoint == "12 week" | Timepoint == "16 week")
 
+Chl_final_for_recoveryplot <- Chl_final %>% subset(Timepoint == "8 week" | Timepoint == "12 week" | Timepoint == "16 week") %>%
+  mutate(Species = case_when(
+    Species == "Mcapitata" ~ "Montipora capitata",
+    Species == "Pacuta" ~ "Pocillopora acuta")) %>%
+  subset(Species == "Montipora capitata")
+
 chl_plot_recovery <- ggplot(Chl_means_cm2_recovery, aes(x=Timepoint, y = Value, group = Treatment, color = Treatment)) +
-  geom_line() + geom_point() +
-  facet_grid(~Species) +
-  geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2) +
-  scale_color_manual(values = cols) + 
-  xlab("Timepoint") + 
+  geom_jitter(data = Chl_final_for_recoveryplot, 
+              aes(x=Timepoint, y=chla.ug.cm2, group = Treatment, color = Treatment), 
+              size=2, width=0.2, alpha=0.15) + 
+  geom_line(size=1) + 
+  geom_errorbar(aes(ymin=Value-se, ymax=Value+se), width=.2, size=1) +
+  geom_point(size=3) +
+  facet_grid(~Species, scales = "free") +
+    scale_color_manual(values = cols) + 
+  xlab("Time point") + 
   theme_classic() + 
   ylab(expression("Chlorophyll a" ~(ug ~cm^-2))) +
+ # theme(legend.position = c(0.1,0.2)) +
   theme(legend.position = "none") +
-  geom_vline(xintercept = c(1.2), colour="black", linetype="dotted") +
+  geom_vline(xintercept = c(1.35), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
   theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
   theme(panel.border = element_blank(),
@@ -374,7 +385,7 @@ chl_plot_recovery <- ggplot(Chl_means_cm2_recovery, aes(x=Timepoint, y = Value, 
   theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
   theme(legend.title = element_text(size = 15))
 
-ggsave(file="Output/Manuscript_figures/chl_recovery.png", chl_plot_recovery, width = 5, height = 4, units = c("in"))
+ggsave(file="Output/Figures/chl_recovery.png", chl_plot_recovery, width = 5, height = 4, units = c("in"))
 ```
 
 ## Presentation figures 
