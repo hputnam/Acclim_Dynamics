@@ -144,6 +144,7 @@ count.means.stress2 <- count.means2 %>%
 
 count.means.test.stress <- count.means.test %>%
   subset(!Timepoint == "Day 1" & !Timepoint == "Day 2" & !Timepoint == "12 week" & !Timepoint == "16 week") %>% filter(N > 3)
+
 count.means.test.full <- count.means.test %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2") %>% filter(N > 3)
 
 count.means.full <- count.means %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2") %>% filter(N > 12)
@@ -153,31 +154,38 @@ count.means.full2 <- count.means2 %>% subset(!Timepoint == "Day 1" & !Timepoint 
 ## Visualize data 
 
 ```{r}
-points.stress <- haemo.for.means.calc %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2" & !Timepoint == "12 week" & !Timepoint == "16 week")
+points.stress <- haemo.for.means.calc %>% subset(!Timepoint == "Day 1" & !Timepoint == "Day 2" & !Timepoint == "12 week" & !Timepoint == "16 week") %>%
+  mutate(haemo.cells.10cm2 = haemo.cells.cm2/100000)
 
-cellcounts_plot <- ggplot(count.means.test.stress, aes(x=Timepoint, y = haemo.cells.cm2, group = Treatment, color = Treatment)) +
+count.means.test.stress.plot <- count.means.test.stress %>% 
+  mutate(haemo.cells.10cm2 = haemo.cells.cm2/100000,
+         se10 = se/100000)
+
+cellcounts_plot <- ggplot(count.means.test.stress.plot, aes(x=Timepoint, y = haemo.cells.10cm2, group = Treatment, color = Treatment)) +
  geom_jitter(data = points.stress, 
-              aes(x=Timepoint, y=haemo.cells.cm2, group = Treatment, color = Treatment), 
+              aes(x=Timepoint, y=haemo.cells.10cm2, group = Treatment, color = Treatment), 
               size=2, width=0.2, alpha=0.15) + 
   geom_line(size=1) + 
-  geom_errorbar(aes(ymin=haemo.cells.cm2-se, ymax=haemo.cells.cm2+se), width=.2) +
+  geom_errorbar(aes(ymin=haemo.cells.10cm2-se10, ymax=haemo.cells.10cm2+se10), width=.2, size=1) +
   geom_point(size=3) +
   facet_grid(~Species, scales = "free") +
     scale_color_manual(values = cols) + 
   theme_classic() + 
-  ylab(expression("Cell Density" ~(cells ~cm^-2))) +
+  ylab(expression("Cell Density" ~(cells ~x10^5 ~cm^-2))) +
   theme(legend.position = "none") +
-  #geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
+  geom_vline(xintercept = c(5.2), colour="black", linetype="dotted") +
   theme(plot.title = element_text(face = 'bold.italic', size = 12, hjust = 0)) + 
+  theme(axis.text.x = element_text(angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  strip.text.x = element_text(size = 20, color = "black", face = "bold.italic"), # Change axis line
+  axis.line = element_line(colour = "black")) + theme(axis.text = element_text(size = 12)) + 
   theme(axis.title = element_text(size = 15)) +
-  theme(axis.text.x = element_text(size = 10, angle = 60, vjust = 1.2, hjust = 1.3)) + #Set the text angle
+  theme(legend.text = element_text(size = 13)) +
   theme(axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0))) +
   theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
-  theme(panel.border = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    strip.text.x = element_text(size = 12, color = "black", face = "bold.italic"),
-  axis.line = element_line(colour = "black")); cellcounts_plot
+  theme(legend.title = element_text(size = 15)); cellcounts_plot
 
 ggsave(file="Output/Figures/Counts_stress.png", cellcounts_plot, width = 11, height = 6, units = c("in"))
 ```
