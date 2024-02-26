@@ -32,7 +32,7 @@ phys_subset <- phys %>% dplyr::select(Plug_ID, Species, PR, Pnet.cell, AFDW.mg.c
 ```{r}
 phys_subset_plot <- phys_subset %>% 
   mutate(Pnet.cell.10 = Pnet.cell*100000,
-         AFDW.ug.cells_Sym = AFDW.mg.cells_Sym*1000) %>% 
+         AFDW.ug.cells_Sym = AFDW.mg.cells_Sym*100000) %>% 
   dplyr::select(-Pnet.cell, -AFDW.mg.cells_Sym) %>%
   gather(., "measurement", "value", 3:7)
 phys_subset_plot$measurement <- factor(phys_subset_plot$measurement, levels = c("Ratio_S.H", "PR", "cre.umol.mgprot", "AFDW.ug.cells_Sym", "Pnet.cell.10"))
