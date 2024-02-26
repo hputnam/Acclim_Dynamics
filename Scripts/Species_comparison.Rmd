@@ -15,18 +15,43 @@ library(plyr)
 library(dplyr)
 library(tidyverse)
 library(ggh4x)
+library(cowplot)
 ```
 
 ```{r}
 phys <- read.csv("Output/results_physiology.csv") %>% subset(Timepoint == "1 week")  
 phys.gather <- read.csv("Output/results_physiology.csv") %>% subset(Timepoint == "1 week") %>% gather(measurement, value, 10:23)
 
-all <- phys.gather %>% ggplot(aes(x=Species, y=value, group = Species)) +
-  ggh4x::facet_grid2(. ~ measurement, scales = "free_y", independent = "y") + 
-  geom_boxplot() + theme_classic()
+# phys.gather %>% ggplot(aes(x=Species, y=value, group = Species)) +
+#   ggh4x::facet_grid2(. ~ measurement, scales = "free_y", independent = "y") + 
+#   geom_boxplot() + theme_classic()
 
-ggsave(file="Output/Supplemental_figures/Species-compare-all.png", all, width = 12, height = 3, units = c("in"))
+phys_subset <- phys %>% dplyr::select(Plug_ID, Species, PR, Pnet.cell, AFDW.mg.cells_Sym, Ratio_S.H, cre.umol.mgprot)
 ```
+
+```{r}
+fig2 <- phys_subset %>% 
+  mutate(Pnet.cell.10 = Pnet.cell*100000,
+         AFDW.ug.cells_Sym = AFDW.mg.cells_Sym*1000) %>% 
+  dplyr::select(-Pnet.cell, -AFDW.mg.cells_Sym) %>%
+  gather(., "measurement", "value", 3:7) %>%
+  ggplot(., aes(x=Species, y=value, shape=Species)) + 
+  geom_boxplot(outlier.shape = NA) + 
+  geom_jitter(aes(shape=Species), width = 0.15, color="black", size=2, alpha=0.7) + 
+  theme_bw() + 
+  ylab("") + 
+  xlab("") +
+  facet_wrap(~measurement, scales = "free", strip.position = "left", ncol=3) + 
+  theme(legend.position="none",
+        strip.placement='outside',
+        panel.grid.major = element_blank(),) +
+  scale_y_continuous(expand = expansion(mult = c(0.1, 0.55)))
+
+ggsave(file="Output/Figures/Species-compare.png", fig2, width = 6, height = 4, units = c("in"))
+```
+
+
+
 
 ```{r}
 pgross <- phys %>% select(1:9, Pgross_umol.cm2.hr) %>%
@@ -35,7 +60,7 @@ pgross <- phys %>% select(1:9, Pgross_umol.cm2.hr) %>%
   theme(legend.position = "none") +
   ylab(bquote('Pgross: Change in oxygen levels ('*mu~ 'mol' ~cm^-2*~ h^-1*')')) + # y-axis label and y axis range
   geom_jitter(aes(shape=Species), width = 0.15, color="black", size=2, alpha=0.9)
-ggsave(file="Output/Supplemental_figures/Species-compare-pgross.png", pgross, width = 3, height = 3, units = c("in"))
+ggsave(file="Output/Figures/Supplemental_figures/Species-compare-pgross.png", pgross, width = 3, height = 3, units = c("in"))
 
 pnet.cm2 <- phys %>% select(1:9, Pnet_umol.cm2.hr) %>%
   ggplot(aes(x=Species, y=Pnet_umol.cm2.hr, group = Species)) + 
@@ -43,15 +68,16 @@ pnet.cm2 <- phys %>% select(1:9, Pnet_umol.cm2.hr) %>%
   theme(legend.position = "none") +
   ylab(bquote('Pnet: Change in oxygen levels ('*mu~ 'mol' ~cm^-2*~ h^-1*')')) + # y-axis label and y axis range
   geom_jitter(aes(shape=Species), width = 0.15, color="black", size=2, alpha=0.9)
-ggsave(file="Output/Supplemental_figures/Species-compare-pnetcm2.png", pnet.cm2, width = 3, height = 3, units = c("in"))
+ggsave(file="Output/Figures/Supplemental_figures/Species-compare-pnetcm2.png", pnet.cm2, width = 3, height = 3, units = c("in"))
 
 PR <- phys %>% select(1:9, PR) %>%
   ggplot(aes(x=Species, y=PR, group = Species)) + 
-  geom_boxplot(outlier.shape = NA) + theme_classic() + xlab("") +
+  geom_boxplot(outlier.shape = NA) + theme_bw() + xlab("") +
   theme(legend.position = "none") +
-  ylab(bquote('Photosynthesis:Respiration Ratio')) + # y-axis label and y axis range
+  ylab("") +
+ # ylab(bquote('P:R')) + # y-axis label and y axis range
   geom_jitter(aes(shape=Species), width = 0.15, color="black", size=2, alpha=0.9)
-ggsave(file="Output/Supplemental_figures/Species-compare-PR.png", PR, width = 3, height = 3, units = c("in"))
+ggsave(file="Output/Figures/Supplemental_figures/Species-compare-PR.png", PR, width = 3, height = 3, units = c("in"))
 
 resp <- phys %>% select(1:9, Rdark_umol.cm2.hr) %>%
   ggplot(aes(x=Species, y=Rdark_umol.cm2.hr, group = Species)) + 
@@ -59,15 +85,17 @@ resp <- phys %>% select(1:9, Rdark_umol.cm2.hr) %>%
   theme(legend.position = "none") +
   ylab(bquote('Respiration: Change in oxygen levels ('*mu~ 'mol' ~cm^-2*~ h^-1*')')) + # y-axis label and y axis range
   geom_jitter(aes(shape=Species), width = 0.15, color="black", size=2, alpha=0.9)
-ggsave(file="Output/Supplemental_figures/Species-compare-resp.png", resp, width = 3, height = 3, units = c("in"))
+ggsave(file="Output/Figures/Supplemental_figures/Species-compare-resp.png", resp, width = 3, height = 3, units = c("in"))
 
 Pnet.cell <- phys %>% select(1:9, Pnet.cell) %>%
-  ggplot(aes(x=Species, y=Pnet.cell, group = Species)) + 
-  geom_boxplot(outlier.shape = NA) + theme_classic() + xlab("") +
+  mutate(Pnet.cell.10 = Pnet.cell*100000) %>% 
+  ggplot(aes(x=Species, y=Pnet.cell.10, group = Species)) + 
+  geom_boxplot(outlier.shape = NA) + theme_bw() + xlab("") +
   theme(legend.position = "none") +
-  ylab(bquote('Pnet: Change in oxygen levels ('*mu~ 'mol' ~cell^-1*~ h^-1*')')) + # y-axis label and y axis range
+  ylab("") +
+  #ylab(bquote('Pnet ('*mu~ 'mol' ~ x10^-5 ~cell^-1*~ h^-1*')')) + # y-axis label and y axis range
   geom_jitter(aes(shape=Species), width = 0.15, color="black", size=2, alpha=0.9)
-ggsave(file="Output/Supplemental_figures/Species-compare-Pnet.cell.png", Pnet.cell, width = 3, height = 3, units = c("in"))
+ggsave(file="Output/Figures/Supplemental_figures/Species-compare-Pnet.cell.png", Pnet.cell, width = 3, height = 3, units = c("in"))
 
 chla.ug.cm2 <- phys %>% select(1:9, chla.ug.cm2) %>%
   ggplot(aes(x=Species, y=chla.ug.cm2, group = Species)) + 
@@ -75,7 +103,7 @@ chla.ug.cm2 <- phys %>% select(1:9, chla.ug.cm2) %>%
   theme(legend.position = "none") +
   ylab(expression("Chlorophyll a" ~(ug ~cm^-2))) +
   geom_jitter(aes(shape=Species), width = 0.15, color="black", size=2, alpha=0.9)
-ggsave(file="Output/Supplemental_figures/Species-compare-chla-cm2.png", chla.ug.cm2, width = 3, height = 3, units = c("in"))
+ggsave(file="Output/Figures/Supplemental_figures/Species-compare-chla-cm2.png", chla.ug.cm2, width = 3, height = 3, units = c("in"))
 
 chla.ug.cells <- phys %>% select(1:9, chla.ug.cells) %>%
   ggplot(aes(x=Species, y=chla.ug.cells, group = Species)) + 
@@ -83,15 +111,15 @@ chla.ug.cells <- phys %>% select(1:9, chla.ug.cells) %>%
   theme(legend.position = "none") +
   ylab(expression("Chlorophyll a" ~(ug ~cell^-1))) +
   geom_jitter(aes(shape=Species), width = 0.15, color="black", size=2, alpha=0.9)
-ggsave(file="Output/Supplemental_figures/Species-compare-chla-cell.png", chla.ug.cells, width = 3, height = 3, units = c("in"))
+ggsave(file="Output/Figures/Supplemental_figures/Species-compare-chla-cell.png", chla.ug.cells, width = 3, height = 3, units = c("in"))
 
 AFDW.mg.cm2_Sym <- phys %>% select(1:9, AFDW.mg.cm2_Sym) %>%
   ggplot(aes(x=Species, y=AFDW.mg.cm2_Sym, group = Species)) + 
-  geom_boxplot(outlier.shape = NA) + theme_classic() + xlab("") +
+  geom_boxplot(outlier.shape = NA) + theme_bw() + xlab("") +
   theme(legend.position = "none") +
   ylab(expression("Sym AFDW" ~(mg ~cm^-2))) +
   geom_jitter(aes(shape=Species), width = 0.15, color="black", size=2, alpha=0.9)
-ggsave(file="Output/Supplemental_figures/Species-compare-Sym-AFDW-cm2.png", AFDW.mg.cm2_Sym, width = 3, height = 3, units = c("in"))
+ggsave(file="Output/Figures/Supplemental_figures/Species-compare-Sym-AFDW-cm2.png", AFDW.mg.cm2_Sym, width = 3, height = 3, units = c("in"))
 
 AFDW.mg.cm2_Host <- phys %>% select(1:9, AFDW.mg.cm2_Host) %>%
   ggplot(aes(x=Species, y=AFDW.mg.cm2_Host, group = Species)) + 
@@ -99,23 +127,26 @@ AFDW.mg.cm2_Host <- phys %>% select(1:9, AFDW.mg.cm2_Host) %>%
   theme(legend.position = "none") +
   ylab(expression("Host AFDW" ~(mg ~cm^-2))) +
   geom_jitter(aes(shape=Species), width = 0.15, color="black", size=2, alpha=0.9)
-ggsave(file="Output/Supplemental_figures/Species-compare-Host-AFDW-cm2.png", AFDW.mg.cm2_Host, width = 3, height = 3, units = c("in"))
+ggsave(file="Output/Figures/Supplemental_figures/Species-compare-Host-AFDW-cm2.png", AFDW.mg.cm2_Host, width = 3, height = 3, units = c("in"))
 
 AFDW.mg.cells_Sym <- phys %>% select(1:9, AFDW.mg.cells_Sym) %>%
-  ggplot(aes(x=Species, y=AFDW.mg.cells_Sym, group = Species)) + 
-  geom_boxplot(outlier.shape = NA) + theme_classic() + xlab("") +
+  mutate(AFDW.ug.cells_Sym = AFDW.mg.cells_Sym*1000) %>%
+  ggplot(aes(x=Species, y=AFDW.ug.cells_Sym, group = Species)) + 
+  geom_boxplot(outlier.shape = NA) + theme_bw() + xlab("") +
+  ylab("") +
   theme(legend.position = "none") +
-  ylab(expression("Sym AFDW" ~(mg ~cell^-1))) +
+ # ylab(expression("Sym AFDW" ~(mg ~ x10^-3 ~cell^-1))) +
   geom_jitter(aes(shape=Species), width = 0.15, color="black", size=2, alpha=0.9)
-ggsave(file="Output/Supplemental_figures/Species-compare-Sym-AFDW-cell.png", AFDW.mg.cells_Sym, width = 3, height = 3, units = c("in"))
+ggsave(file="Output/Figures/Supplemental_figures/Species-compare-Sym-AFDW-cell.png", AFDW.mg.cells_Sym, width = 3, height = 3, units = c("in"))
 
 Ratio_S.H <- phys %>% select(1:9, Ratio_S.H) %>%
   ggplot(aes(x=Species, y=Ratio_S.H, group = Species, shape=Species)) + 
-  geom_boxplot(outlier.shape = NA) + theme_classic() + xlab("") +
+  geom_boxplot(outlier.shape = NA) + theme_bw() + xlab("") +
   theme(legend.position = "none") +
-  ylab(expression("AFDW S:H Ratio")) +
+  ylab("") +
+  #ylab(expression("AFDW S:H")) +
   geom_jitter(aes(shape=Species), width = 0.15, color="black", size=2, alpha=0.9)
-ggsave(file="Output/Supplemental_figures/Species-compare-AFDW-ratio.png", Ratio_S.H, width = 3, height = 3, units = c("in"))
+ggsave(file="Output/Figures/Supplemental_figures/Species-compare-AFDW-ratio.png", Ratio_S.H, width = 3, height = 3, units = c("in"))
 
 prot_mg.cm2 <- phys %>% select(1:9, prot_mg.cm2) %>%
   ggplot(aes(x=Species, y=prot_mg.cm2, group = Species)) + 
@@ -123,15 +154,16 @@ prot_mg.cm2 <- phys %>% select(1:9, prot_mg.cm2) %>%
   theme(legend.position = "none") +
   ylab(expression("Host soluble protein" ~(mg ~cm^-2))) +
   geom_jitter(aes(shape=Species), width = 0.15, color="black", size=2, alpha=0.9)
-ggsave(file="Output/Supplemental_figures/Species-compare-prot.png", prot_mg.cm2, width = 3, height = 3, units = c("in"))
+ggsave(file="Output/Figures/Supplemental_figures/Species-compare-prot.png", prot_mg.cm2, width = 3, height = 3, units = c("in"))
 
 cre.umol.mgprot <- phys %>% select(1:9, cre.umol.mgprot) %>%
   ggplot(aes(x=Species, y=cre.umol.mgprot, group = Species)) + 
-  geom_boxplot(outlier.shape = NA) + theme_classic() + xlab("") +
+  geom_boxplot(outlier.shape = NA) + theme_bw() + xlab("") +
   theme(legend.position = "none") +
-  ylab(expression("CRE"~(umol ~cm^-2))) +
+  ylab("") +
+ # ylab(expression("CRE"~(umol ~cm^-2))) +
   geom_jitter(aes(shape=Species), width = 0.15, color="black", size=2, alpha=0.9)
-ggsave(file="Output/Supplemental_figures/Species-compare-TAC.png", cre.umol.mgprot, width = 3, height = 3, units = c("in"))
+ggsave(file="Output/Figures/Supplemental_figures/Species-compare-TAC.png", cre.umol.mgprot, width = 3, height = 3, units = c("in"))
 
 haemo.cells.cm2 <- phys %>% select(1:9, haemo.cells.cm2) %>%
   ggplot(aes(x=Species, y=haemo.cells.cm2, group = Species)) + 
@@ -139,6 +171,18 @@ haemo.cells.cm2 <- phys %>% select(1:9, haemo.cells.cm2) %>%
   theme(legend.position = "none") +
   ylab(expression("Cell Density" ~(cells ~cm^-2))) +
   geom_jitter(aes(shape=Species), width = 0.15, color="black", size=2, alpha=0.9)
-ggsave(file="Output/Supplemental_figures/Species-compare-counts.png", haemo.cells.cm2, width = 3, height = 3, units = c("in"))
+ggsave(file="Output/Figures/Supplemental_figures/Species-compare-counts.png", haemo.cells.cm2, width = 3, height = 3, units = c("in"))
 ```
+
+
+PR, Pnet.cell, AFDW.mg.cells_Sym, Ratio_S.H, cre.umol.mgprot
+
+```{r}
+plot_grid(Ratio_S.H, PR, cre.umol.mgprot, AFDW.mg.cells_Sym, Pnet.cell, 
+          labels = c('A', 'B', 'C', 'D', 'E'),
+          label_size = 12,
+          rel_widths = c(2,2))
+```
+
+
 
