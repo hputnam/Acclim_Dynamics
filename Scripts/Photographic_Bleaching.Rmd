@@ -28,6 +28,7 @@ library("lme4")
 library("car")
 library("MuMIn")
 library(sjPlot)
+library(readxl)
 ```
 
 ### Reading in quality controlled version of ImageJ data.
@@ -341,4 +342,84 @@ CSP_plot <- ggplot(All.Means, aes(x=Timepoint, y = Bleaching.Score, group = Trea
 
 ggsave(file="Output/Final_Figures/CSP-Photographic_Bleaching.png", CSP_plot, width = 11, height = 6, units = c("in"))
 ```
+### Chille et al gene expression paper
+
+From https://github.com/echille/Genotype_dominates_transcriptomic_response_Pacu/blob/main/Sample_Info
+
+```{r}
+pacuta_ploidy_samples <- read_xlsx("../samples_Pacuta.annotations.xlsx", sheet=1) %>%
+    mutate(., Plug_ID = str_after_nth(Sample, "_", 3)) %>% dplyr::select(Plug_ID, Species) 
+
+mcap_samples <- read_xlsx("../samples_Mcapitata.annotations.xlsx", sheet=1) %>%
+  mutate(., Plug_ID = str_after_nth(Sample, "_", 3)) %>% dplyr::select(Plug_ID, Species)
+```
+
+
+```{r}
+color.data.chille.PA <- color.data %>% subset(ANALYSIS == "Molecular") %>% subset(Species == "Pacuta")
+color.data.chille.PA.means <- summarySE(data = color.data.chille.PA, 
+                                        measurevar="Bleaching.Score", groupvars=c("Blch.Time", "Treatment"))
+
+color.data.chille.PA.means$Blch.Time <- factor(color.data.chille.PA.means$Blch.Time, levels = c("1 week", "2 week", "3 week", "4 week", "5 week", "6 week", "7 week", "8 week", "9 week", "10 week", "11 week", "12 week")) 
+
+color.data.chille.PA.means <- color.data.chille.PA.means %>% subset(!Blch.Time=="5 week")
+
+
+pacuta_color_erin <- color.data.chille.PA.means %>%
+  ggplot(., aes(x=Blch.Time, y = Bleaching.Score, group = Treatment, color=Treatment, fill=Treatment)) +
+  geom_line(size=0.75) + 
+  geom_point(size=3) +
+  geom_errorbar(aes(ymin=Bleaching.Score-se, ymax=Bleaching.Score+se), size=0.75, width=.2) +
+  scale_fill_manual(values = cols) +
+  scale_color_manual(values = cols) +
+  geom_vline(xintercept = c(7.5), colour="black", linetype="dotted") +
+  xlab("Timepoint") + 
+  ylab("Color Score") + # y-axis label and y axis range
+  theme_classic() + 
+  theme(legend.position = c(0.09, 0.22),
+        axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0), size=12, face="bold"),
+        axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0), size=12, face="bold")) 
+
+ggsave("../Pacuta_Chilleetal_2024.png", width=7, height=4)
+```
+
+```{r}
+color.data.chille.MC <- color.data %>% subset(ANALYSIS == "Molecular") %>% subset(Species == "Mcapitata")
+color.data.chille.MC.means <- summarySE(data = color.data.chille.MC, 
+                                        measurevar="Bleaching.Score", groupvars=c("Blch.Time", "Treatment"))
+
+color.data.chille.MC.means$Blch.Time <- factor(color.data.chille.MC.means$Blch.Time, levels = c("1 week", "2 week", "3 week", "4 week", "5 week", "6 week", "7 week", "8 week", "9 week", "10 week", "11 week", "12 week")) 
+
+color.data.chille.MC.means <- color.data.chille.MC.means %>% subset(!Blch.Time=="5 week")
+
+
+mcap_color_erin <- color.data.chille.MC.means %>%
+  ggplot(., aes(x=Blch.Time, y = Bleaching.Score, group = Treatment, color=Treatment, fill=Treatment)) +
+  geom_line(size=0.75) + 
+  geom_point(size=3) +
+  geom_errorbar(aes(ymin=Bleaching.Score-se, ymax=Bleaching.Score+se), size=0.75, width=.2) +
+  scale_fill_manual(values = cols) +
+  scale_color_manual(values = cols) +
+  geom_vline(xintercept = c(7.5), colour="black", linetype="dotted") +
+  xlab("Timepoint") + 
+  ylab("Color Score") + # y-axis label and y axis range
+  theme_classic() + 
+  theme(legend.position = c(0.09, 0.22),
+        axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0), size=12, face="bold"),
+        axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0), size=12, face="bold")) 
+
+ggsave("../Mcap_Chilleetal_2024.png", width=7, height=4)
+```
+
+
+
+
+
+
+
+
+
+
+
+
 
